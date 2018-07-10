@@ -1,0 +1,14 @@
+{
+  "name": "ships",
+  "version": "0.1.0",
+  "description": "ships",
+  "main": "main.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "jannik@feuer.io",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "typescript": "^2.9.2"
+  }
+}
