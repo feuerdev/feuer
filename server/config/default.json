@@ -1,4 +1,5 @@
 {
+  "logfile": "game.log",
   "port": 8000,
   "updaterate": 60,
   "netrate": 30,
