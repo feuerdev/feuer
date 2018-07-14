@@ -1,0 +1,30 @@
+body,
+html {
+    height: 100%; /* Als referenz, damit die height: 100% bei #canvas-container auch etwas bedeutet */
+    overflow: hidden /* Verstecke die Scrollbars */
+}
+
+#canvas-container {
+    position: absolute; 
+    bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* canvas {
+    bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    position: absolute;
+} */
+
+#debug {
+    top: 0;
+    position: absolute;
+    font-size: small;
+    color:white;
+}
