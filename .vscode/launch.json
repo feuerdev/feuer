@@ -12,7 +12,8 @@
       "outFiles": [
         "${workspaceFolder}/build/**/*.js",
         "${workspaceFolder}/server/**/*.js"
-      ]
+      ],
+      "outputCapture": "std"
     }
   ]
 }
