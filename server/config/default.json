@@ -1,0 +1,14 @@
+{
+  "port": 8000,
+  "updaterate": 60,
+  "netrate": 30,
+  "interp": 0.05,
+  "size": 2048,
+  "tileSize": 4,
+  "speed": 0.2,
+  "visibility": 10,
+  "transports": [
+    "websocket"
+  ],
+  "threshold_movement": 0.1
+}
