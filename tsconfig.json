@@ -2,6 +2,8 @@
     "compilerOptions": {
         "module": "commonjs",
         "sourceMap": true,
-        "watch": true
+        "watch": true,
+        "target": "es6",
+        "lib": ["es6", "dom"],
     }
 }
