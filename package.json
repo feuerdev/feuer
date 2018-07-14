@@ -6,7 +6,6 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "@types/node": "^10.5.2",
-    "@types/winston": "^2.3.9",
     "typescript": "^2.9.2"
   },
   "dependencies": {
