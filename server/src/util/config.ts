@@ -12,8 +12,7 @@ const DEFAULT_CONFIG_NAME = "default";
 let config = null;
 let name;
 
-module.exports = getConfig();
-module.exports.getName = getName();
+export default getConfig();
 
 /**
  * Singleton getter.
@@ -24,17 +23,6 @@ function getConfig() {
         config = loadConfig();
     }
     return config;
-}
-
-/**
- * Gibt den Namen der Config wieder.
- * @returns {*}
- */
-function getName() {
-    if(!name) {
-        loadConfig();
-    }
-    return name;
 }
 
 /**
@@ -50,7 +38,7 @@ function loadConfig() {
         const path_config = path.join(__dirname, "../../config/"+name+".json");
         const config_default = JSON.parse(fs.readFileSync(path_config_default, {encoding:"utf8"}));
         const config_custom = JSON.parse(fs.readFileSync(path_config, {encoding:"utf8"}));
-
+        config_default["name"] = name;
         //Stelle sicher, dass alle Parameter der Default Config in der Custom-Config vorhanden sind.
         if(config_custom) {
             for(let item in config_default) {
