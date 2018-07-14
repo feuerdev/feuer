@@ -5,15 +5,24 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Launch Client (Chrome)",
+      "url": "http://localhost:8000",
+      "webRoot": "${workspaceFolder}/client",
+      "preLaunchTask": "Browserify"
+    },
+    {
       "type": "node",
       "request": "launch",
-      "name": "Launch Program",
+      "name": "Launch Server",
       "program": "${workspaceFolder}\\server\\src\\main.ts",
       "outFiles": [
         "${workspaceFolder}/build/**/*.js",
         "${workspaceFolder}/server/**/*.js"
       ],
-      "outputCapture": "std"
+      "outputCapture": "std",
+      "preLaunchTask": "Browserify"
     }
   ]
 }

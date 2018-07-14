@@ -8,6 +8,7 @@
     "@types/express": "^4.16.0",
     "@types/node": "^10.5.2",
     "@types/socket.io": "^1.4.36",
+    "browserify": "^16.2.2",
     "typescript": "^2.9.2"
   },
   "dependencies": {
