@@ -5,14 +5,6 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "chrome",
-      "request": "launch",
-      "name": "Launch Client (Chrome)",
-      "url": "http://localhost:8000",
-      "webRoot": "${workspaceFolder}/client",
-      "preLaunchTask": "Browserify"
-    },
-    {
       "type": "node",
       "request": "launch",
       "name": "Launch Server",
@@ -23,6 +15,14 @@
       ],
       "outputCapture": "std",
       "preLaunchTask": "Browserify"
-    }
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Launch Client (Chrome)",
+      "url": "http://localhost:8000",
+      "webRoot": "${workspaceFolder}/client",
+      "preLaunchTask": "Browserify"
+    },
   ]
 }
