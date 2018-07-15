@@ -13,6 +13,8 @@ const server_web:WebServer = new WebServer();
 const server_socket:SocketServer = new SocketServer(server_web.getHttpServer());
 const server_game:GameServer = new GameServer();
 
+server_socket.delegate = server_game;
+
 
 // this.io.on("connection", function(socket) {
 //   socket.on("login", data => gameserver.onLogin(socket, data));
@@ -26,9 +28,9 @@ const server_game:GameServer = new GameServer();
 //   socket.on("tiles visible", data => gameserver.onRequestTilesVisible(socket.id, data));
 // });
 
-server_web.run();
-Log.info("Webserver started");
 server_game.run();
 Log.info("Gameserver started");
 server_socket.run();
+Log.info("Webserver started");
+server_web.run();
 Log.info("Socketserver started");

@@ -7,14 +7,14 @@ import config from "./util/config";
 import { Server } from "http";
 import Log from "./util/log";
 
-export interface SocketDelegate {
+export interface ServerSocketDelegate {
   onConnection(socket: socketio.Socket);
-  onMessage(socket: socketio.Socket, topic: String, data: {});
+  onDisconnect(socket: socketio.Socket);
 }
 
 export default class SocketServer {
 
-  public delegate: SocketDelegate;
+  public delegate: ServerSocketDelegate;
   public io: socketio.Server;
   private httpServer: Server;
 
@@ -26,6 +26,9 @@ export default class SocketServer {
     this.io = socketio(this.httpServer, {
       transports: config.transports
     });
-    this.io.on("connection", (client) => { Log.info("Someone Connected"); })
+    this.io.on("connection", (socket) => {
+      socket.on("disconnect", () => {this.delegate.onDisconnect(socket)});
+      this.delegate.onConnection(socket);
+    });
   }
 };

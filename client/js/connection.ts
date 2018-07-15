@@ -19,7 +19,7 @@ export default class Connection {
 
     private socket;
 
-    private delegate: ClientSocketDelegate;
+    public delegate: ClientSocketDelegate;
 
     /**
      * Constructor
@@ -41,9 +41,8 @@ export default class Connection {
      */
     connect() {
         this.socket = io.connect(this.ip, {transports: this.transports});
-
-        // this.socket.on("connect", this.delegate.onConnected);
-        // this.socket.on("disconnect", this.delegate.onDisconnected);
+        this.socket.on("connect", this.delegate.onConnected);
+        this.socket.on("disconnect", this.delegate.onDisconnected);
         // this.socket.on = this.delegate;
         // this.socket.on("gamestate units", this.onDataUnits);        
         // this.socket.on("gamestate init", this.onDataInit);
