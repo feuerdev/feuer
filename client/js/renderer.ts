@@ -2,14 +2,12 @@
  * Created by Jannik on 04.09.2016.
  */
 import * as $ from "./lib/jquery-3.1.1.min";
-// import Camera from "./camera";
-// import * as Util from "./util/util";
+import Game from "./game";
+import * as Util from "./util/util";
 
 export default class Renderer {
 
-    // private game: Game;
-    // private world: World;
-    // private camera: Camera;
+    private game: Game;
 
     private canvas_map = $("#canvas-map");
     private canvas_fow = $("#canvas-fow");
@@ -27,19 +25,30 @@ export default class Renderer {
 
     private zoomFactor: number = 2;
 
-    private currentZoom: number = 1;
+    public currentZoom: number = 1;
     private debug = $("#debug");
 
-    constructor() {
+    private deadzone: { x, y } = { x: this.canvasWidth / 2 - (50 / this.currentZoom), y: this.canvasHeight / 2 - (50 / this.currentZoom) };
+    public cameraPos = { x: 0, y: 0 };
+    public cameraPosFollow: { x, y } = { x: 0, y: 0 };
+
+    private cursorCanvasLast: { x, y } = { x: 0, y: 0 };
+    public isFollowing: boolean = false;
+    public isDragging: boolean = false;
+
+    public shouldRedrawMap: boolean = true;
+
+    constructor(game: Game) {
+        this.game = game;
 
         this.canvas_map[0].width = window.innerWidth;
         this.canvas_map[0].height = window.innerHeight;
 
         this.canvas_fow[0].width = window.innerWidth;
-        this.canvas_fow[0].height = window.innerHeight; 
+        this.canvas_fow[0].height = window.innerHeight;
 
         this.canvas_entities[0].width = window.innerWidth;
-        this.canvas_entities[0].height = window.innerHeight; 
+        this.canvas_entities[0].height = window.innerHeight;
 
         if (this.canvas_map.length > 0) {
             this.context_map = this.canvas_map[0].getContext("2d");
@@ -58,161 +67,199 @@ export default class Renderer {
 
         this.drawWidth = this.canvasWidth;
         this.drawHeight = this.canvasHeight;
-
-        // this.game = game;
-        // this.world = world;
-        // this.camera = new Camera();
     }
 
-    // draw() {
-    //     const self = this;
+    //#region Cycle
+    draw() {
 
-    //     this.camera.update();
+        this.updateCamera();
 
-    //     if (self.game.isMapDirty) {
-    //         this.drawMap();
-    //     }
+        if (this.shouldRedrawMap) {
+            this.drawMap();
+        }
+        
+        if (config.fow) {
+            this.drawFow();
+        }
 
-    //     if (self.game.settings.fow) {
-    //         this.drawFow();
-    //     }
+        this.drawEntities();
 
-    //     this.drawEntities();
+        if (config.log_level === "debug") {
+            this.drawDebug();
+        }
+    }
 
-    //     if (config.log_level === "debug") {
-    //         this.drawDebug();
-    //     }
-    // }
+    updateCamera() {
+        if (this.isFollowing) {
+            const activeUnit = this.game.units_owned[this.game.selection[0]];
+            if (activeUnit) {
+                this.cameraPosFollow = activeUnit.pos;
+            }
 
-    // drawEntities() {
-    //     if (this.canvas_entities.length > 0) {
-    //         this.context_entities.clearRect(0, 0, this.drawWidth, this.drawHeight);
-    //         this.context_entities.fillStyle = "blue";
-    //         for (let id in this.world.units_owned) {
-    //             const unit = this.world.units_owned[id];
-    //             this.drawUnit(unit);
-    //         }
-    //         this.context_entities.fillStyle = "red";
-    //         for (let id in this.world.units_other) {
-    //             const unit = this.world.units_other[id];
-    //             this.drawUnit(unit);
-    //         }
-    //     }
-    // }
+            if (this.cameraPosFollow) {
+                if (this.cameraPosFollow.x - this.cameraPos.x + this.deadzone.x > this.drawWidth) {
+                    this.cameraPos.x = Math.round(this.cameraPosFollow.x - (this.drawWidth - this.deadzone.x));
+                } else if (this.cameraPosFollow.x - this.deadzone.x < this.cameraPos.x) {
+                    this.cameraPos.x = Math.round(this.cameraPosFollow.x - this.deadzone.x);
+                }
 
-    // drawMap() {
-    //     // Clear Canvas
-    //     this.context_map.clearRect(0, 0, this.drawWidth, this.drawHeight);
+                if (this.cameraPosFollow.y - this.cameraPos.y + this.deadzone.y > this.drawHeight) {
+                    this.cameraPos.y = Math.round(this.cameraPosFollow.y - (this.drawHeight - this.deadzone.y));
+                } else if (this.cameraPosFollow.y - this.deadzone.y < this.cameraPos.y) {
+                    this.cameraPos.y = Math.round(this.cameraPosFollow.y - this.deadzone.y);
+                }
+                this.shouldRedrawMap = true;
+            }
+        }
 
-    //     //Draw Tiles
-    //     const minX: number = Math.floor(this.camera.pos.x / this.world.tileSize);
-    //     const maxX: number = Math.ceil(minX + this.drawWidth / this.world.tileSize);
-    //     const minY: number = Math.floor(this.camera.pos.y / this.world.tileSize);
-    //     const maxY: number = Math.ceil(minY + this.drawHeight / this.world.tileSize);
+        if (this.isDragging) {
+            this.cameraPos.x -= Math.round((this.game.cursorCanvas.x - this.cursorCanvasLast.x) / this.currentZoom);
+            this.cameraPos.y -= Math.round((this.game.cursorCanvas.y - this.cursorCanvasLast.y) / this.currentZoom);
+            this.shouldRedrawMap = true;
+        }
 
-    //     for (let x = minX; x <= maxX; x++) {
-    //         for (let y = minY; y <= maxY; y++) {
-    //             const wrappedX = Util.mod(x, this.world.size);
-    //             const wrappedY = Util.mod(y, this.world.size);
-    //             const tile = this.world.tileCache[wrappedX][wrappedY];
-    //             if (tile) {
-    //                 this.context_map.fillStyle = tile.color;
-    //                 const tX = Util.mod((wrappedX * this.world.tileSize) - this.camera.pos.x, this.world.worldSize);
-    //                 const tY = Util.mod((wrappedY * this.world.tileSize) - this.camera.pos.y, this.world.worldSize);
+        this.cameraPos.x = Util.mod(this.cameraPos.x, (this.game.worldSize));
+        this.cameraPos.y = Util.mod(this.cameraPos.y, (this.game.worldSize));
 
-    //                 this.context_map.fillRect(tX, tY, this.world.tileSize, this.world.tileSize);
-    //             }
-    //         }
-    //     }
-    //     this.game.isMapDirty = false;
-    // }
+        this.cursorCanvasLast.x = this.game.cursorCanvas.x;
+        this.cursorCanvasLast.y = this.game.cursorCanvas.y;
+    }
 
-    // drawFow() {
-    //     if (this.canvas_fow.length > 0) {
-    //         this.context_fow.clearRect(0, 0, this.drawWidth, this.drawHeight);
-    //         this.context_fow.fillStyle = "rgba(0, 0, 0, 0.2)";
-    //         this.context_fow.fillRect(0, 0, this.drawWidth, this.drawHeight);
+    drawEntities() {
+        if (this.canvas_entities.length > 0) {
+            this.context_entities.clearRect(0, 0, this.drawWidth, this.drawHeight);
+            this.context_entities.fillStyle = "blue";
+            for (let id in this.game.units_owned) {
+                const unit = this.game.units_owned[id];
+                this.drawUnit(unit);
+            }
+            this.context_entities.fillStyle = "red";
+            for (let id in this.game.units_other) {
+                const unit = this.game.units_other[id];
+                this.drawUnit(unit);
+            }
+        }
+    }
 
-    //         for (let id in this.world.units_owned) {
-    //             const unit = this.world.units_owned[id];
-    //             const distance = unit.visibility * this.world.tileSize;
-    //             const pX = Util.mod(unit.pos.x - this.camera.pos.x, this.world.worldSize);
-    //             const pY = Util.mod(unit.pos.y - this.camera.pos.y, this.world.worldSize);
-    //             this.context_fow.save();
-    //             this.context_fow.beginPath();
-    //             this.context_fow.arc(pX, pY, distance, 0, 2 * Math.PI);
-    //             this.context_fow.clip();
-    //             this.context_fow.clearRect(0, 0, this.drawWidth, this.drawHeight);
-    //             this.context_fow.restore();
-    //         }
-    //     }
-    // }
+    drawMap() {
+        // Clear Canvas
+        this.context_map.clearRect(0, 0, this.drawWidth, this.drawHeight);
 
-    // drawUnit(unit) {
-    //     this.context_entities.beginPath();
-    //     const pX = Util.mod(unit.pos.x - this.camera.pos.x, this.world.worldSize);
-    //     const pY = Util.mod(unit.pos.y - this.camera.pos.y, this.world.worldSize);
-    //     this.context_entities.arc(pX, pY, 1, 0, 2 * Math.PI);
-    //     this.context_entities.fill();
-    // }
+        //Draw Tiles
+        const minX: number = Math.floor(this.cameraPos.x / this.game.tileSize);
+        const maxX: number = Math.ceil(minX + this.drawWidth / this.game.tileSize);
+        const minY: number = Math.floor(this.cameraPos.y / this.game.tileSize);
+        const maxY: number = Math.ceil(minY + this.drawHeight / this.game.tileSize);
 
-    // drawDebug() {
-    //     this.debug.text("");
-    //     if (this.camera.isFollowing) {
-    //         this.debug.append("posFollow.pos.x   : " + this.camera.posFollow.x + "<br>");
-    //         this.debug.append("posFollow.pos.y   : " + this.camera.posFollow.y + "<br>");
-    //     }
-    //     this.debug.append("camera.x   : " + this.camera.pos.x + "<br>");
-    //     this.debug.append("camera.y   : " + this.camera.pos.y + "<br>");
-    //     this.debug.append("deadz.x   : " + this.camera.deadzone.x + "<br>");
-    //     this.debug.append("deadz.y   : " + this.camera.deadzone.y + "<br>");
-    //     this.debug.append("drawwidth.x   : " + this.drawWidth + "<br>");
-    //     this.debug.append("drawwidth.y   : " + this.drawHeight + "<br>");
-    //     this.debug.append("worldsize.x   : " + this.world.size + "<br>");
-    //     this.debug.append("worldsize.y   : " + this.world.size + "<br>");
-    //     this.debug.append("cursor.x   : " + this.game.cursorWorld.x + "<br>");
-    //     this.debug.append("cursor.y   : " + this.game.cursorWorld.y + "<br>");
-    //     this.debug.append("canvas.x   : " + this.canvasWidth + "<br>");
-    //     this.debug.append("canvas.y   : " + this.canvasHeight + "<br>");
-    //     this.debug.append("zoom   : " + this.currentZoom + "<br>");
-    // }
+        for (let x = minX; x <= maxX; x++) {
+            for (let y = minY; y <= maxY; y++) {
+                const wrappedX = Util.mod(x, this.game.size);
+                const wrappedY = Util.mod(y, this.game.size);
+                const tile = this.game.tileCache[wrappedX][wrappedY];
+                if (tile) {
+                    this.context_map.fillStyle = tile.color;
+                    const tX = Util.mod((wrappedX * this.game.tileSize) - this.cameraPos.x, this.game.worldSize);
+                    const tY = Util.mod((wrappedY * this.game.tileSize) - this.cameraPos.y, this.game.worldSize);
 
-    // zoomIn() {
-    //     this.zoom(this.zoomFactor);
-    // }
+                    this.context_map.fillRect(tX, tY, this.game.tileSize, this.game.tileSize);
+                }
+            }
+        }
+        this.shouldRedrawMap = false;
+    }
 
-    // zoomOut() {
-    //     this.zoom(1 / this.zoomFactor);
-    // }
+    drawFow() {
+        if (this.canvas_fow.length > 0) {
+            this.context_fow.clearRect(0, 0, this.drawWidth, this.drawHeight);
+            this.context_fow.fillStyle = "rgba(0, 0, 0, 0.2)";
+            this.context_fow.fillRect(0, 0, this.drawWidth, this.drawHeight);
 
-    // zoomReset() {
-    //     const factor = 1 / this.currentZoom;
-    //     this.zoom(factor);
-    // }
+            for (let id in this.game.units_owned) {
+                const unit = this.game.units_owned[id];
+                const distance = unit.visibility * this.game.tileSize;
+                const pX = Util.mod(unit.pos.x - this.cameraPos.x, this.game.worldSize);
+                const pY = Util.mod(unit.pos.y - this.cameraPos.y, this.game.worldSize);
+                this.context_fow.save();
+                this.context_fow.beginPath();
+                this.context_fow.arc(pX, pY, distance, 0, 2 * Math.PI);
+                this.context_fow.clip();
+                this.context_fow.clearRect(0, 0, this.drawWidth, this.drawHeight);
+                this.context_fow.restore();
+            }
+        }
+    }
 
-    // zoom(factor: number) {
-    //     //Limit the zoomlevel to a relative max/min
-    //     if ((!(this.canvasWidth / (this.currentZoom * factor) > this.world.worldSize) && !(this.canvasHeight / (this.currentZoom * factor) > this.world.worldSize)) &&
-    //         (!(this.canvasWidth / (this.currentZoom * factor) < this.canvasWidth / 40) && !(this.canvasHeight / (this.currentZoom * factor) < this.canvasHeight / 40))) {
-    //         this.currentZoom *= factor;
-    //         this.drawWidth = Math.floor(this.canvasWidth / this.currentZoom);
-    //         this.drawHeight = Math.floor(this.canvasHeight / this.currentZoom);
-    //         this.camera.deadzone.x = this.drawWidth / 2 - (50 / this.currentZoom);
-    //         this.camera.deadzone.y = this.drawHeight / 2 - (50 / this.currentZoom);
-    //         if (this.context_map) {
-    //             this.context_map.scale(factor, factor);
-    //         }
-    //         if (this.context_fow) {
-    //             this.context_fow.scale(factor, factor);
-    //         }
+    drawUnit(unit) {
+        this.context_entities.beginPath();
+        const pX = Util.mod(unit.pos.x - this.cameraPos.x, this.game.worldSize);
+        const pY = Util.mod(unit.pos.y - this.cameraPos.y, this.game.worldSize);
+        this.context_entities.arc(pX, pY, 1, 0, 2 * Math.PI);
+        this.context_entities.fill();
+    }
 
-    //         if (this.context_entities) {
-    //             this.context_entities.scale(factor, factor);
-    //         }
+    drawDebug() {
+        this.debug.text("");
+        if (this.isFollowing) {
+            this.debug.append("cameraPosFollow.pos.x   : " + this.cameraPosFollow.x + "<br>");
+            this.debug.append("cameraPosFollow.pos.y   : " + this.cameraPosFollow.y + "<br>");
+        }
+        this.debug.append("camera.x   : " + this.cameraPos.x + "<br>");
+        this.debug.append("camera.y   : " + this.cameraPos.y + "<br>");
+        this.debug.append("deadz.x   : " + this.deadzone.x + "<br>");
+        this.debug.append("deadz.y   : " + this.deadzone.y + "<br>");
+        this.debug.append("drawwidth.x   : " + this.drawWidth + "<br>");
+        this.debug.append("drawwidth.y   : " + this.drawHeight + "<br>");
+        this.debug.append("worldsize.x   : " + this.game.size + "<br>");
+        this.debug.append("worldsize.y   : " + this.game.size + "<br>");
+        this.debug.append("cursor.x   : " + this.game.cursorWorld.x + "<br>");
+        this.debug.append("cursor.y   : " + this.game.cursorWorld.y + "<br>");
+        this.debug.append("canvas.x   : " + this.canvasWidth + "<br>");
+        this.debug.append("canvas.y   : " + this.canvasHeight + "<br>");
+        this.debug.append("zoom   : " + this.currentZoom + "<br>");
+    }
 
-    //         this.game.isMapDirty = true;
-    //         // this.camera.pos.x += ((this.input.posCursorCanvas.x) * factor);
-    //         // this.camera.pos.y += ((this.input.posCursorCanvas.y) * factor);
-    //     }
-    // }
+    zoomIn() {
+        this.zoom(this.zoomFactor);
+    }
+
+    zoomOut() {
+        this.zoom(1 / this.zoomFactor);
+    }
+
+    zoomReset() {
+        const factor = 1 / this.currentZoom;
+        this.zoom(factor);
+    }
+
+    zoom(factor: number) {
+        //Limit the zoomlevel to a relative max/min
+        if ((!(this.canvasWidth / (this.currentZoom * factor) > this.game.worldSize) && !(this.canvasHeight / (this.currentZoom * factor) > this.game.worldSize)) &&
+            (!(this.canvasWidth / (this.currentZoom * factor) < this.canvasWidth / 40) && !(this.canvasHeight / (this.currentZoom * factor) < this.canvasHeight / 40))) {
+            this.currentZoom *= factor;
+            this.drawWidth = Math.floor(this.canvasWidth / this.currentZoom);
+            this.drawHeight = Math.floor(this.canvasHeight / this.currentZoom);
+            this.deadzone.x = this.drawWidth / 2 - (50 / this.currentZoom);
+            this.deadzone.y = this.drawHeight / 2 - (50 / this.currentZoom);
+            if (this.context_map) {
+                this.context_map.scale(factor, factor);
+            }
+            if (this.context_fow) {
+                this.context_fow.scale(factor, factor);
+            }
+
+            if (this.context_entities) {
+                this.context_entities.scale(factor, factor);
+            }
+
+            this.shouldRedrawMap = true;
+            // this.camera.pos.x += ((this.input.posCursorCanvas.x) * factor);
+            // this.camera.pos.y += ((this.input.posCursorCanvas.y) * factor);
+        }
+    }
+
+    switchFollowMode() {
+        this.isFollowing = !this.isFollowing;
+    }
+
 };
+declare const config;

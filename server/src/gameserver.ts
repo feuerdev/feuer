@@ -8,8 +8,8 @@ import * as socketio from "socket.io";
 import { Server } from "http";
 
 export default class GameServer {
-  
-  public io: socketio.Server;  
+
+  public io: socketio.Server;
 
   private players = [];
   private isRunning = false;
@@ -23,10 +23,18 @@ export default class GameServer {
   listen(httpServer: Server) {
     this.io = socketio(httpServer, { transports: config.transports });
     this.io.on("connection", (socket) => {
-      Log.info("Player Connected: "+this.players);
-      this.players.push(socket.client.id);      
-      socket.on("disconnect", a);
-      socket.on("eventA", onEventA);
+      Log.info("Player Connected: " + this.players);
+      this.players.push(socket.client.id);
+      socket.on("disconnect", () => this.onDisconnect);
+      //   socket.on("login", data => gameserver.onLogin(socket, data));
+      //   socket.on("disconnect", () => gameserver.onLogout(socket.id));
+      //   socket.on("input left", data => gameserver.onInputLeft(socket.id, data));
+      //   socket.on("input up", data => gameserver.onInputUp(socket.id, data));
+      //   socket.on("input right", data => gameserver.onInputRight(socket.id, data));
+      //   socket.on("input down", data => gameserver.onInputDown(socket.id, data));
+      //   socket.on("input spawn", data => gameserver.onInputSpawn(socket.id, data));
+      //   socket.on("input click", data => gameserver.onInputClick(socket.id, data.unitIds, data.pos));
+      //   socket.on("tiles visible", data => gameserver.onRequestTilesVisible(socket.id, data));
     });
   }
 
@@ -83,6 +91,6 @@ export default class GameServer {
   onDisconnect(socket: socketio.Socket) {
     const idx = this.players.indexOf(socket.client.id);
     this.players.splice(idx, 1);
-    Log.info("Player Disconnected: "+this.players);
+    Log.info("Player Disconnected: " + this.players);
   }
 };

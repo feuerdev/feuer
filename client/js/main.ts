@@ -5,16 +5,15 @@
 import * as $ from "./lib/jquery-3.1.1.min";
 import Log from "./util/log";
 import Game from "./game";
-import Connection from "./connection";
 import Renderer from "./renderer";
 
 declare const config;
 
 $(document).ready(function() {
-    const connection = new Connection(config.ip, config.transports);
-    connection.connect();
-    const renderer = new Renderer();
-
-    // const game = new Game();
+    const game = new Game();
+    if(!config.local) {
+        game.connect();
+    }
+    game.run();
     Log.info("Client ready");
 });
