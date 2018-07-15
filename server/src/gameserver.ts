@@ -4,14 +4,15 @@
  */
 import config from "./util/config";
 import Log from "./util/log";
-import { ServerSocketDelegate } from "./socketserver"
+import * as socketio from "socket.io";
+import { Server } from "http";
 
-export default class GameServer implements ServerSocketDelegate {
+export default class GameServer {
   
+  public io: socketio.Server;  
 
   private players = [];
   private isRunning = false;
-  // private world = new World();
 
   private readonly delta = Math.round(1000 / config.updaterate);
   private readonly netrate = Math.round(1000 / config.netrate);
@@ -19,6 +20,15 @@ export default class GameServer implements ServerSocketDelegate {
   private accumulator = 0;
   private timeSinceLastUpdate = 0;
 
+  listen(httpServer: Server) {
+    this.io = socketio(httpServer, { transports: config.transports });
+    this.io.on("connection", (socket) => {
+      Log.info("Player Connected: "+this.players);
+      this.players.push(socket.client.id);      
+      socket.on("disconnect", a);
+      socket.on("eventA", onEventA);
+    });
+  }
 
   run() {
     this.isRunning = true;
@@ -68,19 +78,9 @@ export default class GameServer implements ServerSocketDelegate {
     // console.log("netdelta:"+delta);
   }
 
-  event1() {
-    Log.info("Event1");
-  }
 
-  //SocketDelegat
-  onConnection(socket: SocketIO.Socket) {
-
-    socket.on("event1", this.event1);
-
-    this.players.push(socket.client.id);
-    Log.info("Player Connected: "+this.players);
-  }
-  onDisconnect(socket: SocketIO.Socket) {
+  //#region SocketEvents
+  onDisconnect(socket: socketio.Socket) {
     const idx = this.players.indexOf(socket.client.id);
     this.players.splice(idx, 1);
     Log.info("Player Disconnected: "+this.players);
