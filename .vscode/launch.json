@@ -9,6 +9,9 @@
       "request": "launch",
       "name": "Launch Server",
       "program": "${workspaceFolder}\\server\\src\\main.ts",
+      "args": [
+        "lan"
+      ],
       "outFiles": [
         "${workspaceFolder}/build/**/*.js",
         "${workspaceFolder}/server/**/*.js"
