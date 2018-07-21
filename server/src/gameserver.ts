@@ -8,6 +8,11 @@ import * as socketio from "socket.io";
 import { Server } from "http";
 import Player, { PlayerDelegate } from "./player";
 import Shell from "./shell";
+import Ship from "./ship";
+import Gun from "./gun";
+import Vector3 from "./util/vector3";
+
+const GRAVITY: Vector3 = new Vector3(0,0,-0.1);
 
 export default class GameServer implements PlayerDelegate {
 
@@ -15,6 +20,7 @@ export default class GameServer implements PlayerDelegate {
 
   private players: Player[] = [];
   private shells: Shell[] = [];
+  private ships: Ship[] = [];
   private isRunning = false;
 
   //#region Gameloop Variables
@@ -31,8 +37,8 @@ export default class GameServer implements PlayerDelegate {
       const newPlayer: Player = new Player(socket);
       newPlayer.delegate = this;
       this.players.push(newPlayer);
+      this.ships.push(newPlayer.ship);
       Log.info("Player Connected: " + this.players);
-
     });
   }
 
@@ -77,15 +83,49 @@ export default class GameServer implements PlayerDelegate {
 
   //Loops
   update(delta) {
+    for(let i = 0; i < this.players.length; i++) {
+      const player: Player = this.players[i];
+      
+      const ship: Ship = player.ship;
+      ship.rudderAngleActual += (ship.rudderAngleRequested - ship.rudderAngleActual) * ship.turnSpeed;
+      ship.speed_actual += (ship.speed_requested - ship.speed_actual) * ship.acceleration;
+      ship.orientation += ship.rudderAngleActual * ship.turnSpeed;
+      ship.pos.x += Math.sin(ship.orientation) * ship.speed_actual;
+      ship.pos.y += Math.cos(ship.orientation) * ship.speed_actual;
+
+      const gun: Gun = ship.gun;
+      gun.angleHorizontalActual += (gun.angleHorizontalRequested - gun.angleHorizontalActual) * gun.turnspeed; 
+      gun.angleVerticalActual += (gun.angleVerticalRequested - gun.angleVerticalActual) * gun.turnspeed;
+    }
+
+    for(let i = this.shells.length; i > 0 ; i--) { //iterate backwards so its no problem to remove a shell while looping
+      const shell: Shell = this.shells[i];
+
+      shell.velocity.add(GRAVITY);
+      // shell.velocity.add(wind);
+      shell.pos.add(shell.velocity);
+
+      if(shell.pos.z < 0) {
+        //TODO: Check for hit
+        this.shells.splice(i, 1);
+      }
+    }
   }
 
   updateNet(delta) {
+    for(let i = 0; i < this.players.length; i++) {
+      const player: Player = this.players[i];
+      player.socket.emit("ships", this.ships);
+      player.socket.emit("shells", this.shells);
+    }
   }
 
   //#region Playerdelegate
   onPlayerDisconnected(player: Player) {
     const i = this.players.indexOf(player);
     this.players.splice(i, 1);
+    const j = this.ships.indexOf(player.ship);
+    this.ships.splice(j, 1);
     Log.info("Player Disconnected: " + this.players);
   }
   onPlayerShot(player: Player, shell: any) {

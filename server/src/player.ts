@@ -10,35 +10,41 @@ export interface PlayerDelegate {
 
 export default class Player {
   public socket: Socket;
-  public ship: Ship;
-
   public delegate: PlayerDelegate;
+
+  public ship: Ship = new Ship();
 
   constructor(socket: Socket) {
     this.socket = socket;
-
-    this.ship = new Ship();
-
     socket.on("disconnect", () => this.delegate.onPlayerDisconnected);
+    socket.on("input speed", () => this.onShipSpeed);
+    socket.on("input gun horizontal", () => this.onGunAngleHorizontal);
+    socket.on("input gun vertical", () => this.onGunAngleVertical);
+    socket.on("input rudder ", () => this.onRudderPosition);
     socket.on("tryShoot", () => this.onTryShoot);
+  }
+
+  private onShipSpeed(speed: number) {
+    this.ship.speed_requested = speed;
+  }
+
+  private onRudderPosition(position: number) {
+    this.ship.rudderAngleRequested = position;
+  }
+
+  private onGunAngleHorizontal(angle: number) {
+    this.ship.gun.angleHorizontalRequested = angle;
+  }
+
+  private onGunAngleVertical(angle: number) {
+    this.ship.gun.angleVerticalRequested = angle;
   }
 
   private onTryShoot() {
     const shell: Shell = new Shell();
-
-    shell.pos = this.ship.pos;
-
-    const vec = new Vector3();
-    vec.x = Math.cos(this.ship.gun.angleHorizontal)*Math.cos(this.ship.gun.angleHorizontal);
-    vec.y = Math.sin(this.ship.gun.angleHorizontal)*Math.cos(this.ship.gun.angleHorizontal);
-    vec.z = Math.sin(this.ship.gun.angleHorizontal);
-    vec.normalize();
-
-    shell.vec = vec;
-    shell.velocity = this.ship.gun.velocity;
-
+    shell.pos = this.ship.pos.toVector3();
+    shell.velocity = new Vector3(this.ship.gun.angleHorizontalActual, this.ship.gun.angleVerticalActual);
+    shell.velocity.multiply(this.ship.gun.velocity);
     this.delegate.onPlayerShot(this, shell);
   }
-
-
 }
