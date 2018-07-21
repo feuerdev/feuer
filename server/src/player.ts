@@ -12,16 +12,17 @@ export default class Player {
   public socket: Socket;
   public delegate: PlayerDelegate;
 
-  public ship: Ship = new Ship();
+  public ship: Ship;
 
   constructor(socket: Socket) {
     this.socket = socket;
-    socket.on("disconnect", () => this.delegate.onPlayerDisconnected);
-    socket.on("input speed", () => this.onShipSpeed);
-    socket.on("input gun horizontal", () => this.onGunAngleHorizontal);
-    socket.on("input gun vertical", () => this.onGunAngleVertical);
-    socket.on("input rudder ", () => this.onRudderPosition);
-    socket.on("tryShoot", () => this.onTryShoot);
+    this.ship = new Ship(this.socket.id);
+    socket.on("disconnect", () => this.delegate.onPlayerDisconnected(this));
+    socket.on("input speed", (data) => this.onShipSpeed(data));
+    socket.on("input gun horizontal", (data) => this.onGunAngleHorizontal(data));
+    socket.on("input gun vertical", (data) => this.onGunAngleVertical(data));
+    socket.on("input rudder", (data) => this.onRudderPosition(data));
+    socket.on("input shoot", () => this.onTryShoot());
   }
 
   private onShipSpeed(speed: number) {
