@@ -125,7 +125,11 @@ export default class Game {
                 this.renderer.isDragging = false;
             }
         });
-        canvas.mouseout(() => this.renderer.isDragging = false);
+        canvas.mouseout(() => {
+            this.isM1Down = false;
+            this.isM2Down = false;
+            this.renderer.isDragging = false
+        });
     }
 
     public connect() {
