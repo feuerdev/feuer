@@ -126,9 +126,10 @@ export default class Renderer {
     drawEntities() {
         if (this.canvas_entities.length > 0) {
             this.context_entities.clearRect(0, 0, this.drawWidth, this.drawHeight);
-            this.context_entities.save();
-
+            
             for (let i = 0; i < this.game.ships.length; i++) {
+                this.context_entities.save();
+
                 const ship = this.game.ships[i];
                 if (ship.owner === this.game.socket.id) {
                     this.context_entities.fillStyle = "pink";
