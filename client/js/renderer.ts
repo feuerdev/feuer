@@ -126,29 +126,33 @@ export default class Renderer {
     drawEntities() {
         if (this.canvas_entities.length > 0) {
             this.context_entities.clearRect(0, 0, this.drawWidth, this.drawHeight);
+            this.context_entities.save();
 
             for (let i = 0; i < this.game.ships.length; i++) {
-                this.context_entities.save();
                 const ship = this.game.ships[i];
                 if (ship.owner === this.game.socket.id) {
                     this.context_entities.fillStyle = "pink";
                 } else {
                     this.context_entities.fillStyle = "red";
                 }
-                this.context_entities.beginPath();
                 this.context_entities.translate(-this.cameraPos.x, -this.cameraPos.y);
                 // const pX = ship.pos.x - this.cameraPos.x;
                 // const pY = ship.pos.y - this.cameraPos.y;
 
-                this.context_entities.rotate(ship.orientation * Math.PI / 180);
-                this.context_entities.fillRect(ship.pos.x, ship.pos.y, 10, 5);
-                // var x2 = ship.pos.x + 100 * Math.cos(ship.orientation * Math.PI / 180),
-                //     y2 = ship.pos.y + 100 * Math.sin(ship.orientation * Math.PI / 180);
+                const width:number = 20;
+                const height:number = 10;
+                const rad = ship.orientation * Math.PI / 180;
 
-                // this.context_entities.moveTo(ship.pos.x, ship.pos.y);
-                // this.context_entities.lineTo(x2, y2);
-                // this.context_entities.lineWidth = 10;
-                // this.context_entities.stroke();
+                //Set the origin to the center of the image
+                this.context_entities.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);
+
+                //Rotate the canvas around the origin
+                this.context_entities.rotate(rad);
+
+                //draw the image    
+                this.context_entities.fillRect(width / 2 * (-1),height / 2 * (-1),width,height);
+
+                //reset the canvas  
                 this.context_entities.restore();
             }
 
