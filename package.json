@@ -10,7 +10,7 @@
     "launch": "node server/src/main",
     "deploy": "npm install && npm run tsc && npm run browserify",
     "browserify": "browserify client/js/main.js -o client/bin/bundle.js --debug",
-    "tsc": "node_modules/.bin/tsc.cmd -p tsconfig_deploy.json"
+    "tsc": "tsc -p tsconfig_deploy.json"
   },
   "dependencies": {
     "body-parser": "^1.18.3",
