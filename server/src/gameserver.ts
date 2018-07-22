@@ -105,8 +105,8 @@ export default class GameServer implements PlayerDelegate {
       ship.pos.x += Math.cos(Util.scale(ship.orientation, 0, 360, 0, Math.PI*2)) * ship.speed_actual;
       ship.pos.y += Math.sin(Util.scale(ship.orientation, 0, 360, 0, Math.PI*2)) * ship.speed_actual;
 
-      ship.pos.x = Util.clamp(ship.pos.x,0,1860);
-      ship.pos.y = Util.clamp(ship.pos.y,0,850);
+      // ship.pos.x = Util.clamp(ship.pos.x,0,1860);
+      // ship.pos.y = Util.clamp(ship.pos.y,0,850);
 
       const gun: Gun = ship.gun;
       gun.angleHorizontalActual += (gun.angleHorizontalRequested - gun.angleHorizontalActual) * gun.turnspeed; 
