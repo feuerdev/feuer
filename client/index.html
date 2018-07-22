@@ -10,17 +10,13 @@
 </head>
 
 <body>
-		<div style="display:none;">
-				<img id="source" src="img/mario.png" width="20" height="40">
-		</div>
-	<div id="canvas-container">
-		<canvas id="canvas-map" oncontextmenu="return false">Your browser doesn't support canvas</canvas>
+	<div id="canvas-container" >
+		<canvas id="canvas-map" oncontextmenu="return false"></canvas>
 		<canvas id="canvas-fow" oncontextmenu="return false"></canvas>
 		<canvas id="canvas-entities" oncontextmenu="return false"></canvas>
+		<div id="debug"/>
 	</div>
-	<div id="debug">
-		debug
-	</div>
+	
 	<script type="application/javascript" src="config.js"></script>
 	<script type="application/javascript" src="bin/bundle.js"></script>
 </body>

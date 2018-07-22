@@ -1,30 +1,39 @@
 body,
 html {
-    height: 100%; /* Als referenz, damit die height: 100% bei #canvas-container auch etwas bedeutet */
-    overflow: hidden /* Verstecke die Scrollbars */
+    height: 100%;
+    /* Als referenz, damit die height: 100% bei #canvas-container auch etwas bedeutet */
+    margin: 0;
+    /* Default body margin entfernen */
+    overflow: hidden;
+    /*Verstecke die Scrollbars, theoretisch nicht nötig. Einkommentieren falls doch */
+    background: lightgray;
 }
 
 #canvas-container {
-    position: absolute; 
-    bottom: 0;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    top: 20px;
+    bottom: 20px;
 }
 
-/* canvas {
-    bottom: 0;
-    top: 0;
-    left: 0;
-    right: 0;
+#canvas-map {
+    background: darkblue;
+}
+
+canvas {
     position: absolute;
-} */
+    /* Damit alle canvas Elemente übereinander gezeichnet werden */
+}
 
 #debug {
-    top: 0;
+    background: #BBBBBBBB;
+    width: 200px;
+    margin: 20px;
+    bottom: 0;
+    padding: 8px;
     position: absolute;
     font-size: small;
-    color:black;
+    font-weight: bold;
+    color: black;
 }
