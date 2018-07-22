@@ -4,18 +4,11 @@
   "description": "ships",
   "author": "jannik@feuer.io",
   "license": "UNLICENSED",
-  "devDependencies": {
-    "@types/express": "^4.16.0",
-    "@types/node": "^10.5.2",
-    "@types/socket.io": "^1.4.36",
-    "browserify": "^16.2.2",
-    "typescript": "^2.9.2"
-  },
   "scripts": {
     "heroku": "npm run deploy && node server/src/main heroku",
     "start": "npm run deploy && npm run launch",
     "launch": "node server/src/main",
-    "deploy": "npm run tsc && npm run browserify",
+    "deploy": "npm install && npm run tsc && npm run browserify",
     "browserify": "browserify client/js/main.js -o client/bin/bundle.js --debug",
     "tsc": "node_modules/.bin/tsc.cmd -p tsconfig_deploy.json"
   },
@@ -23,6 +16,12 @@
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
     "socket.io": "^2.1.1",
-    "winston": "^3.0.0"
+    "winston": "^3.0.0",
+
+    "@types/express": "^4.16.0",
+    "@types/node": "^10.5.2",
+    "@types/socket.io": "^1.4.36",
+    "browserify": "^16.2.2",
+    "typescript": "^2.9.2"
   }
 }
