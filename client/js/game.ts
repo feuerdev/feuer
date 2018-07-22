@@ -11,7 +11,7 @@ import { Socket } from "../../node_modules/@types/socket.io";
 export default class Game {
     private isRunning: boolean = false;
 
-    private socket: Socket;
+    public socket: Socket;
 
     private renderer: Renderer = new Renderer(this);
 
@@ -23,12 +23,13 @@ export default class Game {
     private isM2Down: boolean = false;
 
     public ships = [];
+    public myShip;
     public shells = [];
 
-    private rudderPosition: number = 0;
-    private speed: number = 0;
-    private gunAngleVertical: number = 0;
-    private gunAngleHorizontal: number = 0;
+    public rudderPosition: number = 0;
+    public speed: number = 0;
+    public gunAngleVertical: number = 0;
+    public gunAngleHorizontal: number = 0;
 
     private rudderLeft: boolean = false;
     private rudderRight: boolean = false;
@@ -67,7 +68,11 @@ export default class Game {
                 case 65: this.gunLeft = true; break;//a
                 case 87: this.gunUp = true; break;//w                    
                 case 68: this.gunRight = true; break;//d
-                case 83: this.gunDown = true; break;//s
+                case 83: this.gunDown = true; break;//s          
+                case 38: this.speedUp = true; break;//pfeilhoch
+                case 40: this.speedDown = true; break;//pfeilrunter
+                case 37: this.rudderLeft = true; break;//pfeillinks
+                case 39: this.rudderRight = true; break;//pfeilrechts
             }
         }, false);
         window.addEventListener("keyup", event => {
@@ -76,10 +81,15 @@ export default class Game {
                 case 87: this.gunUp = false; break;//w                    
                 case 68: this.gunRight = false; break;//d
                 case 83: this.gunDown = false; break;//s
+                case 38: this.speedUp = false; break;//pfeilhoch
+                case 40: this.speedDown = false; break;//pfeilrunter
+                case 37: this.rudderLeft = false; break;//pfeillinks
+                case 39: this.rudderRight = false; break;//pfeilrechts
                 case 70: this.renderer.switchFollowMode(); break;//f
                 case 187: this.renderer.zoomIn(); break;//+
                 case 189: this.renderer.zoomOut(); break;//-   
                 case 191: this.renderer.zoomReset(); break;//#
+                case 32: this.socket.emit("input shoot"); break;//# 
             }
         }, false);
         window.addEventListener("mousewheel", event => event.wheelDelta > 0 ? this.renderer.zoomIn() : this.renderer.zoomOut(), false);
@@ -120,10 +130,10 @@ export default class Game {
 
     public connect() {
         this.socket = io.connect(config.ip, { transports: config.transports });
-        this.socket.on("connect", () => this.onConnected);
+        this.socket.on("connect", () => this.onConnected());
         this.socket.on("disconnect", () => this.onDisconnected);
-        this.socket.on("gamestate ships", () => this.onGamestateShips);
-        this.socket.on("gamestate shells", () => this.onGamestateShells);
+        this.socket.on("gamestate ships", (data) => this.onGamestateShips(data));
+        this.socket.on("gamestate shells", (data) => this.onGamestateShells(data));
     }
 
     public run() {
@@ -181,10 +191,14 @@ export default class Game {
         }
         if (this.speedUp) {
             this.speed += 1;
+            this.socket.emit("input speed", this.speed);
         }
         if (this.speedDown) {
             this.speed -= 1;
+            this.socket.emit("input speed", this.speed);
         }
+        this.rudderPosition = Math.max(Math.min(this.rudderPosition,90),-90)
+
     }
 
     private onConnected() {
@@ -196,7 +210,7 @@ export default class Game {
     }
 
     private onGamestateShips(ships) {
-        this.ships = ships;
+        this.ships = ships;        
     }
 
     private onGamestateShells(shells) {
