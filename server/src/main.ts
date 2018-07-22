@@ -1,6 +1,5 @@
 import config from "./util/config"
 import WebServer from "./webserver"
-import SocketServer from "./socketserver"
 import GameServer from "./gameserver"
 import Log from "./util/log";
 
