@@ -12,6 +12,7 @@ export default class Renderer {
     private canvas_map = $("#canvas-map");
     private canvas_fow = $("#canvas-fow");
     private canvas_entities = $("#canvas-entities");
+    private container = $("#canvas-container");
 
     private context_map: CanvasRenderingContext2D;
     private context_fow: CanvasRenderingContext2D;
@@ -41,22 +42,22 @@ export default class Renderer {
     constructor(game: Game) {
         this.game = game;
 
-        // this.canvas_map[0].width = window.innerWidth;
-        // this.canvas_map[0].height = window.innerHeight;
+        this.canvas_map[0].width = this.container.width();
+        this.canvas_map[0].height = this.container.height();
 
-        // this.canvas_fow[0].width = window.innerWidth;
-        // this.canvas_fow[0].height = window.innerHeight;
+        this.canvas_fow[0].width = this.container.width();
+        this.canvas_fow[0].height = this.container.height();
 
-        this.canvas_entities[0].width = window.innerWidth;
-        this.canvas_entities[0].height = window.innerHeight;
+        this.canvas_entities[0].width = this.container.width();
+        this.canvas_entities[0].height = this.container.height();
 
-        // if (this.canvas_map.length > 0) {
-        //     this.context_map = this.canvas_map[0].getContext("2d");
-        // }
+        if (this.canvas_map.length > 0) {
+            this.context_map = this.canvas_map[0].getContext("2d");
+        }
 
-        // if (this.canvas_fow.length > 0) {
-        //     this.context_fow = this.canvas_fow[0].getContext("2d");
-        // }
+        if (this.canvas_fow.length > 0) {
+            this.context_fow = this.canvas_fow[0].getContext("2d");
+        }
 
         if (this.canvas_entities.length > 0) {
             this.context_entities = this.canvas_entities[0].getContext("2d");
@@ -136,10 +137,10 @@ export default class Renderer {
                 this.context_entities.beginPath();
                 const pX = ship.pos.x - this.cameraPos.x;
                 const pY = ship.pos.y - this.cameraPos.y;
-                this.context_entities.arc(pX, pY, 100, 0, 2 * Math.PI);
-                var image =  document.getElementById('source');
-                this.context_entities.drawImage(<HTMLImageElement>image,pX,pY,20, 40);
-                // this.context_entities.fill();
+                this.context_entities.arc(pX, pY, 30, 0, 2 * Math.PI);
+                // var image =  document.getElementById('source');
+                // this.context_entities.drawImage(<HTMLImageElement>image,pX,pY,20, 40);
+                this.context_entities.fill();
             }
 
             this.context_entities.fillStyle = "yellow";
