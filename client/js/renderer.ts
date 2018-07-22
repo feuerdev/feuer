@@ -78,7 +78,7 @@ export default class Renderer {
         if (this.shouldRedrawMap) {
             this.drawMap();
         }
-        
+
         if (config.fow) {
             this.drawFow();
         }
@@ -126,25 +126,34 @@ export default class Renderer {
     drawEntities() {
         if (this.canvas_entities.length > 0) {
             this.context_entities.clearRect(0, 0, this.drawWidth, this.drawHeight);
-            
-            for(let i = 0; i<this.game.ships.length; i++) {
+
+            for (let i = 0; i < this.game.ships.length; i++) {
+                this.context_entities.save();
                 const ship = this.game.ships[i];
-                if(ship.owner === this.game.socket.id) {      
-                    this.context_entities.fillStyle = "pink";   
-                } else {                               
+                if (ship.owner === this.game.socket.id) {
+                    this.context_entities.fillStyle = "pink";
+                } else {
                     this.context_entities.fillStyle = "red";
                 }
                 this.context_entities.beginPath();
-                const pX = ship.pos.x - this.cameraPos.x;
-                const pY = ship.pos.y - this.cameraPos.y;
-                this.context_entities.arc(pX, pY, 30, 0, 2 * Math.PI);
-                // var image =  document.getElementById('source');
-                // this.context_entities.drawImage(<HTMLImageElement>image,pX,pY,20, 40);
-                this.context_entities.fill();
+                this.context_entities.translate(-this.cameraPos.x, -this.cameraPos.y);
+                // const pX = ship.pos.x - this.cameraPos.x;
+                // const pY = ship.pos.y - this.cameraPos.y;
+
+                this.context_entities.rotate(ship.orientation * Math.PI / 180);
+                this.context_entities.fillRect(ship.pos.x, ship.pos.y, 10, 5);
+                // var x2 = ship.pos.x + 100 * Math.cos(ship.orientation * Math.PI / 180),
+                //     y2 = ship.pos.y + 100 * Math.sin(ship.orientation * Math.PI / 180);
+
+                // this.context_entities.moveTo(ship.pos.x, ship.pos.y);
+                // this.context_entities.lineTo(x2, y2);
+                // this.context_entities.lineWidth = 10;
+                // this.context_entities.stroke();
+                this.context_entities.restore();
             }
 
             this.context_entities.fillStyle = "yellow";
-            for(let i = 0; i<this.game.shells.length; i++) {
+            for (let i = 0; i < this.game.shells.length; i++) {
                 const shell = this.game.ships[i];
                 this.context_entities.beginPath();
                 const pX = shell.pos.x - this.cameraPos.x;
@@ -224,23 +233,23 @@ export default class Renderer {
         this.debug.append("zoom   : " + this.currentZoom + "<br>");
 
         let myShip;
-        for(let i = 0; i<this.game.ships.length; i++) {
+        for (let i = 0; i < this.game.ships.length; i++) {
             let ship = this.game.ships[i];
-            if(ship.owner === this.game.socket.id) {
+            if (ship.owner === this.game.socket.id) {
                 myShip = ship;
             }
         }
 
-        if(myShip) {
+        if (myShip) {
             this.debug.append("pos.x   : " + myShip.pos.x + "<br>");
             this.debug.append("pos.y   : " + myShip.pos.y + "<br>");
             this.debug.append("orientation   : " + myShip.orientation + "<br>");
         }
-        if(this.game.shells[0]) {
+        if (this.game.shells[0]) {
             this.debug.append("shell.x   : " + this.game.shells[0].pos.x + "<br>");
             this.debug.append("shell.y   : " + this.game.shells[0].pos.y + "<br>");
             this.debug.append("shell.z   : " + this.game.shells[0].pos.z + "<br>");
-        }       
+        }
         this.debug.append("speed   : " + this.game.speed + "<br>");
         this.debug.append("speed   : " + this.game.speed + "<br>");
         this.debug.append("rudder   : " + this.game.rudderPosition + "<br>");
@@ -265,25 +274,25 @@ export default class Renderer {
         //Limit the zoomlevel to a relative max/min
         // if ((!(this.canvasWidth / (this.currentZoom * factor) > this.game.worldSize) && !(this.canvasHeight / (this.currentZoom * factor) > this.game.worldSize)) &&
         //     (!(this.canvasWidth / (this.currentZoom * factor) < this.canvasWidth / 40) && !(this.canvasHeight / (this.currentZoom * factor) < this.canvasHeight / 40))) {
-            this.currentZoom *= factor;
-            this.drawWidth = Math.floor(this.canvasWidth / this.currentZoom);
-            this.drawHeight = Math.floor(this.canvasHeight / this.currentZoom);
-            this.deadzone.x = this.drawWidth / 2 - (50 / this.currentZoom);
-            this.deadzone.y = this.drawHeight / 2 - (50 / this.currentZoom);
-            // if (this.context_map) {
-            //     this.context_map.scale(factor, factor);
-            // }
-            // if (this.context_fow) {
-            //     this.context_fow.scale(factor, factor);
-            // }
+        this.currentZoom *= factor;
+        this.drawWidth = Math.floor(this.canvasWidth / this.currentZoom);
+        this.drawHeight = Math.floor(this.canvasHeight / this.currentZoom);
+        this.deadzone.x = this.drawWidth / 2 - (50 / this.currentZoom);
+        this.deadzone.y = this.drawHeight / 2 - (50 / this.currentZoom);
+        // if (this.context_map) {
+        //     this.context_map.scale(factor, factor);
+        // }
+        // if (this.context_fow) {
+        //     this.context_fow.scale(factor, factor);
+        // }
 
-            if (this.context_entities) {
-                this.context_entities.scale(factor, factor);
-            }
+        if (this.context_entities) {
+            this.context_entities.scale(factor, factor);
+        }
 
-            this.shouldRedrawMap = true;
-            // this.camera.pos.x += ((this.input.posCursorCanvas.x) * factor);
-            // this.camera.pos.y += ((this.input.posCursorCanvas.y) * factor);
+        this.shouldRedrawMap = true;
+        // this.camera.pos.x += ((this.input.posCursorCanvas.x) * factor);
+        // this.camera.pos.y += ((this.input.posCursorCanvas.y) * factor);
         // }
     }
 

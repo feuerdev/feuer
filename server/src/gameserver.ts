@@ -99,7 +99,7 @@ export default class GameServer implements PlayerDelegate {
       ship.rudderAngleActual += (ship.rudderAngleRequested - ship.rudderAngleActual) * ship.turnSpeed;
       ship.rudderAngleActual = Util.clamp(ship.rudderAngleActual, -90, 90);
 
-      ship.orientation += ship.rudderAngleActual * ship.turnSpeed * ship.speed_actual;      
+      ship.orientation += ship.rudderAngleActual * ship.turnSpeed; //* ship.speed_actual;      
       ship.orientation = Util.mod(ship.orientation, 360);
 
       ship.pos.x += Math.cos(Util.scale(ship.orientation, 0, 360, 0, Math.PI*2)) * ship.speed_actual;
