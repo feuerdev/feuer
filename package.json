@@ -11,6 +11,14 @@
     "browserify": "^16.2.2",
     "typescript": "^2.9.2"
   },
+  "scripts": {
+    "heroku": "npm run deploy && node server/src/main heroku",
+    "start": "npm run deploy && npm run launch",
+    "launch": "node server/src/main",
+    "deploy": "npm run tsc && npm run browserify",
+    "browserify": "browserify client/js/main.js -o client/bin/bundle.js --debug",
+    "tsc": "node_modules/.bin/tsc.cmd -p tsconfig_deploy.json"
+  },
   "dependencies": {
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
