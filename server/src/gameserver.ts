@@ -11,6 +11,7 @@ import Shell from "./shell";
 import Ship from "./ship";
 import Gun from "./gun";
 import Vector3 from "./util/vector3";
+import * as Util from "./util/util";
 
 const GRAVITY: Vector3 = new Vector3(0,0,-0.1);
 
@@ -81,17 +82,31 @@ export default class GameServer implements PlayerDelegate {
     this.run();
   }
 
+
+  
+
+  
+
   //Loops
   update(delta) {
     for(let i = 0; i < this.players.length; i++) {
       const player: Player = this.players[i];
       
       const ship: Ship = player.ship;
-      ship.rudderAngleActual += (ship.rudderAngleRequested - ship.rudderAngleActual) * ship.turnSpeed;
+
       ship.speed_actual += (ship.speed_requested - ship.speed_actual) * ship.acceleration;
-      ship.orientation += ship.rudderAngleActual * ship.turnSpeed;
-      ship.pos.x += Math.sin(ship.orientation) * ship.speed_actual;
-      ship.pos.y += Math.cos(ship.orientation) * ship.speed_actual;
+
+      ship.rudderAngleActual += (ship.rudderAngleRequested - ship.rudderAngleActual) * ship.turnSpeed;
+      ship.rudderAngleActual = Util.clamp(ship.rudderAngleActual, -90, 90);
+
+      ship.orientation += ship.rudderAngleActual * ship.turnSpeed * ship.speed_actual;      
+      ship.orientation = Util.mod(ship.orientation, 360);
+
+      ship.pos.x += Math.cos(Util.scale(ship.orientation, 0, 360, 0, Math.PI*2)) * ship.speed_actual;
+      ship.pos.y += Math.sin(Util.scale(ship.orientation, 0, 360, 0, Math.PI*2)) * ship.speed_actual;
+
+      ship.pos.x = Util.clamp(ship.pos.x,0,1860);
+      ship.pos.y = Util.clamp(ship.pos.y,0,850);
 
       const gun: Gun = ship.gun;
       gun.angleHorizontalActual += (gun.angleHorizontalRequested - gun.angleHorizontalActual) * gun.turnspeed; 
@@ -115,8 +130,8 @@ export default class GameServer implements PlayerDelegate {
   updateNet(delta) {
     for(let i = 0; i < this.players.length; i++) {
       const player: Player = this.players[i];
-      player.socket.emit("ships", this.ships);
-      player.socket.emit("shells", this.shells);
+      player.socket.emit("gamestate ships", this.ships);
+      player.socket.emit("gamestate shells", this.shells);
     }
   }
 
