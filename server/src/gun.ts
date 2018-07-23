@@ -5,6 +5,6 @@ export default class Gun {
   public angleHorizontalRequested: number = 0;
   public angleVerticalRequested: number = 0;
   public turnspeed: number = 0.1;
-  public velocity: number = 100;
+  public velocity: number = 50;
 
 }
