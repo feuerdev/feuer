@@ -1,10 +1,10 @@
 - spawns implementieren
 - besserer clientseitiger input
 - teams implementieren
-- spielfeldgröße festlegen
-done - feuerrate begrenzen
 - shells besser zeichnen
 - keyboard shortcuts anzeigen
 - Korrekte hit detection
 - Indikator wo sich der requested gun angle befindet
+done - spielfeldgröße festlegen
 done - "Schatten" soll kleiner werden je höher das projektil fliegt
+done - feuerrate begrenzen
