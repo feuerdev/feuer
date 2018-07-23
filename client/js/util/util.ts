@@ -19,6 +19,9 @@ export const mod = function(n, m) {
     return ((n % m) + m) % m;
 };
 
+export function degreeToRadians(angle:number):number {
+    return angle * Math.PI / 180
+}
 
 /**
  * Placeholder function for debugging purposes

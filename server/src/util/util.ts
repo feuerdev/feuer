@@ -9,3 +9,7 @@ export function clamp(value:number, min: number, max: number): number {
 export function mod(value: number, divider:number): number {
   return ((value%divider)+divider)%divider;
 }
+
+export function degreeToRadians(angle:number):number {
+  return angle * Math.PI / 180
+}
