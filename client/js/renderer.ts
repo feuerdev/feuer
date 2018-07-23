@@ -129,27 +129,27 @@ export default class Renderer {
 
             for (let i = 0; i < this.game.ships.length; i++) {
                 this.context_entities.save();
-                
+
                 this.context_entities.translate(-this.cameraPos.x, -this.cameraPos.y); //TODO: kann das nicht schon vorher an eine andere Stelle?
                 // const pX = ship.pos.x - this.cameraPos.x;
                 // const pY = ship.pos.y - this.cameraPos.y;
 
                 const ship = this.game.ships[i];
-                const isMine:boolean = ship.owner === this.game.socket.id;
+                const isMine: boolean = ship.owner === this.game.socket.id;
 
                 //draw the ship
                 const width: number = ship.width; //TODO: width und height vom Server übernehmen
                 const height: number = ship.height;
-                const rad:number = Util.degreeToRadians(ship.orientation);
+                const rad: number = Util.degreeToRadians(ship.orientation);
 
-                if(ship.teamId === 0) {                    
+                if (ship.teamId === 0) {
                     this.context_entities.fillStyle = isMine ? "pink" : "red";
-                } else if(ship.teamId === 1) {
+                } else if (ship.teamId === 1) {
                     this.context_entities.fillStyle = isMine ? "green" : "darkgreen";
                 }
 
                 this.context_entities.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);
-                this.context_entities.rotate(rad); 
+                this.context_entities.rotate(rad);
                 this.context_entities.fillRect(width / 2 * (-1), height / 2 * (-1), width, height);
 
                 //draw the gun
@@ -161,20 +161,21 @@ export default class Renderer {
                 this.context_entities.rotate(radGun);
                 this.context_entities.fillRect(widthGun + offsetGun / 2 * (-1), heightGun / 2 * (-1), widthGun, heightGun);
 
-                //draw the helper line
-                const lengthHelper: number = 900;
-                const thicknessHelper: number = 2;
-                const offsetHelper: number = 30;
-                this.context_entities.beginPath();
-                this.context_entities.setLineDash([5, 15]);
-                this.context_entities.strokeStyle = "yellow";
-                this.context_entities.lineWidth = thicknessHelper;
-                this.context_entities.moveTo(offsetHelper, 0);
-                this.context_entities.lineTo(lengthHelper, 0);
-                // this.context_entities.lineTo(0 + lengthHelper * Math.cos(radGun), 0 + lengthHelper * Math.sin(radGun));
-                this.context_entities.stroke();
-                this.context_entities.closePath();
-
+                if (isMine) {
+                    //draw the helper line
+                    const lengthHelper: number = 900;
+                    const thicknessHelper: number = 2;
+                    const offsetHelper: number = 30;
+                    this.context_entities.beginPath();
+                    this.context_entities.setLineDash([5, 15]);
+                    this.context_entities.strokeStyle = "yellow";
+                    this.context_entities.lineWidth = thicknessHelper;
+                    this.context_entities.moveTo(offsetHelper, 0);
+                    this.context_entities.lineTo(lengthHelper, 0);
+                    // this.context_entities.lineTo(0 + lengthHelper * Math.cos(radGun), 0 + lengthHelper * Math.sin(radGun));
+                    this.context_entities.stroke();
+                    this.context_entities.closePath();
+                }
                 //reset the canvas  
                 this.context_entities.restore();
             }
@@ -186,12 +187,12 @@ export default class Renderer {
                 this.context_entities.fillStyle = "yellow";
                 const pX = shell.pos.x - this.cameraPos.x;
                 const pY = shell.pos.y - this.cameraPos.y;
-                const pYZ = shell.pos.y-shell.pos.z - this.cameraPos.y;
+                const pYZ = shell.pos.y - shell.pos.z - this.cameraPos.y;
                 this.context_entities.arc(pX, pYZ, 3, 0, 2 * Math.PI);
                 this.context_entities.fill();
                 this.context_entities.closePath();
                 //"Schatten" zeichnen
-                const shadowSize = Math.max(3 *  (1 - shell.pos.z / 500), 0.5); //Diese Zeile kommt von Louis
+                const shadowSize = Math.max(3 * (1 - shell.pos.z / 500), 0.5); //Diese Zeile kommt von Louis
                 this.context_entities.beginPath();
                 this.context_entities.fillStyle = "gray";
                 this.context_entities.arc(pX, pY, shadowSize, 0, 2 * Math.PI);
