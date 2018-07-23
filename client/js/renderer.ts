@@ -173,14 +173,21 @@ export default class Renderer {
                 this.context_entities.restore();
             }
 
-            this.context_entities.fillStyle = "yellow";
             for (let i = 0; i < this.game.shells.length; i++) {
                 const shell = this.game.shells[i];
                 this.context_entities.beginPath();
+                this.context_entities.fillStyle = "yellow";
                 const pX = shell.pos.x - this.cameraPos.x;
                 const pY = shell.pos.y - this.cameraPos.y;
-                this.context_entities.arc(pX, pY, 10, 0, 2 * Math.PI);
+                const pYZ = shell.pos.y-shell.pos.z - this.cameraPos.y;
+                this.context_entities.arc(pX, pYZ, 3, 0, 2 * Math.PI);
                 this.context_entities.fill();
+                this.context_entities.closePath();
+                this.context_entities.beginPath();
+                this.context_entities.fillStyle = "gray";
+                this.context_entities.arc(pX, pY, 4, 0, 2 * Math.PI);
+                this.context_entities.fill();
+                this.context_entities.closePath();
             }
         }
     }
