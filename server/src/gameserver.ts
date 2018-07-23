@@ -48,10 +48,10 @@ export default class GameServer implements PlayerDelegate {
     this.io = socketio(httpServer, { transports: config.transports });
     this.io.on("connection", (socket) => {
       const newPlayer: Player = new Player(this, socket);
-      newPlayer.teamId = lastTeamId;      
       newPlayer.ship = new Ship(socket.id);
-      newPlayer.ship.pos = this.requestSpawnPosition(newPlayer.teamId);
-      newPlayer.ship.orientation = this.requestSpawnOrientation(newPlayer.teamId);
+      newPlayer.ship.teamId = lastTeamId;      
+      newPlayer.ship.pos = this.requestSpawnPosition(newPlayer.ship.teamId);
+      newPlayer.ship.orientation = this.requestSpawnOrientation(newPlayer.ship.teamId);
 
       lastTeamId = lastTeamId === 0 ? 1 : 0;
       

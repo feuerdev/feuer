@@ -28,6 +28,7 @@ export default class Game {
 
     public mapWidth:number;
     public mapHeight:number;
+    public teamId:number;
 
     public rudderPosition: number = 0;
     public speed: number = 0;
@@ -143,6 +144,7 @@ export default class Game {
         this.socket.on("gamestate shells", (data) => this.onGamestateShells(data));
         this.socket.on("info mapwidth", (data) => {this.mapWidth = data});
         this.socket.on("info mapheight", (data) => {this.mapHeight = data});
+        this.socket.on("info teamId", (data) => {this.teamId = data});
     }
 
     public run() {

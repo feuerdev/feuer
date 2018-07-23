@@ -9,6 +9,8 @@ export default class Ship {
     this.owner = owner;
   }
 
+  public teamId:number;
+
   public width:number = 20;
   public height:number = 10;
 

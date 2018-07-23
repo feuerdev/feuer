@@ -141,7 +141,13 @@ export default class Renderer {
                 const width: number = ship.width; //TODO: width und height vom Server übernehmen
                 const height: number = ship.height;
                 const rad:number = Util.degreeToRadians(ship.orientation);
-                this.context_entities.fillStyle = isMine ? "pink" : "red";
+
+                if(ship.teamId === 0) {                    
+                    this.context_entities.fillStyle = isMine ? "pink" : "red";
+                } else if(ship.teamId === 1) {
+                    this.context_entities.fillStyle = isMine ? "green" : "darkgreen";
+                }
+
                 this.context_entities.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);
                 this.context_entities.rotate(rad); 
                 this.context_entities.fillRect(width / 2 * (-1), height / 2 * (-1), width, height);
