@@ -112,14 +112,12 @@ export default class GameServer implements PlayerDelegate {
       // ship.pos.y = Util.clamp(ship.pos.y,0,850);
 
       const gun: Gun = ship.gun;
-      if (gun.angleHorizontalRequested > gun.angleHorizontalActual) {
-        gun.angleHorizontalActual += gun.turnspeed * GUNHORIZONTALFACTOR;
-      } else {
-        gun.angleHorizontalActual -= gun.turnspeed * GUNHORIZONTALFACTOR;
-      }
+
+      gun.angleHorizontalActual = gun.angleHorizontalRequested;
       // gun.angleHorizontalActual += (gun.angleHorizontalRequested - gun.angleHorizontalActual) * gun.turnspeed * GUNHORIZONTALFACTOR; 
       gun.angleHorizontalActual = Util.clamp(gun.angleHorizontalActual, gun.minAngleHorizontal, gun.maxAngleHorizontal);
-      gun.angleVerticalActual += (gun.angleVerticalRequested - gun.angleVerticalActual) * gun.turnspeed * GUNVERTICALFACTOR;
+      gun.angleVerticalActual = gun.angleVerticalRequested;
+      // gun.angleVerticalActual += (gun.angleVerticalRequested - gun.angleVerticalActual) * gun.turnspeed * GUNVERTICALFACTOR;
       gun.angleVerticalActual = Util.clamp(gun.angleVerticalActual, gun.minAngleVertical, gun.maxAngleVertical);
     }
 
