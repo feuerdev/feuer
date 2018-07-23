@@ -15,7 +15,7 @@ export default class Ship {
   public speed_min:number = -10;
   public speed_max:number = 20;
 
-  public pos:Vector2 = new Vector2();
+  public pos:Vector2;
   public orientation: number = 0;
 
   public rudderAngleActual: number = 0;

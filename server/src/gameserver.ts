@@ -12,6 +12,7 @@ import Ship from "./ship";
 import Gun from "./gun";
 import Vector3 from "./util/vector3";
 import * as Util from "./util/util";
+import Vector2 from "./util/vector2";
 
 const GRAVITY: Vector3 = new Vector3(0, 0, -0.01);
 const SPEEDFACTOR: number = 0.01;
@@ -22,6 +23,7 @@ const GUNHORIZONTALFACTOR: number = 0.1;
 const GUNVERTICALFACTOR: number = 0.01;
 
 export default class GameServer implements PlayerDelegate {
+  
 
   public io: socketio.Server;
 
@@ -30,7 +32,7 @@ export default class GameServer implements PlayerDelegate {
   private ships: Ship[] = [];
   private isRunning = false;
 
-  private mapWidth:number = 3000;
+  private mapWidth:number = 1880;
   private mapHeight:number = 1000;
 
   //#region Gameloop Variables
@@ -42,14 +44,22 @@ export default class GameServer implements PlayerDelegate {
   //#endregion
 
   listen(httpServer: Server) {
+    let lastTeamId = 0;
     this.io = socketio(httpServer, { transports: config.transports });
     this.io.on("connection", (socket) => {
-      const newPlayer: Player = new Player(socket);
-      newPlayer.delegate = this;
+      const newPlayer: Player = new Player(this, socket);
+      newPlayer.teamId = lastTeamId;      
+      newPlayer.ship = new Ship(socket.id);
+      newPlayer.ship.pos = this.requestSpawnPosition(newPlayer.teamId);
+      newPlayer.ship.orientation = this.requestSpawnOrientation(newPlayer.teamId);
+
+      lastTeamId = lastTeamId === 0 ? 1 : 0;
+      
       this.players.push(newPlayer);
       this.ships.push(newPlayer.ship);
-
-      
+      socket.emit("info teamId", newPlayer.teamId);
+      socket.emit("info mapwidth", this.mapWidth);
+      socket.emit("info mapheight", this.mapHeight);
       Log.info("Player Connected: " + this.players);
     });
   }
@@ -154,6 +164,33 @@ export default class GameServer implements PlayerDelegate {
     }
   }
 
+  requestSpawnOrientation(teamId:number): number {
+    if(teamId === 0) {
+      return 0;
+    } else if(teamId === 1) {
+      return 180;
+    } else {
+      throw Error("invalid teamId given");
+    }
+  }
+
+  requestSpawnPosition(teamId: number):Vector2 {
+    const margin = 50;
+    const spawnboxWidth = 100;
+    const spawnboxHeight = this.mapHeight;  
+    if(teamId === 0) {
+      const x = Util.scale(Math.random(), 0, 1, margin,margin+spawnboxWidth); 
+      const y = Util.scale(Math.random(), 0, 1, margin,spawnboxHeight-margin);
+      return new Vector2(x,y);
+    } else if(teamId === 1) {
+      const x = Util.scale(Math.random(), 0, 1, this.mapWidth - (margin + spawnboxWidth) ,this.mapWidth - margin); 
+      const y = Util.scale(Math.random(), 0, 1, margin,spawnboxHeight-margin);
+      return new Vector2(x,y);
+    } else {
+      throw Error("invalid teamId given");
+    }
+  }
+
   //#region Playerdelegate
   onPlayerDisconnected(player: Player) {
     const i = this.players.indexOf(player);
@@ -167,6 +204,6 @@ export default class GameServer implements PlayerDelegate {
       player.ship.gun.timeSinceLastShot = 0;
       this.shells.push(shell);
     }
-  }
+  }  
   //#endregion
 };

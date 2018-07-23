@@ -2,6 +2,7 @@ import { Socket } from "../../node_modules/@types/socket.io";
 import Ship from "./ship";
 import Shell from "./shell";
 import Vector3 from "./util/vector3";
+import Vector2 from "./util/vector2";
 
 export interface PlayerDelegate {
   onPlayerDisconnected(player: Player);
@@ -12,11 +13,13 @@ export default class Player {
   public socket: Socket;
   public delegate: PlayerDelegate;
 
+  public teamId: number;
+
   public ship: Ship;
 
-  constructor(socket: Socket) {
+  constructor(delegate:PlayerDelegate, socket: Socket) {
     this.socket = socket;
-    this.ship = new Ship(this.socket.id);
+    this.delegate = delegate;
     socket.on("disconnect", () => this.delegate.onPlayerDisconnected(this));
     socket.on("input speed", (data) => this.onShipSpeed(data));
     socket.on("input gun horizontal", (data) => this.onGunAngleHorizontal(data));
