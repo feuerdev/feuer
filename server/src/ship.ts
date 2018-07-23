@@ -9,6 +9,9 @@ export default class Ship {
     this.owner = owner;
   }
 
+  public width:number = 20;
+  public height:number = 10;
+
   public speed_min:number = -10;
   public speed_max:number = 20;
 

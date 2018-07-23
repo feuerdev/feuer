@@ -138,8 +138,8 @@ export default class Renderer {
                 const isMine:boolean = ship.owner === this.game.socket.id;
 
                 //draw the ship
-                const width: number = 20; //TODO: width und height vom Server übernehmen
-                const height: number = 10;
+                const width: number = ship.width; //TODO: width und height vom Server übernehmen
+                const height: number = ship.height;
                 const rad:number = Util.degreeToRadians(ship.orientation);
                 this.context_entities.fillStyle = isMine ? "pink" : "red";
                 this.context_entities.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);

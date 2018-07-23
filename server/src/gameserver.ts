@@ -13,7 +13,13 @@ import Gun from "./gun";
 import Vector3 from "./util/vector3";
 import * as Util from "./util/util";
 
-const GRAVITY: Vector3 = new Vector3(0,0,-0.01);
+const GRAVITY: Vector3 = new Vector3(0, 0, -0.01);
+const SPEEDFACTOR: number = 0.01;
+const ACCELFACTOR: number = 0.1;
+const RUDDERFACTOR: number = 0.4;
+const ORIENTATIONFACTOR: number = 0.1;
+const GUNHORIZONTALFACTOR: number = 0.1;
+const GUNVERTICALFACTOR: number = 0.01;
 
 export default class GameServer implements PlayerDelegate {
 
@@ -84,17 +90,11 @@ export default class GameServer implements PlayerDelegate {
 
   //Loops
   update(delta) {
-    for(let i = 0; i < this.players.length; i++) {
+    for (let i = 0; i < this.players.length; i++) {
       const player: Player = this.players[i];
-      
+
       const ship: Ship = player.ship;
-      
-      const SPEEDFACTOR = 0.01;
-      const ACCELFACTOR = 0.1;
-      const RUDDERFACTOR = 0.4;
-      const ORIENTATIONFACTOR = 0.1;
-      const GUNHORIZONTALFACTOR = 0.1;
-      const GUNVERTICALFACTOR = 0.01;
+
 
       ship.speed_actual += (ship.speed_requested - ship.speed_actual) * ship.acceleration * ACCELFACTOR;
       ship.speed_actual = Util.clamp(ship.speed_actual, ship.speed_min, ship.speed_max);
@@ -102,17 +102,17 @@ export default class GameServer implements PlayerDelegate {
       ship.rudderAngleActual += (ship.rudderAngleRequested - ship.rudderAngleActual) * RUDDERFACTOR;
       ship.rudderAngleActual = Util.clamp(ship.rudderAngleActual, -90, 90);
 
-      ship.orientation += ship.rudderAngleActual * ship.turnSpeed * ship.speed_actual * ORIENTATIONFACTOR;      
+      ship.orientation += ship.rudderAngleActual * ship.turnSpeed * ship.speed_actual * ORIENTATIONFACTOR;
       ship.orientation = Util.mod(ship.orientation, 360);
 
-      ship.pos.x += Math.cos(Util.scale(ship.orientation, 0, 360, 0, Math.PI*2)) * ship.speed_actual * SPEEDFACTOR;
-      ship.pos.y += Math.sin(Util.scale(ship.orientation, 0, 360, 0, Math.PI*2)) * ship.speed_actual * SPEEDFACTOR;
+      ship.pos.x += Math.cos(Util.scale(ship.orientation, 0, 360, 0, Math.PI * 2)) * ship.speed_actual * SPEEDFACTOR;
+      ship.pos.y += Math.sin(Util.scale(ship.orientation, 0, 360, 0, Math.PI * 2)) * ship.speed_actual * SPEEDFACTOR;
 
       // ship.pos.x = Util.clamp(ship.pos.x,0,1860);
       // ship.pos.y = Util.clamp(ship.pos.y,0,850);
 
       const gun: Gun = ship.gun;
-      if(gun.angleHorizontalRequested > gun.angleHorizontalActual) {
+      if (gun.angleHorizontalRequested > gun.angleHorizontalActual) {
         gun.angleHorizontalActual += gun.turnspeed * GUNHORIZONTALFACTOR;
       } else {
         gun.angleHorizontalActual -= gun.turnspeed * GUNHORIZONTALFACTOR;
@@ -123,22 +123,27 @@ export default class GameServer implements PlayerDelegate {
       gun.angleVerticalActual = Util.clamp(gun.angleVerticalActual, gun.minAngleVertical, gun.maxAngleVertical);
     }
 
-    for(let i = this.shells.length-1; i >= 0 ; i--) { //iterate backwards so its no problem to remove a shell while looping
+    for (let i = this.shells.length - 1; i >= 0; i--) { //iterate backwards so its no problem to remove a shell while looping
       const shell: Shell = this.shells[i];
 
       shell.velocity.add(GRAVITY);
       // shell.velocity.add(wind);
       shell.pos.add(shell.velocity);
 
-      if(shell.pos.z < 0) {
-        //TODO: Check for hit
+      if (shell.pos.z < 0) {
+        this.players.forEach((player: Player) => {          
+            if ((Math.abs(shell.pos.x - player.ship.pos.x) <= shell.size + player.ship.width)
+              && (Math.abs(shell.pos.y - player.ship.pos.y) <= shell.size + player.ship.width)) {
+              player.socket.disconnect();
+            }
+        });
         this.shells.splice(i, 1);
       }
     }
   }
 
   updateNet(delta) {
-    for(let i = 0; i < this.players.length; i++) {
+    for (let i = 0; i < this.players.length; i++) {
       const player: Player = this.players[i];
       player.socket.emit("gamestate ships", this.ships);
       player.socket.emit("gamestate shells", this.shells);
