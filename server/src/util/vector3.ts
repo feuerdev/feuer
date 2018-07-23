@@ -1,3 +1,4 @@
+import * as Util from "./util";
 export default class Vector3 {
   public x: number = 0;
   public y: number = 0;
@@ -8,15 +9,17 @@ export default class Vector3 {
   constructor(p1: { x: number, y: number, z: number }, p2: { x: number, y: number, z: number }); //Constructor 3
   constructor(x: number, y: number, z: number);
   constructor(arg1?: { x: number, y: number, z: number } | number, arg2?: { x: number, y: number, z: number } | number, arg3?: number) {
-    if (arg1 && arg2 && arg3) {
+    if (typeof arg1 !== "undefined" && typeof arg2 !== "undefined" && typeof arg3 !== "undefined") {
       if(typeof arg1 === "number" && typeof arg2 === "number" && typeof arg3 === "number") {
         this.x = arg1;
         this.y = arg2;
         this.z = arg3;
       }
-    } else if(arg1 && arg2) {
+    } else if(typeof arg1 !== "undefined" && typeof arg2 !== "undefined") {
       if (typeof arg1 === "number" && typeof arg2 === "number") {
         //Constructor 2
+        arg1 = Util.degreeToRadians(arg1);
+        arg2 = Util.degreeToRadians(arg2);
         this.x = Math.cos(arg1) * Math.cos(arg2);
         this.y = Math.sin(arg1) * Math.cos(arg2);
         this.z = Math.sin(arg2);
