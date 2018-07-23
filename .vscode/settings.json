@@ -4,5 +4,6 @@
     "**/*.js.map": true,
     "client/js/*.js": true,
     "client/js/config/*.js": true,
+    "client/js/util/*.js": true,
   },
 }
