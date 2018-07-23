@@ -30,6 +30,9 @@ export default class GameServer implements PlayerDelegate {
   private ships: Ship[] = [];
   private isRunning = false;
 
+  private mapWidth:number = 3000;
+  private mapHeight:number = 1000;
+
   //#region Gameloop Variables
   private readonly delta = Math.round(1000 / config.updaterate);
   private readonly netrate = Math.round(1000 / config.netrate);
@@ -45,6 +48,8 @@ export default class GameServer implements PlayerDelegate {
       newPlayer.delegate = this;
       this.players.push(newPlayer);
       this.ships.push(newPlayer.ship);
+
+      
       Log.info("Player Connected: " + this.players);
     });
   }
@@ -108,8 +113,8 @@ export default class GameServer implements PlayerDelegate {
       ship.pos.x += Math.cos(Util.scale(ship.orientation, 0, 360, 0, Math.PI * 2)) * ship.speed_actual * SPEEDFACTOR;
       ship.pos.y += Math.sin(Util.scale(ship.orientation, 0, 360, 0, Math.PI * 2)) * ship.speed_actual * SPEEDFACTOR;
 
-      // ship.pos.x = Util.clamp(ship.pos.x,0,1860);
-      // ship.pos.y = Util.clamp(ship.pos.y,0,850);
+      ship.pos.x = Util.clamp(ship.pos.x,0,this.mapWidth);
+      ship.pos.y = Util.clamp(ship.pos.y,0,this.mapHeight);
 
       const gun: Gun = ship.gun;
 
@@ -119,6 +124,7 @@ export default class GameServer implements PlayerDelegate {
       gun.angleVerticalActual = gun.angleVerticalRequested;
       // gun.angleVerticalActual += (gun.angleVerticalRequested - gun.angleVerticalActual) * gun.turnspeed * GUNVERTICALFACTOR;
       gun.angleVerticalActual = Util.clamp(gun.angleVerticalActual, gun.minAngleVertical, gun.maxAngleVertical);
+      gun.timeSinceLastShot+=delta;
     }
 
     for (let i = this.shells.length - 1; i >= 0; i--) { //iterate backwards so its no problem to remove a shell while looping
@@ -157,7 +163,10 @@ export default class GameServer implements PlayerDelegate {
     Log.info("Player Disconnected: " + this.players);
   }
   onPlayerShot(player: Player, shell: any) {
-    this.shells.push(shell);
+    if(player.ship.gun.canShoot()) {
+      player.ship.gun.timeSinceLastShot = 0;
+      this.shells.push(shell);
+    }
   }
   //#endregion
 };
