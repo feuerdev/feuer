@@ -26,6 +26,9 @@ export default class Game {
     public myShip;
     public shells = [];
 
+    public mapWidth:number;
+    public mapHeight:number;
+
     public rudderPosition: number = 0;
     public speed: number = 0;
     public gunAngleVertical: number = 0;
@@ -138,6 +141,8 @@ export default class Game {
         this.socket.on("disconnect", () => this.onDisconnected);
         this.socket.on("gamestate ships", (data) => this.onGamestateShips(data));
         this.socket.on("gamestate shells", (data) => this.onGamestateShells(data));
+        this.socket.on("info mapwidth", (data) => {this.mapWidth = data});
+        this.socket.on("info mapheight", (data) => {this.mapHeight = data});
     }
 
     public run() {
