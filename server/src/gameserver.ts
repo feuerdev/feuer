@@ -113,7 +113,7 @@ export default class GameServer implements PlayerDelegate {
       gun.angleVerticalActual += (gun.angleVerticalRequested - gun.angleVerticalActual) * gun.turnspeed;
     }
 
-    for(let i = this.shells.length; i > 0 ; i--) { //iterate backwards so its no problem to remove a shell while looping
+    for(let i = this.shells.length-1; i >= 0 ; i--) { //iterate backwards so its no problem to remove a shell while looping
       const shell: Shell = this.shells[i];
 
       shell.velocity.add(GRAVITY);
@@ -144,7 +144,7 @@ export default class GameServer implements PlayerDelegate {
     Log.info("Player Disconnected: " + this.players);
   }
   onPlayerShot(player: Player, shell: any) {
-    this.shells.push[shell];
+    this.shells.push(shell);
   }
   //#endregion
 };
