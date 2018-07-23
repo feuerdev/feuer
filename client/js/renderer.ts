@@ -150,7 +150,7 @@ export default class Renderer {
                 const widthGun: number = 12; //TODO: width und height vom Server übernehmen
                 const heightGun: number = 2;
                 const offsetGun: number = 10;
-                const radGun = ship.gun.angleHorizontalActual * Math.PI / 180;
+                const radGun = Util.degreeToRadians(ship.gun.angleHorizontalActual);
                 this.context_entities.fillStyle = "black";
                 this.context_entities.rotate(radGun);
                 this.context_entities.fillRect(widthGun + offsetGun / 2 * (-1), heightGun / 2 * (-1), widthGun, heightGun);
