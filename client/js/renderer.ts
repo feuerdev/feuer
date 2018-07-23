@@ -196,8 +196,13 @@ export default class Renderer {
     }
 
     drawMap() {
-        // Clear Canvas
-        // this.context_map.clearRect(0, 0, this.drawWidth, this.drawHeight);
+        //Clear Canvas
+        this.context_entities.save();
+        // this.context_entities.translate(-this.cameraPos.x, -this.cameraPos.y); //TODO: kann das nicht schon vorher an eine andere Stelle?
+        this.context_map.clearRect(0, 0, this.drawWidth, this.drawHeight);
+        this.context_map.fillStyle = "darkblue";
+        this.context_map.fillRect(-this.cameraPos.x, -this.cameraPos.y, this.game.mapWidth, this.game.mapHeight);
+        this.context_entities.restore();
 
         // //Draw Tiles
         // const minX: number = Math.floor(this.cameraPos.x / this.game.tileSize);
@@ -310,12 +315,12 @@ export default class Renderer {
         this.drawHeight = Math.floor(this.canvasHeight / this.currentZoom);
         this.deadzone.x = this.drawWidth / 2 - (50 / this.currentZoom);
         this.deadzone.y = this.drawHeight / 2 - (50 / this.currentZoom);
-        // if (this.context_map) {
-        //     this.context_map.scale(factor, factor);
-        // }
-        // if (this.context_fow) {
-        //     this.context_fow.scale(factor, factor);
-        // }
+        if (this.context_map) {
+            this.context_map.scale(factor, factor);
+        }
+        if (this.context_fow) {
+            this.context_fow.scale(factor, factor);
+        }
 
         if (this.context_entities) {
             this.context_entities.scale(factor, factor);

@@ -17,9 +17,9 @@ html {
     bottom: 20px;
 }
 
-#canvas-map {
+/* #canvas-map {
     background: darkblue;
-}
+} */
 
 canvas {
     position: absolute;
