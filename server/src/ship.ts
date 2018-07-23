@@ -9,12 +9,15 @@ export default class Ship {
     this.owner = owner;
   }
 
+  public speed_min:number = -10;
+  public speed_max:number = 20;
+
   public pos:Vector2 = new Vector2();
   public orientation: number = 0;
 
   public rudderAngleActual: number = 0;
   public rudderAngleRequested: number = 0;
-  public turnSpeed: number = 0.3;
+  public turnSpeed: number = 0.001;
 
   public speed_actual:number = 0;
   public speed_requested: number = 0;
