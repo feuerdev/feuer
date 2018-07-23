@@ -175,6 +175,7 @@ export default class Renderer {
 
             for (let i = 0; i < this.game.shells.length; i++) {
                 const shell = this.game.shells[i];
+                //Shell zeichnen
                 this.context_entities.beginPath();
                 this.context_entities.fillStyle = "yellow";
                 const pX = shell.pos.x - this.cameraPos.x;
@@ -183,9 +184,11 @@ export default class Renderer {
                 this.context_entities.arc(pX, pYZ, 3, 0, 2 * Math.PI);
                 this.context_entities.fill();
                 this.context_entities.closePath();
+                //"Schatten" zeichnen
+                const shadowSize = Math.max(3 *  (1 - shell.pos.z / 500), 0.5); //Diese Zeile kommt von Louis
                 this.context_entities.beginPath();
                 this.context_entities.fillStyle = "gray";
-                this.context_entities.arc(pX, pY, 4, 0, 2 * Math.PI);
+                this.context_entities.arc(pX, pY, shadowSize, 0, 2 * Math.PI);
                 this.context_entities.fill();
                 this.context_entities.closePath();
             }
