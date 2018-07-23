@@ -1,4 +1,8 @@
+
+
 export default class Gun {
+
+  readonly FIRERATE:number = 1000;
 
   public angleHorizontalActual: number = 0;
   public angleVerticalActual: number = 0;
@@ -10,4 +14,10 @@ export default class Gun {
   public maxAngleVertical: number = 80;
   public minAngleHorizontal: number = -115;
   public maxAngleHorizontal: number = 115;
+  
+  public timeSinceLastShot: number = 0;
+
+  public canShoot():boolean {
+    return this.timeSinceLastShot > this.FIRERATE;
+  }
 }
