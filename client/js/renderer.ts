@@ -126,32 +126,48 @@ export default class Renderer {
     drawEntities() {
         if (this.canvas_entities.length > 0) {
             this.context_entities.clearRect(0, 0, this.drawWidth, this.drawHeight);
-            
+
             for (let i = 0; i < this.game.ships.length; i++) {
                 this.context_entities.save();
-
-                const ship = this.game.ships[i];
-                if (ship.owner === this.game.socket.id) {
-                    this.context_entities.fillStyle = "pink";
-                } else {
-                    this.context_entities.fillStyle = "red";
-                }
-                this.context_entities.translate(-this.cameraPos.x, -this.cameraPos.y);
+                
+                this.context_entities.translate(-this.cameraPos.x, -this.cameraPos.y); //TODO: kann das nicht schon vorher an eine andere Stelle?
                 // const pX = ship.pos.x - this.cameraPos.x;
                 // const pY = ship.pos.y - this.cameraPos.y;
 
-                const width:number = 20;
-                const height:number = 10;
-                const rad = ship.orientation * Math.PI / 180;
+                const ship = this.game.ships[i];
+                const isMine:boolean = ship.owner === this.game.socket.id;
 
-                //Set the origin to the center of the image
+                //draw the ship
+                const width: number = 20; //TODO: width und height vom Server übernehmen
+                const height: number = 10;
+                const rad:number = Util.degreeToRadians(ship.orientation);
+                this.context_entities.fillStyle = isMine ? "pink" : "red";
                 this.context_entities.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);
+                this.context_entities.rotate(rad); 
+                this.context_entities.fillRect(width / 2 * (-1), height / 2 * (-1), width, height);
 
-                //Rotate the canvas around the origin
-                this.context_entities.rotate(rad);
+                //draw the gun
+                const widthGun: number = 12; //TODO: width und height vom Server übernehmen
+                const heightGun: number = 2;
+                const offsetGun: number = 10;
+                const radGun = ship.gun.angleHorizontalActual * Math.PI / 180;
+                this.context_entities.fillStyle = "black";
+                this.context_entities.rotate(radGun);
+                this.context_entities.fillRect(widthGun + offsetGun / 2 * (-1), heightGun / 2 * (-1), widthGun, heightGun);
 
-                //draw the image    
-                this.context_entities.fillRect(width / 2 * (-1),height / 2 * (-1),width,height);
+                //draw the helper line
+                const lengthHelper: number = 900;
+                const thicknessHelper: number = 2;
+                const offsetHelper: number = 30;
+                this.context_entities.beginPath();
+                this.context_entities.setLineDash([5, 15]);
+                this.context_entities.strokeStyle = "yellow";
+                this.context_entities.lineWidth = thicknessHelper;
+                this.context_entities.moveTo(offsetHelper, 0);
+                this.context_entities.lineTo(lengthHelper, 0);
+                // this.context_entities.lineTo(0 + lengthHelper * Math.cos(radGun), 0 + lengthHelper * Math.sin(radGun));
+                this.context_entities.stroke();
+                this.context_entities.closePath();
 
                 //reset the canvas  
                 this.context_entities.restore();
@@ -159,11 +175,11 @@ export default class Renderer {
 
             this.context_entities.fillStyle = "yellow";
             for (let i = 0; i < this.game.shells.length; i++) {
-                const shell = this.game.ships[i];
+                const shell = this.game.shells[i];
                 this.context_entities.beginPath();
                 const pX = shell.pos.x - this.cameraPos.x;
                 const pY = shell.pos.y - this.cameraPos.y;
-                this.context_entities.arc(pX, pY, 100, 0, 2 * Math.PI);
+                this.context_entities.arc(pX, pY, 10, 0, 2 * Math.PI);
                 this.context_entities.fill();
             }
         }
