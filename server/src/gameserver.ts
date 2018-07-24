@@ -37,7 +37,9 @@ export default class GameServer implements PlayerDelegate {
 
   //#region Gameloop Variables
   private readonly delta = Math.round(1000 / config.updaterate);
+  private readonly defaultDelta = Math.round(1000 / 60);
   private readonly netrate = Math.round(1000 / config.netrate);
+  private readonly defaultNetrate = Math.round(1000 / 30);
   private lastTime = Date.now();
   private accumulator = 0;
   private timeSinceLastUpdate = 0;
@@ -76,12 +78,12 @@ export default class GameServer implements PlayerDelegate {
       this.accumulator += frameTime;
 
       while (this.accumulator > this.delta) {
-        this.update(this.delta);
+        this.update(this.delta / this.defaultDelta);
         this.accumulator -= this.delta;
       }
 
       if (this.timeSinceLastUpdate > this.netrate) {
-        this.updateNet(this.timeSinceLastUpdate);
+        this.updateNet(this.timeSinceLastUpdate / this.defaultNetrate);
         this.timeSinceLastUpdate = 0;
       }
 
@@ -110,18 +112,17 @@ export default class GameServer implements PlayerDelegate {
 
       const ship: Ship = player.ship;
 
-
-      ship.speed_actual += (ship.speed_requested - ship.speed_actual) * ship.acceleration * ACCELFACTOR;
+      ship.speed_actual += (ship.speed_requested - ship.speed_actual) * ship.acceleration * ACCELFACTOR * delta;
       ship.speed_actual = Util.clamp(ship.speed_actual, ship.speed_min, ship.speed_max);
 
-      ship.rudderAngleActual += (ship.rudderAngleRequested - ship.rudderAngleActual) * RUDDERFACTOR;
+      ship.rudderAngleActual += (ship.rudderAngleRequested - ship.rudderAngleActual) * RUDDERFACTOR * delta;
       ship.rudderAngleActual = Util.clamp(ship.rudderAngleActual, -90, 90);
 
-      ship.orientation += ship.rudderAngleActual * ship.turnSpeed * ship.speed_actual * ORIENTATIONFACTOR;
+      ship.orientation += ship.rudderAngleActual * ship.turnSpeed * ship.speed_actual * ORIENTATIONFACTOR * delta;
       ship.orientation = Util.mod(ship.orientation, 360);
 
-      ship.pos.x += Math.cos(Util.scale(ship.orientation, 0, 360, 0, Math.PI * 2)) * ship.speed_actual * SPEEDFACTOR;
-      ship.pos.y += Math.sin(Util.scale(ship.orientation, 0, 360, 0, Math.PI * 2)) * ship.speed_actual * SPEEDFACTOR;
+      ship.pos.x += Math.cos(Util.scale(ship.orientation, 0, 360, 0, Math.PI * 2)) * ship.speed_actual * SPEEDFACTOR * delta;
+      ship.pos.y += Math.sin(Util.scale(ship.orientation, 0, 360, 0, Math.PI * 2)) * ship.speed_actual * SPEEDFACTOR * delta;
 
       ship.pos.x = Util.clamp(ship.pos.x,0,this.mapWidth);
       ship.pos.y = Util.clamp(ship.pos.y,0,this.mapHeight);
@@ -129,10 +130,10 @@ export default class GameServer implements PlayerDelegate {
       const gun: Gun = ship.gun;
 
       gun.angleHorizontalActual = gun.angleHorizontalRequested;
-      // gun.angleHorizontalActual += (gun.angleHorizontalRequested - gun.angleHorizontalActual) * gun.turnspeed * GUNHORIZONTALFACTOR; 
+      // gun.angleHorizontalActual += (gun.angleHorizontalRequested - gun.angleHorizontalActual) * gun.turnspeed * GUNHORIZONTALFACTOR * delta; 
       gun.angleHorizontalActual = Util.clamp(gun.angleHorizontalActual, gun.minAngleHorizontal, gun.maxAngleHorizontal);
       gun.angleVerticalActual = gun.angleVerticalRequested;
-      // gun.angleVerticalActual += (gun.angleVerticalRequested - gun.angleVerticalActual) * gun.turnspeed * GUNVERTICALFACTOR;
+      // gun.angleVerticalActual += (gun.angleVerticalRequested - gun.angleVerticalActual) * gun.turnspeed * GUNVERTICALFACTOR * delta;
       gun.angleVerticalActual = Util.clamp(gun.angleVerticalActual, gun.minAngleVertical, gun.maxAngleVertical);
       gun.timeSinceLastShot+=delta;
     }
@@ -140,9 +141,9 @@ export default class GameServer implements PlayerDelegate {
     for (let i = this.shells.length - 1; i >= 0; i--) { //iterate backwards so its no problem to remove a shell while looping
       const shell: Shell = this.shells[i];
 
-      shell.velocity.add(GRAVITY);
+      shell.velocity = shell.velocity.add(GRAVITY.multiply(delta));
       // shell.velocity.add(wind);
-      shell.pos.add(shell.velocity);
+      shell.pos = shell.pos.add(shell.velocity);
 
       if (shell.pos.z < 0) {
         this.players.forEach((player: Player) => {          
@@ -159,7 +160,15 @@ export default class GameServer implements PlayerDelegate {
   updateNet(delta) {
     for (let i = 0; i < this.players.length; i++) {
       const player: Player = this.players[i];
-      player.socket.emit("gamestate ships", this.ships);
+      let otherShips: Ship[] = Array.from(this.ships,);
+      for(let i = otherShips.length -1; i>=0; i--) {
+        if(otherShips[i].owner === player.socket.id) {
+          otherShips.splice(i, 1);
+          break;
+        }
+      }
+      player.socket.emit("gamestate ship", player.ship);
+      player.socket.emit("gamestate ships", otherShips);
       player.socket.emit("gamestate shells", this.shells);
     }
   }

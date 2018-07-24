@@ -6,6 +6,7 @@ import Renderer from "./renderer";
 import Log from "./util/log";
 import * as io from "./lib/socket.io.min";
 import * as $ from "./lib/jquery-3.1.1.min";
+import * as Util from "./util/util";
 import { Socket } from "../../node_modules/@types/socket.io";
 
 export default class Game {
@@ -22,13 +23,13 @@ export default class Game {
     private isM1Down: boolean = false;
     private isM2Down: boolean = false;
 
+    public ship: any;
     public ships = [];
-    public myShip;
     public shells = [];
 
-    public mapWidth:number;
-    public mapHeight:number;
-    public teamId:number;
+    public mapWidth: number;
+    public mapHeight: number;
+    public teamId: number;
 
     public rudderPosition: number = 0;
     public speed: number = 0;
@@ -100,7 +101,7 @@ export default class Game {
         window.addEventListener("click", event => {
             switch (event.which) {
                 case 1: // this.onClick(); break;//Linksclick
-                case 2: this.renderer.switchFollowMode();break;//Mittelclick?
+                case 2: this.renderer.switchFollowMode(); break;//Mittelclick?
             }
         });
 
@@ -140,17 +141,19 @@ export default class Game {
         this.socket = io.connect(config.ip, { transports: config.transports });
         this.socket.on("connect", () => this.onConnected());
         this.socket.on("disconnect", () => this.onDisconnected);
+        this.socket.on("gamestate ship", (data) => this.onGamestateShip(data));
         this.socket.on("gamestate ships", (data) => this.onGamestateShips(data));
         this.socket.on("gamestate shells", (data) => this.onGamestateShells(data));
-        this.socket.on("info mapwidth", (data) => {this.mapWidth = data});
-        this.socket.on("info mapheight", (data) => {this.mapHeight = data});
-        this.socket.on("info teamId", (data) => {this.teamId = data});
+        this.socket.on("info mapwidth", (data) => { this.mapWidth = data });
+        this.socket.on("info mapheight", (data) => { this.mapHeight = data });
+        this.socket.on("info teamId", (data) => { this.teamId = data });
     }
 
     public run() {
         const self = this;
         this.isRunning = true;
         const delta = Math.round(1000 / config.updaterate);
+        const defaultDelta = Math.round(1000 / 60);
         let lastTime = Date.now();
         let accumulator = 0;
 
@@ -164,7 +167,7 @@ export default class Game {
                 accumulator += frameTime;
 
                 while (accumulator > delta) {
-                    self.update(delta);
+                    self.update(delta / defaultDelta);
                     accumulator -= delta;
                 }
 
@@ -177,39 +180,45 @@ export default class Game {
 
     private update(delta) {
         if (this.rudderLeft) {
-            this.rudderPosition -= 1;
+            this.rudderPosition -= 1 * delta;
+            this.rudderPosition = Util.clamp(this.rudderPosition, -90, 90);
             this.socket.emit("input rudder", this.rudderPosition);
         }
         if (this.rudderRight) {
-            this.rudderPosition += 1;
+            this.rudderPosition += 1 * delta;
+            this.rudderPosition = Util.clamp(this.rudderPosition, -90, 90);
             this.socket.emit("input rudder", this.rudderPosition);
         }
         if (this.gunDown) {
-            this.gunAngleVertical -= 1;
+            this.gunAngleVertical -= 1 * delta;
+            this.gunAngleVertical = Util.clamp(this.gunAngleVertical, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
             this.socket.emit("input gun vertical", this.gunAngleVertical);
         }
         if (this.gunUp) {
-            this.gunAngleVertical += 1;
+            this.gunAngleVertical += 1 * delta;
+            this.gunAngleVertical = Util.clamp(this.gunAngleVertical, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
             this.socket.emit("input gun vertical", this.gunAngleVertical);
         }
         if (this.gunLeft) {
-            this.gunAngleHorizontal -= 1;
+            this.gunAngleHorizontal -= 1 * delta;
+            this.gunAngleHorizontal = Util.clamp(this.gunAngleHorizontal, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal);
             this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
         }
         if (this.gunRight) {
-            this.gunAngleHorizontal += 1;
+            this.gunAngleHorizontal += 1 * delta;
+            this.gunAngleHorizontal = Util.clamp(this.gunAngleHorizontal, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal);
             this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
         }
         if (this.speedUp) {
-            this.speed += 1;
+            this.speed += 1 * delta;
+            this.speed = Util.clamp(this.speed, this.ship.speed_min, this.ship.speed_max);
             this.socket.emit("input speed", this.speed);
         }
         if (this.speedDown) {
-            this.speed -= 1;
+            this.speed -= 1 * delta;
+            this.speed = Util.clamp(this.speed, this.ship.speed_min, this.ship.speed_max);
             this.socket.emit("input speed", this.speed);
         }
-        this.rudderPosition = Math.max(Math.min(this.rudderPosition,90),-90)
-
     }
 
     private onConnected() {
@@ -220,8 +229,12 @@ export default class Game {
         Log.info("Disonnected");
     }
 
+    private onGamestateShip(ship) {
+        this.ship = ship;
+    }
+
     private onGamestateShips(ships) {
-        this.ships = ships;        
+        this.ships = ships;
     }
 
     private onGamestateShells(shells) {

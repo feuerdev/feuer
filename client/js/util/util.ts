@@ -1,31 +1,29 @@
 import Log from "./log";
 
-/**
- * Returns a 2d-Array
- */
-export const createSquareArray = function(width) {
+export const createSquareArray = function (width) {
     const arr = [];
-    for (let i=0;i<width;i++) {
+    for (let i = 0; i < width; i++) {
         arr[i] = [];
     }
     return arr;
 };
 
-/**
- * Wrapper around the %-operator.
- * Returns result even with negative inputs.
- */
-export const mod = function(n, m) {
+export const mod = function (n, m) {
     return ((n % m) + m) % m;
 };
 
-export function degreeToRadians(angle:number):number {
+export function degreeToRadians(angle: number): number {
     return angle * Math.PI / 180
 }
 
-/**
- * Placeholder function for debugging purposes
- */
-export const unassigned = function() {
-    Log.debug(arguments.callee.caller.name+" is unnassigned");    
+export function scale(value: number, oldmin: number, oldmax: number, newmin: number, newmax: number): number {
+    return (((newmax - newmin) * (value - oldmin)) / (oldmax - oldmin)) + newmin;
+}
+
+export function clamp(value: number, min: number, max: number): number {
+    return Math.min(Math.max(value, min), max);
+}
+
+export const unassigned = function () {
+    Log.debug(arguments.callee.caller.name + " is unnassigned");
 }

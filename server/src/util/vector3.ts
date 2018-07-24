@@ -10,12 +10,12 @@ export default class Vector3 {
   constructor(x: number, y: number, z: number);
   constructor(arg1?: { x: number, y: number, z: number } | number, arg2?: { x: number, y: number, z: number } | number, arg3?: number) {
     if (typeof arg1 !== "undefined" && typeof arg2 !== "undefined" && typeof arg3 !== "undefined") {
-      if(typeof arg1 === "number" && typeof arg2 === "number" && typeof arg3 === "number") {
+      if (typeof arg1 === "number" && typeof arg2 === "number" && typeof arg3 === "number") {
         this.x = arg1;
         this.y = arg2;
         this.z = arg3;
       }
-    } else if(typeof arg1 !== "undefined" && typeof arg2 !== "undefined") {
+    } else if (typeof arg1 !== "undefined" && typeof arg2 !== "undefined") {
       if (typeof arg1 === "number" && typeof arg2 === "number") {
         //Constructor 2
         arg1 = Util.degreeToRadians(arg1);
@@ -48,15 +48,11 @@ export default class Vector3 {
     }
   }
 
-  public add(vector: Vector3): void {
-    this.x += vector.x;
-    this.y += vector.y;
-    this.z += vector.z;
+  public add(vector: Vector3): Vector3 {
+    return new Vector3(this.x + vector.x, this.y + vector.y, this.z + vector.z);
   }
-  
-  public multiply(factor: number): void {
-    this.x *= factor;
-    this.y *= factor;
-    this.z *= factor;
+
+  public multiply(factor: number): Vector3 {
+    return new Vector3(this.x * factor, this.y * factor, this.z * factor);
   }
 }

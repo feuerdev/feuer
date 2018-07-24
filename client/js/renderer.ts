@@ -127,57 +127,10 @@ export default class Renderer {
         if (this.canvas_entities.length > 0) {
             this.context_entities.clearRect(0, 0, this.drawWidth, this.drawHeight);
 
+            this.drawShip(this.game.ship, true);
+
             for (let i = 0; i < this.game.ships.length; i++) {
-                this.context_entities.save();
-
-                this.context_entities.translate(-this.cameraPos.x, -this.cameraPos.y); //TODO: kann das nicht schon vorher an eine andere Stelle?
-                // const pX = ship.pos.x - this.cameraPos.x;
-                // const pY = ship.pos.y - this.cameraPos.y;
-
-                const ship = this.game.ships[i];
-                const isMine: boolean = ship.owner === this.game.socket.id;
-
-                //draw the ship
-                const width: number = ship.width; //TODO: width und height vom Server übernehmen
-                const height: number = ship.height;
-                const rad: number = Util.degreeToRadians(ship.orientation);
-
-                if (ship.teamId === 0) {
-                    this.context_entities.fillStyle = isMine ? "pink" : "red";
-                } else if (ship.teamId === 1) {
-                    this.context_entities.fillStyle = isMine ? "green" : "darkgreen";
-                }
-
-                this.context_entities.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);
-                this.context_entities.rotate(rad);
-                this.context_entities.fillRect(width / 2 * (-1), height / 2 * (-1), width, height);
-
-                //draw the gun
-                const widthGun: number = 12; //TODO: width und height vom Server übernehmen
-                const heightGun: number = 2;
-                const offsetGun: number = 10;
-                const radGun = Util.degreeToRadians(ship.gun.angleHorizontalActual);
-                this.context_entities.fillStyle = "black";
-                this.context_entities.rotate(radGun);
-                this.context_entities.fillRect(widthGun + offsetGun / 2 * (-1), heightGun / 2 * (-1), widthGun, heightGun);
-
-                if (isMine) {
-                    //draw the helper line
-                    const lengthHelper: number = 900;
-                    const thicknessHelper: number = 2;
-                    const offsetHelper: number = 30;
-                    this.context_entities.beginPath();
-                    this.context_entities.setLineDash([5, 15]);
-                    this.context_entities.strokeStyle = "yellow";
-                    this.context_entities.lineWidth = thicknessHelper;
-                    this.context_entities.moveTo(offsetHelper, 0);
-                    this.context_entities.lineTo(lengthHelper, 0);
-                    // this.context_entities.lineTo(0 + lengthHelper * Math.cos(radGun), 0 + lengthHelper * Math.sin(radGun));
-                    this.context_entities.stroke();
-                    this.context_entities.closePath();
-                }
-                //reset the canvas  
-                this.context_entities.restore();
+                this.drawShip(this.game.ships[i], false);
             }
 
             for (let i = 0; i < this.game.shells.length; i++) {
@@ -199,6 +152,58 @@ export default class Renderer {
                 this.context_entities.fill();
                 this.context_entities.closePath();
             }
+        }
+    }
+
+    drawShip(ship, isMine) {
+        if(ship) {
+            this.context_entities.save();
+
+            this.context_entities.translate(-this.cameraPos.x, -this.cameraPos.y); //TODO: kann das nicht schon vorher an eine andere Stelle?
+            // const pX = ship.pos.x - this.cameraPos.x;
+            // const pY = ship.pos.y - this.cameraPos.y;
+    
+            //draw the ship
+            const width: number = ship.width; //TODO: width und height vom Server übernehmen
+            const height: number = ship.height;
+            const rad: number = Util.degreeToRadians(ship.orientation);
+    
+            if (ship.teamId === 0) {
+                this.context_entities.fillStyle = isMine ? "pink" : "red";
+            } else if (ship.teamId === 1) {
+                this.context_entities.fillStyle = isMine ? "green" : "darkgreen";
+            }
+    
+            this.context_entities.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);
+            this.context_entities.rotate(rad);
+            this.context_entities.fillRect(width / 2 * (-1), height / 2 * (-1), width, height);
+    
+            //draw the gun
+            const widthGun: number = 12; //TODO: width und height vom Server übernehmen
+            const heightGun: number = 2;
+            const offsetGun: number = 10;
+            const radGun = Util.degreeToRadians(ship.gun.angleHorizontalActual);
+            this.context_entities.fillStyle = "black";
+            this.context_entities.rotate(radGun);
+            this.context_entities.fillRect(widthGun + offsetGun / 2 * (-1), heightGun / 2 * (-1), widthGun, heightGun);
+    
+            if (isMine) {
+                //draw the helper line
+                const lengthHelper: number = 900;
+                const thicknessHelper: number = 2;
+                const offsetHelper: number = 30;
+                this.context_entities.beginPath();
+                this.context_entities.setLineDash([5, 15]);
+                this.context_entities.strokeStyle = "yellow";
+                this.context_entities.lineWidth = thicknessHelper;
+                this.context_entities.moveTo(offsetHelper, 0);
+                this.context_entities.lineTo(lengthHelper, 0);
+                // this.context_entities.lineTo(0 + lengthHelper * Math.cos(radGun), 0 + lengthHelper * Math.sin(radGun));
+                this.context_entities.stroke();
+                this.context_entities.closePath();
+            }
+            //reset the canvas  
+            this.context_entities.restore();
         }
     }
 
@@ -275,18 +280,10 @@ export default class Renderer {
         this.debug.append("canvas.y   : " + this.canvasHeight + "<br>");
         this.debug.append("zoom   : " + this.currentZoom + "<br>");
 
-        let myShip;
-        for (let i = 0; i < this.game.ships.length; i++) {
-            let ship = this.game.ships[i];
-            if (ship.owner === this.game.socket.id) {
-                myShip = ship;
-            }
-        }
-
-        if (myShip) {
-            this.debug.append("pos.x   : " + myShip.pos.x + "<br>");
-            this.debug.append("pos.y   : " + myShip.pos.y + "<br>");
-            this.debug.append("orientation   : " + myShip.orientation + "<br>");
+        if (this.game.ship) {
+            this.debug.append("pos.x   : " + this.game.ship.pos.x + "<br>");
+            this.debug.append("pos.y   : " + this.game.ship.pos.y + "<br>");
+            this.debug.append("orientation   : " + this.game.ship.orientation + "<br>");
         }
         if (this.game.shells[0]) {
             this.debug.append("shell.x   : " + this.game.shells[0].pos.x + "<br>");
