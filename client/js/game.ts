@@ -87,6 +87,7 @@ export default class Game {
                 case 68: this.gunRight = false; break;//d
                 case 83: this.gunDown = false; break;//s
                 case 38: this.speedUp = false; break;//pfeilhoch
+                case 88: this.rudderPosition = 0; break;//x
                 case 40: this.speedDown = false; break;//pfeilrunter
                 case 37: this.rudderLeft = false; break;//pfeillinks
                 case 39: this.rudderRight = false; break;//pfeilrechts
