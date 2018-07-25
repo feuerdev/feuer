@@ -2,7 +2,7 @@
 
 export default class Gun {
 
-  readonly FIRERATE:number = 5000;
+  readonly FIRERATE:number = 0.5000;
 
   public angleHorizontalActual: number = 0;
   public angleVerticalActual: number = 0;

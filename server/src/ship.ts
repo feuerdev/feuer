@@ -15,7 +15,7 @@ export default class Ship {
   public height:number = 52;
 
   public speed_min:number = -10;
-  public speed_max:number = 20;
+  public speed_max:number = 300;
 
   public pos:Vector2;
   public orientation: number = 0;
@@ -26,7 +26,7 @@ export default class Ship {
 
   public speed_actual:number = 0;
   public speed_requested: number = 0;
-  public acceleration: number = 0.01;
+  public acceleration: number = 0.1;
 
   public gun: Gun = new Gun();
 }
