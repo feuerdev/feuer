@@ -182,9 +182,9 @@ export default class Renderer {
             const widthGun: number = 12; //TODO: width und height vom Server übernehmen
             const heightGun: number = 2;
             const offsetGun: number = 10;
-            const radGun = Util.degreeToRadians(ship.gun.angleHorizontalActual);
+            const radGunActual = Util.degreeToRadians(ship.gun.angleHorizontalActual);
             this.context_entities.fillStyle = "black";
-            this.context_entities.rotate(radGun);
+            this.context_entities.rotate(radGunActual);
             this.context_entities.fillRect(widthGun + offsetGun / 2 * (-1), heightGun / 2 * (-1), widthGun, heightGun);
 
             if (isMine) {
@@ -192,15 +192,25 @@ export default class Renderer {
                 const lengthHelper: number = 900;
                 const thicknessHelper: number = 2;
                 const offsetHelper: number = 30;
-                this.context_entities.beginPath();
                 this.context_entities.setLineDash([5, 15]);
                 this.context_entities.strokeStyle = "yellow";
                 this.context_entities.lineWidth = thicknessHelper;
+                this.context_entities.beginPath();
                 this.context_entities.moveTo(offsetHelper, 0);
                 this.context_entities.lineTo(lengthHelper, 0);
-                // this.context_entities.lineTo(0 + lengthHelper * Math.cos(radGun), 0 + lengthHelper * Math.sin(radGun));
                 this.context_entities.stroke();
                 this.context_entities.closePath();
+
+                const radGunReq = Util.degreeToRadians(ship.gun.angleHorizontalRequested);
+                this.context_entities.rotate(-radGunActual);
+                this.context_entities.rotate(radGunReq);
+                this.context_entities.strokeStyle = "grey";
+                this.context_entities.beginPath();
+                this.context_entities.moveTo(offsetHelper, 0);
+                this.context_entities.lineTo(lengthHelper, 0);
+                this.context_entities.stroke();
+                this.context_entities.closePath();
+
             }
             //reset the canvas  
             this.context_entities.restore();
