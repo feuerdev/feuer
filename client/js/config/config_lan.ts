@@ -6,5 +6,7 @@ const config = {
     ip: "192.168.178.23:8000",
     transports: ["websocket"],
     updaterate: 60,
-    log_level: "debug"
+    log_level: "debug",
+    zoom_min: 0.25,
+    zoom_max: 4
 };

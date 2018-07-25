@@ -156,28 +156,28 @@ export default class Renderer {
     }
 
     drawShip(ship, isMine) {
-        if(ship) {
+        if (ship) {
             this.context_entities.save();
 
             this.context_entities.translate(-this.cameraPos.x, -this.cameraPos.y); //TODO: kann das nicht schon vorher an eine andere Stelle?
             // const pX = ship.pos.x - this.cameraPos.x;
             // const pY = ship.pos.y - this.cameraPos.y;
-    
+
             //draw the ship
             const width: number = ship.width; //TODO: width und height vom Server übernehmen
             const height: number = ship.height;
             const rad: number = Util.degreeToRadians(ship.orientation);
-    
+
             if (ship.teamId === 0) {
                 this.context_entities.fillStyle = isMine ? "pink" : "red";
             } else if (ship.teamId === 1) {
                 this.context_entities.fillStyle = isMine ? "green" : "darkgreen";
             }
-    
+
             this.context_entities.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);
             this.context_entities.rotate(rad);
             this.context_entities.fillRect(width / 2 * (-1), height / 2 * (-1), width, height);
-    
+
             //draw the gun
             const widthGun: number = 12; //TODO: width und height vom Server übernehmen
             const heightGun: number = 2;
@@ -186,7 +186,7 @@ export default class Renderer {
             this.context_entities.fillStyle = "black";
             this.context_entities.rotate(radGun);
             this.context_entities.fillRect(widthGun + offsetGun / 2 * (-1), heightGun / 2 * (-1), widthGun, heightGun);
-    
+
             if (isMine) {
                 //draw the helper line
                 const lengthHelper: number = 900;
@@ -262,39 +262,47 @@ export default class Renderer {
 
     drawDebug() {
         this.debug.text("");
+        this.debug.append("<em>General Information</em><br>");
         if (this.isFollowing) {
             this.debug.append("cameraPosFollow.pos.x   : " + this.cameraPosFollow.x + "<br>");
             this.debug.append("cameraPosFollow.pos.y   : " + this.cameraPosFollow.y + "<br>");
         }
-        this.debug.append("camera.x   : " + this.cameraPos.x + "<br>");
-        this.debug.append("camera.y   : " + this.cameraPos.y + "<br>");
-        this.debug.append("deadz.x   : " + this.deadzone.x + "<br>");
-        this.debug.append("deadz.y   : " + this.deadzone.y + "<br>");
-        this.debug.append("drawwidth.x   : " + this.drawWidth + "<br>");
-        this.debug.append("drawwidth.y   : " + this.drawHeight + "<br>");
-        // this.debug.append("worldsize.x   : " + this.game.size + "<br>");
-        // this.debug.append("worldsize.y   : " + this.game.size + "<br>");
-        this.debug.append("cursor.x   : " + this.game.cursorWorld.x + "<br>");
-        this.debug.append("cursor.y   : " + this.game.cursorWorld.y + "<br>");
-        this.debug.append("canvas.x   : " + this.canvasWidth + "<br>");
-        this.debug.append("canvas.y   : " + this.canvasHeight + "<br>");
-        this.debug.append("zoom   : " + this.currentZoom + "<br>");
-
+        this.debug.append("Camera.x   : " + this.cameraPos.x + "<br>");
+        this.debug.append("Camera.y   : " + this.cameraPos.y + "<br>");
+        // this.debug.append("deadz.x   : " + this.deadzone.x + "<br>");
+        // this.debug.append("deadz.y   : " + this.deadzone.y + "<br>");
+        this.debug.append("Canvas Width   : " + this.canvasWidth + "<br>");
+        this.debug.append("Canvas Height   : " + this.canvasHeight + "<br>");
+        this.debug.append("Draw Width   : " + this.drawWidth + "<br>");
+        this.debug.append("Draw Height   : " + this.drawHeight + "<br>");
+        this.debug.append("Map Width   : " + this.game.mapWidth + "<br>");
+        this.debug.append("Map Height   : " + this.game.mapHeight + "<br>");
+        this.debug.append("Cursor Position X   : " + this.game.cursorWorld.x + "<br>");
+        this.debug.append("Cursor Position Y   : " + this.game.cursorWorld.y + "<br>");
+        this.debug.append("Cursor Canvas Position X   : " + this.game.cursorCanvas.x + "<br>");
+        this.debug.append("Cursor Canvas Position Y   : " + this.game.cursorCanvas.y + "<br>");
+        this.debug.append("Zoom Factor   : " + this.currentZoom + "<br>");
         if (this.game.ship) {
-            this.debug.append("pos.x   : " + this.game.ship.pos.x + "<br>");
-            this.debug.append("pos.y   : " + this.game.ship.pos.y + "<br>");
-            this.debug.append("orientation   : " + this.game.ship.orientation + "<br>");
+            this.debug.append("<br><em>Ship</em><br>");
+            this.debug.append("Pos X   : " + Math.round(this.game.ship.pos.x) + "<br>");
+            this.debug.append("Pos Y   : " + Math.round(this.game.ship.pos.y) + "<br>");
+            this.debug.append("Orientation   : " + Math.round(this.game.ship.orientation) + "<br>");
+            this.debug.append("Speed Actual   : " + Math.round(this.game.ship.speed_actual) + "<br>");
+            this.debug.append("Speed Requested  : " + Math.round(this.game.speed) + "<br>");
+            this.debug.append("Rudder Actual  : " + Math.round(this.game.ship.rudderAngleActual) + "<br>");
+            this.debug.append("Rudder Requested  : " + Math.round(this.game.rudderPosition) + "<br>");
+            this.debug.append("Gun Vertical Actual   : " + Math.round(this.game.ship.gun.angleVerticalActual) + "<br>");
+            this.debug.append("Gun Vertical Requested   : " + Math.round(this.game.gunAngleVertical) + "<br>");
+            this.debug.append("Gun Horizontal Actual   : " + Math.round(this.game.ship.gun.angleHorizontalActual) + "<br>");
+            this.debug.append("Gun Horizontal Requested   : " + Math.round(this.game.gunAngleHorizontal) + "<br>");
         }
+       
         if (this.game.shells[0]) {
-            this.debug.append("shell.x   : " + this.game.shells[0].pos.x + "<br>");
-            this.debug.append("shell.y   : " + this.game.shells[0].pos.y + "<br>");
-            this.debug.append("shell.z   : " + this.game.shells[0].pos.z + "<br>");
+            this.debug.append("<br><em>Shell</em><br>");
+            this.debug.append("shell.x   : " + Math.round(this.game.shells[0].pos.x) + "<br>");
+            this.debug.append("shell.y   : " + Math.round(this.game.shells[0].pos.y) + "<br>");
+            this.debug.append("shell.z   : " + Math.round(this.game.shells[0].pos.z) + "<br>");
         }
-        this.debug.append("speed   : " + this.game.speed + "<br>");
-        this.debug.append("speed   : " + this.game.speed + "<br>");
-        this.debug.append("rudder   : " + this.game.rudderPosition + "<br>");
-        this.debug.append("gun vert   : " + this.game.gunAngleVertical + "<br>");
-        this.debug.append("gun hori   : " + this.game.gunAngleHorizontal + "<br>");
     }
 
     zoomIn() {
@@ -311,29 +319,32 @@ export default class Renderer {
     }
 
     zoom(factor: number) {
+        const newZoom = this.currentZoom * factor;
         //Limit the zoomlevel to a relative max/min
         // if ((!(this.canvasWidth / (this.currentZoom * factor) > this.game.worldSize) && !(this.canvasHeight / (this.currentZoom * factor) > this.game.worldSize)) &&
         //     (!(this.canvasWidth / (this.currentZoom * factor) < this.canvasWidth / 40) && !(this.canvasHeight / (this.currentZoom * factor) < this.canvasHeight / 40))) {
-        this.currentZoom *= factor;
-        this.drawWidth = Math.floor(this.canvasWidth / this.currentZoom);
-        this.drawHeight = Math.floor(this.canvasHeight / this.currentZoom);
-        this.deadzone.x = this.drawWidth / 2 - (50 / this.currentZoom);
-        this.deadzone.y = this.drawHeight / 2 - (50 / this.currentZoom);
-        if (this.context_map) {
-            this.context_map.scale(factor, factor);
+        if(newZoom <= config.zoom_max && newZoom >= config.zoom_min) {
+            this.currentZoom *= factor;
+            this.drawWidth = Math.floor(this.canvasWidth / this.currentZoom);
+            this.drawHeight = Math.floor(this.canvasHeight / this.currentZoom);
+            this.deadzone.x = this.drawWidth / 2 - (50 / this.currentZoom);
+            this.deadzone.y = this.drawHeight / 2 - (50 / this.currentZoom);
+            if (this.context_map) {
+                this.context_map.scale(factor, factor);
+            }
+            if (this.context_fow) {
+                this.context_fow.scale(factor, factor);
+            }
+    
+            if (this.context_entities) {
+                this.context_entities.scale(factor, factor);
+            }
+    
+            this.shouldRedrawMap = true;
+            // this.camera.pos.x += ((this.input.posCursorCanvas.x) * factor);
+            // this.camera.pos.y += ((this.input.posCursorCanvas.y) * factor);
+            // }
         }
-        if (this.context_fow) {
-            this.context_fow.scale(factor, factor);
-        }
-
-        if (this.context_entities) {
-            this.context_entities.scale(factor, factor);
-        }
-
-        this.shouldRedrawMap = true;
-        // this.camera.pos.x += ((this.input.posCursorCanvas.x) * factor);
-        // this.camera.pos.y += ((this.input.posCursorCanvas.y) * factor);
-        // }
     }
 
     switchFollowMode() {

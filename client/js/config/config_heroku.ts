@@ -3,8 +3,10 @@
  */
 // @ts-ignore
 const config = {
-    ip: "http://gellerlul.herokuapp.com",
+    ip: "https://gellerlul.herokuapp.com",
     transports: ["websocket"],
     updaterate: 60,
-    log_level: "debug"
+    log_level: "debug",
+    zoom_min: 0.25,
+    zoom_max: 4
 };
