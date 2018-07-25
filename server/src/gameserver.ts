@@ -20,7 +20,7 @@ const ACCELFACTOR: number = 0.1;
 const RUDDERFACTOR: number = 0.4;
 const ORIENTATIONFACTOR: number = 0.1;
 const GUNHORIZONTALFACTOR: number = 0.1;
-const GUNVERTICALFACTOR: number = 0.01;
+const GUNVERTICALFACTOR: number = 0.1;
 
 export default class GameServer implements PlayerDelegate {
   
@@ -106,40 +106,40 @@ export default class GameServer implements PlayerDelegate {
   }
 
   //Loops
-  update(delta) {
+  update(deltaFactor) {
     for (let i = 0; i < this.players.length; i++) {
       const player: Player = this.players[i];
 
       const ship: Ship = player.ship;
 
-      ship.speed_actual += (ship.speed_requested - ship.speed_actual) * ship.acceleration * ACCELFACTOR * delta;
+      ship.speed_actual += (ship.speed_requested - ship.speed_actual) * ship.acceleration * ACCELFACTOR * deltaFactor;
       ship.speed_actual = Util.clamp(ship.speed_actual, ship.speed_min, ship.speed_max);
 
-      ship.rudderAngleActual += (ship.rudderAngleRequested - ship.rudderAngleActual) * RUDDERFACTOR * delta;
+      ship.rudderAngleActual += (ship.rudderAngleRequested - ship.rudderAngleActual) * RUDDERFACTOR * deltaFactor;
       ship.rudderAngleActual = Util.clamp(ship.rudderAngleActual, -90, 90);
 
-      ship.orientation += ship.rudderAngleActual * ship.turnSpeed * ship.speed_actual * ORIENTATIONFACTOR * delta;
+      ship.orientation += ship.rudderAngleActual * ship.turnSpeed * ship.speed_actual * ORIENTATIONFACTOR * deltaFactor;
       ship.orientation = Util.mod(ship.orientation, 360);
 
-      ship.pos.x += Math.cos(Util.scale(ship.orientation, 0, 360, 0, Math.PI * 2)) * ship.speed_actual * SPEEDFACTOR * delta;
-      ship.pos.y += Math.sin(Util.scale(ship.orientation, 0, 360, 0, Math.PI * 2)) * ship.speed_actual * SPEEDFACTOR * delta;
+      ship.pos.x += Math.cos(Util.scale(ship.orientation, 0, 360, 0, Math.PI * 2)) * ship.speed_actual * SPEEDFACTOR * deltaFactor;
+      ship.pos.y += Math.sin(Util.scale(ship.orientation, 0, 360, 0, Math.PI * 2)) * ship.speed_actual * SPEEDFACTOR * deltaFactor;
 
       ship.pos.x = Util.clamp(ship.pos.x,0,this.mapWidth);
       ship.pos.y = Util.clamp(ship.pos.y,0,this.mapHeight);
 
       const gun: Gun = ship.gun;
 
-      gun.angleHorizontalActual += Util.clamp(gun.angleHorizontalRequested - gun.angleHorizontalActual, -1, 1) * gun.turnspeed * GUNHORIZONTALFACTOR * delta; 
+      gun.angleHorizontalActual += Util.clamp(gun.angleHorizontalRequested - gun.angleHorizontalActual, -1, 1) * gun.turnspeed * GUNHORIZONTALFACTOR * deltaFactor; 
       gun.angleHorizontalActual = Util.clamp(gun.angleHorizontalActual, gun.minAngleHorizontal, gun.maxAngleHorizontal);
-      gun.angleVerticalActual += Util.clamp(gun.angleVerticalRequested - gun.angleVerticalActual, -1, 1) * gun.turnspeed * GUNVERTICALFACTOR * delta;
+      gun.angleVerticalActual += Util.clamp(gun.angleVerticalRequested - gun.angleVerticalActual, -1, 1) * gun.turnspeed * GUNVERTICALFACTOR * deltaFactor;
       gun.angleVerticalActual = Util.clamp(gun.angleVerticalActual, gun.minAngleVertical, gun.maxAngleVertical);
-      gun.timeSinceLastShot+=delta * config.updaterate;
+      gun.timeSinceLastShot+=deltaFactor * this.delta;
     }
 
     for (let i = this.shells.length - 1; i >= 0; i--) { //iterate backwards so its no problem to remove a shell while looping
       const shell: Shell = this.shells[i];
 
-      shell.velocity = shell.velocity.add(GRAVITY.multiply(delta));
+      shell.velocity = shell.velocity.add(GRAVITY.multiply(deltaFactor));
       // shell.velocity.add(wind);
       shell.pos = shell.pos.add(shell.velocity);
 
