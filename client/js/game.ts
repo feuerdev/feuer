@@ -106,7 +106,10 @@ export default class Game {
             console.log(event.which);
             switch (event.which) {
                 case 1: { //Linksclick
-
+                    this.gunAngleHorizontal = this.calculateHorizontalAngle(this.cursorWorld);
+                    this.gunAngleVertical = this.calculateVerticalAngle(this.cursorWorld);
+                    this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
+                    this.socket.emit("input gun vertical", this.gunAngleVertical);
                     break;
                 }
                 // case 2: this.renderer.switchFollowMode(); break;//Mittelclick?
@@ -144,6 +147,22 @@ export default class Game {
             this.isM2Down = false;
             this.renderer.isDragging = false
         });
+    }
+
+    private calculateHorizontalAngle(toPos: {x,y}): number {
+        Log.debug(Util.radiansToDegrees(Math.atan2(toPos.y - this.ship.pos.y, toPos.x - this.ship.pos.x)));
+        Log.debug(this.ship.orientation);
+        return Math.abs(Util.radiansToDegrees(Math.atan2(toPos.y - this.ship.pos.y, toPos.x - this.ship.pos.x))) - this.ship.orientation;
+    }
+
+    private calculateVerticalAngle(toPos: {x,y}):number {
+
+        const d = Math.sqrt(Math.pow(toPos.x - this.ship.pos.x, 2) + Math.pow(toPos.y - this.ship.pos.y, 2));
+        const g = -config.gravity;
+        const v = this.ship.gun.velocity;
+
+        const result = Math.atan((Math.pow(v, 2)-Math.sqrt(Math.pow(v, 4)-g*(g*(g*Math.pow(d,2))))) / (d*g));
+        return result;
     }
 
     private updateCursor(event) {

@@ -13,7 +13,10 @@ export const mod = function (n, m) {
 };
 
 export function degreeToRadians(angle: number): number {
-    return angle * Math.PI / 180
+    return angle * Math.PI / 180;
+}
+export function radiansToDegrees(angle: number): number {
+    return angle * 180 / Math.PI;
 }
 
 export function scale(value: number, oldmin: number, oldmax: number, newmin: number, newmax: number): number {
