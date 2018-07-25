@@ -5,18 +5,18 @@ Building, Running, Debugging
 
 * Pepy's Schiffe zeichnen
 * Optimierter Input und UX
-..* Mausinput
-..* Linksclick zum Zielen
-..* Rechtsklick zum Waypoint setzen
-..* Zwei Hilfslienien (oder anderer Indikator für "requested" Angle und "actual" Angle)
-..* Optische Darstellung des Vertikalen Angles
+  * Mausinput
+  * Linksclick zum Zielen
+  * Rechtsklick zum Waypoint setzen
+  * Zwei Hilfslienien (oder anderer Indikator für "requested" Angle und "actual" Angle)
+  * Optische Darstellung des Vertikalen Angles
 * Shells besser zeichnen
 * Keyboard shortcuts anzeigen
 * Korrekte hit detection
 * Tilebasierter Schiff Aufbau
   * Dann könnte man z.B. eine Werft (aka eine Tabelle) anlegen. Die Standard Werft ist z.B. 4x3. Durch Upgrades kann man die maximale Größe erweitern.
 * Login
-..* XP System
+  * XP System
 
 * done - teams implementieren
 * done - spawns implementieren
