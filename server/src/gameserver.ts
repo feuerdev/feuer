@@ -129,11 +129,9 @@ export default class GameServer implements PlayerDelegate {
 
       const gun: Gun = ship.gun;
 
-      gun.angleHorizontalActual = gun.angleHorizontalRequested;
-      // gun.angleHorizontalActual += (gun.angleHorizontalRequested - gun.angleHorizontalActual) * gun.turnspeed * GUNHORIZONTALFACTOR * delta; 
+      gun.angleHorizontalActual += Util.clamp(gun.angleHorizontalRequested - gun.angleHorizontalActual, -1, 1) * gun.turnspeed * GUNHORIZONTALFACTOR * delta; 
       gun.angleHorizontalActual = Util.clamp(gun.angleHorizontalActual, gun.minAngleHorizontal, gun.maxAngleHorizontal);
-      gun.angleVerticalActual = gun.angleVerticalRequested;
-      // gun.angleVerticalActual += (gun.angleVerticalRequested - gun.angleVerticalActual) * gun.turnspeed * GUNVERTICALFACTOR * delta;
+      gun.angleVerticalActual += Util.clamp(gun.angleVerticalRequested - gun.angleVerticalActual, -1, 1) * gun.turnspeed * GUNVERTICALFACTOR * delta;
       gun.angleVerticalActual = Util.clamp(gun.angleVerticalActual, gun.minAngleVertical, gun.maxAngleVertical);
       gun.timeSinceLastShot+=delta * config.updaterate;
     }
