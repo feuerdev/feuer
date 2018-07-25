@@ -121,8 +121,8 @@ export default class GameServer implements PlayerDelegate {
       ship.orientation += ship.rudderAngleActual * ship.turnSpeed * ship.speed_actual * ORIENTATIONFACTOR * deltaFactor;
       ship.orientation = Util.mod(ship.orientation, 360);
 
-      ship.pos.x += Math.cos(Util.scale(ship.orientation, 0, 360, 0, Math.PI * 2)) * ship.speed_actual * SPEEDFACTOR * deltaFactor;
-      ship.pos.y += Math.sin(Util.scale(ship.orientation, 0, 360, 0, Math.PI * 2)) * ship.speed_actual * SPEEDFACTOR * deltaFactor;
+      ship.pos.x += Math.cos(Util.degreeToRadians(ship.orientation)) * ship.speed_actual * SPEEDFACTOR * deltaFactor;
+      ship.pos.y += Math.sin(Util.degreeToRadians(ship.orientation)) * ship.speed_actual * SPEEDFACTOR * deltaFactor;
 
       ship.pos.x = Util.clamp(ship.pos.x,0,this.mapWidth);
       ship.pos.y = Util.clamp(ship.pos.y,0,this.mapHeight);
