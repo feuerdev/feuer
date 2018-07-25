@@ -8,5 +8,6 @@ const config = {
     updaterate: 60,
     log_level: "debug",
     zoom_min: 0.25,
-    zoom_max: 4
+    zoom_max: 4,
+    gravity: -0.01
 };
