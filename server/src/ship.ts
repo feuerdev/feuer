@@ -11,8 +11,8 @@ export default class Ship {
 
   public teamId:number;
 
-  public width:number = 20;
-  public height:number = 10;
+  public width:number = 68;
+  public height:number = 52;
 
   public speed_min:number = -10;
   public speed_max:number = 20;

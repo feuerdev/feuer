@@ -159,6 +159,8 @@ export default class Renderer {
         if (ship) {
             this.context_entities.save();
 
+            let image = new Image();
+
             this.context_entities.translate(-this.cameraPos.x, -this.cameraPos.y); //TODO: kann das nicht schon vorher an eine andere Stelle?
             // const pX = ship.pos.x - this.cameraPos.x;
             // const pY = ship.pos.y - this.cameraPos.y;
@@ -181,13 +183,18 @@ export default class Renderer {
 
             if (ship.teamId === 0) {
                 this.context_entities.fillStyle = isMine ? "pink" : "red";
+                image.src = isMine ? "../img/ship.png" : "../img/ship2.png";
             } else if (ship.teamId === 1) {
                 this.context_entities.fillStyle = isMine ? "green" : "darkgreen";
+                image.src = isMine ? "../img/ship3.png" : "../img/ship4.png";
             }
 
             this.context_entities.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);
             this.context_entities.rotate(rad);
-            this.context_entities.fillRect(width / 2 * (-1), height / 2 * (-1), width, height);
+            this.context_entities.rotate(Util.degreeToRadians(90)); //Just for the image
+            this.context_entities.drawImage(image,width / 2 * (-1), height / 2 * (-1));
+            this.context_entities.rotate(Util.degreeToRadians(-90)); //Just for the image
+            // this.context_entities.fillRect(width / 2 * (-1), height / 2 * (-1), width, height);
 
             //draw the gun
             const widthGun: number = 12; //TODO: width und height vom Server übernehmen
