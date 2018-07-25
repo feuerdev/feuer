@@ -39,8 +39,19 @@ export default class Renderer {
 
     public shouldRedrawMap: boolean = true;
 
+    readonly img_ship1 = new Image();
+    readonly img_ship2 = new Image();
+    readonly img_ship3 = new Image();
+    readonly img_ship4 = new Image();
+
+
     constructor(game: Game) {
         this.game = game;
+        
+        this.img_ship1.src = "../img/ship.png";
+        this.img_ship2.src = "../img/ship2.png";
+        this.img_ship3.src = "../img/ship3.png";
+        this.img_ship4.src = "../img/ship4.png";
 
         this.canvas_map[0].width = this.container.width();
         this.canvas_map[0].height = this.container.height();
@@ -159,7 +170,7 @@ export default class Renderer {
         if (ship) {
             this.context_entities.save();
 
-            let image = new Image();
+            let image;
 
             this.context_entities.translate(-this.cameraPos.x, -this.cameraPos.y); //TODO: kann das nicht schon vorher an eine andere Stelle?
             // const pX = ship.pos.x - this.cameraPos.x;
@@ -183,10 +194,10 @@ export default class Renderer {
 
             if (ship.teamId === 0) {
                 this.context_entities.fillStyle = isMine ? "pink" : "red";
-                image.src = isMine ? "../img/ship.png" : "../img/ship2.png";
+                image = isMine ? this.img_ship1 : this.img_ship2;
             } else if (ship.teamId === 1) {
                 this.context_entities.fillStyle = isMine ? "green" : "darkgreen";
-                image.src = isMine ? "../img/ship3.png" : "../img/ship4.png";
+                image = isMine ? this.img_ship3 : this.img_ship4;
             }
 
             this.context_entities.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);
