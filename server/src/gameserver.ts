@@ -135,7 +135,7 @@ export default class GameServer implements PlayerDelegate {
       gun.angleVerticalActual = gun.angleVerticalRequested;
       // gun.angleVerticalActual += (gun.angleVerticalRequested - gun.angleVerticalActual) * gun.turnspeed * GUNVERTICALFACTOR * delta;
       gun.angleVerticalActual = Util.clamp(gun.angleVerticalActual, gun.minAngleVertical, gun.maxAngleVertical);
-      gun.timeSinceLastShot+=delta;
+      gun.timeSinceLastShot+=delta * config.updaterate;
     }
 
     for (let i = this.shells.length - 1; i >= 0; i--) { //iterate backwards so its no problem to remove a shell while looping
