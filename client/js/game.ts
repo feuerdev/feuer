@@ -154,6 +154,8 @@ export default class Game {
         if(result < -180) { //Das verstehe ich nicht ganz
             result+=360;
         }
+        result = Util.clamp(result, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal);
+        
         return result;
     }
 
@@ -163,7 +165,9 @@ export default class Game {
         const g = -config.gravity;
         const v = this.ship.gun.velocity;
 
-        const result = Math.atan((Math.pow(v, 2)-Math.sqrt(Math.pow(v, 4)-g*(g*(g*Math.pow(d,2))))) / (d*g));
+        let result = Math.atan((Math.pow(v, 2)-Math.sqrt(Math.pow(v, 4)-g*(g*(g*Math.pow(d,2))))) / (d*g));
+        
+        result = Util.clamp(result, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
         return result;
     }
 
