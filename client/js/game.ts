@@ -87,7 +87,7 @@ export default class Game {
                 case 68: this.gunRight = false; break;//d
                 case 83: this.gunDown = false; break;//s
                 case 38: this.speedUp = false; break;//pfeilhoch
-                case 88: {this.rudderPosition = 0; this.socket.emit("input rudder", this.rudderPosition);} break;//x
+                case 88: { this.rudderPosition = 0; this.socket.emit("input rudder", this.rudderPosition); } break;//x
                 case 40: this.speedDown = false; break;//pfeilrunter
                 case 37: this.rudderLeft = false; break;//pfeillinks
                 case 39: this.rudderRight = false; break;//pfeilrechts
@@ -98,12 +98,23 @@ export default class Game {
                 case 32: this.socket.emit("input shoot"); break;//# 
             }
         }, false);
-        window.addEventListener("mousewheel", event => event.wheelDelta > 0 ? this.renderer.zoomIn() : this.renderer.zoomOut(), false);
+        window.addEventListener("mousewheel", event => {
+            event.wheelDelta > 0 ? this.renderer.zoomIn() : this.renderer.zoomOut();
+            this.updateCursor(event);
+        }, false);
         window.addEventListener("click", event => {
+            console.log(event.which);
             switch (event.which) {
-                case 1: // this.onClick(); break;//Linksclick
-                case 2: this.renderer.switchFollowMode(); break;//Mittelclick?
+                case 1: { //Linksclick
+
+                    break;
+                }
+                // case 2: this.renderer.switchFollowMode(); break;//Mittelclick?
             }
+        });
+
+        canvas[0].addEventListener("contextmenu", (event) => { //Rechtsklick
+
         });
 
         canvas.mousemove(event => {
@@ -111,10 +122,7 @@ export default class Game {
                 this.renderer.isDragging = true;
                 this.renderer.isFollowing = false;
             }
-            this.cursorCanvas.x = event.offsetX;
-            this.cursorCanvas.y = event.offsetY;
-            this.cursorWorld.x = (event.offsetX / this.renderer.currentZoom) + this.renderer.cameraPos.x;
-            this.cursorWorld.y = (event.offsetY / this.renderer.currentZoom) + this.renderer.cameraPos.y;
+            this.updateCursor(event);
         });
         canvas.mousedown(event => {
             if (event.button === 0) { //Leftclick
@@ -136,6 +144,13 @@ export default class Game {
             this.isM2Down = false;
             this.renderer.isDragging = false
         });
+    }
+
+    private updateCursor(event) {
+        this.cursorCanvas.x = event.offsetX;
+        this.cursorCanvas.y = event.offsetY;
+        this.cursorWorld.x = (event.offsetX / this.renderer.currentZoom) + this.renderer.cameraPos.x;
+        this.cursorWorld.y = (event.offsetY / this.renderer.currentZoom) + this.renderer.cameraPos.y;
     }
 
     public connect() {
