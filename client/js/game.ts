@@ -19,6 +19,7 @@ export default class Game {
     //Aktuelle Cursor Position
     public cursorWorld: { x, y } = { x: -1, y: -1 };
     public cursorCanvas: { x, y } = { x: -1, y: -1 };
+    public aimPoint: { x, y };
 
     private isM1Down: boolean = false;
     private isM2Down: boolean = false;
@@ -70,10 +71,10 @@ export default class Game {
 
         window.addEventListener("keydown", event => {
             switch (event.keyCode) {
-                case 65: this.gunLeft = true; break;//a
-                case 87: this.gunUp = true; break;//w                    
-                case 68: this.gunRight = true; break;//d
-                case 83: this.gunDown = true; break;//s          
+                case 65: this.gunLeft = true;this.aimPoint = null; break;//a
+                case 87: this.gunUp = true;this.aimPoint = null; break;//w                    
+                case 68: this.gunRight = true;this.aimPoint = null; break;//d
+                case 83: this.gunDown = true;this.aimPoint = null; break;//s          
                 case 38: this.speedUp = true; break;//pfeilhoch
                 case 40: this.speedDown = true; break;//pfeilrunter
                 case 37: this.rudderLeft = true; break;//pfeillinks
@@ -82,7 +83,7 @@ export default class Game {
         }, false);
         window.addEventListener("keyup", event => {
             switch (event.keyCode) {
-                case 65: this.gunLeft = false; break;//a
+                case 65: this.gunLeft = false;  break;//a
                 case 87: this.gunUp = false; break;//w                    
                 case 68: this.gunRight = false; break;//d
                 case 83: this.gunDown = false; break;//s
@@ -107,9 +108,15 @@ export default class Game {
             switch (event.which) {
                 case 1: { //Linksclick
                     this.gunAngleHorizontal = this.calculateHorizontalAngle(this.cursorWorld);
-                    this.gunAngleVertical = this.calculateVerticalAngle(this.cursorWorld);
                     this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
-                    this.socket.emit("input gun vertical", this.gunAngleVertical);
+                    
+                    let vertical = this.calculateVerticalAngle(this.cursorWorld);
+                    if(!Number.isNaN(vertical)) {
+                        this.aimPoint = {x:this.cursorWorld.x, y:this.cursorWorld.y};
+                        this.gunAngleVertical = this.calculateVerticalAngle(this.cursorWorld);
+                        this.socket.emit("input gun vertical", this.gunAngleVertical);
+                    }
+
                     break;
                 }
                 // case 2: this.renderer.switchFollowMode(); break;//Mittelclick?
@@ -160,13 +167,10 @@ export default class Game {
     }
 
     private calculateVerticalAngle(toPos: {x,y}):number {
-
         const d = Math.sqrt(Math.pow(toPos.x - this.ship.pos.x, 2) + Math.pow(toPos.y - this.ship.pos.y, 2));
         const g = -config.gravity;
         const v = this.ship.gun.velocity;
-
-        let result = Math.atan((Math.pow(v, 2)-Math.sqrt(Math.pow(v, 4)-g*(g*(g*Math.pow(d,2))))) / (d*g));
-        
+        let result = Util.radiansToDegrees(Math.asin( d * g / (Math.pow(v,2) )) / 2);
         result = Util.clamp(result, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
         return result;
     }

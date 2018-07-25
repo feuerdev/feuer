@@ -162,6 +162,17 @@ export default class Renderer {
             this.context_entities.translate(-this.cameraPos.x, -this.cameraPos.y); //TODO: kann das nicht schon vorher an eine andere Stelle?
             // const pX = ship.pos.x - this.cameraPos.x;
             // const pY = ship.pos.y - this.cameraPos.y;
+            //Draw aimpoint
+            if(this.game.aimPoint) {
+                this.context_entities.beginPath();
+                this.context_entities.strokeStyle = "green";
+                this.context_entities.lineWidth = 1;
+                this.context_entities.setLineDash([]);
+                this.context_entities.arc(this.game.aimPoint.x, this.game.aimPoint.y, 10, 0, 2 * Math.PI);
+                this.context_entities.arc(this.game.aimPoint.x, this.game.aimPoint.y, 15, 0, 2 * Math.PI);
+                this.context_entities.arc(this.game.aimPoint.x, this.game.aimPoint.y, 20, 0, 2 * Math.PI);
+                this.context_entities.stroke();
+            }
 
             //draw the ship
             const width: number = ship.width; //TODO: width und height vom Server übernehmen
@@ -188,6 +199,7 @@ export default class Renderer {
             this.context_entities.fillRect(widthGun + offsetGun / 2 * (-1), heightGun / 2 * (-1), widthGun, heightGun);
 
             if (isMine) {
+
                 //draw the helper line
                 const lengthHelper: number = 900;
                 const thicknessHelper: number = 2;
@@ -211,6 +223,7 @@ export default class Renderer {
                 this.context_entities.stroke();
                 this.context_entities.closePath();
 
+                                
             }
             //reset the canvas  
             this.context_entities.restore();
