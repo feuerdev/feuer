@@ -14,7 +14,7 @@ import Vector3 from "./util/vector3";
 import * as Util from "./util/util";
 import Vector2 from "./util/vector2";
 
-const GRAVITY: Vector3 = new Vector3(0, 0, -0.01);
+const GRAVITY: Vector3 = new Vector3(0, 0, config.gravity);
 const SPEEDFACTOR: number = 0.01;
 const ACCELFACTOR: number = 0.1;
 const RUDDERFACTOR: number = 0.4;

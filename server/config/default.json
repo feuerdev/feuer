@@ -8,7 +8,7 @@
   "tileSize": 4,
   "speed": 0.2,
   "visibility": 10,
-  "gravity": -0.9,
+  "gravity": -0.01,
   "transports": [
     "websocket"
   ],
