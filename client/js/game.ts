@@ -152,7 +152,10 @@ export default class Game {
     private calculateHorizontalAngle(toPos: {x,y}): number {
         Log.debug(Util.radiansToDegrees(Math.atan2(toPos.y - this.ship.pos.y, toPos.x - this.ship.pos.x)));
         Log.debug(this.ship.orientation);
-        return Math.abs(Util.radiansToDegrees(Math.atan2(toPos.y - this.ship.pos.y, toPos.x - this.ship.pos.x))) - this.ship.orientation;
+        const bojanWinkel = Math.atan2(toPos.y - this.ship.pos.y, toPos.x - this.ship.pos.x) + 180;
+        const bojandifference = bojanWinkel-this.gunAngleHorizontal;
+        return bojandifference + this.gunAngleHorizontal;
+        // return Util.radiansToDegrees(Math.atan2(toPos.y - this.ship.pos.y, toPos.x - this.ship.pos.x)) - this.ship.orientation;
     }
 
     private calculateVerticalAngle(toPos: {x,y}):number {
