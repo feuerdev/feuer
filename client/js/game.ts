@@ -157,7 +157,7 @@ export default class Game {
     }
 
     private calculateHorizontalAngle(toPos: {x,y}): number {
-        let result = Util.radiansToDegrees(Math.atan2(toPos.y - this.ship.pos.y, toPos.x - this.ship.pos.x)) - this.ship.orientation;
+        let result = Util.radiansToDegrees(Math.atan2((toPos.y-this.ship.height/2) - this.ship.pos.y, (toPos.x-this.ship.width/2) - this.ship.pos.x)) - this.ship.orientation;
         if(result < -180) { //Das verstehe ich nicht ganz
             result+=360;
         }
