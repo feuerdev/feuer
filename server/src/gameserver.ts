@@ -118,8 +118,8 @@ export default class GameServer implements PlayerDelegate {
       ship.pos.x += Math.cos(Util.degreeToRadians(ship.orientation)) * ship.speed_actual * config.factor_speed * deltaFactor;
       ship.pos.y += Math.sin(Util.degreeToRadians(ship.orientation)) * ship.speed_actual * config.factor_speed * deltaFactor;
 
-      ship.pos.x = Util.clamp(ship.pos.x,0,this.mapWidth);
-      ship.pos.y = Util.clamp(ship.pos.y,0,this.mapHeight);
+      ship.pos.x = Util.clamp(ship.pos.x,0,this.mapWidth-ship.width);
+      ship.pos.y = Util.clamp(ship.pos.y,0,this.mapHeight-ship.height);
 
       const gun: Gun = ship.gun;
 
