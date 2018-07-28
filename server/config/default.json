@@ -14,8 +14,16 @@
   "ship_speed_min" : -10,
   "ship_speed_max" : 40,
   "ship_turn_speed" : 0.001,
-  "ship_acceleration": 0.1,
+  "ship_acceleration": 0.005,
   "gun_firerate" : 3000,
-  "gun_turn_speed" : 3,
-  "gun_velocity" : 3
+  "gun_turn_speed_horizontal" : 0.3,
+  "gun_turn_speed_vertical" : 0.3,
+  "gun_velocity" : 3,
+  "gun_min_angle_vertical" : 3,
+  "gun_max_angle_vertical" : 80,
+  "gun_min_angle_horizontal" : -115,
+  "gun_max_angle_horizontal" : 115,
+  "factor_speed": 0.01,
+  "factor_rudder": 0.4,
+  "factor_orientation": 0.1
 }

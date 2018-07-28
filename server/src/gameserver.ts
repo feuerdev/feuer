@@ -15,12 +15,6 @@ import * as Util from "./util/util";
 import Vector2 from "./util/vector2";
 
 const GRAVITY: Vector3 = new Vector3(0, 0, config.gravity);
-const SPEEDFACTOR: number = 0.01;
-const ACCELFACTOR: number = 0.1;
-const RUDDERFACTOR: number = 0.4;
-const ORIENTATIONFACTOR: number = 0.1;
-const GUNHORIZONTALFACTOR: number = 0.1;
-const GUNVERTICALFACTOR: number = 0.1;
 
 export default class GameServer implements PlayerDelegate {
   
@@ -112,26 +106,26 @@ export default class GameServer implements PlayerDelegate {
 
       const ship: Ship = player.ship;
 
-      ship.speed_actual += (ship.speed_requested - ship.speed_actual) * ship.acceleration * ACCELFACTOR * deltaFactor;
+      ship.speed_actual += (ship.speed_requested - ship.speed_actual) * ship.acceleration * deltaFactor;
       ship.speed_actual = Util.clamp(ship.speed_actual, ship.speed_min, ship.speed_max);
 
-      ship.rudderAngleActual += (ship.rudderAngleRequested - ship.rudderAngleActual) * RUDDERFACTOR * deltaFactor;
+      ship.rudderAngleActual += (ship.rudderAngleRequested - ship.rudderAngleActual) * config.factor_rudder * deltaFactor;
       ship.rudderAngleActual = Util.clamp(ship.rudderAngleActual, -90, 90);
 
-      ship.orientation += ship.rudderAngleActual * ship.turnSpeed * ship.speed_actual * ORIENTATIONFACTOR * deltaFactor;
+      ship.orientation += ship.rudderAngleActual * ship.turnSpeed * ship.speed_actual * config.factor_orientation * deltaFactor;
       ship.orientation = Util.mod(ship.orientation, 360);
 
-      ship.pos.x += Math.cos(Util.degreeToRadians(ship.orientation)) * ship.speed_actual * SPEEDFACTOR * deltaFactor;
-      ship.pos.y += Math.sin(Util.degreeToRadians(ship.orientation)) * ship.speed_actual * SPEEDFACTOR * deltaFactor;
+      ship.pos.x += Math.cos(Util.degreeToRadians(ship.orientation)) * ship.speed_actual * config.factor_speed * deltaFactor;
+      ship.pos.y += Math.sin(Util.degreeToRadians(ship.orientation)) * ship.speed_actual * config.factor_speed * deltaFactor;
 
       ship.pos.x = Util.clamp(ship.pos.x,0,this.mapWidth);
       ship.pos.y = Util.clamp(ship.pos.y,0,this.mapHeight);
 
       const gun: Gun = ship.gun;
 
-      gun.angleHorizontalActual += Util.clamp(gun.angleHorizontalRequested - gun.angleHorizontalActual, -1, 1) * gun.turnspeed * GUNHORIZONTALFACTOR * deltaFactor; 
+      gun.angleHorizontalActual += Util.clamp(gun.angleHorizontalRequested - gun.angleHorizontalActual, -1, 1) * gun.turnspeedHorizontal * deltaFactor; 
       gun.angleHorizontalActual = Util.clamp(gun.angleHorizontalActual, gun.minAngleHorizontal, gun.maxAngleHorizontal);
-      gun.angleVerticalActual += Util.clamp(gun.angleVerticalRequested - gun.angleVerticalActual, -1, 1) * gun.turnspeed * GUNVERTICALFACTOR * deltaFactor;
+      gun.angleVerticalActual += Util.clamp(gun.angleVerticalRequested - gun.angleVerticalActual, -1, 1) * gun.turnspeedVertical * deltaFactor;
       gun.angleVerticalActual = Util.clamp(gun.angleVerticalActual, gun.minAngleVertical, gun.maxAngleVertical);
       gun.timeSinceLastShot+=deltaFactor * this.delta;
     }
