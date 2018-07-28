@@ -1,16 +1,21 @@
 {
   "logfile": "game.log",
   "port": 8000,
+  "transports": ["websocket"],  
   "updaterate": 60,
   "netrate": 30,
   "interp": 0.05,
-  "size": 2048,
-  "tileSize": 4,
-  "speed": 0.2,
-  "visibility": 10,
+
+  "map_width": 2048,
+  "map_height": 2048,
   "gravity": -0.01,
-  "transports": [
-    "websocket"
-  ],
-  "threshold_movement": 0.1
+  "ship_width" : 68,
+  "ship_height" : 52,
+  "ship_speed_min" : -10,
+  "ship_speed_max" : 40,
+  "ship_turn_speed" : 0.001,
+  "ship_acceleration": 0.1,
+  "gun_firerate" : 3000,
+  "gun_turn_speed" : 3,
+  "gun_velocity" : 3
 }

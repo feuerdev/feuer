@@ -1,5 +1,6 @@
 import Gun from "./gun";
 import Vector2 from "./util/vector2";
+import Config from "./util/config";
 
 export default class Ship {
 
@@ -11,22 +12,22 @@ export default class Ship {
 
   public teamId:number;
 
-  public width:number = 68;
-  public height:number = 52;
+  public width:number = Config.ship_width;
+  public height:number = Config.ship_height;
 
-  public speed_min:number = -10;
-  public speed_max:number = 300;
+  public speed_min:number = Config.ship_speed_min;
+  public speed_max:number = Config.ship_speed_max;
 
   public pos:Vector2;
   public orientation: number = 0;
 
   public rudderAngleActual: number = 0;
   public rudderAngleRequested: number = 0;
-  public turnSpeed: number = 0.001;
+  public turnSpeed: number = Config.ship_turn_speed;
 
   public speed_actual:number = 0;
   public speed_requested: number = 0;
-  public acceleration: number = 0.1;
+  public acceleration: number = Config.ship_acceleration;
 
   public gun: Gun = new Gun();
 }
