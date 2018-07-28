@@ -47,7 +47,7 @@ export default class Renderer {
 
     constructor(game: Game) {
         this.game = game;
-        
+
         this.img_ship1.src = "../img/ship.png";
         this.img_ship2.src = "../img/ship2.png";
         this.img_ship3.src = "../img/ship3.png";
@@ -127,6 +127,8 @@ export default class Renderer {
         if (this.isDragging) {
             this.cameraPos.x -= Math.round((this.game.cursorCanvas.x - this.cursorCanvasLast.x) / this.currentZoom);
             this.cameraPos.y -= Math.round((this.game.cursorCanvas.y - this.cursorCanvasLast.y) / this.currentZoom);
+            this.cameraPos.x = Util.clamp(this.cameraPos.x, 0, this.game.mapWidth-this.drawWidth);
+            this.cameraPos.y = Util.clamp(this.cameraPos.y, 0, this.game.mapHeight-this.drawHeight);
             this.shouldRedrawMap = true;
         }
 
@@ -176,9 +178,9 @@ export default class Renderer {
             // const pX = ship.pos.x - this.cameraPos.x;
             // const pY = ship.pos.y - this.cameraPos.y;
             //Draw aimpoint
-            if(this.game.aimPoint) {
+            if (this.game.aimPoint) {
                 this.context_entities.beginPath();
-                this.context_entities.strokeStyle = "green";
+                this.context_entities.strokeStyle = "yellow";
                 this.context_entities.lineWidth = 1;
                 this.context_entities.setLineDash([]);
                 this.context_entities.arc(this.game.aimPoint.x, this.game.aimPoint.y, 10, 0, 2 * Math.PI);
@@ -203,7 +205,7 @@ export default class Renderer {
             this.context_entities.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);
             this.context_entities.rotate(rad);
             this.context_entities.rotate(Util.degreeToRadians(90)); //Just for the image
-            this.context_entities.drawImage(image,width / 2 * (-1), height / 2 * (-1));
+            this.context_entities.drawImage(image, width / 2 * (-1), height / 2 * (-1), width, height);
             this.context_entities.rotate(Util.degreeToRadians(-90)); //Just for the image
             // this.context_entities.fillRect(width / 2 * (-1), height / 2 * (-1), width, height);
 
@@ -212,13 +214,13 @@ export default class Renderer {
             const heightGun: number = 2;
             const offsetGun: number = 10;
             const radGunActual = Util.degreeToRadians(ship.gun.angleHorizontalActual);
+            const radGunReq = Util.degreeToRadians(ship.gun.angleHorizontalRequested);
             this.context_entities.fillStyle = "black";
             this.context_entities.rotate(radGunActual);
             this.context_entities.fillRect(widthGun + offsetGun / 2 * (-1), heightGun / 2 * (-1), widthGun, heightGun);
 
             if (isMine) {
-
-                //draw the helper line
+                //draw the helper line                
                 const lengthHelper: number = 900;
                 const thicknessHelper: number = 2;
                 const offsetHelper: number = 30;
@@ -230,18 +232,16 @@ export default class Renderer {
                 this.context_entities.lineTo(lengthHelper, 0);
                 this.context_entities.stroke();
                 this.context_entities.closePath();
-
-                const radGunReq = Util.degreeToRadians(ship.gun.angleHorizontalRequested);
-                this.context_entities.rotate(-radGunActual);
-                this.context_entities.rotate(radGunReq);
-                this.context_entities.strokeStyle = "grey";
-                this.context_entities.beginPath();
-                this.context_entities.moveTo(offsetHelper, 0);
-                this.context_entities.lineTo(lengthHelper, 0);
-                this.context_entities.stroke();
-                this.context_entities.closePath();
-
-                                
+                if (ship.gun.angleHorizontalRequested !== ship.gun.angleHorizontalActual) {
+                    this.context_entities.rotate(-radGunActual);
+                    this.context_entities.rotate(radGunReq);
+                    this.context_entities.strokeStyle = "grey";
+                    this.context_entities.beginPath();
+                    this.context_entities.moveTo(offsetHelper, 0);
+                    this.context_entities.lineTo(lengthHelper, 0);
+                    this.context_entities.stroke();
+                    this.context_entities.closePath();
+                }
             }
             //reset the canvas  
             this.context_entities.restore();
@@ -338,7 +338,7 @@ export default class Renderer {
             this.debug.append("Gun Horizontal Requested   : " + Math.round(this.game.gunAngleHorizontal) + "<br>");
             this.debug.append("Winkel zum Cursor   : " + Math.round(Util.radiansToDegrees(Math.atan2(this.game.cursorWorld.y - this.game.ship.pos.y, this.game.cursorWorld.x - this.game.ship.pos.x))) + "<br>");
         }
-       
+
         if (this.game.shells[0]) {
             this.debug.append("<br><em>Shell</em><br>");
             this.debug.append("shell.x   : " + Math.round(this.game.shells[0].pos.x) + "<br>");
@@ -365,7 +365,7 @@ export default class Renderer {
         //Limit the zoomlevel to a relative max/min
         // if ((!(this.canvasWidth / (this.currentZoom * factor) > this.game.worldSize) && !(this.canvasHeight / (this.currentZoom * factor) > this.game.worldSize)) &&
         //     (!(this.canvasWidth / (this.currentZoom * factor) < this.canvasWidth / 40) && !(this.canvasHeight / (this.currentZoom * factor) < this.canvasHeight / 40))) {
-        if(newZoom <= config.zoom_max && newZoom >= config.zoom_min) {
+        if (newZoom <= config.zoom_max && newZoom >= config.zoom_min) {
             this.currentZoom *= factor;
             this.drawWidth = Math.floor(this.canvasWidth / this.currentZoom);
             this.drawHeight = Math.floor(this.canvasHeight / this.currentZoom);
@@ -377,11 +377,11 @@ export default class Renderer {
             if (this.context_fow) {
                 this.context_fow.scale(factor, factor);
             }
-    
+
             if (this.context_entities) {
                 this.context_entities.scale(factor, factor);
             }
-    
+
             this.shouldRedrawMap = true;
             // this.camera.pos.x += ((this.input.posCursorCanvas.x) * factor);
             // this.camera.pos.y += ((this.input.posCursorCanvas.y) * factor);
