@@ -10,7 +10,7 @@
       "name": "Launch Server",
       "program": "${workspaceFolder}\\server\\src\\main.ts",
       "args": [
-        "lan"
+        "debug"
       ],
       "outFiles": [
         "${workspaceFolder}/build/**/*.js",
