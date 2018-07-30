@@ -10,6 +10,10 @@ import * as Util from "./util/util";
 import { Socket } from "../../node_modules/@types/socket.io";
 
 export default class Game {
+
+    private readonly delta = Math.round(1000 / config.updaterate);
+    private readonly defaultDelta = Math.round(1000 / 60);
+
     private isRunning: boolean = false;
 
     public socket: Socket;
@@ -45,6 +49,15 @@ export default class Game {
     private gunDown: boolean = false;
     private gunLeft: boolean = false;
     private gunRight: boolean = false;
+
+    private rudderLeftTime: number = 0;
+    private rudderRightTime: number = 0;
+    private gunLeftTime: number = 0;
+    private gunRightTime: number = 0;
+    private gunUpTime: number = 0;
+    private gunDownTime: number = 0;
+    private speedUpTime: number = 0;
+    private speedDownTime: number = 0;
 
     //Wrapper um window.requestAnimationFrame()
     private requestAnimationFrameWrapper: Function = (function () {
@@ -83,15 +96,15 @@ export default class Game {
         }, false);
         window.addEventListener("keyup", event => {
             switch (event.keyCode) {
-                case 65: this.gunLeft = false; break;//a
-                case 87: this.gunUp = false; break;//w                    
-                case 68: this.gunRight = false; break;//d
-                case 83: this.gunDown = false; break;//s
-                case 38: this.speedUp = false; break;//pfeilhoch
-                case 88: { this.rudderPosition = 0; this.socket.emit("input rudder", this.rudderPosition); } break;//x
-                case 40: this.speedDown = false; break;//pfeilrunter
-                case 37: this.rudderLeft = false; break;//pfeillinks
-                case 39: this.rudderRight = false; break;//pfeilrechts
+                case 65: this.gunLeft = false; this.gunLeftTime = 0; this.gunAngleHorizontal = Util.clamp(--this.gunAngleHorizontal, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal); this.socket.emit("input gun horizontal", this.gunAngleHorizontal); break;//a
+                case 87: this.gunUp = false; this.gunUpTime = 0; this.gunAngleVertical = Util.clamp(++this.gunAngleVertical, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical); this.socket.emit("input gun vertical", this.gunAngleVertical); break;//w                    
+                case 68: this.gunRight = false; this.gunRightTime = 0; this.gunAngleHorizontal = Util.clamp(++this.gunAngleHorizontal, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal); this.socket.emit("input gun horizontal", this.gunAngleHorizontal); break;//d
+                case 83: this.gunDown = false; this.gunDownTime = 0; this.gunAngleVertical = Util.clamp(--this.gunAngleVertical, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical); this.socket.emit("input gun vertical", this.gunAngleVertical); break;//s
+                case 38: this.speedUp = false; this.speedUpTime = 0; this.speed = Util.clamp(++this.speed, this.ship.speed_min, this.ship.speed_max); this.socket.emit("input speed", this.speed); break;//pfeilhoch
+                case 40: this.speedDown = false; this.speedDownTime = 0; this.speed = Util.clamp(--this.speed, this.ship.speed_min, this.ship.speed_max); this.socket.emit("input speed", this.speed); break;//pfeilrunter
+                case 37: this.rudderLeft = false; this.rudderLeftTime = 0; this.rudderPosition = Util.clamp(--this.rudderPosition, -90, 90); this.socket.emit("input rudder", this.rudderPosition); break;//pfeillinks
+                case 88: this.rudderPosition = 0; this.socket.emit("input rudder", this.rudderPosition); break;//x
+                case 39: this.rudderRight = false; this.rudderRightTime = 0; this.rudderPosition = Util.clamp(++this.rudderPosition, -90, 90); this.socket.emit("input rudder", this.rudderPosition); break;//pfeilrechts
                 case 70: this.renderer.switchFollowMode(); break;//f
                 case 187: this.renderer.zoomIn(); break;//+
                 case 189: this.renderer.zoomOut(); break;//-   
@@ -197,8 +210,6 @@ export default class Game {
     public run() {
         const self = this;
         this.isRunning = true;
-        const delta = Math.round(1000 / config.updaterate);
-        const defaultDelta = Math.round(1000 / 60);
         let lastTime = Date.now();
         let accumulator = 0;
 
@@ -211,9 +222,9 @@ export default class Game {
 
                 accumulator += frameTime;
 
-                while (accumulator > delta) {
-                    self.update(delta / defaultDelta);
-                    accumulator -= delta;
+                while (accumulator > self.delta) {
+                    self.update(self.delta / self.defaultDelta);
+                    accumulator -= self.delta;
                 }
 
                 self.renderer.draw();
@@ -225,44 +236,68 @@ export default class Game {
 
     private update(deltaFactor) {
         if (this.rudderLeft) {
-            this.rudderPosition -= 1 * config.input_factor * deltaFactor;
-            this.rudderPosition = Util.clamp(this.rudderPosition, -90, 90);
-            this.socket.emit("input rudder", this.rudderPosition);
+            this.rudderLeftTime += this.delta
+            if (this.rudderLeftTime > config.input_time_threshold) {
+                this.rudderPosition -= 1 * config.input_factor * deltaFactor;
+                this.rudderPosition = Util.clamp(this.rudderPosition, -90, 90);
+                this.socket.emit("input rudder", this.rudderPosition);
+            }
         }
         if (this.rudderRight) {
-            this.rudderPosition += 1 * config.input_factor * deltaFactor;
-            this.rudderPosition = Util.clamp(this.rudderPosition, -90, 90);
-            this.socket.emit("input rudder", this.rudderPosition);
+            this.rudderRightTime += this.delta;
+            if (this.rudderRightTime > config.input_time_threshold) {
+                this.rudderPosition += 1 * config.input_factor * deltaFactor;
+                this.rudderPosition = Util.clamp(this.rudderPosition, -90, 90);
+                this.socket.emit("input rudder", this.rudderPosition);
+            }
         }
         if (this.gunDown) {
-            this.gunAngleVertical -= 1 * config.input_factor * deltaFactor;
-            this.gunAngleVertical = Util.clamp(this.gunAngleVertical, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
-            this.socket.emit("input gun vertical", this.gunAngleVertical);
+            this.gunDownTime += this.delta;
+            if (this.gunDownTime > config.input_time_threshold) {
+                this.gunAngleVertical -= 1 * config.input_factor * deltaFactor;
+                this.gunAngleVertical = Util.clamp(this.gunAngleVertical, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
+                this.socket.emit("input gun vertical", this.gunAngleVertical);
+            }
         }
         if (this.gunUp) {
-            this.gunAngleVertical += 1 * config.input_factor * deltaFactor;
-            this.gunAngleVertical = Util.clamp(this.gunAngleVertical, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
-            this.socket.emit("input gun vertical", this.gunAngleVertical);
+            this.gunUpTime += this.delta;
+            if (this.gunUpTime > config.input_time_threshold) {
+                this.gunAngleVertical += 1 * config.input_factor * deltaFactor;
+                this.gunAngleVertical = Util.clamp(this.gunAngleVertical, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
+                this.socket.emit("input gun vertical", this.gunAngleVertical);
+            }
         }
         if (this.gunLeft) {
-            this.gunAngleHorizontal -= 1 * config.input_factor * deltaFactor;
-            this.gunAngleHorizontal = Util.clamp(this.gunAngleHorizontal, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal);
-            this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
+            this.gunLeftTime += this.delta;
+            if (this.gunLeftTime > config.input_time_threshold) {
+                this.gunAngleHorizontal -= 1 * config.input_factor * deltaFactor;
+                this.gunAngleHorizontal = Util.clamp(this.gunAngleHorizontal, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal);
+                this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
+            }
         }
         if (this.gunRight) {
-            this.gunAngleHorizontal += 1 * config.input_factor * deltaFactor;
-            this.gunAngleHorizontal = Util.clamp(this.gunAngleHorizontal, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal);
-            this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
+            this.gunRightTime += this.delta;
+            if (this.gunRightTime > config.input_time_threshold) {
+                this.gunAngleHorizontal += 1 * config.input_factor * deltaFactor;
+                this.gunAngleHorizontal = Util.clamp(this.gunAngleHorizontal, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal);
+                this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
+            }
         }
         if (this.speedUp) {
-            this.speed += 1 * config.input_factor * deltaFactor;
-            this.speed = Util.clamp(this.speed, this.ship.speed_min, this.ship.speed_max);
-            this.socket.emit("input speed", this.speed);
+            this.speedUpTime += this.delta;
+            if (this.speedUpTime > config.input_time_threshold) {
+                this.speed += 1 * config.input_factor * deltaFactor;
+                this.speed = Util.clamp(this.speed, this.ship.speed_min, this.ship.speed_max);
+                this.socket.emit("input speed", this.speed);
+            }
         }
         if (this.speedDown) {
-            this.speed -= 1 * config.input_factor * deltaFactor;
-            this.speed = Util.clamp(this.speed, this.ship.speed_min, this.ship.speed_max);
-            this.socket.emit("input speed", this.speed);
+            this.speedDownTime += this.delta;
+            if (this.speedDownTime > config.input_time_threshold) {
+                this.speed -= 1 * config.input_factor * deltaFactor;
+                this.speed = Util.clamp(this.speed, this.ship.speed_min, this.ship.speed_max);
+                this.socket.emit("input speed", this.speed);
+            }
         }
     }
 

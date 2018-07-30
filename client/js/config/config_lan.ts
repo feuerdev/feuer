@@ -10,5 +10,6 @@ const config = {
     zoom_min: 0.25,
     zoom_max: 4,
     gravity: -0.01,
-    input_factor: 0.2
+    input_factor: 0.4,
+    input_time_threshold: 300
 };
