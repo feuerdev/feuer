@@ -36,6 +36,9 @@ export default class Game {
     public mapHeight: number;
     public teamId: number;
 
+    public waypoint: { x: number, y: number };
+    public angleToWaypoint: number;
+
     public rudderPosition: number = 0;
     public speed: number = 0;
     public gunAngleVertical: number = 0;
@@ -137,7 +140,8 @@ export default class Game {
         });
 
         canvas[0].addEventListener("contextmenu", (event) => { //Rechtsklick
-
+            this.waypoint = { x: this.cursorWorld.x, y: this.cursorWorld.y };
+            this.socket.emit("input waypoint", this.cursorWorld);
         });
 
         canvas.mousemove(event => {
@@ -235,6 +239,13 @@ export default class Game {
     }
 
     private update(deltaFactor) {
+        if (this.waypoint) {
+            this.angleToWaypoint = Util.radiansToDegrees(Math.atan2((this.waypoint.y - this.ship.height / 2) - this.ship.pos.y, (this.waypoint.x - this.ship.width / 2) - this.ship.pos.x)) - this.ship.orientation;
+            if (this.angleToWaypoint < -180) { //Das verstehe ich nicht ganz
+                this.angleToWaypoint += 360;
+            }
+        }
+
         if (this.rudderLeft) {
             this.rudderLeftTime += this.delta
             if (this.rudderLeftTime > config.input_time_threshold) {
