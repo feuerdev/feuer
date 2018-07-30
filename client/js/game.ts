@@ -71,10 +71,10 @@ export default class Game {
 
         window.addEventListener("keydown", event => {
             switch (event.keyCode) {
-                case 65: this.gunLeft = true;this.aimPoint = null; break;//a
-                case 87: this.gunUp = true;this.aimPoint = null; break;//w                    
-                case 68: this.gunRight = true;this.aimPoint = null; break;//d
-                case 83: this.gunDown = true;this.aimPoint = null; break;//s          
+                case 65: this.gunLeft = true; this.aimPoint = null; break;//a
+                case 87: this.gunUp = true; this.aimPoint = null; break;//w                    
+                case 68: this.gunRight = true; this.aimPoint = null; break;//d
+                case 83: this.gunDown = true; this.aimPoint = null; break;//s          
                 case 38: this.speedUp = true; break;//pfeilhoch
                 case 40: this.speedDown = true; break;//pfeilrunter
                 case 37: this.rudderLeft = true; break;//pfeillinks
@@ -83,7 +83,7 @@ export default class Game {
         }, false);
         window.addEventListener("keyup", event => {
             switch (event.keyCode) {
-                case 65: this.gunLeft = false;  break;//a
+                case 65: this.gunLeft = false; break;//a
                 case 87: this.gunUp = false; break;//w                    
                 case 68: this.gunRight = false; break;//d
                 case 83: this.gunDown = false; break;//s
@@ -109,10 +109,10 @@ export default class Game {
                 case 1: { //Linksclick
                     this.gunAngleHorizontal = this.calculateHorizontalAngle(this.cursorWorld);
                     this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
-                    
+
                     let vertical = this.calculateVerticalAngle(this.cursorWorld);
-                    if(!Number.isNaN(vertical)) {
-                        this.aimPoint = {x:this.cursorWorld.x, y:this.cursorWorld.y};
+                    if (!Number.isNaN(vertical)) {
+                        this.aimPoint = { x: this.cursorWorld.x, y: this.cursorWorld.y };
                         this.gunAngleVertical = this.calculateVerticalAngle(this.cursorWorld);
                         this.socket.emit("input gun vertical", this.gunAngleVertical);
                     }
@@ -156,21 +156,21 @@ export default class Game {
         });
     }
 
-    private calculateHorizontalAngle(toPos: {x,y}): number {
-        let result = Util.radiansToDegrees(Math.atan2((toPos.y-this.ship.height/2) - this.ship.pos.y, (toPos.x-this.ship.width/2) - this.ship.pos.x)) - this.ship.orientation;
-        if(result < -180) { //Das verstehe ich nicht ganz
-            result+=360;
+    private calculateHorizontalAngle(toPos: { x, y }): number {
+        let result = Util.radiansToDegrees(Math.atan2((toPos.y - this.ship.height / 2) - this.ship.pos.y, (toPos.x - this.ship.width / 2) - this.ship.pos.x)) - this.ship.orientation;
+        if (result < -180) { //Das verstehe ich nicht ganz
+            result += 360;
         }
         result = Util.clamp(result, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal);
-        
+
         return result;
     }
 
-    private calculateVerticalAngle(toPos: {x,y}):number {
+    private calculateVerticalAngle(toPos: { x, y }): number {
         const d = Math.sqrt(Math.pow(toPos.x - this.ship.pos.x, 2) + Math.pow(toPos.y - this.ship.pos.y, 2));
         const g = -config.gravity;
         const v = this.ship.gun.velocity;
-        let result = Util.radiansToDegrees(Math.asin( d * g / (Math.pow(v,2) )) / 2);
+        let result = Util.radiansToDegrees(Math.asin(d * g / (Math.pow(v, 2))) / 2);
         result = Util.clamp(result, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
         return result;
     }
@@ -223,44 +223,44 @@ export default class Game {
         gameLoop();
     }
 
-    private update(delta) {
+    private update(deltaFactor) {
         if (this.rudderLeft) {
-            this.rudderPosition -= 1 * delta;
+            this.rudderPosition -= 1 * config.input_factor * deltaFactor;
             this.rudderPosition = Util.clamp(this.rudderPosition, -90, 90);
             this.socket.emit("input rudder", this.rudderPosition);
         }
         if (this.rudderRight) {
-            this.rudderPosition += 1 * delta;
+            this.rudderPosition += 1 * config.input_factor * deltaFactor;
             this.rudderPosition = Util.clamp(this.rudderPosition, -90, 90);
             this.socket.emit("input rudder", this.rudderPosition);
         }
         if (this.gunDown) {
-            this.gunAngleVertical -= 1 * delta;
+            this.gunAngleVertical -= 1 * config.input_factor * deltaFactor;
             this.gunAngleVertical = Util.clamp(this.gunAngleVertical, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
             this.socket.emit("input gun vertical", this.gunAngleVertical);
         }
         if (this.gunUp) {
-            this.gunAngleVertical += 1 * delta;
+            this.gunAngleVertical += 1 * config.input_factor * deltaFactor;
             this.gunAngleVertical = Util.clamp(this.gunAngleVertical, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
             this.socket.emit("input gun vertical", this.gunAngleVertical);
         }
         if (this.gunLeft) {
-            this.gunAngleHorizontal -= 1 * delta;
+            this.gunAngleHorizontal -= 1 * config.input_factor * deltaFactor;
             this.gunAngleHorizontal = Util.clamp(this.gunAngleHorizontal, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal);
             this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
         }
         if (this.gunRight) {
-            this.gunAngleHorizontal += 1 * delta;
+            this.gunAngleHorizontal += 1 * config.input_factor * deltaFactor;
             this.gunAngleHorizontal = Util.clamp(this.gunAngleHorizontal, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal);
             this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
         }
         if (this.speedUp) {
-            this.speed += 1 * delta;
+            this.speed += 1 * config.input_factor * deltaFactor;
             this.speed = Util.clamp(this.speed, this.ship.speed_min, this.ship.speed_max);
             this.socket.emit("input speed", this.speed);
         }
         if (this.speedDown) {
-            this.speed -= 1 * delta;
+            this.speed -= 1 * config.input_factor * deltaFactor;
             this.speed = Util.clamp(this.speed, this.ship.speed_min, this.ship.speed_max);
             this.socket.emit("input speed", this.speed);
         }

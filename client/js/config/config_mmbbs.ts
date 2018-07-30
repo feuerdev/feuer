@@ -9,5 +9,6 @@ const config = {
     log_level: "debug",
     zoom_min: 0.25,
     zoom_max: 4,
-    gravity: -0.01
+    gravity: -0.01,
+    input_factor: 0.2
 };
