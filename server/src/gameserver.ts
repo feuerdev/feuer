@@ -11,8 +11,8 @@ import Shell from "./shell";
 import Ship from "./ship";
 import Gun from "./gun";
 import Vector3 from "./util/vector3";
-import * as Util from "./util/util";
-import Vector2 from "./util/vector2";
+import * as Util from "../../shared/util";
+import Vector2 from "../../shared/vector2";
 
 const GRAVITY: Vector3 = new Vector3(0, 0, config.gravity);
 

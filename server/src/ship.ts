@@ -1,5 +1,5 @@
 import Gun from "./gun";
-import Vector2 from "./util/vector2";
+import Vector2 from "../../shared/vector2";
 import Config from "./util/config";
 
 export default class Ship {
@@ -28,6 +28,8 @@ export default class Ship {
   public speed_actual:number = 0;
   public speed_requested: number = 0;
   public acceleration: number = Config.ship_acceleration;
+
+  public waypoint: Vector2;
 
   public gun: Gun = new Gun();
 }
