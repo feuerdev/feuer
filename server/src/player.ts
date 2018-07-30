@@ -25,7 +25,12 @@ export default class Player {
     socket.on("input gun horizontal", (data) => this.onGunAngleHorizontal(data));
     socket.on("input gun vertical", (data) => this.onGunAngleVertical(data));
     socket.on("input rudder", (data) => this.onRudderPosition(data));
+    socket.on("input waypoint", (data) => this.onWaypoint(data));
     socket.on("input shoot", () => this.onTryShoot());
+  }
+
+  private onWaypoint(waypoint: {x,y}) {
+    this.ship.waypoint = new Vector2(waypoint.x, waypoint.y);
   }
 
   private onShipSpeed(speed: number) {
