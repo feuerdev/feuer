@@ -106,7 +106,7 @@ export default class GameServer implements PlayerDelegate {
 
       const ship: Ship = player.ship;
 
-      ship.speed_actual += (ship.speed_requested - ship.speed_actual) * ship.acceleration * deltaFactor;
+      ship.speed_actual += Util.clamp(ship.speed_requested - ship.speed_actual, -1, 1) * ship.acceleration * deltaFactor;
       ship.speed_actual = Util.clamp(ship.speed_actual, ship.speed_min, ship.speed_max);
 
       ship.rudderAngleActual += (ship.rudderAngleRequested - ship.rudderAngleActual) * config.factor_rudder * deltaFactor;
