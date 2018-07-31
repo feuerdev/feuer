@@ -14,9 +14,9 @@ export default class Renderer {
     private canvas_entities = $("#canvas-entities");
     private container = $("#canvas-container");
 
-    private context_map: CanvasRenderingContext2D;
-    private context_fow: CanvasRenderingContext2D;
-    private context_entities: CanvasRenderingContext2D;
+    private ctxm: CanvasRenderingContext2D;
+    private ctxf: CanvasRenderingContext2D;
+    private ctxe: CanvasRenderingContext2D;
 
     private canvasWidth: number;
     private canvasHeight: number;
@@ -44,7 +44,6 @@ export default class Renderer {
     readonly img_ship3 = new Image();
     readonly img_ship4 = new Image();
 
-
     constructor(game: Game) {
         this.game = game;
 
@@ -63,15 +62,15 @@ export default class Renderer {
         this.canvas_entities[0].height = this.container.height();
 
         if (this.canvas_map.length > 0) {
-            this.context_map = this.canvas_map[0].getContext("2d");
+            this.ctxm = this.canvas_map[0].getContext("2d");
         }
 
         if (this.canvas_fow.length > 0) {
-            this.context_fow = this.canvas_fow[0].getContext("2d");
+            this.ctxf = this.canvas_fow[0].getContext("2d");
         }
 
         if (this.canvas_entities.length > 0) {
-            this.context_entities = this.canvas_entities[0].getContext("2d");
+            this.ctxe = this.canvas_entities[0].getContext("2d");
         }
 
         this.canvasWidth = this.canvas_entities[0].width;
@@ -83,222 +82,185 @@ export default class Renderer {
 
     //#region Cycle
     draw() {
+        this.ctxm.save();
+        this.ctxf.save();
+        this.ctxe.save();
+
+        this.ctxe.clearRect(0, 0, this.drawWidth, this.drawHeight);
 
         this.updateCamera();
 
         if (this.shouldRedrawMap) {
+            this.ctxm.translate(-this.cameraPos.x, -this.cameraPos.y);
             this.drawMap();
         }
 
         if (config.fow) {
+            this.ctxf.translate(-this.cameraPos.x, -this.cameraPos.y);
             this.drawFow();
         }
 
+        this.ctxe.translate(-this.cameraPos.x, -this.cameraPos.y);
         this.drawEntities();
 
         if (config.log_level === "debug") {
             this.drawDebug();
         }
+
+        this.ctxm.restore();
+        this.ctxf.restore();
+        this.ctxe.restore();
     }
 
     updateCamera() {
-        // if (this.isFollowing) {
-        //     const activeUnit = this.game.units_owned[this.game.selection[0]];
-        //     if (activeUnit) {
-        //         this.cameraPosFollow = activeUnit.pos;
-        //     }
-
-        //     if (this.cameraPosFollow) {
-        //         if (this.cameraPosFollow.x - this.cameraPos.x + this.deadzone.x > this.drawWidth) {
-        //             this.cameraPos.x = Math.round(this.cameraPosFollow.x - (this.drawWidth - this.deadzone.x));
-        //         } else if (this.cameraPosFollow.x - this.deadzone.x < this.cameraPos.x) {
-        //             this.cameraPos.x = Math.round(this.cameraPosFollow.x - this.deadzone.x);
-        //         }
-
-        //         if (this.cameraPosFollow.y - this.cameraPos.y + this.deadzone.y > this.drawHeight) {
-        //             this.cameraPos.y = Math.round(this.cameraPosFollow.y - (this.drawHeight - this.deadzone.y));
-        //         } else if (this.cameraPosFollow.y - this.deadzone.y < this.cameraPos.y) {
-        //             this.cameraPos.y = Math.round(this.cameraPosFollow.y - this.deadzone.y);
-        //         }
-        //         this.shouldRedrawMap = true;
-        //     }
-        // }
-
         if (this.isDragging) {
             this.cameraPos.x -= Math.round((this.game.cursorCanvas.x - this.cursorCanvasLast.x) / this.currentZoom);
             this.cameraPos.y -= Math.round((this.game.cursorCanvas.y - this.cursorCanvasLast.y) / this.currentZoom);
-            this.cameraPos.x = Util.clamp(this.cameraPos.x, 0, this.game.mapWidth-this.drawWidth);
-            this.cameraPos.y = Util.clamp(this.cameraPos.y, 0, this.game.mapHeight-this.drawHeight);
+            this.cameraPos.x = Util.clamp(this.cameraPos.x, 0, this.game.mapWidth - this.drawWidth);
+            this.cameraPos.y = Util.clamp(this.cameraPos.y, 0, this.game.mapHeight - this.drawHeight);
             this.shouldRedrawMap = true;
         }
-
         this.cursorCanvasLast.x = this.game.cursorCanvas.x;
         this.cursorCanvasLast.y = this.game.cursorCanvas.y;
     }
 
     drawEntities() {
-        if (this.canvas_entities.length > 0) {
-            this.context_entities.clearRect(0, 0, this.drawWidth, this.drawHeight);
+        if (this.game.aimPoint) {
+            this.drawAimpoint(this.game.aimPoint);
+        }
 
+        if(this.game.waypoint) {
+            this.drawWaypoint();
+        }
+
+        if (this.game.ship) {
             this.drawShip(this.game.ship, true);
+        }
 
-            for (let i = 0; i < this.game.ships.length; i++) {
-                this.drawShip(this.game.ships[i], false);
-            }
+        for (let i = 0; i < this.game.ships.length; i++) {
+            this.drawShip(this.game.ships[i], false);
+        }
 
-            for (let i = 0; i < this.game.shells.length; i++) {
-                const shell = this.game.shells[i];
-                //Shell zeichnen
-                this.context_entities.beginPath();
-                this.context_entities.fillStyle = "yellow";
-                const pX = shell.pos.x - this.cameraPos.x;
-                const pY = shell.pos.y - this.cameraPos.y;
-                const pYZ = shell.pos.y - shell.pos.z - this.cameraPos.y;
-                this.context_entities.arc(pX, pYZ, 3, 0, 2 * Math.PI);
-                this.context_entities.fill();
-                this.context_entities.closePath();
-                //"Schatten" zeichnen
-                const shadowSize = Math.max(3 * (1 - shell.pos.z / 500), 0.5); //Diese Zeile kommt von Louis
-                this.context_entities.beginPath();
-                this.context_entities.fillStyle = "gray";
-                this.context_entities.arc(pX, pY, shadowSize, 0, 2 * Math.PI);
-                this.context_entities.fill();
-                this.context_entities.closePath();
-            }
+        for (let i = 0; i < this.game.shells.length; i++) {
+            this.drawShell(this.game.shells[i]);
         }
     }
 
+    drawWaypoint() {
+        this.ctxe.save();
+        
+        this.ctxe.setLineDash([5, 15]);
+        this.ctxe.strokeStyle = "red";
+        this.ctxe.fillStyle = "red";
+
+        this.ctxe.beginPath();
+        this.ctxe.arc(this.game.waypoint.x, this.game.waypoint.y, 5, 0, 2 * Math.PI);
+        this.ctxe.fill();
+
+        this.ctxe.beginPath();
+        this.ctxe.moveTo(this.game.ship.pos.x + this.game.ship.width / 2, this.game.ship.pos.y + this.game.ship.height / 2);
+        this.ctxe.lineTo(this.game.waypoint.x, this.game.waypoint.y);
+        this.ctxe.stroke();
+        
+        this.ctxe.restore();
+    }
+
+    drawAimpoint(aimPoint: { x, y }) {
+        this.ctxe.beginPath();
+        this.ctxe.strokeStyle = "yellow";
+        this.ctxe.arc(aimPoint.x, aimPoint.y, 10, 0, 2 * Math.PI);
+        this.ctxe.arc(aimPoint.x, aimPoint.y, 15, 0, 2 * Math.PI);
+        this.ctxe.arc(aimPoint.x, aimPoint.y, 20, 0, 2 * Math.PI);
+        this.ctxe.stroke();
+        this.ctxe.closePath();
+    }
+
+    drawShell(shell) {
+        //Shell zeichnen
+        this.ctxe.beginPath();
+        this.ctxe.fillStyle = "yellow";
+        this.ctxe.arc(shell.pos.x, shell.pos.y - shell.pos.z, 3, 0, 2 * Math.PI);
+        this.ctxe.fill();
+        //"Schatten" zeichnen
+        const shadowSize = Math.max(3 * (1 - shell.pos.z / 500), 0.5); //Diese Zeile kommt von Louis
+        this.ctxe.beginPath();
+        this.ctxe.fillStyle = "gray";
+        this.ctxe.arc(shell.pos.x, shell.pos.y, shadowSize, 0, 2 * Math.PI);
+        this.ctxe.fill();
+    }
+
     drawShip(ship, isMine) {
-        if (ship) {
-            this.context_entities.save();
+        this.ctxe.save();
+        const width: number = ship.width;
+        const height: number = ship.height;
 
-            let image;
+        const angleOrientation: number = Util.degreeToRadians(ship.orientation);
+        const angleWaypoint: number = Util.degreeToRadians(this.game.angleToWaypoint);
 
-            this.context_entities.translate(-this.cameraPos.x, -this.cameraPos.y); //TODO: kann das nicht schon vorher an eine andere Stelle?
-            // const pX = ship.pos.x - this.cameraPos.x;
-            // const pY = ship.pos.y - this.cameraPos.y;
-            //Draw aimpoint
-            if (this.game.aimPoint) {
-                this.context_entities.beginPath();
-                this.context_entities.strokeStyle = "yellow";
-                this.context_entities.lineWidth = 1;
-                this.context_entities.setLineDash([]);
-                this.context_entities.arc(this.game.aimPoint.x, this.game.aimPoint.y, 10, 0, 2 * Math.PI);
-                this.context_entities.arc(this.game.aimPoint.x, this.game.aimPoint.y, 15, 0, 2 * Math.PI);
-                this.context_entities.arc(this.game.aimPoint.x, this.game.aimPoint.y, 20, 0, 2 * Math.PI);
-                this.context_entities.stroke();
-            }
-
-            //draw the ship
-            const width: number = ship.width; //TODO: width und height vom Server übernehmen
-            const height: number = ship.height;
-            const rad: number = Util.degreeToRadians(ship.orientation);
-
-            if (ship.teamId === 0) {
-                this.context_entities.fillStyle = isMine ? "pink" : "red";
-                image = isMine ? this.img_ship1 : this.img_ship2;
-            } else if (ship.teamId === 1) {
-                this.context_entities.fillStyle = isMine ? "green" : "darkgreen";
-                image = isMine ? this.img_ship3 : this.img_ship4;
-            }
-
-            this.context_entities.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);
-            this.context_entities.rotate(rad);
-            this.context_entities.rotate(Util.degreeToRadians(90)); //Just for the image
-            this.context_entities.drawImage(image, width / 2 * (-1), height / 2 * (-1), width, height);
-            this.context_entities.rotate(Util.degreeToRadians(-90)); //Just for the image
-            // this.context_entities.fillRect(width / 2 * (-1), height / 2 * (-1), width, height);
-
-            //draw the gun
-            const widthGun: number = 12; //TODO: width und height vom Server übernehmen
-            const heightGun: number = 2;
-            const offsetGun: number = 10;
-            const radGunActual = Util.degreeToRadians(ship.gun.angleHorizontalActual);
-            const radGunReq = Util.degreeToRadians(ship.gun.angleHorizontalRequested);
-            this.context_entities.fillStyle = "black";
-            this.context_entities.rotate(radGunActual);
-            this.context_entities.fillRect(widthGun + offsetGun / 2 * (-1), heightGun / 2 * (-1), widthGun, heightGun);
-
-            if (isMine) {
-                //draw the helper line                
-                const lengthHelper: number = 900;
-                const thicknessHelper: number = 2;
-                const offsetHelper: number = 30;
-                this.context_entities.setLineDash([5, 15]);
-                this.context_entities.strokeStyle = "yellow";
-                this.context_entities.lineWidth = thicknessHelper;
-                this.context_entities.beginPath();
-                this.context_entities.moveTo(offsetHelper, 0);
-                this.context_entities.lineTo(lengthHelper, 0);
-                this.context_entities.stroke();
-                this.context_entities.closePath();
-                if (ship.gun.angleHorizontalRequested !== ship.gun.angleHorizontalActual) {
-                    this.context_entities.rotate(-radGunActual);
-                    this.context_entities.rotate(radGunReq);
-                    this.context_entities.strokeStyle = "grey";
-                    this.context_entities.beginPath();
-                    this.context_entities.moveTo(offsetHelper, 0);
-                    this.context_entities.lineTo(lengthHelper, 0);
-                    this.context_entities.stroke();
-                    this.context_entities.closePath();
-                }
-            }
-            //reset the canvas  
-            this.context_entities.restore();
+        
+        this.ctxe.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);
+        //draw the ship
+        let image;
+        if (ship.teamId === 0) {
+            this.ctxe.fillStyle = isMine ? "pink" : "red";
+            image = isMine ? this.img_ship1 : this.img_ship2;
+        } else if (ship.teamId === 1) {
+            this.ctxe.fillStyle = isMine ? "green" : "darkgreen";
+            image = isMine ? this.img_ship3 : this.img_ship4;
         }
+        this.ctxe.rotate(angleOrientation + (Math.PI / 2));
+        this.ctxe.drawImage(image, width / 2 * (-1), height / 2 * (-1), width, height);
+        this.ctxe.rotate(-(Math.PI /2));
+        // this.ctxe.restore();
+        // this.context_entities.fillRect(width / 2 * (-1), height / 2 * (-1), width, height);
+
+        //draw the gun
+        const widthGun: number = 12; //TODO: width und height vom Server übernehmen
+        const heightGun: number = 2;
+        const offsetGun: number = 10;
+        const radGunActual = Util.degreeToRadians(ship.gun.angleHorizontalActual);
+        const radGunReq = Util.degreeToRadians(ship.gun.angleHorizontalRequested);
+        this.ctxe.fillStyle = "black";
+        this.ctxe.rotate(radGunActual);
+        this.ctxe.fillRect(widthGun + offsetGun / 2 * (-1), heightGun / 2 * (-1), widthGun, heightGun);
+
+        if (isMine) {
+            //draw the helper line                
+            const lengthHelper: number = 900;
+            const thicknessHelper: number = 2;
+            const offsetHelper: number = 30;
+            this.ctxe.setLineDash([5, 15]);
+            this.ctxe.strokeStyle = "yellow";
+            this.ctxe.lineWidth = thicknessHelper;
+            this.ctxe.beginPath();
+            this.ctxe.moveTo(offsetHelper, 0);
+            this.ctxe.lineTo(lengthHelper, 0);
+            this.ctxe.stroke();
+            if (ship.gun.angleHorizontalRequested !== ship.gun.angleHorizontalActual) {
+                this.ctxe.rotate(-radGunActual);
+                this.ctxe.rotate(radGunReq);
+                this.ctxe.strokeStyle = "grey";
+                this.ctxe.beginPath();
+                this.ctxe.moveTo(offsetHelper, 0);
+                this.ctxe.lineTo(lengthHelper, 0);
+                this.ctxe.stroke();
+            }
+        }
+        //reset the canvas  
+        this.ctxe.restore();
     }
 
     drawMap() {
         //Clear Canvas
-        this.context_entities.save();
-        // this.context_entities.translate(-this.cameraPos.x, -this.cameraPos.y); //TODO: kann das nicht schon vorher an eine andere Stelle?
-        this.context_map.clearRect(0, 0, this.drawWidth, this.drawHeight);
-        this.context_map.fillStyle = "darkblue";
-        this.context_map.fillRect(-this.cameraPos.x, -this.cameraPos.y, this.game.mapWidth, this.game.mapHeight);
-        this.context_entities.restore();
-
-        // //Draw Tiles
-        // const minX: number = Math.floor(this.cameraPos.x / this.game.tileSize);
-        // const maxX: number = Math.ceil(minX + this.drawWidth / this.game.tileSize);
-        // const minY: number = Math.floor(this.cameraPos.y / this.game.tileSize);
-        // const maxY: number = Math.ceil(minY + this.drawHeight / this.game.tileSize);
-
-        // for (let x = minX; x <= maxX; x++) {
-        //     for (let y = minY; y <= maxY; y++) {
-        //         const wrappedX = Util.mod(x, this.game.size);
-        //         const wrappedY = Util.mod(y, this.game.size);
-        //         const tile = this.game.tileCache[wrappedX][wrappedY];
-        //         if (tile) {
-        //             this.context_map.fillStyle = tile.color;
-        //             const tX = Util.mod((wrappedX * this.game.tileSize) - this.cameraPos.x, this.game.worldSize);
-        //             const tY = Util.mod((wrappedY * this.game.tileSize) - this.cameraPos.y, this.game.worldSize);
-
-        //             this.context_map.fillRect(tX, tY, this.game.tileSize, this.game.tileSize);
-        //         }
-        //     }
-        // }
-        // this.shouldRedrawMap = false;
+        this.ctxm.save();
+        this.ctxm.fillStyle = "darkblue";
+        this.ctxm.fillRect(0, 0, this.drawWidth, this.drawHeight);
+        this.ctxm.restore();
+        this.shouldRedrawMap = false;
     }
 
     drawFow() {
-        // if (this.canvas_fow.length > 0) {
-        //     this.context_fow.clearRect(0, 0, this.drawWidth, this.drawHeight);
-        //     this.context_fow.fillStyle = "rgba(0, 0, 0, 0.2)";
-        //     this.context_fow.fillRect(0, 0, this.drawWidth, this.drawHeight);
-
-        //     for (let id in this.game.units_owned) {
-        //         const unit = this.game.units_owned[id];
-        //         const distance = unit.visibility * this.game.tileSize;
-        //         const pX = Util.mod(unit.pos.x - this.cameraPos.x, this.game.worldSize);
-        //         const pY = Util.mod(unit.pos.y - this.cameraPos.y, this.game.worldSize);
-        //         this.context_fow.save();
-        //         this.context_fow.beginPath();
-        //         this.context_fow.arc(pX, pY, distance, 0, 2 * Math.PI);
-        //         this.context_fow.clip();
-        //         this.context_fow.clearRect(0, 0, this.drawWidth, this.drawHeight);
-        //         this.context_fow.restore();
-        //     }
-        // }
+        //no fow yet
     }
 
     drawDebug() {
@@ -337,6 +299,9 @@ export default class Renderer {
             this.debug.append("Gun Horizontal Actual   : " + Math.round(this.game.ship.gun.angleHorizontalActual) + "<br>");
             this.debug.append("Gun Horizontal Requested   : " + Math.round(this.game.gunAngleHorizontal) + "<br>");
             this.debug.append("Winkel zum Cursor   : " + Math.round(Util.radiansToDegrees(Math.atan2(this.game.cursorWorld.y - this.game.ship.pos.y, this.game.cursorWorld.x - this.game.ship.pos.x))) + "<br>");
+            if (this.game.waypoint) {
+                this.debug.append("Winkel zum Waypoint   : " + Math.round(this.game.angleToWaypoint) + "<br>");
+            }
         }
 
         if (this.game.shells[0]) {
@@ -362,24 +327,21 @@ export default class Renderer {
 
     zoom(factor: number) {
         const newZoom = this.currentZoom * factor;
-        //Limit the zoomlevel to a relative max/min
-        // if ((!(this.canvasWidth / (this.currentZoom * factor) > this.game.worldSize) && !(this.canvasHeight / (this.currentZoom * factor) > this.game.worldSize)) &&
-        //     (!(this.canvasWidth / (this.currentZoom * factor) < this.canvasWidth / 40) && !(this.canvasHeight / (this.currentZoom * factor) < this.canvasHeight / 40))) {
         if (newZoom <= config.zoom_max && newZoom >= config.zoom_min) {
             this.currentZoom *= factor;
             this.drawWidth = Math.floor(this.canvasWidth / this.currentZoom);
             this.drawHeight = Math.floor(this.canvasHeight / this.currentZoom);
             this.deadzone.x = this.drawWidth / 2 - (50 / this.currentZoom);
             this.deadzone.y = this.drawHeight / 2 - (50 / this.currentZoom);
-            if (this.context_map) {
-                this.context_map.scale(factor, factor);
+            if (this.ctxm) {
+                this.ctxm.scale(factor, factor);
             }
-            if (this.context_fow) {
-                this.context_fow.scale(factor, factor);
+            if (this.ctxf) {
+                this.ctxf.scale(factor, factor);
             }
 
-            if (this.context_entities) {
-                this.context_entities.scale(factor, factor);
+            if (this.ctxe) {
+                this.ctxe.scale(factor, factor);
             }
 
             this.shouldRedrawMap = true;
