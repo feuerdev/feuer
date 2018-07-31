@@ -29,7 +29,5 @@ export default class Ship {
   public speed_requested: number = 0;
   public acceleration: number = Config.ship_acceleration;
 
-  public waypoint: Vector2;
-
   public gun: Gun = new Gun();
 }

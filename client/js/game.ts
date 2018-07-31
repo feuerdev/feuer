@@ -8,6 +8,7 @@ import * as io from "./lib/socket.io.min";
 import * as $ from "./lib/jquery-3.1.1.min";
 import * as Util from "./util/util";
 import { Socket } from "../../node_modules/@types/socket.io";
+import Vector2 from "../../shared/vector2";
 
 export default class Game {
 
@@ -140,8 +141,7 @@ export default class Game {
         });
 
         canvas[0].addEventListener("contextmenu", (event) => { //Rechtsklick
-            this.waypoint = { x: this.cursorWorld.x, y: this.cursorWorld.y };
-            this.socket.emit("input waypoint", this.cursorWorld);
+            this.waypoint = new Vector2(this.cursorWorld.x, this.cursorWorld.y);
         });
 
         canvas.mousemove(event => {
@@ -243,6 +243,12 @@ export default class Game {
             this.angleToWaypoint = Util.radiansToDegrees(Math.atan2((this.waypoint.y - this.ship.height / 2) - this.ship.pos.y, (this.waypoint.x - this.ship.width / 2) - this.ship.pos.x)) - this.ship.orientation;
             if (this.angleToWaypoint < -180) { //Das verstehe ich nicht ganz
                 this.angleToWaypoint += 360;
+            }
+            const autoRudder = Util.clamp(this.angleToWaypoint*4, -90, 90);
+            
+            if(Math.round(autoRudder) !== this.rudderPosition) {
+                this.rudderPosition = autoRudder;
+                this.socket.emit("input rudder", this.rudderPosition);
             }
         }
 
