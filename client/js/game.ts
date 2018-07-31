@@ -94,8 +94,8 @@ export default class Game {
                 case 83: this.gunDown = true; this.aimPoint = null; break;//s          
                 case 38: this.speedUp = true; break;//pfeilhoch
                 case 40: this.speedDown = true; break;//pfeilrunter
-                case 37: this.rudderLeft = true; break;//pfeillinks
-                case 39: this.rudderRight = true; break;//pfeilrechts
+                case 37: this.rudderLeft = true; this.waypoint = null; break;//pfeillinks
+                case 39: this.rudderRight = true; this.waypoint = null; break;//pfeilrechts
             }
         }, false);
         window.addEventListener("keyup", event => {
@@ -141,7 +141,13 @@ export default class Game {
         });
 
         canvas[0].addEventListener("contextmenu", (event) => { //Rechtsklick
-            this.waypoint = new Vector2(this.cursorWorld.x, this.cursorWorld.y);
+            if (!this.renderer.isDragging) { //TODO: This doesnt work. Fix it.
+                this.waypoint = new Vector2(this.cursorWorld.x, this.cursorWorld.y);
+                if(this.speed <= 0) { 
+                    this.speed = this.ship.speed_max;
+                    this.socket.emit("input speed", this.speed);
+                }
+            }
         });
 
         canvas.mousemove(event => {
@@ -164,6 +170,7 @@ export default class Game {
             } else if (event.button === 2) { //Rightclick
                 this.isM2Down = false;
                 this.renderer.isDragging = false;
+
             }
         });
         canvas.mouseout(() => {
@@ -240,16 +247,21 @@ export default class Game {
 
     private update(deltaFactor) {
         if (this.waypoint) {
-            this.angleToWaypoint = Util.radiansToDegrees(Math.atan2((this.waypoint.y - this.ship.height / 2) - this.ship.pos.y, (this.waypoint.x - this.ship.width / 2) - this.ship.pos.x)) - this.ship.orientation;
-            if (this.angleToWaypoint < -180) { //Das verstehe ich nicht ganz
-                this.angleToWaypoint += 360;
+            if (new Vector2(this.waypoint, this.ship.pos).length() < config.waypoint_distance_threshold) {
+                this.rudderPosition = 0;
+                this.waypoint = null;
+            } else {
+                this.angleToWaypoint = Util.radiansToDegrees(Math.atan2((this.waypoint.y - this.ship.height / 2) - this.ship.pos.y, (this.waypoint.x - this.ship.width / 2) - this.ship.pos.x)) - this.ship.orientation;
+                if (this.angleToWaypoint < -180) { //Das verstehe ich nicht ganz
+                    this.angleToWaypoint += 360;
+                }
+                const autoRudder = Util.clamp(this.angleToWaypoint * 4, -90, 90);
+
+                if (Math.round(autoRudder) !== this.rudderPosition) {
+                    this.rudderPosition = autoRudder;
+                }
             }
-            const autoRudder = Util.clamp(this.angleToWaypoint*4, -90, 90);
-            
-            if(Math.round(autoRudder) !== this.rudderPosition) {
-                this.rudderPosition = autoRudder;
-                this.socket.emit("input rudder", this.rudderPosition);
-            }
+            this.socket.emit("input rudder", this.rudderPosition);
         }
 
         if (this.rudderLeft) {
