@@ -284,6 +284,7 @@ export default class Renderer {
         this.debug.append("Cursor Position Y   : " + this.game.cursorWorld.y + "<br>");
         this.debug.append("Cursor Canvas Position X   : " + this.game.cursorCanvas.x + "<br>");
         this.debug.append("Cursor Canvas Position Y   : " + this.game.cursorCanvas.y + "<br>");
+        this.debug.append("Mouse Distance   : " + this.game.dragDistance + "<br>");
         this.debug.append("Zoom Factor   : " + this.currentZoom + "<br>");
         if (this.game.ship) {
             this.debug.append("<br><em>Ship</em><br>");

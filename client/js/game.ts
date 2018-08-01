@@ -22,6 +22,7 @@ export default class Game {
     private renderer: Renderer = new Renderer(this);
 
     //Aktuelle Cursor Position
+    public dragDistance: number = 0;
     public cursorWorld: { x, y } = { x: -1, y: -1 };
     public cursorCanvas: { x, y } = { x: -1, y: -1 };
     public aimPoint: { x, y };
@@ -140,20 +141,21 @@ export default class Game {
             }
         });
 
-        canvas[0].addEventListener("contextmenu", (event) => { //Rechtsklick
-            if (!this.renderer.isDragging) { //TODO: This doesnt work. Fix it.
-                this.waypoint = new Vector2(this.cursorWorld.x, this.cursorWorld.y);
-                if(this.speed <= 0) { 
-                    this.speed = this.ship.speed_max;
-                    this.socket.emit("input speed", this.speed);
-                }
-            }
-        });
+        // canvas[0].addEventListener("contextmenu", (event) => { //Rechtsklick
+        //     if (!this.renderer.isDragging) { //TODO: This doesnt work. Fix it.
+        //         this.waypoint = new Vector2(this.cursorWorld.x, this.cursorWorld.y);
+        //         if (this.speed <= 0) {
+        //             this.speed = this.ship.speed_max;
+        //             this.socket.emit("input speed", this.speed);
+        //         }
+        //     }
+        // });
 
         canvas.mousemove(event => {
             if (this.isM2Down) {
                 this.renderer.isDragging = true;
                 this.renderer.isFollowing = false;
+                this.dragDistance += (Math.abs(this.cursorCanvas.x - event.offsetX) + Math.abs(this.cursorCanvas.y - event.offsetY));
             }
             this.updateCursor(event);
         });
@@ -170,7 +172,15 @@ export default class Game {
             } else if (event.button === 2) { //Rightclick
                 this.isM2Down = false;
                 this.renderer.isDragging = false;
-
+                console.log(this.dragDistance);
+                if (this.dragDistance < config.click_distance_threshold) {
+                    this.waypoint = new Vector2(this.cursorWorld.x, this.cursorWorld.y);
+                    if (this.speed <= 0) {
+                        this.speed = this.ship.speed_max;
+                        this.socket.emit("input speed", this.speed);
+                    }
+                }
+                this.dragDistance = 0;
             }
         });
         canvas.mouseout(() => {
