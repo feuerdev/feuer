@@ -23,9 +23,9 @@ export default class Game {
 
     //Aktuelle Cursor Position
     public dragDistance: number = 0;
-    public cursorWorld: { x, y } = { x: -1, y: -1 };
-    public cursorCanvas: { x, y } = { x: -1, y: -1 };
-    public aimPoint: { x, y };
+    public cursorWorld: Vector2 = new Vector2();
+    public cursorCanvas: Vector2 = new Vector2();
+    public aimPoint: Vector2;
 
     private isM1Down: boolean = false;
     private isM2Down: boolean = false;
@@ -38,7 +38,7 @@ export default class Game {
     public mapHeight: number;
     public teamId: number;
 
-    public waypoint: { x: number, y: number };
+    public waypoint: Vector2 = null;
     public angleToWaypoint: number;
 
     public rudderPosition: number = 0;
@@ -108,7 +108,7 @@ export default class Game {
                 case 38: this.speedUp = false; this.speedUpTime = 0; this.speed = Util.clamp(++this.speed, this.ship.speed_min, this.ship.speed_max); this.socket.emit("input speed", this.speed); break;//pfeilhoch
                 case 40: this.speedDown = false; this.speedDownTime = 0; this.speed = Util.clamp(--this.speed, this.ship.speed_min, this.ship.speed_max); this.socket.emit("input speed", this.speed); break;//pfeilrunter
                 case 37: this.rudderLeft = false; this.rudderLeftTime = 0; this.rudderPosition = Util.clamp(--this.rudderPosition, -90, 90); this.socket.emit("input rudder", this.rudderPosition); break;//pfeillinks
-                case 88: this.rudderPosition = 0; this.socket.emit("input rudder", this.rudderPosition); break;//x
+                case 88: this.rudderPosition = 0; this.waypoint = null; this.socket.emit("input rudder", this.rudderPosition); break;//x
                 case 39: this.rudderRight = false; this.rudderRightTime = 0; this.rudderPosition = Util.clamp(++this.rudderPosition, -90, 90); this.socket.emit("input rudder", this.rudderPosition); break;//pfeilrechts
                 case 70: this.renderer.switchFollowMode(); break;//f
                 case 187: this.renderer.zoomIn(); break;//+
@@ -122,19 +122,17 @@ export default class Game {
             this.updateCursor(event);
         }, false);
         window.addEventListener("click", event => {
-            console.log(event.which);
             switch (event.which) {
                 case 1: { //Linksclick
                     this.gunAngleHorizontal = this.calculateHorizontalAngle(this.cursorWorld);
                     this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
 
                     let vertical = this.calculateVerticalAngle(this.cursorWorld);
-                    if (!Number.isNaN(vertical)) {
-                        this.aimPoint = { x: this.cursorWorld.x, y: this.cursorWorld.y };
+                    if (!Number.isNaN(vertical)) { //TODO improve this
+                        this.aimPoint = new Vector2(this.cursorWorld.x, this.cursorWorld.y);
                         this.gunAngleVertical = this.calculateVerticalAngle(this.cursorWorld);
                         this.socket.emit("input gun vertical", this.gunAngleVertical);
                     }
-
                     break;
                 }
                 // case 2: this.renderer.switchFollowMode(); break;//Mittelclick?
@@ -172,7 +170,6 @@ export default class Game {
             } else if (event.button === 2) { //Rightclick
                 this.isM2Down = false;
                 this.renderer.isDragging = false;
-                console.log(this.dragDistance);
                 if (this.dragDistance < config.click_distance_threshold) {
                     this.waypoint = new Vector2(this.cursorWorld.x, this.cursorWorld.y);
                     if (this.speed <= 0) {
@@ -349,6 +346,10 @@ export default class Game {
     }
 
     private onGamestateShip(ship) {
+        if(this.ship && this.aimPoint) {
+            const travel: Vector2 = new Vector2(this.ship.pos, ship.pos);
+            this.aimPoint = this.aimPoint.add(travel);
+        }
         this.ship = ship;
     }
 

@@ -4,6 +4,7 @@
 import * as $ from "./lib/jquery-3.1.1.min";
 import Game from "./game";
 import * as Util from "./util/util";
+import Vector2 from "../../shared/vector2";
 
 export default class Renderer {
 
@@ -29,11 +30,11 @@ export default class Renderer {
     public currentZoom: number = 1;
     private debug = $("#debug");
 
-    private deadzone: { x, y } = { x: this.canvasWidth / 2 - (50 / this.currentZoom), y: this.canvasHeight / 2 - (50 / this.currentZoom) };
-    public cameraPos = { x: 0, y: 0 };
-    public cameraPosFollow: { x, y } = { x: 0, y: 0 };
+    private deadzone: Vector2 = new Vector2(this.canvasWidth / 2 - (50 / this.currentZoom),this.canvasHeight / 2 - (50 / this.currentZoom));
+    public cameraPos: Vector2 = new Vector2();
+    public cameraPosFollow: Vector2 = new Vector2();
 
-    private cursorCanvasLast: { x, y } = { x: 0, y: 0 };
+    private cursorCanvasLast: Vector2 = new Vector2();
     public isFollowing: boolean = false;
     public isDragging: boolean = false;
 
