@@ -9,8 +9,9 @@ TODO:
   * Shells besser zeichnen
 * Input
   * Linksclick zum Zielen
-    * Nicht ganz akkurat
-  * Rechtsklick zum Waypoint setzen
+    * Sollte sich mit dem Schiff bewegen
+    * Kalkuliere den aimpoint anhand der beiden Winkel und der velocity
+      * Dann ist es auch einfacher den Punkt aktuell zu halten
   * Optische Darstellung des Vertikalen Angles
 
 * UI
@@ -23,12 +24,14 @@ TODO:
 
 * Login
 * XP System
+* Client Config über Webservice laden
 
 Erledigt:
-* done - teams implementieren
-* done - spawns implementieren
-* done - spielfeldgröße festlegen
-* done - "Schatten" soll kleiner werden je höher das projektil fliegt
-* done - feuerrate begrenzen
-* done - Pepy's Schiffe zeichnen
-* done - Zwei Hilfslinien (oder anderer Indikator für "requested" Angle und "actual" Angle)
+* Rechtsklick zum Waypoint setzen
+* teams implementieren
+* spawns implementieren
+* spielfeldgröße festlegen
+* "Schatten" soll kleiner werden je höher das projektil fliegt
+* feuerrate begrenzen
+* Pepy's Schiffe zeichnen
+* Zwei Hilfslinien (oder anderer Indikator für "requested" Angle und "actual" Angle)
