@@ -45,6 +45,10 @@ export default class Vector2 {
     }
   }
 
+  public add(vector:Vector2): Vector2 {
+    return new Vector2(this.x + vector.x, this.y + vector.y);
+  }
+
   public toVector3(): Vector3 {
     return new Vector3(this.x, this.y, 0);  
   }
