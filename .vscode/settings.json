@@ -1,6 +1,7 @@
 {
   "files.exclude": {
     "server/**/*.js": true,
+    "shared/**/*.js": true,
     "**/*.js.map": true,
     "client/js/*.js": true,
     "client/js/config/*.js": true,
