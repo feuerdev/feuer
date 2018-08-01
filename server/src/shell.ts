@@ -1,4 +1,5 @@
-import Vector3 from "./util/vector3";
+
+import Vector3 from "../../shared/vector3";
 
 export default class Shell {
 

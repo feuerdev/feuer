@@ -6,7 +6,7 @@ import Renderer from "./renderer";
 import Log from "./util/log";
 import * as io from "./lib/socket.io.min";
 import * as $ from "./lib/jquery-3.1.1.min";
-import * as Util from "./util/util";
+import * as Util from "../../shared/util";
 import { Socket } from "../../node_modules/@types/socket.io";
 import Vector2 from "../../shared/vector2";
 

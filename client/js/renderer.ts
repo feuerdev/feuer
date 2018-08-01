@@ -3,8 +3,8 @@
  */
 import * as $ from "./lib/jquery-3.1.1.min";
 import Game from "./game";
-import * as Util from "./util/util";
 import Vector2 from "../../shared/vector2";
+import * as Util from "../../shared/util";
 
 export default class Renderer {
 

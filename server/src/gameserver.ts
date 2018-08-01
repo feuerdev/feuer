@@ -10,9 +10,9 @@ import Player, { PlayerDelegate } from "./player";
 import Shell from "./shell";
 import Ship from "./ship";
 import Gun from "./gun";
-import Vector3 from "./util/vector3";
 import * as Util from "../../shared/util";
 import Vector2 from "../../shared/vector2";
+import Vector3 from "../../shared/vector3";
 
 const GRAVITY: Vector3 = new Vector3(0, 0, config.gravity);
 

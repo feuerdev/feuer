@@ -1,8 +1,8 @@
 import { Socket } from "../../node_modules/@types/socket.io";
 import Ship from "./ship";
 import Shell from "./shell";
-import Vector3 from "./util/vector3";
-import Vector2 from "./util/vector2";
+import Vector2 from "../../shared/vector2";
+import Vector3 from "../../shared/vector3";
 
 export interface PlayerDelegate {
   onPlayerDisconnected(player: Player);
