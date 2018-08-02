@@ -127,7 +127,11 @@ export default class Renderer {
 
     drawEntities() {
         if (this.game.aimPoint) {
-            this.drawAimpoint(this.game.aimPoint);
+            this.drawAimpoint(this.game.aimPoint, "yellow");
+        }
+
+        if (this.game.aimPointRequested) {
+            this.drawAimpoint(this.game.aimPointRequested, "grey");
         }
 
         if(this.game.waypoint) {
@@ -166,9 +170,9 @@ export default class Renderer {
         this.ctxe.restore();
     }
 
-    drawAimpoint(aimPoint: { x, y }) {
+    drawAimpoint(aimPoint: Vector2, color:string) {
         this.ctxe.beginPath();
-        this.ctxe.strokeStyle = "yellow";
+        this.ctxe.strokeStyle = color;
         this.ctxe.arc(aimPoint.x, aimPoint.y, 10, 0, 2 * Math.PI);
         this.ctxe.arc(aimPoint.x, aimPoint.y, 15, 0, 2 * Math.PI);
         this.ctxe.arc(aimPoint.x, aimPoint.y, 20, 0, 2 * Math.PI);

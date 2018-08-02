@@ -26,8 +26,8 @@ export default class Game {
     public cursorWorld: Vector2 = new Vector2();
     public cursorCanvas: Vector2 = new Vector2();
     public aimPoint: Vector2;
+    public aimPointRequested: Vector2;
 
-    private isM1Down: boolean = false;
     private isM2Down: boolean = false;
 
     public ship: any;
@@ -89,10 +89,10 @@ export default class Game {
 
         window.addEventListener("keydown", event => {
             switch (event.keyCode) {
-                case 65: this.gunLeft = true; this.aimPoint = null; break;//a
-                case 87: this.gunUp = true; this.aimPoint = null; break;//w                    
-                case 68: this.gunRight = true; this.aimPoint = null; break;//d
-                case 83: this.gunDown = true; this.aimPoint = null; break;//s          
+                case 65: this.gunLeft = true;  break;//a
+                case 87: this.gunUp = true;  break;//w                    
+                case 68: this.gunRight = true;  break;//d
+                case 83: this.gunDown = true;  break;//s          
                 case 38: this.speedUp = true; break;//pfeilhoch
                 case 40: this.speedDown = true; break;//pfeilrunter
                 case 37: this.rudderLeft = true; this.waypoint = null; break;//pfeillinks
@@ -124,15 +124,17 @@ export default class Game {
         window.addEventListener("click", event => {
             switch (event.which) {
                 case 1: { //Linksclick
-                    this.gunAngleHorizontal = this.calculateHorizontalAngle(this.cursorWorld);
+                    this.gunAngleHorizontal = Util.clamp(Util.calculateHorizontalAngle(this.ship.pos ,new Vector2(this.cursorWorld.x - this.ship.width / 2, this.cursorWorld.y -this.ship.width / 2), this.ship.orientation), this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal);
+                    this.gunAngleVertical = Util.clamp(Util.calculateVerticalAngle(new Vector2(this.ship.pos.x - this.ship.width / 2, this.ship.pos.y -this.ship.width / 2), this.cursorWorld, config.gravity, this.ship.gun.velocity), this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
                     this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
+                    this.socket.emit("input gun vertical", this.gunAngleVertical);
 
-                    let vertical = this.calculateVerticalAngle(this.cursorWorld);
-                    if (!Number.isNaN(vertical)) { //TODO improve this
-                        this.aimPoint = new Vector2(this.cursorWorld.x, this.cursorWorld.y);
-                        this.gunAngleVertical = this.calculateVerticalAngle(this.cursorWorld);
-                        this.socket.emit("input gun vertical", this.gunAngleVertical);
-                    }
+                    // let vertical = this.calculateVerticalAngle(this.cursorWorld);
+                    // if (!Number.isNaN(vertical)) { //TODO improve this
+                    //     this.aimPoint = new Vector2(this.cursorWorld.x, this.cursorWorld.y);
+                    //     this.gunAngleVertical = this.calculateVerticalAngle(this.cursorWorld);
+                    //     this.socket.emit("input gun vertical", this.gunAngleVertical);
+                    // }
                     break;
                 }
                 // case 2: this.renderer.switchFollowMode(); break;//Mittelclick?
@@ -159,14 +161,14 @@ export default class Game {
         });
         canvas.mousedown(event => {
             if (event.button === 0) { //Leftclick
-                this.isM1Down = true;
+                //
             } else if (event.button === 2) { //Rightclick
                 this.isM2Down = true;
             }
         });
         canvas.mouseup(event => {
             if (event.button === 0) { //Leftclick
-                this.isM1Down = false;
+                //
             } else if (event.button === 2) { //Rightclick
                 this.isM2Down = false;
                 this.renderer.isDragging = false;
@@ -181,12 +183,12 @@ export default class Game {
             }
         });
         canvas.mouseout(() => {
-            this.isM1Down = false;
             this.isM2Down = false;
             this.renderer.isDragging = false
         });
     }
 
+    /*
     private calculateHorizontalAngle(toPos: { x, y }): number {
         let result = Util.radiansToDegrees(Math.atan2((toPos.y - this.ship.height / 2) - this.ship.pos.y, (toPos.x - this.ship.width / 2) - this.ship.pos.x)) - this.ship.orientation;
         if (result < -180) { //Das verstehe ich nicht ganz
@@ -202,10 +204,15 @@ export default class Game {
         const g = -config.gravity;
         const v = this.ship.gun.velocity;
         let result = Util.radiansToDegrees(Math.asin(d * g / (Math.pow(v, 2))) / 2);
-        result = Util.clamp(result, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
+        if(Number.isNaN(result)) {
+            result = 45;
+        } else {
+            result = Util.clamp(result, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
+        }
         return result;
     }
 
+*/
     private updateCursor(event) {
         this.cursorCanvas.x = event.offsetX;
         this.cursorCanvas.y = event.offsetY;
@@ -335,6 +342,11 @@ export default class Game {
                 this.socket.emit("input speed", this.speed);
             }
         }
+
+        if(this.ship) {
+            this.aimPointRequested = Util.calculateAimpoint(this.ship.pos, this.gunAngleHorizontal, this.gunAngleVertical, this.ship.orientation, config.gravity, this.ship.gun.velocity);
+            this.aimPoint = Util.calculateAimpoint(this.ship.pos, this.ship.gun.angleHorizontalActual,this.ship.gun.angleVerticalActual, this.ship.orientation, config.gravity, this.ship.gun.velocity);
+        }
     }
 
     private onConnected() {
@@ -346,10 +358,6 @@ export default class Game {
     }
 
     private onGamestateShip(ship) {
-        if(this.ship && this.aimPoint) {
-            const travel: Vector2 = new Vector2(this.ship.pos, ship.pos);
-            this.aimPoint = this.aimPoint.add(travel);
-        }
         this.ship = ship;
     }
 
