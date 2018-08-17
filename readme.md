@@ -7,17 +7,15 @@ TODO:
 
 * Grafik
   * Shells besser zeichnen
-* Input
-  * Linksclick zum Zielen
-    * Sollte sich mit dem Schiff bewegen
-    * Kalkuliere den aimpoint anhand der beiden Winkel und der velocity
-      * Dann ist es auch einfacher den Punkt aktuell zu halten
+* Input  
   * Optische Darstellung des Vertikalen Angles
 
 * UI
   * Keyboard shortcuts anzeigen
 
 * Gameplay
+  * Kugeln aus Kanone fliegen lassen
+  * Mehrere Kanonen
   * Korrekte hit detection
   * Tilebasierter Schiff Aufbau
     * Dann könnte man z.B. eine Werft (aka eine Tabelle) anlegen. Die Standard Werft ist z.B. 4x3. Durch Upgrades kann man die maximale Größe erweitern.
@@ -27,11 +25,25 @@ TODO:
 * Client Config über Webservice laden
 
 Erledigt:
-* Rechtsklick zum Waypoint setzen
-* teams implementieren
-* spawns implementieren
-* spielfeldgröße festlegen
-* "Schatten" soll kleiner werden je höher das projektil fliegt
-* feuerrate begrenzen
-* Pepy's Schiffe zeichnen
-* Zwei Hilfslinien (oder anderer Indikator für "requested" Angle und "actual" Angle)
+* Gameplay
+  * Multiplayer
+  * Mausinput
+    * Linksclick zum Zielen
+    * Rechtsklick zum Waypoint setzen
+  * Tastaturinput
+    * WASD zum Zielen
+    * Pfeiltasten zum bewegen
+    * x zum Ruder-Reset
+    * Space zum Schießen
+* Spawns auf beiden Spielfeldseiten
+* Spielfeldgröße festlegen
+* Feuerrate begrenzen
+
+* UI
+  * Vorschau des Einschlagpunkts der Projektile (Zielhilfe)
+  * "Schatten" soll kleiner werden je höher das projektil fliegt
+  * Pepy's Schiffe zeichnen
+  * Zwei Hilfslinien (oder anderer Indikator für "requested" Angle und "actual" Angle)
+
+* Other
+  * Shared Code zwischen Server und Client
