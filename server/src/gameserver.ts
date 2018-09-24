@@ -134,7 +134,8 @@ export default class GameServer implements PlayerDelegate {
       const shell: Shell = this.shells[i];
 
       shell.velocity = shell.velocity.add(GRAVITY.multiply(deltaFactor));
-      // shell.velocity.add(wind);
+      // const windVector: Vector3 = new Vector3(0.01,0,0);
+      // shell.velocity = shell.velocity.add(windVector);
       shell.pos = shell.pos.add(shell.velocity);
 
       if (shell.pos.z < 0) {
