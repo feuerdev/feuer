@@ -3,6 +3,10 @@ import WebServer from "./webserver"
 import GameServer from "./gameserver"
 import Log from "./util/log";
 
+import * as dotenv from "dotenv";
+
+dotenv.config();
+
 Log.info("Config: "+config.name);
 Log.info("Config Content: "+JSON.stringify(config));
 
