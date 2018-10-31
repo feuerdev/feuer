@@ -19,9 +19,4 @@ router.post("/", function(req, res) {
   //TODO
 });
 
-/* old:
- this.app.get("/login", function(req, res) {
-  res.sendFile("login.html", {root: directory_client});
- });
-*/
 export default router;

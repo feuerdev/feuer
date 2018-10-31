@@ -19,3 +19,6 @@ function getPool() {
 export function query(sql, callback) {
   getPool().query(sql, callback);
 }
+export function queryWithValues(sql, values, callback) {
+  getPool().query(sql, values, callback);
+}
