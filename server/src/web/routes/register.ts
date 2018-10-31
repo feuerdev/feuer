@@ -1,5 +1,6 @@
 import * as express from "express";
 import * as validator from "express-validator";
+import * as bcrypt from "bcrypt";
 import * as db from "../../util/db";
 import Log from "../../util/log";
 const router = express.Router();
@@ -43,14 +44,18 @@ router.post("/", function (req, res) {
   } else {
     Log.info("Registration: Username=" + username + "\nE-Mail=" + email + "\nPassword=" + password + "\nPassword2=" + passwordRepeat);
 
-    db.queryWithValues("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", [username, email, password], function (error, results, fields) {
-      if (error) {
-        Log.error(error);
-        res.send(error);
-      } else {
-        res.send("Reg complete");
-      }
+    bcrypt.hash(password, 10, function(err, hash) {
+      if(err) throw err;
+      db.queryWithValues("INSERT INTO users (username, email, password) VALUES (?, ?, ?)", [username, email, hash], function (error, results, fields) {
+        if (error) {
+          Log.error(error);
+          res.send(error);
+        } else {
+          res.send("Reg complete");
+        }
+      });
     });
+    
   }
 
 
