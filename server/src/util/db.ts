@@ -16,9 +16,6 @@ function getPool() {
   return pool;  
 }
 
-export function query(sql) {
-  getPool().query(sql, function(error, results, fields) {
-    if(error) throw error;
-    return results;
-  });
+export function query(sql, callback) {
+  getPool().query(sql, callback);
 }
