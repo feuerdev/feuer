@@ -14,7 +14,7 @@
     "tscwin": "node_modules/.bin/tsc.cmd -p tsconfig_deploy.json"
   },
   "dependencies": {
-    "bcrypt": "^3.0.2",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.3",
     "browserify": "^16.2.2",
     "dotenv": "^6.1.0",
