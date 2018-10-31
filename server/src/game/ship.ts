@@ -1,4 +1,4 @@
-import Gun from "../gun";
+import Gun from "./gun";
 import Vector2 from "../../../shared/vector2";
 import Config from "../util/config";
 

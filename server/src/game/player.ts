@@ -1,6 +1,6 @@
 import { Socket } from "socket.io";
-import Ship from "../ship";
-import Shell from "../shell";
+import Ship from "./ship";
+import Shell from "./shell";
 import Vector2 from "../../../shared/vector2";
 import Vector3 from "../../../shared/vector3";
 

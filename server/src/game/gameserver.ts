@@ -6,10 +6,10 @@ import config from "../util/config";
 import Log from "../util/log";
 import * as socketio from "socket.io";
 import { Server } from "http";
-import Player, { PlayerDelegate } from "../player";
-import Shell from "../shell";
-import Ship from "../ship";
-import Gun from "../gun";
+import Player, { PlayerDelegate } from "./player"
+import Shell from "./shell";
+import Ship from "./ship";
+import Gun from "./gun";
 import * as Util from "../../../shared/util";
 import Vector2 from "../../../shared/vector2";
 import Vector3 from "../../../shared/vector3";
