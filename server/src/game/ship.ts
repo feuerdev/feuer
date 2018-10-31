@@ -1,6 +1,6 @@
-import Gun from "./gun";
-import Vector2 from "../../shared/vector2";
-import Config from "./util/config";
+import Gun from "../gun";
+import Vector2 from "../../../shared/vector2";
+import Config from "../util/config";
 
 export default class Ship {
 

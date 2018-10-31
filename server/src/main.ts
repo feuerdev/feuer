@@ -1,6 +1,6 @@
 import config from "./util/config"
-import WebServer from "./webserver"
-import GameServer from "./gameserver"
+import WebServer from "./web/webserver"
+import GameServer from "./game/gameserver"
 import Log from "./util/log";
 
 import * as dotenv from "dotenv";

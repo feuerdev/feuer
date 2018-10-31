@@ -1,5 +1,5 @@
 import * as express from "express";
-import * as db from "../util/db";
+import * as db from "../../util/db";
 const router = express.Router();
 
 //Route: /register/
@@ -22,7 +22,7 @@ router.post("/", function(req, res) {
   const password = req.body.password;
   const passwordRepeat = req.body.passwordRepeat;
   console.log({username, email, password, passwordRepeat});
-  console.log(db.query("SELECT 1 + 1 AS solution"));
+  // console.log(db.query("SELECT 1 + 1 AS solution", null));
   res.send("Reg complete");
 });
 

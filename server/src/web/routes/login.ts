@@ -1,5 +1,5 @@
 import * as express from "express";
-import * as db from "../util/db";
+import * as db from "../../util/db";
 const router = express.Router();
 
 //Route: /login/

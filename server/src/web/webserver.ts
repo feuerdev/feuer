@@ -1,16 +1,17 @@
 /**
  * Diese Klasse behandelt den HttpServer
  */
-import config from "./util/config";
+import config from "../util/config";
 import * as http from "http";
 import * as express from "express";
 import * as path from "path";
 import * as bodyParser from "body-parser";
 
+import router_game from "./routes/game";
 import router_register from "./routes/register";
 import router_login from "./routes/login";
 
-const directory_client = path.join(__dirname, "/../../client"); //Gibt das Client-Root-Verzeichnis zurueck.;
+const directory_client = path.join(__dirname, "../../../client"); //Gibt das Client-Root-Verzeichnis zurueck.;
     
 export default class Webserver {
   
@@ -24,7 +25,6 @@ export default class Webserver {
 
         this.app.use("/register", router_register);
         this.app.use("/login", router_login);
-
         
         this.app.get("/config.js", function(req, res) {
             res.sendFile("/js/config/config_"+config.name+".js", {root: directory_client});
