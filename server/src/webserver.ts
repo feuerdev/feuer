@@ -7,7 +7,6 @@ import * as express from "express";
 import * as path from "path";
 import * as bodyParser from "body-parser";
 
-import router_game from "./routes/game";
 import router_register from "./routes/register";
 import router_login from "./routes/login";
 
