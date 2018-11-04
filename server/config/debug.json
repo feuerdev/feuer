@@ -1,4 +1,6 @@
 {
+  "secure_cookie": false,
+  "log_level": "debug",
   "ship_acceleration": 0.2,
   "gun_firerate" : 100
 }

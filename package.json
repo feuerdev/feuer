@@ -14,18 +14,22 @@
     "tscwin": "node_modules/.bin/tsc.cmd -p tsconfig_deploy.json"
   },
   "dependencies": {
+    "@types/express": "^4.16.0",
+    "@types/express-session": "^1.15.11",
+    "@types/node": "^10.5.2",
+    "@types/passport": "^0.4.7",
+    "@types/socket.io": "^1.4.36",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.3",
     "browserify": "^16.2.2",
     "dotenv": "^6.1.0",
     "express": "^4.16.3",
+    "express-session": "^1.15.6",
     "express-validator": "^5.3.0",
     "mysql": "^2.16.0",
+    "passport": "^0.4.0",
     "socket.io": "^2.1.1",
     "typescript": "^2.9.2",
-    "winston": "^3.0.0",
-    "@types/express": "^4.16.0",
-    "@types/node": "^10.5.2",
-    "@types/socket.io": "^1.4.36"
+    "winston": "^3.0.0"
   }
 }

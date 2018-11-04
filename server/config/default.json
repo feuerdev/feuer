@@ -1,5 +1,7 @@
 {
   "logfile": "game.log",
+  "log_level": "error",
+  "secure_cookie": true,
   "port": 8000,
   "transports": ["websocket"],  
   "updaterate": 60,
