@@ -1,3 +1,5 @@
+Try it at https://gellerlul.herokuapp.com/
+
 Building, Running, Debugging
 
 1. run build task (tsc ist durch die tsconfig.json automatisch im watch modus);
