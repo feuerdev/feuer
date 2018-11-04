@@ -56,7 +56,7 @@ export default class GameServer implements PlayerDelegate {
       socket.emit("info teamId", newPlayer.teamId);
       socket.emit("info mapwidth", this.mapWidth);
       socket.emit("info mapheight", this.mapHeight);
-      Log.info("Player Connected: " + this.players);
+      Log.info("Player Connected: " + socket.id);
     });
   }
 
