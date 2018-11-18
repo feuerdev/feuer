@@ -1,5 +1,8 @@
+
 node_modules
 *.js
 *.js.map
 *.log
 .env
+
+!client/js/web/*.js
