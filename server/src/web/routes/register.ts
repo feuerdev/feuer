@@ -1,11 +1,5 @@
 import * as express from "express";
-import * as validator from "express-validator";
-import * as bcrypt from "bcryptjs";
-import * as db from "../../util/db";
-import Log from "../../util/log";
 const router = express.Router();
-
-router.use(validator());
 
 //Route: /register/
 router.get("/", function (req, res) {
