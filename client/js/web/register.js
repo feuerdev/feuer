@@ -5,17 +5,28 @@ if (form_register) {
     e.preventDefault(); //stop form from submitting
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
+    const passwordRepeat = document.getElementById("passwordRepeat").value;
+    const username = document.getElementById("username").value;
 
-    firebase.auth().createUserWithEmailAndPassword(email, password)
-      .then(function () {
-        console.log("User successfully registered, redirecting");
-        window.location.replace("/");
-      })
-      .catch(function (error) {
-        if (error) {
-          console.log(error.code);
-          console.log(error.message);
-        }
-      });
+    if (password === passwordRepeat) {
+      firebase.auth().createUserWithEmailAndPassword(email, password)
+        .then(function (success) {
+          console.log("User successfully registered, redirecting");
+          success.updateProfile({
+            displayName: username
+          }).catch(err => {
+            console.log(err);
+          });
+          window.location.replace("/");
+        })
+        .catch(function (error) {
+          if (error) {
+            console.log(error.code);
+            console.log(error.message);
+          }
+        });
+    } else {
+      console.log("passwords dont match");
+    }
   });
 }
