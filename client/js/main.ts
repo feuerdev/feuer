@@ -5,13 +5,12 @@
 import * as $ from "./lib/jquery-3.1.1.min";
 import Log from "./util/log";
 import Game from "./game";
-import Renderer from "./renderer";
 
 declare const config;
 
-$(document).ready(function() {
+$(document).ready(function () {
     const game = new Game();
-    if(!config.local) {
+    if (!config.local) {
         game.connect();
     }
     game.run();

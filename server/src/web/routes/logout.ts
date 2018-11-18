@@ -4,11 +4,11 @@ const router = express.Router();
 //Route: /login/
 
 router.get("/", function(req, res) {
-  res.render("login");
+  res.render("logout");
 });
 
 router.post("/", function(req, res) {
-  //Not needed. Logout will be handled on the client side
+  //Not needed. Login will be handled on the client side
 });
 
 export default router;
