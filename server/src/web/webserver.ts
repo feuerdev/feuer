@@ -9,6 +9,7 @@ import * as cookieParser from "cookie-parser";
 import * as path from "path";
 import * as bodyParser from "body-parser";
 import * as admin from 'firebase-admin';
+import * as auth from "../util/auth";
 import Log from "../util/log";
 
 import router_register from "./routes/register";
@@ -26,27 +27,6 @@ admin.initializeApp({
     databaseURL: 'https://feuer-io.firebaseio.com'
 });
 
-const isAuthenticated = function (req, res, next) {
-    if (req.cookies) {
-        const idToken = req.cookies.__session;
-        if (idToken) {
-            admin.auth().verifyIdToken(idToken)
-                .then(decodedToken => {
-                    console.log(decodedToken);
-                    console.log("IdToken is valid");
-                    next();
-                })
-                .catch(error => {
-                    console.log(error);
-                    res.redirect("/login");
-                });
-        } else {
-            res.redirect("/login");
-        }
-    } else {
-        res.redirect("/login");
-    }
-}
 
 export default class Webserver {
 
@@ -66,12 +46,12 @@ export default class Webserver {
         this.app.use("/login", router_login);
         this.app.use("/logout", router_logout);
 
-        this.app.get("/", isAuthenticated, function (req, res) {
+        this.app.get("/", [auth.isAuthenticated, auth.deserializeAuthGame], function (req, res) {
             Log.debug(JSON.stringify(req.user));
-            res.render("home", {username: req.user.username});
+            res.render("home", {username: req.user.game.username});
         });
 
-        this.app.get("/play", isAuthenticated, function (req, res) {
+        this.app.get("/play", auth.isAuthenticated, function (req, res) {
             Log.debug(JSON.stringify(req.user));
             res.render("play");
         });
