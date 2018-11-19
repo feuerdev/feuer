@@ -68,8 +68,12 @@ export default class Webserver {
 
         this.app.get("/", isAuthenticated, function (req, res) {
             Log.debug(JSON.stringify(req.user));
-            res.sendFile("index.html", { root: directory_client });
-            // req.next();
+            res.render("home", {username: req.user.username});
+        });
+
+        this.app.get("/play", isAuthenticated, function (req, res) {
+            Log.debug(JSON.stringify(req.user));
+            res.render("play");
         });
 
         this.app.get("/config.js", function (req, res) {
