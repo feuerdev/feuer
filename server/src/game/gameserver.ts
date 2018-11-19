@@ -3,6 +3,7 @@
  * Created by geller on 30.08.2016.
  */
 import config from "../util/config";
+import * as db from "../util/db";
 import Log from "../util/log";
 import * as socketio from "socket.io";
 import { Server } from "http";
@@ -43,7 +44,7 @@ export default class GameServer implements PlayerDelegate {
     this.io = socketio(httpServer, { transports: config.transports });
     this.io.on("connection", (socket) => {
 
-      
+
       socket.emit("info mapwidth", this.mapWidth);
       socket.emit("info mapheight", this.mapHeight);
 
@@ -130,18 +131,33 @@ export default class GameServer implements PlayerDelegate {
       shell.pos = shell.pos.add(shell.velocity);
 
       if (shell.pos.z < 0) {
-        this.initializedPlayers.forEach((player: Player) => {
+        for (let j = 0; j < this.initializedPlayers.length; j++) {
+          let player = this.initializedPlayers[j];
           if ((Math.abs(shell.pos.x - player.ship.pos.x) <= shell.size + player.ship.width)
             && (Math.abs(shell.pos.y - player.ship.pos.y) <= shell.size + player.ship.width)) {
             player.ship.hitpoints -= shell.damage;
             if (player.ship.hitpoints <= 0) {
-              player.socket.disconnect();
+              player.socket.emit("gamestate death");
+              const killer = shell.owner;
+              this.onPlayerDisconnected(player);
+              this.updateKillStatistic(killer, player.uid);
+              break;
             }
           }
-        });
+        };
         this.shells.splice(i, 1);
       }
     }
+  }
+
+  updateKillStatistic(killer: string, killed: string): any {
+    db.queryWithValues("INSERT INTO kills (killer, killed) VALUES (?, ?)", [killer, killed], function (error, results, fields) {
+      if(error) {
+        console.log(error);
+      } else {
+        console.log("updated kill db");
+      }
+    });
   }
 
   updateNet(delta) {

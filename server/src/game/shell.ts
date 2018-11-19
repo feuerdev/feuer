@@ -4,9 +4,13 @@ import Config from "../util/config";
 
 export default class Shell {
 
+  constructor(uid: string) {
+    this.owner = uid;
+  }
+
   public owner: string;
   public pos: Vector3;
   public velocity: Vector3;
-  public size:number = Config.shell_size;
+  public size: number = Config.shell_size;
   public damage: number = Config.shell_damage;
 }

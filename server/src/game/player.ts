@@ -72,7 +72,7 @@ export default class Player {
   }
 
   private onTryShoot() {
-    const shell: Shell = new Shell();
+    const shell: Shell = new Shell(this.uid);
     shell.pos = this.ship.pos.toVector3();
     shell.velocity = new Vector3(this.ship.gun.angleHorizontalActual + this.ship.orientation, this.ship.gun.angleVerticalActual).multiply(this.ship.gun.velocity);
     this.delegate.onPlayerShot(this, shell);

@@ -230,6 +230,7 @@ export default class Game {
         this.socket.on("gamestate ship", (data) => this.onGamestateShip(data));
         this.socket.on("gamestate ships", (data) => this.onGamestateShips(data));
         this.socket.on("gamestate shells", (data) => this.onGamestateShells(data));
+        this.socket.on("gamestate death", () => this.onGamestateDeath());
         this.socket.on("info mapwidth", (data) => { this.mapWidth = data });
         this.socket.on("info mapheight", (data) => { this.mapHeight = data });
         this.socket.on("info teamId", (data) => { this.teamId = data });
@@ -381,6 +382,20 @@ export default class Game {
 
     private onGamestateShells(shells) {
         this.shells = shells;
+    }
+
+    private onGamestateDeath() {
+
+        $('#death').show();
+        $("#canvas-entities").hide();        
+        $("#canvas-fow").hide();
+        $("#canvas-map").hide();
+        
+        function goBack() {
+            window.location.replace("/");
+        }
+        setTimeout(goBack, 2000);
+        
     }
 };
 
