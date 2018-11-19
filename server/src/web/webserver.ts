@@ -15,6 +15,8 @@ import Log from "../util/log";
 import router_register from "./routes/register";
 import router_login from "./routes/login";
 import router_logout from "./routes/logout";
+import router_home from "./routes/home";
+import router_play from "./routes/play";
 
 const directory_client = path.join(__dirname, "../../../client"); //Gibt das Client-Root-Verzeichnis zurueck.;
 
@@ -45,16 +47,8 @@ export default class Webserver {
         this.app.use("/register", router_register);
         this.app.use("/login", router_login);
         this.app.use("/logout", router_logout);
-
-        this.app.get("/", [auth.isAuthenticated, auth.deserializeAuthGame], function (req, res) {
-            Log.debug(JSON.stringify(req.user));
-            res.render("home", {username: req.user.game.username});
-        });
-
-        this.app.get("/play", auth.isAuthenticated, function (req, res) {
-            Log.debug(JSON.stringify(req.user));
-            res.render("play");
-        });
+        this.app.use("/", [auth.isAuthenticated, auth.deserializeAuthGame], router_home);
+        this.app.use("/play", auth.isAuthenticated, router_play);
 
         this.app.get("/relogin", function (req, res) {
             res.render("relogin");
