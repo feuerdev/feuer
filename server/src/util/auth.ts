@@ -14,8 +14,9 @@ export function isAuthenticated(req, res, next) {
           next();
         })
         .catch(error => {
+          //TODO: Fange hier nur den Token expired Error ab.
           console.log(error);
-          res.redirect("/login");
+          res.redirect("/relogin");
         });
     } else {
       res.redirect("/login");

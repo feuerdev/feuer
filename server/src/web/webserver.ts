@@ -56,6 +56,10 @@ export default class Webserver {
             res.render("play");
         });
 
+        this.app.get("/relogin", function (req, res) {
+            res.render("relogin");
+        });
+
         this.app.get("/config.js", function (req, res) {
             res.sendFile("/js/config/config_" + config.name + ".js", { root: directory_client });
         });

@@ -19,6 +19,12 @@ firebase.auth().onAuthStateChanged(function (user) {
         firebase.auth().currentUser.getIdToken().then(token => {
             document.cookie = COOKIE_NAME + "=" + token + ';max-age=' + COOKIE_MAXAGE;
             console.log("Cookie set");
+
+            console.log(window.location.href);
+            if(window.location.href.endsWith("relogin")) {
+                //Nutzer ist gerade beim relogin. Nachdem setzten des aktuellen cookies auf die startseite weiterleiten
+                window.location.replace("/");
+            }
         });
     } else {
         document.cookie = COOKIE_NAME + "=;max-age=-99999999;";
