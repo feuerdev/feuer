@@ -17,11 +17,9 @@ import Vector3 from "../../../shared/vector3";
 const GRAVITY: Vector3 = new Vector3(0, 0, config.gravity);
 
 export default class GameServer implements PlayerDelegate {
-
-
   public io: socketio.Server;
 
-  private players: Player[] = [];
+  private initializedPlayers: Player[] = [];
   private shells: Shell[] = [];
   private ships: Ship[] = [];
   private isRunning = false;
@@ -39,24 +37,17 @@ export default class GameServer implements PlayerDelegate {
   private timeSinceLastUpdate = 0;
   //#endregion
 
+  private lastTeamId = 0;
+
   listen(httpServer: Server) {
-    let lastTeamId = 0;
     this.io = socketio(httpServer, { transports: config.transports });
     this.io.on("connection", (socket) => {
-      const newPlayer: Player = new Player(this, socket);
-      newPlayer.ship = new Ship(socket.id);
-      newPlayer.ship.teamId = lastTeamId;
-      newPlayer.ship.pos = this.requestSpawnPosition(newPlayer.ship.teamId);
-      newPlayer.ship.orientation = this.requestSpawnOrientation(newPlayer.ship.teamId);
 
-      lastTeamId = lastTeamId === 0 ? 1 : 0;
-
-      this.players.push(newPlayer);
-      this.ships.push(newPlayer.ship);
-      socket.emit("info teamId", newPlayer.teamId);
+      
       socket.emit("info mapwidth", this.mapWidth);
       socket.emit("info mapheight", this.mapHeight);
-      Log.info("Player Connected: " + socket.id);
+
+      const newPlayer: Player = new Player(this, socket);
     });
   }
 
@@ -101,8 +92,8 @@ export default class GameServer implements PlayerDelegate {
 
   //Loops
   update(deltaFactor) {
-    for (let i = 0; i < this.players.length; i++) {
-      const player: Player = this.players[i];
+    for (let i = 0; i < this.initializedPlayers.length; i++) {
+      const player: Player = this.initializedPlayers[i];
 
       const ship: Ship = player.ship;
 
@@ -139,7 +130,7 @@ export default class GameServer implements PlayerDelegate {
       shell.pos = shell.pos.add(shell.velocity);
 
       if (shell.pos.z < 0) {
-        this.players.forEach((player: Player) => {
+        this.initializedPlayers.forEach((player: Player) => {
           if ((Math.abs(shell.pos.x - player.ship.pos.x) <= shell.size + player.ship.width)
             && (Math.abs(shell.pos.y - player.ship.pos.y) <= shell.size + player.ship.width)) {
             player.ship.hitpoints -= shell.damage;
@@ -154,11 +145,11 @@ export default class GameServer implements PlayerDelegate {
   }
 
   updateNet(delta) {
-    for (let i = 0; i < this.players.length; i++) {
-      const player: Player = this.players[i];
+    for (let i = 0; i < this.initializedPlayers.length; i++) {
+      const player: Player = this.initializedPlayers[i];
       let otherShips: Ship[] = Array.from(this.ships);
       for (let i = otherShips.length - 1; i >= 0; i--) {
-        if (otherShips[i].owner === player.socket.id) {
+        if (otherShips[i].owner === player.uid) {
           otherShips.splice(i, 1);
           break;
         }
@@ -197,12 +188,21 @@ export default class GameServer implements PlayerDelegate {
   }
 
   //#region Playerdelegate
+  onPlayerInitialized(player: Player) {
+    player.ship.pos = this.requestSpawnPosition(this.lastTeamId);
+    player.ship.orientation = this.requestSpawnOrientation(this.lastTeamId);
+    player.ship.teamId = this.lastTeamId;
+    player.socket.emit("info teamId", this.lastTeamId);
+    this.lastTeamId = this.lastTeamId === 0 ? 1 : 0;
+    this.ships.push(player.ship);
+    this.initializedPlayers.push(player);
+  }
   onPlayerDisconnected(player: Player) {
-    const i = this.players.indexOf(player);
-    this.players.splice(i, 1);
+    const i = this.initializedPlayers.indexOf(player);
+    this.initializedPlayers.splice(i, 1);
     const j = this.ships.indexOf(player.ship);
     this.ships.splice(j, 1);
-    Log.info("Player Disconnected: " + this.players);
+    Log.info("Player Disconnected: " + this.initializedPlayers);
   }
   onPlayerShot(player: Player, shell: any) {
     if (player.ship.gun.canShoot()) {

@@ -12,14 +12,15 @@ firebase.initializeApp({
 const COOKIE_MAXAGE = (60 * 60 * 24 * 7 * 4); //Vier Wochen
 
 const COOKIE_NAME = "__session";
+let currentUid = null;
 
 firebase.auth().onAuthStateChanged(function (user) {
     if (user) {
+        currentUid = user.uid;
         console.log("User logged in, setting Cookie");
         firebase.auth().currentUser.getIdToken().then(token => {
             document.cookie = COOKIE_NAME + "=" + token + ';max-age=' + COOKIE_MAXAGE;
             console.log("Cookie set");
-
             console.log(window.location.href);
             if(window.location.href.endsWith("relogin")) {
                 //Nutzer ist gerade beim relogin. Nachdem setzten des aktuellen cookies auf die startseite weiterleiten

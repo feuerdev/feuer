@@ -10,6 +10,7 @@ import * as Util from "../../shared/util";
 import { Socket } from "../../node_modules/@types/socket.io";
 import Vector2 from "../../shared/vector2";
 
+
 export default class Game {
 
     private readonly delta = Math.round(1000 / config.updaterate);
@@ -37,6 +38,7 @@ export default class Game {
     public mapWidth: number;
     public mapHeight: number;
     public teamId: number;
+    public username: string;
 
     public waypoint: Vector2 = null;
     public angleToWaypoint: number;
@@ -231,6 +233,7 @@ export default class Game {
         this.socket.on("info mapwidth", (data) => { this.mapWidth = data });
         this.socket.on("info mapheight", (data) => { this.mapHeight = data });
         this.socket.on("info teamId", (data) => { this.teamId = data });
+        this.socket.on("info username", (data) => { this.username = data });
     }
 
     public run() {
@@ -352,6 +355,16 @@ export default class Game {
 
     private onConnected() {
         Log.info("Connected");
+        const self = this;
+        function waitForUid() {            
+            if (currentUid) {
+                self.socket.emit("initialize", currentUid);
+            } else {
+              console.log("uid not set yet. trying again...");
+              setTimeout(waitForUid, 300);
+            }
+          }
+          waitForUid();
     }
 
     private onDisconnected() {
@@ -383,3 +396,4 @@ interface Window {
 }
 declare const window: Window;
 declare const config;
+declare const currentUid;

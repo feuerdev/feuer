@@ -5,6 +5,7 @@ import Config from "../util/config";
 export default class Ship {
 
   public owner: string;
+  public username: string; //TODO: this is weird. Make it pretty
 
   constructor(owner:string) {
     this.owner = owner;
