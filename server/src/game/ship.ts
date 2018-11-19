@@ -21,6 +21,8 @@ export default class Ship {
   public pos:Vector2;
   public orientation: number = 0;
 
+  public hitpoints = Config.ship_hitpoints;
+
   public rudderAngleActual: number = 0;
   public rudderAngleRequested: number = 0;
   public turnSpeed: number = Config.ship_turn_speed;

@@ -17,7 +17,7 @@ import Vector3 from "../../../shared/vector3";
 const GRAVITY: Vector3 = new Vector3(0, 0, config.gravity);
 
 export default class GameServer implements PlayerDelegate {
-  
+
 
   public io: socketio.Server;
 
@@ -26,8 +26,8 @@ export default class GameServer implements PlayerDelegate {
   private ships: Ship[] = [];
   private isRunning = false;
 
-  private mapWidth:number = 1880;
-  private mapHeight:number = 1000;
+  private mapWidth: number = 1880;
+  private mapHeight: number = 1000;
 
   //#region Gameloop Variables
   private readonly delta = Math.round(1000 / config.updaterate);
@@ -45,12 +45,12 @@ export default class GameServer implements PlayerDelegate {
     this.io.on("connection", (socket) => {
       const newPlayer: Player = new Player(this, socket);
       newPlayer.ship = new Ship(socket.id);
-      newPlayer.ship.teamId = lastTeamId;      
+      newPlayer.ship.teamId = lastTeamId;
       newPlayer.ship.pos = this.requestSpawnPosition(newPlayer.ship.teamId);
       newPlayer.ship.orientation = this.requestSpawnOrientation(newPlayer.ship.teamId);
 
       lastTeamId = lastTeamId === 0 ? 1 : 0;
-      
+
       this.players.push(newPlayer);
       this.ships.push(newPlayer.ship);
       socket.emit("info teamId", newPlayer.teamId);
@@ -118,16 +118,16 @@ export default class GameServer implements PlayerDelegate {
       ship.pos.x += Math.cos(Util.degreeToRadians(ship.orientation)) * ship.speed_actual * config.factor_speed * deltaFactor;
       ship.pos.y += Math.sin(Util.degreeToRadians(ship.orientation)) * ship.speed_actual * config.factor_speed * deltaFactor;
 
-      ship.pos.x = Util.clamp(ship.pos.x,0,this.mapWidth-ship.width);
-      ship.pos.y = Util.clamp(ship.pos.y,0,this.mapHeight-ship.height);
+      ship.pos.x = Util.clamp(ship.pos.x, 0, this.mapWidth - ship.width);
+      ship.pos.y = Util.clamp(ship.pos.y, 0, this.mapHeight - ship.height);
 
       const gun: Gun = ship.gun;
 
-      gun.angleHorizontalActual += Util.clamp(gun.angleHorizontalRequested - gun.angleHorizontalActual, -1, 1) * gun.turnspeedHorizontal * deltaFactor; 
+      gun.angleHorizontalActual += Util.clamp(gun.angleHorizontalRequested - gun.angleHorizontalActual, -1, 1) * gun.turnspeedHorizontal * deltaFactor;
       gun.angleHorizontalActual = Util.clamp(gun.angleHorizontalActual, gun.minAngleHorizontal, gun.maxAngleHorizontal);
       gun.angleVerticalActual += Util.clamp(gun.angleVerticalRequested - gun.angleVerticalActual, -1, 1) * gun.turnspeedVertical * deltaFactor;
       gun.angleVerticalActual = Util.clamp(gun.angleVerticalActual, gun.minAngleVertical, gun.maxAngleVertical);
-      gun.timeSinceLastShot+=deltaFactor * this.delta;
+      gun.timeSinceLastShot += deltaFactor * this.delta;
     }
 
     for (let i = this.shells.length - 1; i >= 0; i--) { //iterate backwards so its no problem to remove a shell while looping
@@ -139,11 +139,14 @@ export default class GameServer implements PlayerDelegate {
       shell.pos = shell.pos.add(shell.velocity);
 
       if (shell.pos.z < 0) {
-        this.players.forEach((player: Player) => {          
-            if ((Math.abs(shell.pos.x - player.ship.pos.x) <= shell.size + player.ship.width)
-              && (Math.abs(shell.pos.y - player.ship.pos.y) <= shell.size + player.ship.width)) {
+        this.players.forEach((player: Player) => {
+          if ((Math.abs(shell.pos.x - player.ship.pos.x) <= shell.size + player.ship.width)
+            && (Math.abs(shell.pos.y - player.ship.pos.y) <= shell.size + player.ship.width)) {
+            player.ship.hitpoints -= shell.damage;
+            if (player.ship.hitpoints <= 0) {
               player.socket.disconnect();
             }
+          }
         });
         this.shells.splice(i, 1);
       }
@@ -153,9 +156,9 @@ export default class GameServer implements PlayerDelegate {
   updateNet(delta) {
     for (let i = 0; i < this.players.length; i++) {
       const player: Player = this.players[i];
-      let otherShips: Ship[] = Array.from(this.ships,);
-      for(let i = otherShips.length -1; i>=0; i--) {
-        if(otherShips[i].owner === player.socket.id) {
+      let otherShips: Ship[] = Array.from(this.ships);
+      for (let i = otherShips.length - 1; i >= 0; i--) {
+        if (otherShips[i].owner === player.socket.id) {
           otherShips.splice(i, 1);
           break;
         }
@@ -166,28 +169,28 @@ export default class GameServer implements PlayerDelegate {
     }
   }
 
-  requestSpawnOrientation(teamId:number): number {
-    if(teamId === 0) {
+  requestSpawnOrientation(teamId: number): number {
+    if (teamId === 0) {
       return 0;
-    } else if(teamId === 1) {
+    } else if (teamId === 1) {
       return 180;
     } else {
       throw Error("invalid teamId given");
     }
   }
 
-  requestSpawnPosition(teamId: number):Vector2 {
+  requestSpawnPosition(teamId: number): Vector2 {
     const margin = 50;
     const spawnboxWidth = 100;
-    const spawnboxHeight = this.mapHeight;  
-    if(teamId === 0) {
-      const x = Util.scale(Math.random(), 0, 1, margin,margin+spawnboxWidth); 
-      const y = Util.scale(Math.random(), 0, 1, margin,spawnboxHeight-margin);
-      return new Vector2(x,y);
-    } else if(teamId === 1) {
-      const x = Util.scale(Math.random(), 0, 1, this.mapWidth - (margin + spawnboxWidth) ,this.mapWidth - margin); 
-      const y = Util.scale(Math.random(), 0, 1, margin,spawnboxHeight-margin);
-      return new Vector2(x,y);
+    const spawnboxHeight = this.mapHeight;
+    if (teamId === 0) {
+      const x = Util.scale(Math.random(), 0, 1, margin, margin + spawnboxWidth);
+      const y = Util.scale(Math.random(), 0, 1, margin, spawnboxHeight - margin);
+      return new Vector2(x, y);
+    } else if (teamId === 1) {
+      const x = Util.scale(Math.random(), 0, 1, this.mapWidth - (margin + spawnboxWidth), this.mapWidth - margin);
+      const y = Util.scale(Math.random(), 0, 1, margin, spawnboxHeight - margin);
+      return new Vector2(x, y);
     } else {
       throw Error("invalid teamId given");
     }
@@ -202,10 +205,10 @@ export default class GameServer implements PlayerDelegate {
     Log.info("Player Disconnected: " + this.players);
   }
   onPlayerShot(player: Player, shell: any) {
-    if(player.ship.gun.canShoot()) {
+    if (player.ship.gun.canShoot()) {
       player.ship.gun.timeSinceLastShot = 0;
       this.shells.push(shell);
     }
-  }  
+  }
   //#endregion
 };
