@@ -265,6 +265,7 @@ export default class Renderer {
         //TODO: draw map border
         // this.ctxm.strokeStyle = "black";
         // this.ctxm.rect(0,0,this.game.mapWidth, this.game.mapHeight);
+        // this.ctxm.lineWidth = 20;
         // this.ctxm.stroke();
         this.ctxm.restore();
         this.shouldRedrawMap = false;
@@ -369,6 +370,11 @@ export default class Renderer {
 
     toggleDebug(): any {
         this.shouldDrawDebug = !this.shouldDrawDebug;
+        if(this.shouldDrawDebug) {
+            this.debug.show();
+        } else {
+            this.debug.hide();
+        }
     }
 
 };
