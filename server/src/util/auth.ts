@@ -52,11 +52,15 @@ export function deserializeAuthGame(req, res, next) {
         res.send(error);
       } else {
         console.log(results);
-        if(!req.user.game) {
-          req.user.game = {};
+        if(results.length > 0) {
+          if(!req.user.game) {
+            req.user.game = {};
+          }
+          req.user.game.username = results[0].username;
+          next();
+        } else {
+          res.send("error: no user with uid:"+uid);
         }
-        req.user.game.username = results[0].username;
-        next();
       }
     });
   }
