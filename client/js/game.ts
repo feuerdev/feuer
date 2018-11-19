@@ -408,6 +408,7 @@ interface Window {
     webkitRequestAnimationFrame: Function;
     setTimeout: Function;
     addEventListener: Function;
+    location;
 }
 declare const window: Window;
 declare const config;
