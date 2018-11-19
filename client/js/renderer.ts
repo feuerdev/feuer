@@ -98,7 +98,7 @@ export default class Renderer {
 
         this.drawWidth = this.canvasWidth;
         this.drawHeight = this.canvasHeight;
-        
+
         this.updateDebug()
     }
 
@@ -115,7 +115,7 @@ export default class Renderer {
         this.ctxm.clearRect(0, 0, this.drawWidth, this.drawHeight);
         this.ctxm.translate(-this.cameraPos.x, -this.cameraPos.y);
         this.drawMap();
-        
+
 
         if (config.fow) {
             this.ctxf.translate(-this.cameraPos.x, -this.cameraPos.y);
@@ -226,6 +226,7 @@ export default class Renderer {
 
 
         this.ctxe.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);
+
         //draw the ship
         let image;
         if (ship.teamId === 0) {
@@ -235,6 +236,16 @@ export default class Renderer {
             this.ctxe.fillStyle = isMine ? "green" : "darkgreen";
             image = isMine ? this.img_ship3 : this.img_ship4;
         }
+        
+        if(isMine) {
+            this.ctxe.strokeStyle = "green";
+            this.ctxe.strokeText(this.game.username, width / 2, 40);
+        } else {
+            this.ctxe.strokeStyle = "red";
+            this.ctxe.strokeText(ship.username, width / 2, 40);
+        }
+
+        this.ctxe.strokeText(ship.hitpoints, width + 10, height / 2);
         this.ctxe.rotate(angleOrientation + (Math.PI / 2));
         this.ctxe.drawImage(image, width / 2 * (-1), height / 2 * (-1), width, height);
         this.ctxe.rotate(-(Math.PI / 2));
@@ -255,8 +266,8 @@ export default class Renderer {
             //draw the helper line            
             const lengthHelper: number = 900;
             const thicknessHelper: number = 2;
-            const offsetHelper: number = 30;      
-            this.ctxe.setLineDash([5, 15]);   
+            const offsetHelper: number = 30;
+            this.ctxe.setLineDash([5, 15]);
             if (ship.gun.angleHorizontalRequested !== ship.gun.angleHorizontalActual) {
                 this.ctxe.rotate(-radGunActual);
                 this.ctxe.rotate(radGunReq);
@@ -274,8 +285,8 @@ export default class Renderer {
             this.ctxe.moveTo(offsetHelper, 0);
             this.ctxe.lineTo(lengthHelper, 0);
             this.ctxe.stroke();
-            
         }
+
         //reset the canvas  
         this.ctxe.restore();
     }
@@ -412,7 +423,7 @@ export default class Renderer {
         this.isFollowing = !this.isFollowing;
     }
 
-    toggleDebug(){
+    toggleDebug() {
         this.shouldDrawDebug = !this.shouldDrawDebug;
         this.updateDebug();
     }
