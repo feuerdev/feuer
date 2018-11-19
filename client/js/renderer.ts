@@ -7,7 +7,7 @@ import Vector2 from "../../shared/vector2";
 import * as Util from "../../shared/util";
 
 export default class Renderer {
-    
+
 
     private game: Game;
 
@@ -31,7 +31,7 @@ export default class Renderer {
     public currentZoom: number = 1;
     private debug = $("#debug");
 
-    private deadzone: Vector2 = new Vector2(this.canvasWidth / 2 - (50 / this.currentZoom),this.canvasHeight / 2 - (50 / this.currentZoom));
+    private deadzone: Vector2 = new Vector2(this.canvasWidth / 2 - (50 / this.currentZoom), this.canvasHeight / 2 - (50 / this.currentZoom));
     public cameraPos: Vector2 = new Vector2();
     public cameraPosFollow: Vector2 = new Vector2();
 
@@ -40,12 +40,16 @@ export default class Renderer {
     public isDragging: boolean = false;
     private shouldDrawDebug: boolean = config.log_level === "debug";
 
-    public shouldRedrawMap: boolean = true;
-
     readonly img_ship1 = new Image();
     readonly img_ship2 = new Image();
     readonly img_ship3 = new Image();
     readonly img_ship4 = new Image();
+
+    private imgs_bg = [];
+    private spritecounter: number = 0;
+    private framecounter: number = 0;
+
+    private readonly frameskip: number = 5;
 
     constructor(game: Game) {
         this.game = game;
@@ -54,6 +58,19 @@ export default class Renderer {
         this.img_ship2.src = "../img/ship2.png";
         this.img_ship3.src = "../img/ship3.png";
         this.img_ship4.src = "../img/ship4.png";
+
+        for (let i = 1; i <= 250; i++) {
+            const img = new Image();
+            let imgnr = "" + i;
+            const length = imgnr.length;
+            const missingzeros = 4 - length;
+            for (let j = 0; j < missingzeros; j++) {
+                imgnr = "0" + imgnr;
+            }
+
+            img.src = "../img/background/water_055_c_" + imgnr + ".jpg";
+            this.imgs_bg.push(img);
+        }
 
         this.canvas_map[0].width = this.container.width();
         this.canvas_map[0].height = this.container.height();
@@ -93,10 +110,10 @@ export default class Renderer {
 
         this.updateCamera();
 
-        if (this.shouldRedrawMap) {
-            this.ctxm.translate(-this.cameraPos.x, -this.cameraPos.y);
-            this.drawMap();
-        }
+        this.ctxm.clearRect(0, 0, this.drawWidth, this.drawHeight);
+        this.ctxm.translate(-this.cameraPos.x, -this.cameraPos.y);
+        this.drawMap();
+        
 
         if (config.fow) {
             this.ctxf.translate(-this.cameraPos.x, -this.cameraPos.y);
@@ -113,6 +130,7 @@ export default class Renderer {
         this.ctxm.restore();
         this.ctxf.restore();
         this.ctxe.restore();
+        this.framecounter++;
     }
 
     updateCamera() {
@@ -121,22 +139,21 @@ export default class Renderer {
             this.cameraPos.y -= Math.round((this.game.cursorCanvas.y - this.cursorCanvasLast.y) / this.currentZoom);
             this.cameraPos.x = Util.clamp(this.cameraPos.x, 0, this.game.mapWidth - this.drawWidth);
             this.cameraPos.y = Util.clamp(this.cameraPos.y, 0, this.game.mapHeight - this.drawHeight);
-            this.shouldRedrawMap = true;
         }
         this.cursorCanvasLast.x = this.game.cursorCanvas.x;
         this.cursorCanvasLast.y = this.game.cursorCanvas.y;
     }
 
     drawEntities() {
-        if (this.game.aimPoint) {
-            this.drawAimpoint(this.game.aimPoint, "yellow");
-        }
-
         if (this.game.aimPointRequested) {
             this.drawAimpoint(this.game.aimPointRequested, "grey");
         }
 
-        if(this.game.waypoint) {
+        if (this.game.aimPoint) {
+            this.drawAimpoint(this.game.aimPoint, "yellow");
+        }
+
+        if (this.game.waypoint) {
             this.drawWaypoint();
         }
 
@@ -155,7 +172,7 @@ export default class Renderer {
 
     drawWaypoint() {
         this.ctxe.save();
-        
+
         this.ctxe.setLineDash([5, 15]);
         this.ctxe.strokeStyle = "red";
         this.ctxe.fillStyle = "red";
@@ -168,11 +185,11 @@ export default class Renderer {
         this.ctxe.moveTo(this.game.ship.pos.x + this.game.ship.width / 2, this.game.ship.pos.y + this.game.ship.height / 2);
         this.ctxe.lineTo(this.game.waypoint.x, this.game.waypoint.y);
         this.ctxe.stroke();
-        
+
         this.ctxe.restore();
     }
 
-    drawAimpoint(aimPoint: Vector2, color:string) {
+    drawAimpoint(aimPoint: Vector2, color: string) {
         this.ctxe.beginPath();
         this.ctxe.strokeStyle = color;
         this.ctxe.arc(aimPoint.x, aimPoint.y, 10, 0, 2 * Math.PI);
@@ -183,17 +200,18 @@ export default class Renderer {
     }
 
     drawShell(shell) {
-        //Shell zeichnen
-        this.ctxe.beginPath();
-        this.ctxe.fillStyle = "yellow";
-        this.ctxe.arc(shell.pos.x, shell.pos.y - shell.pos.z, 3, 0, 2 * Math.PI);
-        this.ctxe.fill();
         //"Schatten" zeichnen
         const shadowSize = Math.max(3 * (1 - shell.pos.z / 500), 0.5); //Diese Zeile kommt von Louis
         this.ctxe.beginPath();
         this.ctxe.fillStyle = "gray";
         this.ctxe.arc(shell.pos.x, shell.pos.y, shadowSize, 0, 2 * Math.PI);
         this.ctxe.fill();
+        //Shell zeichnen
+        this.ctxe.beginPath();
+        this.ctxe.fillStyle = "yellow";
+        this.ctxe.arc(shell.pos.x, shell.pos.y - shell.pos.z, 3, 0, 2 * Math.PI);
+        this.ctxe.fill();
+
     }
 
     drawShip(ship, isMine) {
@@ -204,7 +222,7 @@ export default class Renderer {
         const angleOrientation: number = Util.degreeToRadians(ship.orientation);
         const angleWaypoint: number = Util.degreeToRadians(this.game.angleToWaypoint);
 
-        
+
         this.ctxe.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);
         //draw the ship
         let image;
@@ -217,7 +235,7 @@ export default class Renderer {
         }
         this.ctxe.rotate(angleOrientation + (Math.PI / 2));
         this.ctxe.drawImage(image, width / 2 * (-1), height / 2 * (-1), width, height);
-        this.ctxe.rotate(-(Math.PI /2));
+        this.ctxe.rotate(-(Math.PI / 2));
         // this.ctxe.restore();
         // this.context_entities.fillRect(width / 2 * (-1), height / 2 * (-1), width, height);
 
@@ -232,17 +250,11 @@ export default class Renderer {
         this.ctxe.fillRect(widthGun + offsetGun / 2 * (-1), heightGun / 2 * (-1), widthGun, heightGun);
 
         if (isMine) {
-            //draw the helper line                
+            //draw the helper line            
             const lengthHelper: number = 900;
             const thicknessHelper: number = 2;
-            const offsetHelper: number = 30;
-            this.ctxe.setLineDash([5, 15]);
-            this.ctxe.strokeStyle = "yellow";
-            this.ctxe.lineWidth = thicknessHelper;
-            this.ctxe.beginPath();
-            this.ctxe.moveTo(offsetHelper, 0);
-            this.ctxe.lineTo(lengthHelper, 0);
-            this.ctxe.stroke();
+            const offsetHelper: number = 30;      
+            this.ctxe.setLineDash([5, 15]);   
             if (ship.gun.angleHorizontalRequested !== ship.gun.angleHorizontalActual) {
                 this.ctxe.rotate(-radGunActual);
                 this.ctxe.rotate(radGunReq);
@@ -251,7 +263,16 @@ export default class Renderer {
                 this.ctxe.moveTo(offsetHelper, 0);
                 this.ctxe.lineTo(lengthHelper, 0);
                 this.ctxe.stroke();
+                this.ctxe.rotate(-radGunReq);
+                this.ctxe.rotate(radGunActual);
             }
+            this.ctxe.strokeStyle = "yellow";
+            this.ctxe.lineWidth = thicknessHelper;
+            this.ctxe.beginPath();
+            this.ctxe.moveTo(offsetHelper, 0);
+            this.ctxe.lineTo(lengthHelper, 0);
+            this.ctxe.stroke();
+            
         }
         //reset the canvas  
         this.ctxe.restore();
@@ -260,15 +281,37 @@ export default class Renderer {
     drawMap() {
         //Clear Canvas
         this.ctxm.save();
-        this.ctxm.fillStyle = "darkblue";
-        this.ctxm.fillRect(0, 0, this.drawWidth, this.drawHeight);
+
+        const img = this.imgs_bg[this.spritecounter];
+        if (!(img instanceof Image)) {
+            console.log("somethings fucky");
+        }
+
+        const pattern = this.ctxm.createPattern(img, 'repeat');
+        this.ctxm.beginPath();
+        this.ctxm.rect(0, 0, this.game.mapWidth, this.game.mapHeight);
+        this.ctxm.fillStyle = pattern;
+        this.ctxm.fill();
+        this.ctxm.fillStyle = "rgba(0, 0, 0, 0.6)"; //make bg darker
+        this.ctxm.fillRect(0, 0, this.game.mapWidth, this.game.mapHeight);
+        if (this.framecounter % this.frameskip === 0) { //slow down animation
+            this.spritecounter++;
+        }
+
+        if (this.spritecounter > this.imgs_bg.length - 1) {
+            this.spritecounter = 0;
+        }
+
+
+        // this.ctxm.fillStyle = "darkblue";
+        // this.ctxm.fillRect(0, 0, this.drawWidth, this.drawHeight);
         //TODO: draw map border
         // this.ctxm.strokeStyle = "black";
         // this.ctxm.rect(0,0,this.game.mapWidth, this.game.mapHeight);
         // this.ctxm.lineWidth = 20;
         // this.ctxm.stroke();
         this.ctxm.restore();
-        this.shouldRedrawMap = false;
+        // this.shouldRedrawMap = false;
     }
 
     drawFow() {
@@ -357,7 +400,6 @@ export default class Renderer {
                 this.ctxe.scale(factor, factor);
             }
 
-            this.shouldRedrawMap = true;
             // this.camera.pos.x += ((this.input.posCursorCanvas.x) * factor);
             // this.camera.pos.y += ((this.input.posCursorCanvas.y) * factor);
             // }
@@ -370,7 +412,7 @@ export default class Renderer {
 
     toggleDebug(): any {
         this.shouldDrawDebug = !this.shouldDrawDebug;
-        if(this.shouldDrawDebug) {
+        if (this.shouldDrawDebug) {
             this.debug.show();
         } else {
             this.debug.hide();
