@@ -35,7 +35,7 @@ function initLogger() {
         transports: [
             new winston.transports.Console(),
             new winston.transports.File({ filename: config.logfile}),
-            new winston.transports.File({ filename: "error.log", level:config.log_level})
+            new winston.transports.File({ filename: "error.log", level:"error"})
         ]
     });
 }
