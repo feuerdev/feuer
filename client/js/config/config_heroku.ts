@@ -6,7 +6,7 @@ const config = {
     ip: "https://gellerlul.herokuapp.com",
     transports: ["websocket"],
     updaterate: 60,
-    log_level: "debug",
+    log_level: "warn",
     zoom_min: 0.25,
     zoom_max: 4,
     gravity: -0.01,

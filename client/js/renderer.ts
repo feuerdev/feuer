@@ -7,6 +7,7 @@ import Vector2 from "../../shared/vector2";
 import * as Util from "../../shared/util";
 
 export default class Renderer {
+    
 
     private game: Game;
 
@@ -37,6 +38,7 @@ export default class Renderer {
     private cursorCanvasLast: Vector2 = new Vector2();
     public isFollowing: boolean = false;
     public isDragging: boolean = false;
+    private shouldDrawDebug: boolean = config.log_level === "debug";
 
     public shouldRedrawMap: boolean = true;
 
@@ -104,7 +106,7 @@ export default class Renderer {
         this.ctxe.translate(-this.cameraPos.x, -this.cameraPos.y);
         this.drawEntities();
 
-        if (config.log_level === "debug") {
+        if (this.shouldDrawDebug) {
             this.drawDebug();
         }
 
@@ -260,6 +262,10 @@ export default class Renderer {
         this.ctxm.save();
         this.ctxm.fillStyle = "darkblue";
         this.ctxm.fillRect(0, 0, this.drawWidth, this.drawHeight);
+        //TODO: draw map border
+        // this.ctxm.strokeStyle = "black";
+        // this.ctxm.rect(0,0,this.game.mapWidth, this.game.mapHeight);
+        // this.ctxm.stroke();
         this.ctxm.restore();
         this.shouldRedrawMap = false;
     }
@@ -357,8 +363,12 @@ export default class Renderer {
         }
     }
 
-    switchFollowMode() {
+    toggleFollowMode() {
         this.isFollowing = !this.isFollowing;
+    }
+
+    toggleDebug(): any {
+        this.shouldDrawDebug = !this.shouldDrawDebug;
     }
 
 };

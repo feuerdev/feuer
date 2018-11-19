@@ -6,7 +6,7 @@ const config = {
     ip: "localhost:8000",
     transports: ["websocket"],
     updaterate: 60,
-    log_level: "debug",
+    log_level: "warn",
     zoom_min: 0.25,
     zoom_max: 4,
     gravity: -0.01,

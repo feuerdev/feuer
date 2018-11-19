@@ -110,10 +110,11 @@ export default class Game {
                 case 37: this.rudderLeft = false; this.rudderLeftTime = 0; this.rudderPosition = Util.clamp(--this.rudderPosition, -90, 90); this.socket.emit("input rudder", this.rudderPosition); break;//pfeillinks
                 case 88: this.rudderPosition = 0; this.waypoint = null; this.socket.emit("input rudder", this.rudderPosition); break;//x
                 case 39: this.rudderRight = false; this.rudderRightTime = 0; this.rudderPosition = Util.clamp(++this.rudderPosition, -90, 90); this.socket.emit("input rudder", this.rudderPosition); break;//pfeilrechts
-                case 70: this.renderer.switchFollowMode(); break;//f
+                case 70: this.renderer.toggleFollowMode(); break;//f
                 case 187: this.renderer.zoomIn(); break;//+
                 case 189: this.renderer.zoomOut(); break;//-   
                 case 191: this.renderer.zoomReset(); break;//#
+                case 80: this.renderer.toggleDebug(); break;//#
                 case 32: this.socket.emit("input shoot"); break;//# 
             }
         }, false);
