@@ -98,6 +98,8 @@ export default class Renderer {
 
         this.drawWidth = this.canvasWidth;
         this.drawHeight = this.canvasHeight;
+        
+        this.updateDebug()
     }
 
     //#region Cycle
@@ -410,8 +412,11 @@ export default class Renderer {
         this.isFollowing = !this.isFollowing;
     }
 
-    toggleDebug(): any {
+    toggleDebug(){
         this.shouldDrawDebug = !this.shouldDrawDebug;
+        this.updateDebug();
+    }
+    updateDebug() {
         if (this.shouldDrawDebug) {
             this.debug.show();
         } else {
