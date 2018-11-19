@@ -11,6 +11,19 @@
 
 <body>
 	Logged in as {{username}}<br/>
+	Leaderboard<br>
+	<table style="border: 1px solid black">
+		<tr>
+			<th>Player</th>
+			<th>Kills</th>			
+		</tr>
+		{{#each leaderboardItems}}
+		<tr>
+			<th>{{killer}}</th>
+			<th>{{kills}}</th>
+		</tr>
+		{{/each}}
+	</table>
 
 
   <a href="/play">Play!</a>
