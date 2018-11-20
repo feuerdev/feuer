@@ -2,53 +2,62 @@
  * Einstiegspunkt für den Gameserver Code
  * Created by geller on 30.08.2016.
  */
-import config from "../util/config";
-import * as db from "../util/db";
-import Log from "../util/log";
+
 import * as socketio from "socket.io";
 import { Server } from "http";
-import Player, { PlayerDelegate } from "./player"
+
 import Shell from "./shell";
 import Ship from "./ship";
 import Gun from "./gun";
+import Player from "./player"
+
+import * as db from "../util/db";
 import * as Util from "../../../shared/util";
+import Log from "../util/log";
+import config from "../util/config";
 import Vector2 from "../../../shared/vector2";
 import Vector3 from "../../../shared/vector3";
 
 const GRAVITY: Vector3 = new Vector3(0, 0, config.gravity);
 
-export default class GameServer implements PlayerDelegate {
-  public io: socketio.Server;
+export default class GameServer {
+  private io: socketio.Server;
 
-  private initializedPlayers: Player[] = [];
+  private players: Player[] = [];
   private shells: Shell[] = [];
-  private ships: Ship[] = [];
-  private isRunning = false;
 
-  private mapWidth: number = 1880;
-  private mapHeight: number = 1000;
+  private mapWidth: number = config.map_width;
+  private mapHeight: number = config.map_height;
 
   //#region Gameloop Variables
   private readonly delta = Math.round(1000 / config.updaterate);
   private readonly defaultDelta = Math.round(1000 / 60);
   private readonly netrate = Math.round(1000 / config.netrate);
   private readonly defaultNetrate = Math.round(1000 / 30);
+  private isRunning = false;
   private lastTime = Date.now();
   private accumulator = 0;
   private timeSinceLastUpdate = 0;
   //#endregion
 
+  //helper
   private lastTeamId = 0;
 
   listen(httpServer: Server) {
     this.io = socketio(httpServer, { transports: config.transports });
     this.io.on("connection", (socket) => {
-
+      const player: Player = new Player(socket);
+      this.players.push(player);
 
       socket.emit("info mapwidth", this.mapWidth);
       socket.emit("info mapheight", this.mapHeight);
-
-      const newPlayer: Player = new Player(this, socket);
+      socket.on("disconnect", () => this.onPlayerDisconnected(player));
+      socket.on("initialize", (data) => this.onPlayerInitialize(player, data));
+      socket.on("input speed", (data) => this.onPlayerInputShipSpeed(player, data));
+      socket.on("input gun horizontal", (data) => this.onPlayerInputGunAngleHorizontal(player, data));
+      socket.on("input gun vertical", (data) => this.onPlayerInputGunAngleVertical(player, data));
+      socket.on("input rudder", (data) => this.onPlayerInputRudderPosition(player, data));
+      socket.on("input shoot", () => this.onPlayerInputShoot(player));
     });
   }
 
@@ -93,33 +102,34 @@ export default class GameServer implements PlayerDelegate {
 
   //Loops
   update(deltaFactor) {
-    for (let i = 0; i < this.initializedPlayers.length; i++) {
-      const player: Player = this.initializedPlayers[i];
+    for (let i = 0; i < this.players.length; i++) {
+      const player: Player = this.players[i];
+      if (player.initialized) {
+        const ship: Ship = player.ship;
 
-      const ship: Ship = player.ship;
+        ship.speed_actual += Util.clamp(ship.speed_requested - ship.speed_actual, -1, 1) * ship.acceleration * deltaFactor;
+        ship.speed_actual = Util.clamp(ship.speed_actual, ship.speed_min, ship.speed_max);
 
-      ship.speed_actual += Util.clamp(ship.speed_requested - ship.speed_actual, -1, 1) * ship.acceleration * deltaFactor;
-      ship.speed_actual = Util.clamp(ship.speed_actual, ship.speed_min, ship.speed_max);
+        ship.rudderAngleActual += (ship.rudderAngleRequested - ship.rudderAngleActual) * config.factor_rudder * deltaFactor;
+        ship.rudderAngleActual = Util.clamp(ship.rudderAngleActual, -90, 90);
 
-      ship.rudderAngleActual += (ship.rudderAngleRequested - ship.rudderAngleActual) * config.factor_rudder * deltaFactor;
-      ship.rudderAngleActual = Util.clamp(ship.rudderAngleActual, -90, 90);
+        ship.orientation += ship.rudderAngleActual * ship.turnSpeed * ship.speed_actual * config.factor_orientation * deltaFactor;
+        ship.orientation = Util.mod(ship.orientation, 360);
 
-      ship.orientation += ship.rudderAngleActual * ship.turnSpeed * ship.speed_actual * config.factor_orientation * deltaFactor;
-      ship.orientation = Util.mod(ship.orientation, 360);
+        ship.pos.x += Math.cos(Util.degreeToRadians(ship.orientation)) * ship.speed_actual * config.factor_speed * deltaFactor;
+        ship.pos.y += Math.sin(Util.degreeToRadians(ship.orientation)) * ship.speed_actual * config.factor_speed * deltaFactor;
 
-      ship.pos.x += Math.cos(Util.degreeToRadians(ship.orientation)) * ship.speed_actual * config.factor_speed * deltaFactor;
-      ship.pos.y += Math.sin(Util.degreeToRadians(ship.orientation)) * ship.speed_actual * config.factor_speed * deltaFactor;
+        ship.pos.x = Util.clamp(ship.pos.x, 0, this.mapWidth - ship.width);
+        ship.pos.y = Util.clamp(ship.pos.y, 0, this.mapHeight - ship.height);
 
-      ship.pos.x = Util.clamp(ship.pos.x, 0, this.mapWidth - ship.width);
-      ship.pos.y = Util.clamp(ship.pos.y, 0, this.mapHeight - ship.height);
+        const gun: Gun = ship.gun;
 
-      const gun: Gun = ship.gun;
-
-      gun.angleHorizontalActual += Util.clamp(gun.angleHorizontalRequested - gun.angleHorizontalActual, -1, 1) * gun.turnspeedHorizontal * deltaFactor;
-      gun.angleHorizontalActual = Util.clamp(gun.angleHorizontalActual, gun.minAngleHorizontal, gun.maxAngleHorizontal);
-      gun.angleVerticalActual += Util.clamp(gun.angleVerticalRequested - gun.angleVerticalActual, -1, 1) * gun.turnspeedVertical * deltaFactor;
-      gun.angleVerticalActual = Util.clamp(gun.angleVerticalActual, gun.minAngleVertical, gun.maxAngleVertical);
-      gun.timeSinceLastShot += deltaFactor * this.delta;
+        gun.angleHorizontalActual += Util.clamp(gun.angleHorizontalRequested - gun.angleHorizontalActual, -1, 1) * gun.turnspeedHorizontal * deltaFactor;
+        gun.angleHorizontalActual = Util.clamp(gun.angleHorizontalActual, gun.minAngleHorizontal, gun.maxAngleHorizontal);
+        gun.angleVerticalActual += Util.clamp(gun.angleVerticalRequested - gun.angleVerticalActual, -1, 1) * gun.turnspeedVertical * deltaFactor;
+        gun.angleVerticalActual = Util.clamp(gun.angleVerticalActual, gun.minAngleVertical, gun.maxAngleVertical);
+        gun.timeSinceLastShot += deltaFactor * this.delta;
+      }
     }
 
     for (let i = this.shells.length - 1; i >= 0; i--) { //iterate backwards so its no problem to remove a shell while looping
@@ -131,20 +141,18 @@ export default class GameServer implements PlayerDelegate {
       shell.pos = shell.pos.add(shell.velocity);
 
       if (shell.pos.z < 0) {
-        for (let j = 0; j < this.initializedPlayers.length; j++) {
-          let player = this.initializedPlayers[j];
-          if ((Math.abs(shell.pos.x - player.ship.pos.x) <= shell.size + player.ship.width)
-            && (Math.abs(shell.pos.y - player.ship.pos.y) <= shell.size + player.ship.width)) {
-            player.ship.hitpoints -= shell.damage;
-            if (player.ship.hitpoints <= 0) {
-              const i = this.initializedPlayers.indexOf(player);
-              this.initializedPlayers.splice(i, 1);
-              const j = this.ships.indexOf(player.ship);
-              this.ships.splice(j, 1);
-              player.socket.emit("gamestate death");
-              const killer = shell.owner;
-              this.updateKillStatistic(killer, player.uid);
-              break;
+        for (let j = 0; j < this.players.length; j++) {
+          const player = this.players[j];
+          if (player.initialized) {
+            if ((Math.abs(shell.pos.x - player.ship.pos.x) <= shell.size + player.ship.width)
+              && (Math.abs(shell.pos.y - player.ship.pos.y) <= shell.size + player.ship.width)) { //TODO: Fix Hitboxes
+              player.ship.hitpoints -= shell.damage;
+              if (player.ship.hitpoints <= 0) {
+                const killer: Player = shell.owner;
+                const killed: Player = player;
+                this.onPlayerKilled(killer, killed);
+                break;
+              }
             }
           }
         };
@@ -153,9 +161,22 @@ export default class GameServer implements PlayerDelegate {
     }
   }
 
-  updateKillStatistic(killer: string, killed: string): any {
-    db.queryWithValues("INSERT INTO kills (killer, killed) VALUES (?, ?)", [killer, killed], function (error, results, fields) {
-      if(error) {
+  onPlayerKilled(killer: Player, killed: Player) {
+    this.removePlayer(killed);
+    killed.socket.emit("gamestate death");
+    this.updateKillStatistic(killer, killed);
+  }
+
+  removePlayer(player: Player) {
+    const index = this.players.indexOf(player);
+    if (index !== -1) {
+      this.players.splice(index, 1);
+    }
+  }
+
+  updateKillStatistic(killer: Player, killed: Player): any {
+    db.queryWithValues("INSERT INTO kills (killer, killed) VALUES (?, ?)", [killer.uid, killed.uid], function (error, results, fields) {
+      if (error) {
         console.log(error);
       } else {
         console.log("updated kill db");
@@ -164,18 +185,12 @@ export default class GameServer implements PlayerDelegate {
   }
 
   updateNet(delta) {
-    for (let i = 0; i < this.initializedPlayers.length; i++) {
-      const player: Player = this.initializedPlayers[i];
-      let otherShips: Ship[] = Array.from(this.ships);
-      for (let i = otherShips.length - 1; i >= 0; i--) {
-        if (otherShips[i].owner === player.uid) {
-          otherShips.splice(i, 1);
-          break;
-        }
-      }
-      player.socket.emit("gamestate ship", player.ship);
-      player.socket.emit("gamestate ships", otherShips);
-      player.socket.emit("gamestate shells", this.shells);
+    for (let i = 0; i < this.players.length; i++) {
+      const player: Player = this.players[i];
+      if(player.initialized) {
+        player.socket.emit("gamestate players", this.players);
+        player.socket.emit("gamestate shells", this.shells);
+      }      
     }
   }
 
@@ -218,11 +233,11 @@ export default class GameServer implements PlayerDelegate {
   }
   onPlayerDisconnected(player: Player) {
     const i = this.initializedPlayers.indexOf(player);
-    if(i != -1) {
+    if (i != -1) {
       this.initializedPlayers.splice(i, 1);
     }
     const j = this.ships.indexOf(player.ship);
-    if(i != -1) {
+    if (i != -1) {
       this.ships.splice(j, 1);
     }
     Log.info("Player Disconnected: " + player.name);

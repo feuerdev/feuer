@@ -10,7 +10,6 @@ import * as Util from "../../shared/util";
 import { Socket } from "../../node_modules/@types/socket.io";
 import Vector2 from "../../shared/vector2";
 
-
 export default class Game {
 
     private readonly delta = Math.round(1000 / config.updaterate);

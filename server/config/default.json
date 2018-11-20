@@ -8,8 +8,8 @@
   "netrate": 30,
   "interp": 0.05,
 
-  "map_width": 2048,
-  "map_height": 2048,
+  "map_width": 1880,
+  "map_height": 1000,
   "gravity": -0.01,
   "shell_size": 3,
   "shell_damage": 10,

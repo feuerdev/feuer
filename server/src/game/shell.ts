@@ -1,14 +1,15 @@
 
 import Vector3 from "../../../shared/vector3";
 import Config from "../util/config";
+import Player from "./player";
 
 export default class Shell {
 
-  constructor(uid: string) {
-    this.owner = uid;
+  constructor(owner: Player) {
+    this.owner = owner;
   }
 
-  public owner: string;
+  public owner: Player;
   public pos: Vector3;
   public velocity: Vector3;
   public size: number = Config.shell_size;
