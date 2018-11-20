@@ -10,7 +10,6 @@ import * as path from "path";
 import * as bodyParser from "body-parser";
 import * as admin from 'firebase-admin';
 import * as auth from "../util/auth";
-import Log from "../util/log";
 
 import router_register from "./routes/register";
 import router_login from "./routes/login";

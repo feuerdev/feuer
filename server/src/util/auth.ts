@@ -8,14 +8,11 @@ export function isAuthenticated(req, res, next) {
     if (idToken) {
       admin.auth().verifyIdToken(idToken)
         .then(decodedToken => {
-          console.log(decodedToken);
-          console.log("IdToken is valid");
           req.user = decodedToken;
           next();
         })
         .catch(error => {
           //TODO: Fange hier nur den Token expired Error ab.
-          console.log(error);
           res.redirect("/relogin");
         });
     } else {
