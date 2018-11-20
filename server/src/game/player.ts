@@ -21,7 +21,7 @@ export default class Player {
 
   public ship: Ship;
   public uid: string;
-  private name: string;
+  public name: string;
 
   constructor(delegate: PlayerDelegate, socket: Socket) {
     this.socket = socket;

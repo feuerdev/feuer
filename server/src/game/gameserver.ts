@@ -137,9 +137,12 @@ export default class GameServer implements PlayerDelegate {
             && (Math.abs(shell.pos.y - player.ship.pos.y) <= shell.size + player.ship.width)) {
             player.ship.hitpoints -= shell.damage;
             if (player.ship.hitpoints <= 0) {
+              const i = this.initializedPlayers.indexOf(player);
+              this.initializedPlayers.splice(i, 1);
+              const j = this.ships.indexOf(player.ship);
+              this.ships.splice(j, 1);
               player.socket.emit("gamestate death");
               const killer = shell.owner;
-              this.onPlayerDisconnected(player);
               this.updateKillStatistic(killer, player.uid);
               break;
             }
@@ -215,10 +218,14 @@ export default class GameServer implements PlayerDelegate {
   }
   onPlayerDisconnected(player: Player) {
     const i = this.initializedPlayers.indexOf(player);
-    this.initializedPlayers.splice(i, 1);
+    if(i != -1) {
+      this.initializedPlayers.splice(i, 1);
+    }
     const j = this.ships.indexOf(player.ship);
-    this.ships.splice(j, 1);
-    Log.info("Player Disconnected: " + this.initializedPlayers);
+    if(i != -1) {
+      this.ships.splice(j, 1);
+    }
+    Log.info("Player Disconnected: " + player.name);
   }
   onPlayerShot(player: Player, shell: any) {
     if (player.ship.gun.canShoot()) {
