@@ -22,10 +22,13 @@ firebase.auth().onAuthStateChanged(function (user) {
             document.cookie = COOKIE_NAME + "=" + token + ';max-age=' + COOKIE_MAXAGE;
             console.log("Cookie set");
             console.log(window.location.href);
-            if(window.location.href.endsWith("relogin")) {
-                //Nutzer ist gerade beim relogin. Nachdem setzten des aktuellen cookies auf die startseite weiterleiten
-                window.location.replace("/");
+            function redirect() {
+                if(window.location.href.endsWith("relogin")) {
+                    //Nutzer ist gerade beim relogin. Nachdem setzten des aktuellen cookies auf die startseite weiterleiten
+                    window.location.replace("/");
+                }
             }
+            window.setTimeout(redirect, 500);
         });
     } else {
         document.cookie = COOKIE_NAME + "=;max-age=-99999999;";

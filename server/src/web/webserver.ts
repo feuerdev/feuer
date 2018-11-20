@@ -47,7 +47,7 @@ export default class Webserver {
         this.app.use("/register", router_register);
         this.app.use("/login", router_login);
         this.app.use("/logout", router_logout);
-        this.app.use("/", [auth.isAuthenticated, auth.deserializeAuthGame], router_home);
+        this.app.use("/", router_home);
         this.app.use("/play", auth.isAuthenticated, router_play);
 
         this.app.get("/relogin", function (req, res) {

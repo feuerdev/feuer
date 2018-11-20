@@ -1,11 +1,11 @@
 import * as express from "express";
 import * as db from "../../util/db";
+import * as auth from "../../util/auth";
 const router = express.Router();
 
 //Route: /
 
-router.get("/", function (req, res) {
-
+router.get("/", [auth.isAuthenticated, auth.deserializeAuthGame], function (req, res) {
   db.query("SELECT users.username as 'killer', COUNT(*) AS 'kills' FROM kills JOIN users ON kills.killer=users.uid GROUP BY killer", function (error, results, fields) {
     if (error) {
       console.log(error);
@@ -24,8 +24,6 @@ router.get("/", function (req, res) {
       });
     }
   });
-
-
 });
 
 
