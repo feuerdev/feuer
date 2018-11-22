@@ -27,12 +27,11 @@ export default class Game {
     public cursorCanvas: Vector2 = new Vector2();
     public aimPoint: Vector2;
     public aimPointRequested: Vector2;
-
     private isM2Down: boolean = false;
 
     public ship: any;
-    public ships = [];
     public shells = [];
+    public players = [];
 
     public mapWidth: number;
     public mapHeight: number;
@@ -130,28 +129,11 @@ export default class Game {
                     this.gunAngleVertical = Util.clamp(Util.calculateVerticalAngle(new Vector2(this.ship.pos.x - this.ship.width / 2, this.ship.pos.y -this.ship.width / 2), this.cursorWorld, config.gravity, this.ship.gun.velocity), this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
                     this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
                     this.socket.emit("input gun vertical", this.gunAngleVertical);
-
-                    // let vertical = this.calculateVerticalAngle(this.cursorWorld);
-                    // if (!Number.isNaN(vertical)) { //TODO improve this
-                    //     this.aimPoint = new Vector2(this.cursorWorld.x, this.cursorWorld.y);
-                    //     this.gunAngleVertical = this.calculateVerticalAngle(this.cursorWorld);
-                    //     this.socket.emit("input gun vertical", this.gunAngleVertical);
-                    // }
                     break;
                 }
                 // case 2: this.renderer.switchFollowMode(); break;//Mittelclick?
             }
         });
-
-        // canvas[0].addEventListener("contextmenu", (event) => { //Rechtsklick
-        //     if (!this.renderer.isDragging) { //TODO: This doesnt work. Fix it.
-        //         this.waypoint = new Vector2(this.cursorWorld.x, this.cursorWorld.y);
-        //         if (this.speed <= 0) {
-        //             this.speed = this.ship.speed_max;
-        //             this.socket.emit("input speed", this.speed);
-        //         }
-        //     }
-        // });
 
         canvas.mousemove(event => {
             if (this.isM2Down) {
@@ -190,31 +172,6 @@ export default class Game {
         });
     }
 
-    /*
-    private calculateHorizontalAngle(toPos: { x, y }): number {
-        let result = Util.radiansToDegrees(Math.atan2((toPos.y - this.ship.height / 2) - this.ship.pos.y, (toPos.x - this.ship.width / 2) - this.ship.pos.x)) - this.ship.orientation;
-        if (result < -180) { //Das verstehe ich nicht ganz
-            result += 360;
-        }
-        result = Util.clamp(result, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal);
-
-        return result;
-    }
-
-    private calculateVerticalAngle(toPos: { x, y }): number {
-        const d = Math.sqrt(Math.pow(toPos.x - this.ship.pos.x, 2) + Math.pow(toPos.y - this.ship.pos.y, 2));
-        const g = -config.gravity;
-        const v = this.ship.gun.velocity;
-        let result = Util.radiansToDegrees(Math.asin(d * g / (Math.pow(v, 2))) / 2);
-        if(Number.isNaN(result)) {
-            result = 45;
-        } else {
-            result = Util.clamp(result, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
-        }
-        return result;
-    }
-
-*/
     private updateCursor(event) {
         this.cursorCanvas.x = event.offsetX;
         this.cursorCanvas.y = event.offsetY;
@@ -226,8 +183,7 @@ export default class Game {
         this.socket = io.connect(config.ip, { transports: config.transports });
         this.socket.on("connect", () => this.onConnected());
         this.socket.on("disconnect", () => this.onDisconnected);
-        this.socket.on("gamestate ship", (data) => this.onGamestateShip(data));
-        this.socket.on("gamestate ships", (data) => this.onGamestateShips(data));
+        this.socket.on("gamestate players", (data) => this.onGamestatePlayers(data));
         this.socket.on("gamestate shells", (data) => this.onGamestateShells(data));
         this.socket.on("gamestate death", () => this.onGamestateDeath());
         this.socket.on("info mapwidth", (data) => { this.mapWidth = data });
@@ -371,12 +327,13 @@ export default class Game {
         Log.info("Disonnected");
     }
 
-    private onGamestateShip(ship) {
-        this.ship = ship;
-    }
-
-    private onGamestateShips(ships) {
-        this.ships = ships;
+    private onGamestatePlayers(players) {
+        this.players = players;
+        players.forEach(p => {
+            if(p.uid === currentUid) {
+                this.ship = p.ship;
+            }
+        });
     }
 
     private onGamestateShells(shells) {

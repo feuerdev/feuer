@@ -159,12 +159,8 @@ export default class Renderer {
             this.drawWaypoint();
         }
 
-        if (this.game.ship) {
-            this.drawShip(this.game.ship, true);
-        }
-
-        for (let i = 0; i < this.game.ships.length; i++) {
-            this.drawShip(this.game.ships[i], false);
+        for (let i = 0; i < this.game.players.length; i++) {
+            this.drawShip(this.game.players[i]);
         }
 
         for (let i = 0; i < this.game.shells.length; i++) {
@@ -216,77 +212,79 @@ export default class Renderer {
 
     }
 
-    drawShip(ship, isMine) {
+    drawShip(player) {
         this.ctxe.save();
-        const width: number = ship.width;
-        const height: number = ship.height;
+        const ship = player.ship;
+        if (ship) {
+            const isMine = player.uid === currentUid;
 
-        const angleOrientation: number = Util.degreeToRadians(ship.orientation);
-        const angleWaypoint: number = Util.degreeToRadians(this.game.angleToWaypoint);
+            const width: number = player.ship.width;
+            const height: number = player.ship.height;
 
+            const angleOrientation: number = Util.degreeToRadians(player.ship.orientation);
+            const angleWaypoint: number = Util.degreeToRadians(this.game.angleToWaypoint);
 
-        this.ctxe.translate(ship.pos.x + width / 2, ship.pos.y + height / 2);
+            this.ctxe.translate(player.ship.pos.x + width / 2, player.ship.pos.y + height / 2);
 
-        //draw the ship
-        let image;
-        if (ship.teamId === 0) {
-            this.ctxe.fillStyle = isMine ? "pink" : "red";
-            image = isMine ? this.img_ship1 : this.img_ship2;
-        } else if (ship.teamId === 1) {
-            this.ctxe.fillStyle = isMine ? "green" : "darkgreen";
-            image = isMine ? this.img_ship3 : this.img_ship4;
-        }
-        
-        if(isMine) {
-            this.ctxe.strokeStyle = "green";
-            this.ctxe.strokeText(this.game.username, width / 2, 40);
-        } else {
-            this.ctxe.strokeStyle = "red";
-            this.ctxe.strokeText(ship.username, width / 2, 40);
-        }
+            //draw the ship
+            let image;
+            if (player.teamId === 0) {
+                this.ctxe.fillStyle = isMine ? "pink" : "red";
+                image = isMine ? this.img_ship1 : this.img_ship2;
+            } else if (player.teamId === 1) {
+                this.ctxe.fillStyle = isMine ? "green" : "darkgreen";
+                image = isMine ? this.img_ship3 : this.img_ship4;
+            }
 
-        this.ctxe.strokeText(ship.hitpoints, width + 10, height / 2);
-        this.ctxe.rotate(angleOrientation + (Math.PI / 2));
-        this.ctxe.drawImage(image, width / 2 * (-1), height / 2 * (-1), width, height);
-        this.ctxe.rotate(-(Math.PI / 2));
-        // this.ctxe.restore();
-        // this.context_entities.fillRect(width / 2 * (-1), height / 2 * (-1), width, height);
+            if (isMine) {
+                this.ctxe.strokeStyle = "green";
+            } else {
+                this.ctxe.strokeStyle = "red";
+            }
+            this.ctxe.strokeText(player.name, width / 2, 40);
 
-        //draw the gun
-        const widthGun: number = 12; //TODO: width und height vom Server übernehmen
-        const heightGun: number = 2;
-        const offsetGun: number = 10;
-        const radGunActual = Util.degreeToRadians(ship.gun.angleHorizontalActual);
-        const radGunReq = Util.degreeToRadians(ship.gun.angleHorizontalRequested);
-        this.ctxe.fillStyle = "black";
-        this.ctxe.rotate(radGunActual);
-        this.ctxe.fillRect(widthGun + offsetGun / 2 * (-1), heightGun / 2 * (-1), widthGun, heightGun);
+            this.ctxe.strokeText(player.ship.hitpoints, width + 10, height / 2);
+            this.ctxe.rotate(angleOrientation + (Math.PI / 2));
+            this.ctxe.drawImage(image, width / 2 * (-1), height / 2 * (-1), width, height);
+            this.ctxe.rotate(-(Math.PI / 2));
+            // this.ctxe.restore();
+            // this.context_entities.fillRect(width / 2 * (-1), height / 2 * (-1), width, height);
 
-        if (isMine) {
-            //draw the helper line            
-            const lengthHelper: number = 900;
-            const thicknessHelper: number = 2;
-            const offsetHelper: number = 30;
-            this.ctxe.setLineDash([5, 15]);
-            if (ship.gun.angleHorizontalRequested !== ship.gun.angleHorizontalActual) {
-                this.ctxe.rotate(-radGunActual);
-                this.ctxe.rotate(radGunReq);
-                this.ctxe.strokeStyle = "grey";
+            //draw the gun
+            const widthGun: number = 12; //TODO: width und height vom Server übernehmen
+            const heightGun: number = 2;
+            const offsetGun: number = 10;
+            const radGunActual = Util.degreeToRadians(player.ship.gun.angleHorizontalActual);
+            const radGunReq = Util.degreeToRadians(player.ship.gun.angleHorizontalRequested);
+            this.ctxe.fillStyle = "black";
+            this.ctxe.rotate(radGunActual);
+            this.ctxe.fillRect(widthGun + offsetGun / 2 * (-1), heightGun / 2 * (-1), widthGun, heightGun);
+
+            if (isMine) {
+                //draw the helper line            
+                const lengthHelper: number = 900;
+                const thicknessHelper: number = 2;
+                const offsetHelper: number = 30;
+                this.ctxe.setLineDash([5, 15]);
+                if (player.ship.gun.angleHorizontalRequested !== player.ship.gun.angleHorizontalActual) {
+                    this.ctxe.rotate(-radGunActual);
+                    this.ctxe.rotate(radGunReq);
+                    this.ctxe.strokeStyle = "grey";
+                    this.ctxe.beginPath();
+                    this.ctxe.moveTo(offsetHelper, 0);
+                    this.ctxe.lineTo(lengthHelper, 0);
+                    this.ctxe.stroke();
+                    this.ctxe.rotate(-radGunReq);
+                    this.ctxe.rotate(radGunActual);
+                }
+                this.ctxe.strokeStyle = "yellow";
+                this.ctxe.lineWidth = thicknessHelper;
                 this.ctxe.beginPath();
                 this.ctxe.moveTo(offsetHelper, 0);
                 this.ctxe.lineTo(lengthHelper, 0);
                 this.ctxe.stroke();
-                this.ctxe.rotate(-radGunReq);
-                this.ctxe.rotate(radGunActual);
             }
-            this.ctxe.strokeStyle = "yellow";
-            this.ctxe.lineWidth = thicknessHelper;
-            this.ctxe.beginPath();
-            this.ctxe.moveTo(offsetHelper, 0);
-            this.ctxe.lineTo(lengthHelper, 0);
-            this.ctxe.stroke();
         }
-
         //reset the canvas  
         this.ctxe.restore();
     }
@@ -437,3 +435,4 @@ export default class Renderer {
 
 };
 declare const config;
+declare const currentUid;

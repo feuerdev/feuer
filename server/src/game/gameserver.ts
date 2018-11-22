@@ -9,7 +9,8 @@ import { Server } from "http";
 import Shell from "./shell";
 import Ship from "./ship";
 import Gun from "./gun";
-import Player from "./player"
+import Player from "./player";
+import Helper from "./helper";
 
 import * as db from "../util/db";
 import * as Util from "../../../shared/util";
@@ -17,12 +18,15 @@ import Log from "../util/log";
 import config from "../util/config";
 import Vector2 from "../../../shared/vector2";
 import Vector3 from "../../../shared/vector3";
+import { Socket } from "socket.io";
 
 const GRAVITY: Vector3 = new Vector3(0, 0, config.gravity);
 
 export default class GameServer {
   private io: socketio.Server;
 
+  private socketplayer: {} = {};
+  private uidsockets: {} = {};
   private players: Player[] = [];
   private shells: Shell[] = [];
 
@@ -46,18 +50,15 @@ export default class GameServer {
   listen(httpServer: Server) {
     this.io = socketio(httpServer, { transports: config.transports });
     this.io.on("connection", (socket) => {
-      const player: Player = new Player(socket);
-      this.players.push(player);
-
       socket.emit("info mapwidth", this.mapWidth);
       socket.emit("info mapheight", this.mapHeight);
-      socket.on("disconnect", () => this.onPlayerDisconnected(player));
-      socket.on("initialize", (data) => this.onPlayerInitialize(player, data));
-      socket.on("input speed", (data) => this.onPlayerInputShipSpeed(player, data));
-      socket.on("input gun horizontal", (data) => this.onPlayerInputGunAngleHorizontal(player, data));
-      socket.on("input gun vertical", (data) => this.onPlayerInputGunAngleVertical(player, data));
-      socket.on("input rudder", (data) => this.onPlayerInputRudderPosition(player, data));
-      socket.on("input shoot", () => this.onPlayerInputShoot(player));
+      socket.on("initialize", (data) => this.onPlayerInitialize(socket, data));
+      socket.on("input speed", (data) => this.onPlayerInputShipSpeed(socket, data));
+      socket.on("input gun horizontal", (data) => this.onPlayerInputGunAngleHorizontal(socket, data));
+      socket.on("input gun vertical", (data) => this.onPlayerInputGunAngleVertical(socket, data));
+      socket.on("input rudder", (data) => this.onPlayerInputRudderPosition(socket, data));
+      socket.on("input shoot", () => this.onPlayerInputShoot(socket));
+      socket.on("disconnect", () => this.onPlayerDisconnected(socket));
     });
   }
 
@@ -163,7 +164,10 @@ export default class GameServer {
 
   onPlayerKilled(killer: Player, killed: Player) {
     this.removePlayer(killed);
-    killed.socket.emit("gamestate death");
+    const socket: Socket = this.uidsockets[killed.uid]
+    socket.emit("gamestate death");
+    delete this.uidsockets[killed.uid];
+    delete this.socketplayer[socket.id];
     this.updateKillStatistic(killer, killed);
   }
 
@@ -187,66 +191,92 @@ export default class GameServer {
   updateNet(delta) {
     for (let i = 0; i < this.players.length; i++) {
       const player: Player = this.players[i];
-      if(player.initialized) {
-        player.socket.emit("gamestate players", this.players);
-        player.socket.emit("gamestate shells", this.shells);
-      }      
+      if (player.initialized) {
+        const socket: Socket = this.uidsockets[player.uid];
+        if (socket) {
+          socket.emit("gamestate players", this.players);
+          socket.emit("gamestate shells", this.shells);
+        }
+      }
     }
   }
 
-  requestSpawnOrientation(teamId: number): number {
-    if (teamId === 0) {
-      return 0;
-    } else if (teamId === 1) {
-      return 180;
+  onPlayerDisconnected(socket: Socket) {
+    // const i = this.players.indexOf(player);
+    // if (i != -1) {
+    //   this.players.splice(i, 1);
+    // }
+    // delete this.sockets[player.uid];
+    const player: Player = this.socketplayer[socket.id];
+    if(player) {
+      Log.info("Player Disconnected: " + player.name);
+    }
+  }
+  onPlayerInitialize(socket: Socket, uid: string) {
+    const self = this;
+    if (!this.uidsockets[uid]) {
+      Helper.getUsername(uid)
+        .then((name) => {
+          const player: Player = new Player();
+          player.uid = uid;
+          player.name = name;
+          player.teamId = this.lastTeamId;
+          player.ship = new Ship();
+          player.ship.pos = Helper.requestSpawnPosition(player.teamId, self.mapWidth, self.mapHeight);
+          player.ship.orientation = Helper.requestSpawnOrientation(player.teamId);
+          player.initialized = true;
+          self.players.push(player);
+          self.socketplayer[socket.id] = player;
+          Log.info("Player Connected: " + player.name);
+          self.lastTeamId = self.lastTeamId === 0 ? 1 : 0;
+
+        })
+        .catch(error => {
+          Log.error(error);
+        });
     } else {
-      throw Error("invalid teamId given");
+      for(let i = 0; i < self.players.length; i++) {
+        if(self.players[i].uid === uid) {
+          this.socketplayer[socket.id] = self.players[i];
+        } 
+      }
+    }
+    this.uidsockets[uid] = socket;
+  }
+  onPlayerInputShoot(socket: Socket) {
+    const player: Player = this.socketplayer[socket.id];
+    if (player && player.initialized) {
+      if (player.ship.gun.canShoot()) {
+        player.ship.gun.timeSinceLastShot = 0;
+        const shell: Shell = new Shell(player);
+        shell.pos = player.ship.pos.toVector3();
+        shell.velocity = new Vector3(player.ship.gun.angleHorizontalActual + player.ship.orientation, player.ship.gun.angleVerticalActual).multiply(player.ship.gun.velocity);
+        this.shells.push(shell);
+      }
     }
   }
-
-  requestSpawnPosition(teamId: number): Vector2 {
-    const margin = 50;
-    const spawnboxWidth = 100;
-    const spawnboxHeight = this.mapHeight;
-    if (teamId === 0) {
-      const x = Util.scale(Math.random(), 0, 1, margin, margin + spawnboxWidth);
-      const y = Util.scale(Math.random(), 0, 1, margin, spawnboxHeight - margin);
-      return new Vector2(x, y);
-    } else if (teamId === 1) {
-      const x = Util.scale(Math.random(), 0, 1, this.mapWidth - (margin + spawnboxWidth), this.mapWidth - margin);
-      const y = Util.scale(Math.random(), 0, 1, margin, spawnboxHeight - margin);
-      return new Vector2(x, y);
-    } else {
-      throw Error("invalid teamId given");
+  private onPlayerInputShipSpeed(socket: Socket, speed: number) {
+    const player: Player = this.socketplayer[socket.id];
+    if (player && player.initialized) {
+      player.ship.speed_requested = speed;
     }
   }
-
-  //#region Playerdelegate
-  onPlayerInitialized(player: Player) {
-    player.ship.pos = this.requestSpawnPosition(this.lastTeamId);
-    player.ship.orientation = this.requestSpawnOrientation(this.lastTeamId);
-    player.ship.teamId = this.lastTeamId;
-    player.socket.emit("info teamId", this.lastTeamId);
-    this.lastTeamId = this.lastTeamId === 0 ? 1 : 0;
-    this.ships.push(player.ship);
-    this.initializedPlayers.push(player);
-  }
-  onPlayerDisconnected(player: Player) {
-    const i = this.initializedPlayers.indexOf(player);
-    if (i != -1) {
-      this.initializedPlayers.splice(i, 1);
-    }
-    const j = this.ships.indexOf(player.ship);
-    if (i != -1) {
-      this.ships.splice(j, 1);
-    }
-    Log.info("Player Disconnected: " + player.name);
-  }
-  onPlayerShot(player: Player, shell: any) {
-    if (player.ship.gun.canShoot()) {
-      player.ship.gun.timeSinceLastShot = 0;
-      this.shells.push(shell);
+  private onPlayerInputGunAngleHorizontal(socket: Socket, angle: number) {
+    const player: Player = this.socketplayer[socket.id];
+    if (player && player.initialized) {
+      player.ship.gun.angleHorizontalRequested = angle;
     }
   }
-  //#endregion
+  private onPlayerInputGunAngleVertical(socket: Socket, angle: number) {
+    const player: Player = this.socketplayer[socket.id];
+    if (player && player.initialized) {
+      player.ship.gun.angleVerticalRequested = angle;
+    }
+  }
+  private onPlayerInputRudderPosition(socket: Socket, position: number) {
+    const player: Player = this.socketplayer[socket.id];
+    if (player && player.initialized) {
+      player.ship.rudderAngleRequested = position;
+    }
+  }
 };
