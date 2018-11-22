@@ -158,10 +158,9 @@ export default class Game {
                 this.renderer.isDragging = false;
                 if (this.dragDistance < config.click_distance_threshold) {
                     this.waypoint = new Vector2(this.cursorWorld.x, this.cursorWorld.y);
-                    if (this.speed <= 0) {
-                        this.speed = this.ship.speed_max;
-                        this.socket.emit("input speed", this.speed);
-                    }
+                    this.speed = this.ship.speed_max;
+                    this.socket.emit("input speed", this.speed);
+                    
                 }
                 this.dragDistance = 0;
             }
