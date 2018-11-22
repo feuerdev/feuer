@@ -1,7 +1,9 @@
 {
   "secure_cookie": true,  
-  "ship_acceleration": 0.4,
+  "ship_acceleration": 1,
   "gun_firerate" : 100,
   "gun_turn_speed_horizontal" : 1,
-  "gun_turn_speed_vertical" : 0.5
+  "gun_turn_speed_vertical" : 0.5,
+  "ship_speed_max" : 200,
+  "gun_velocity" : 3
 }
