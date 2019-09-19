@@ -65,6 +65,4 @@ export default class Webserver {
     public getHttpServer() {
         return this.httpServer;
     }
-
-
 };
