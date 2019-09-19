@@ -8,7 +8,7 @@
       "type": "node",
       "request": "launch",
       "name": "Launch Server",
-      "program": "${workspaceFolder}\\server\\src\\main.ts",
+      "program": "${workspaceFolder}/server/src/main.ts",
       "args": [
         "debug"
       ],
