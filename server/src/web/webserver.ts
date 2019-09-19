@@ -35,7 +35,7 @@ export default class Webserver {
     private httpServer: http.Server = http.createServer(this.app);
 
     constructor() {
-        this.app.engine("hbs", express_handlebars({ extname: ".hbs" }));
+        this.app.engine("hbs", express_handlebars({ extname: ".hbs", defaultLayout: null }));
         this.app.set("views", path.join(directory_client, "views"));
         this.app.set("view engine", "hbs");
         this.app.use(cookieParser());
