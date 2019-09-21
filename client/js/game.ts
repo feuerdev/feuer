@@ -30,6 +30,8 @@ export default class Game {
     private isM2Down: boolean = false;
 
     public players = [];
+    
+    public tiles:{};
 
     public mapWidth: number;
     public mapHeight: number;
@@ -131,6 +133,7 @@ export default class Game {
         this.socket.on("connect", () => this.onConnected());
         this.socket.on("disconnect", () => this.onDisconnected);
         this.socket.on("gamestate players", (data) => this.onGamestatePlayers(data));
+        this.socket.on("gamestate tiles", (data) => this.onGamestateTiles(data));
         //this.socket.on("gamestate death", () => this.onGamestateDeath());
         //this.socket.on("info mapwidth", (data) => { this.mapWidth = data });
     }
@@ -191,6 +194,10 @@ export default class Game {
                 //this.ship = p.ship;
             }
         });
+    }
+
+    private onGamestateTiles(tiles) {
+        this.tiles = tiles;
     }
 
     private onGamestateDeath() {

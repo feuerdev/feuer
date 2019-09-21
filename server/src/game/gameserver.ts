@@ -16,6 +16,8 @@ import config from "../util/config";
 import Vector2 from "../../../shared/vector2";
 import Vector3 from "../../../shared/vector3";
 import { Socket } from "socket.io";
+import { Hashtable } from "../../../shared/util";
+import Tile from "./tile";
 
 const GRAVITY: Vector3 = new Vector3(0, 0, config.gravity);
 
@@ -26,8 +28,8 @@ export default class GameServer {
   private uidsockets: {} = {};
   private players: Player[] = [];
 
-  private mapWidth: number = config.map_width;
-  private mapHeight: number = config.map_height;
+  private tiles:Hashtable<Tile> = {};
+
 
   //#region Gameloop Variables
   private readonly delta = Math.round(1000 / config.updaterate);
@@ -40,11 +42,19 @@ export default class GameServer {
   private timeSinceLastUpdate = 0;
   //#endregion
 
+  constructor() {
+    for(let q:number = -config.map_radius; q <= config.map_radius; q++) {
+      let r1:number = Math.max(-config.map_radius, -q - config.map_radius);
+      let r2:number = Math.min(config.map_radius, -q + config.map_radius);
+      for (let r:number = r1; r <= r2; r++) {
+          this.tiles[q+"-"+r] = new Tile(q,r);
+      }
+    }
+  }
+
   listen(httpServer: Server) {
     this.io = socketio(httpServer, { transports: config.transports });
     this.io.on("connection", (socket) => {
-      socket.emit("info mapwidth", this.mapWidth);
-      socket.emit("info mapheight", this.mapHeight);
       socket.on("initialize", (data) => this.onPlayerInitialize(socket, data));
       socket.on("disconnect", () => this.onPlayerDisconnected(socket));
     });
@@ -116,6 +126,7 @@ export default class GameServer {
         const socket: Socket = this.uidsockets[player.uid];
         if (socket) {
           socket.emit("gamestate players", this.players);
+          socket.emit("gamestate tiles", this.tiles);
         }
       }
     }

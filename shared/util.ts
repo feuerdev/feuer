@@ -1,5 +1,9 @@
 import Vector2 from "./vector2";
 
+export interface Hashtable<T> {
+  [key: string]:T;
+}
+
 export function scale(value: number, oldmin: number, oldmax: number, newmin: number, newmax: number): number {
   return (((newmax - newmin) * (value - oldmin)) / (oldmax - oldmin)) + newmin;
 }

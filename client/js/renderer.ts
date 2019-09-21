@@ -120,7 +120,10 @@ export default class Renderer {
     drawMap() {
         //Clear Canvas
         this.ctxm.save();
-
+        Object.keys(this.game.tiles).forEach(function (key) { 
+            let tile:{} = this.game.tiles[key]
+            
+        })
         this.ctxm.restore();
         // this.shouldRedrawMap = false;
     }
