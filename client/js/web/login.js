@@ -33,9 +33,14 @@ function onGuestClicked() {
                       xmlhttp.open("POST", "/register");
                       xmlhttp.setRequestHeader("Content-Type", "application/json");
                       xmlhttp.onreadystatechange = function () {
-                        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                          console.log("Data sent to server, redirecting");
-                          window.location.replace("/");
+                        if (xmlhttp.readyState == 4) {
+                          if(xmlhttp.status == 200) {
+                            console.log("Data sent to server, redirecting");
+                            window.location.replace("/");
+                          } else {
+                            console.log(xmlhttp.responseText);
+                            window.location.replace("/logout");
+                          }
                         }
                       };
                       xmlhttp.send(JSON.stringify({
