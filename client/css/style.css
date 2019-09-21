@@ -6,7 +6,7 @@ html {
     /* Default body margin entfernen */
     overflow: hidden;
     /*Verstecke die Scrollbars, theoretisch nicht nötig. Einkommentieren falls doch */
-    background: lightgray;
+    background: black;
 }
 
 #canvas-container {
@@ -17,9 +17,9 @@ html {
     bottom: 20px;
 }
 
-/* #canvas-map {
-    background: darkblue;
-} */
+ #canvas-map {
+    background: rgb(33, 231, 165);
+}
 
 canvas {
     position: absolute;
