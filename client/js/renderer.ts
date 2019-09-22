@@ -4,6 +4,7 @@
 import * as $ from "./lib/jquery-3.1.1.min";
 import Game from "./game";
 import Vector2 from "../../shared/vector2";
+import {Layout, Orientation} from "../../shared/hex";
 import * as Util from "../../shared/util";
 
 export default class Renderer {
@@ -38,8 +39,15 @@ export default class Renderer {
     public isDragging: boolean = false;
     private shouldDrawDebug: boolean = config.log_level === "debug";
 
+    //Hex
+    private orientation:Orientation;
+    private layout:Layout;
+
     constructor(game: Game) {
         this.game = game;
+
+        this.orientation = Layout.flat;
+        this.layout = new Layout(this.orientation, new Vector2(config.hex_width, config.hex_height), new Vector2(0,0));
 
         this.canvas_map[0].width = this.container.width();
         this.canvas_map[0].height = this.container.height();
@@ -106,8 +114,8 @@ export default class Renderer {
         if (this.isDragging) {
             this.cameraPos.x -= Math.round((this.game.cursorCanvas.x - this.cursorCanvasLast.x) / this.currentZoom);
             this.cameraPos.y -= Math.round((this.game.cursorCanvas.y - this.cursorCanvasLast.y) / this.currentZoom);
-            this.cameraPos.x = Util.clamp(this.cameraPos.x, 0, this.game.mapWidth - this.drawWidth);
-            this.cameraPos.y = Util.clamp(this.cameraPos.y, 0, this.game.mapHeight - this.drawHeight);
+            //this.cameraPos.x = Util.clamp(this.cameraPos.x, 0, this.game.mapWidth - this.drawWidth);
+            //this.cameraPos.y = Util.clamp(this.cameraPos.y, 0, this.game.mapHeight - this.drawHeight);
         }
         this.cursorCanvasLast.x = this.game.cursorCanvas.x;
         this.cursorCanvasLast.y = this.game.cursorCanvas.y;
@@ -120,10 +128,25 @@ export default class Renderer {
     drawMap() {
         //Clear Canvas
         this.ctxm.save();
-        Object.keys(this.game.tiles).forEach(function (key) { 
-            let tile:{} = this.game.tiles[key]
-            
-        })
+        if(this.game.tiles) {
+            this.ctxm.fillStyle = "green";
+            Object.keys(this.game.tiles).forEach(key => { 
+                let tile = this.game.tiles[key].hex;
+                let corners = this.layout.polygonCorners(tile);
+                
+                this.ctxm.beginPath();                
+                for(let i = 0; i < corners.length; i++) {
+                    //this.ctxm.fillText(""+i, corners[i].x, corners[i].y);
+                    if(i === 0) {
+                        this.ctxm.moveTo(corners[i].x, corners[i].y);
+                    } else {
+                        this.ctxm.lineTo(corners[i].x, corners[i].y);
+                    }
+                }
+                this.ctxm.closePath();
+                this.ctxm.fill();
+            });
+        }
         this.ctxm.restore();
         // this.shouldRedrawMap = false;
     }
