@@ -7,5 +7,5 @@
   "updaterate": 60,
   "netrate": 30,
   "interp": 0.05,
-  "map_radius": 20
+  "map_radius": 30
 }
