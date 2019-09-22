@@ -11,7 +11,7 @@ export default class Vector2 {
   constructor(p1: { x: number, y: number }, p2: { x: number, y: number }); //Constructor 3
   constructor(x: number, y: number); //Constructor 4
   constructor(arg1?: { x: number, y: number } | number, arg2?: { x: number, y: number } | number) {
-    if (arg1 && arg2) {
+    if (arg1 !== undefined && arg2 !== undefined) {
       if (typeof arg1 === "number" && typeof arg2 === "number") {
         //Constructor 4
         this.x = arg1;
