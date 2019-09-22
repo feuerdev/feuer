@@ -129,7 +129,7 @@ export default class Renderer {
         //Clear Canvas
         this.ctxm.save();
         if(this.game.tiles) {
-            this.ctxm.fillStyle = "green";
+            this.ctxm.fillStyle = "#20C20E";
             Object.keys(this.game.tiles).forEach(key => { 
                 let tile = this.game.tiles[key].hex;
                 let corners = this.layout.polygonCorners(tile);

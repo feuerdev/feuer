@@ -7,19 +7,20 @@ html {
     overflow: hidden;
     /*Verstecke die Scrollbars, theoretisch nicht nötig. Einkommentieren falls doch */
     background: black;
+    color:#20C20E;
 }
 
 #canvas-container {
     position: absolute;
-    left: 20px;
-    right: 20px;
-    top: 20px;
-    bottom: 20px;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
 }
 
- #canvas-map {
-    background: rgb(33, 231, 165);
-}
+ /* #canvas-map {
+    background: black;
+} */
 
 canvas {
     position: absolute;
