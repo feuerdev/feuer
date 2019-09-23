@@ -9,6 +9,7 @@ import * as $ from "./lib/jquery-3.1.1.min";
 import * as Util from "../../shared/util";
 import { Socket } from "../../node_modules/@types/socket.io";
 import Vector2 from "../../shared/vector2";
+import Hex, {Layout, Orientation} from "../../shared/hex";
 
 export default class Game {
 
@@ -33,9 +34,16 @@ export default class Game {
     
     public tiles:{};
 
+
     public mapWidth: number;
     public mapHeight: number;
     public username: string;
+
+    //Hex
+    public orientation:Orientation = Layout.flat;;
+    public layout:Layout = new Layout(this.orientation, new Vector2(config.hex_width, config.hex_height), new Vector2(0,0));
+
+    public selectedHex:Hex;
 
     //Wrapper um window.requestAnimationFrame()
     private requestAnimationFrameWrapper: Function = (function () {
@@ -50,7 +58,6 @@ export default class Game {
     })();
 
     constructor() {
-
         let canvas;
         if ($("#canvas-entities").length > 0) {
             canvas = $("#canvas-entities");
@@ -82,6 +89,7 @@ export default class Game {
         window.addEventListener("click", event => {
             switch (event.which) {
                 case 1: { //Linksclick
+                    this.selectedHex = this.layout.pixelToHex(this.cursorWorld).round();
                     break;
                 }
                 // case 2: this.renderer.switchFollowMode(); break;//Mittelclick?

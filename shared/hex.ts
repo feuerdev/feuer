@@ -84,6 +84,10 @@ export default class Hex {
     }
     return results;
   }
+
+  public equals(hex:Hex) {
+    return this.q === hex.q && this.r === hex.r && this.s === hex.s;
+  }
 }
 
 export class OffsetCoord {

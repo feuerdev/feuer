@@ -4,7 +4,6 @@
 import * as $ from "./lib/jquery-3.1.1.min";
 import Game from "./game";
 import Vector2 from "../../shared/vector2";
-import {Layout, Orientation} from "../../shared/hex";
 import * as Util from "../../shared/util";
 
 export default class Renderer {
@@ -39,15 +38,10 @@ export default class Renderer {
     public isDragging: boolean = false;
     private shouldDrawDebug: boolean = config.log_level === "debug";
 
-    //Hex
-    private orientation:Orientation;
-    private layout:Layout;
 
     constructor(game: Game) {
         this.game = game;
 
-        this.orientation = Layout.flat;
-        this.layout = new Layout(this.orientation, new Vector2(config.hex_width, config.hex_height), new Vector2(0,0));
 
         this.canvas_map[0].width = this.container.width();
         this.canvas_map[0].height = this.container.height();
@@ -129,10 +123,10 @@ export default class Renderer {
         //Clear Canvas
         this.ctxm.save();
         if(this.game.tiles) {
-            this.ctxm.fillStyle = "#20C20E";
             Object.keys(this.game.tiles).forEach(key => { 
-                let tile = this.game.tiles[key].hex;
-                let corners = this.layout.polygonCorners(tile);
+                let hex = this.game.tiles[key].hex;
+                
+                let corners = this.game.layout.polygonCorners(hex);
                 
                 this.ctxm.beginPath();                
                 for(let i = 0; i < corners.length; i++) {
@@ -144,6 +138,13 @@ export default class Renderer {
                     }
                 }
                 this.ctxm.closePath();
+
+                if(this.game.selectedHex && this.game.selectedHex.equals(hex)) {
+                    this.ctxm.fillStyle = "red";
+                } else {
+                    this.ctxm.fillStyle = "#20C20E";
+                }
+
                 this.ctxm.fill();
             });
         }
@@ -164,18 +165,15 @@ export default class Renderer {
         }
         this.debug.append("Camera.x   : " + this.cameraPos.x + "<br>");
         this.debug.append("Camera.y   : " + this.cameraPos.y + "<br>");
-        // this.debug.append("deadz.x   : " + this.deadzone.x + "<br>");
-        // this.debug.append("deadz.y   : " + this.deadzone.y + "<br>");
         this.debug.append("Canvas Width   : " + this.canvasWidth + "<br>");
         this.debug.append("Canvas Height   : " + this.canvasHeight + "<br>");
         this.debug.append("Draw Width   : " + this.drawWidth + "<br>");
         this.debug.append("Draw Height   : " + this.drawHeight + "<br>");
-        this.debug.append("Map Width   : " + this.game.mapWidth + "<br>");
-        this.debug.append("Map Height   : " + this.game.mapHeight + "<br>");
         this.debug.append("Cursor Position X   : " + this.game.cursorWorld.x + "<br>");
         this.debug.append("Cursor Position Y   : " + this.game.cursorWorld.y + "<br>");
         this.debug.append("Cursor Canvas Position X   : " + this.game.cursorCanvas.x + "<br>");
         this.debug.append("Cursor Canvas Position Y   : " + this.game.cursorCanvas.y + "<br>");
+        if(this.game.selectedHex) this.debug.append("Selected Hex   : " + this.game.selectedHex.q+" "+this.game.selectedHex.r+" "+this.game.selectedHex.s + "<br>");
         this.debug.append("Mouse Distance   : " + this.game.dragDistance + "<br>");
         this.debug.append("Zoom Factor   : " + this.currentZoom + "<br>");
     }
