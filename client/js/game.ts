@@ -34,13 +34,10 @@ export default class Game {
     
     public tiles:{};
 
-
-    public mapWidth: number;
-    public mapHeight: number;
     public username: string;
 
     //Hex
-    public orientation:Orientation = Layout.flat;;
+    public orientation:Orientation = Layout.pointy;
     public layout:Layout = new Layout(this.orientation, new Vector2(config.hex_width, config.hex_height), new Vector2(0,0));
 
     public selectedHex:Hex;
@@ -142,8 +139,6 @@ export default class Game {
         this.socket.on("disconnect", () => this.onDisconnected);
         this.socket.on("gamestate players", (data) => this.onGamestatePlayers(data));
         this.socket.on("gamestate tiles", (data) => this.onGamestateTiles(data));
-        //this.socket.on("gamestate death", () => this.onGamestateDeath());
-        //this.socket.on("info mapwidth", (data) => { this.mapWidth = data });
     }
 
     public run() {
