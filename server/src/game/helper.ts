@@ -28,31 +28,4 @@ export default abstract class Helper {
     });
   }
 
-  static requestSpawnPosition(teamId: number, mapWidth:number, mapHeight:number,): Vector2 {
-    const margin = 50;
-    const spawnboxWidth = 100;
-    const spawnboxHeight = mapHeight;
-    if (teamId === 0) {
-      const x = Util.scale(Math.random(), 0, 1, margin, margin + spawnboxWidth);
-      const y = Util.scale(Math.random(), 0, 1, margin, spawnboxHeight - margin);
-      return new Vector2(x, y);
-    } else if (teamId === 1) {
-      const x = Util.scale(Math.random(), 0, 1, mapWidth - (margin + spawnboxWidth), mapWidth - margin);
-      const y = Util.scale(Math.random(), 0, 1, margin, spawnboxHeight - margin);
-      return new Vector2(x, y);
-    } else {
-      throw Error("invalid teamId given");
-    }
-  }
-
-  static requestSpawnOrientation(teamId: number): number {
-    if (teamId === 0) {
-      return 0;
-    } else if (teamId === 1) {
-      return 180;
-    } else {
-      throw Error("invalid teamId given");
-    }
-  }
-
 }
