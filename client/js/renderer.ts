@@ -108,8 +108,6 @@ export default class Renderer {
         if (this.isDragging) {
             this.cameraPos.x -= Math.round((this.game.cursorCanvas.x - this.cursorCanvasLast.x) / this.currentZoom);
             this.cameraPos.y -= Math.round((this.game.cursorCanvas.y - this.cursorCanvasLast.y) / this.currentZoom);
-            //this.cameraPos.x = Util.clamp(this.cameraPos.x, 0, this.game.mapWidth - this.drawWidth);
-            //this.cameraPos.y = Util.clamp(this.cameraPos.y, 0, this.game.mapHeight - this.drawHeight);
         }
         this.cursorCanvasLast.x = this.game.cursorCanvas.x;
         this.cursorCanvasLast.y = this.game.cursorCanvas.y;
@@ -125,12 +123,11 @@ export default class Renderer {
         if(this.game.tiles) {
             Object.keys(this.game.tiles).forEach(key => { 
                 let hex = this.game.tiles[key].hex;
-                
+                let height  = this.game.tiles[key].height;
                 let corners = this.game.layout.polygonCorners(hex);
                 
                 this.ctxm.beginPath();                
                 for(let i = 0; i < corners.length; i++) {
-                    //this.ctxm.fillText(""+i, corners[i].x, corners[i].y);
                     if(i === 0) {
                         this.ctxm.moveTo(corners[i].x, corners[i].y);
                     } else {
@@ -146,6 +143,8 @@ export default class Renderer {
                 }
 
                 this.ctxm.fill();
+                this.ctxm.fillStyle = "red";
+                this.ctxm.fillText(""+height, corners[0].x-30, corners[0].y-50);
             });
         }
         this.ctxm.restore();
