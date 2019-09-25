@@ -17,6 +17,8 @@ import router_login from "./routes/login";
 import router_logout from "./routes/logout";
 import router_home from "./routes/home";
 import router_play from "./routes/play";
+import router_mapgen from "./routes/mapgen";
+import GameServer from "../game/gameserver";
 
 const directory_client = path.join(__dirname, "../../../client"); //Gibt das Client-Root-Verzeichnis zurueck.;
 
@@ -38,6 +40,8 @@ export default class Webserver {
     private app = express();
     private httpServer: http.Server = http.createServer(this.app);
 
+    public gameserver:GameServer;
+
     constructor() {
         this.app.engine("hbs", express_handlebars({ extname: ".hbs", defaultLayout: null }));
         this.app.set("views", path.join(directory_client, "views"));
@@ -50,6 +54,7 @@ export default class Webserver {
         this.app.use("/register", router_register);
         this.app.use("/login", router_login);
         this.app.use("/logout", router_logout);
+        this.app.use("/mapgen", router_mapgen);
         this.app.use("/", router_home);
         this.app.use("/play", auth.isAuthenticated, router_play);
 
@@ -64,6 +69,7 @@ export default class Webserver {
 
     run() {
         this.httpServer.listen(process.env.PORT || config.port);
+        this.app.set('gameserver', this.gameserver);
     }
 
     public getHttpServer() {

@@ -28,7 +28,7 @@ export default class GameServer {
   private uidsockets: {} = {};
   private players: Player[] = [];
 
-  private tiles:Hashtable<Tile> = {};
+  public tiles:Hashtable<Tile> = {};
 
 
   //#region Gameloop Variables

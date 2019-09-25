@@ -19,5 +19,6 @@ const server_game:GameServer = new GameServer();
 server_game.listen(server_web.getHttpServer());
 server_game.run();
 Log.info("Gameserver started");
+server_web.gameserver = server_game;
 server_web.run();
 Log.info("Webserver started");
