@@ -1,51 +1,46 @@
-Try it at https://gellerlul.herokuapp.com/
+MMORTS in development
 
-Building, Running, Debugging
+Description: 
 
-1. run build task (tsc ist durch die tsconfig.json automatisch im watch modus);
-2. F5 um zu starten/debuggen
+A realtime PvP focussed hardcore persistent MMORTS in medieval setting.
 
-TODO:
+- Play on procedurally generated persistent Hex based map with high player number
+- Gather resources
+- Construct settlements, towns, cities
+- Recruit and train soldiers and generals and engage in raiding, conquering
+- Realtime tick based combat (think Hearts of Iron)
+- Get involved in diplomacy/clans/factions wars and trading
+- No or very limited PvE
+- Visible and noticeable ranking system to spark competitiveness
+- Limited focus on graphics until game is fun to play and balanced
 
-* Grafik
-  * Shells besser zeichnen
-* Input  
-  * Optische Darstellung des Vertikalen Angles
+Try the current state at https://gellerlul.herokuapp.com/
 
-* UI
-  * Keyboard shortcuts anzeigen
+Running the code
+1. npm install
+1. Open Folder in Visual Studio Code (Build tasks will start automatically)
+2. Fill .env File with credentials
+3. F5!
 
-* Gameplay
-  * Kugeln aus Kanone fliegen lassen
-  * Mehrere Kanonen
-  * Korrekte hit detection
-  * Tilebasierter Schiff Aufbau
-    * Dann könnte man z.B. eine Werft (aka eine Tabelle) anlegen. Die Standard Werft ist z.B. 4x3. Durch Upgrades kann man die maximale Größe erweitern.
-
-* Login
-* XP System
-* Client Config über Webservice laden
-
-Erledigt:
-* Gameplay
-  * Multiplayer
-  * Mausinput
-    * Linksclick zum Zielen
-    * Rechtsklick zum Waypoint setzen
-  * Tastaturinput
-    * WASD zum Zielen
-    * Pfeiltasten zum bewegen
-    * x zum Ruder-Reset
-    * Space zum Schießen
-* Spawns auf beiden Spielfeldseiten
-* Spielfeldgröße festlegen
-* Feuerrate begrenzen
-
-* UI
-  * Vorschau des Einschlagpunkts der Projektile (Zielhilfe)
-  * "Schatten" soll kleiner werden je höher das projektil fliegt
-  * Pepy's Schiffe zeichnen
-  * Zwei Hilfslinien (oder anderer Indikator für "requested" Angle und "actual" Angle)
-
-* Other
-  * Shared Code zwischen Server und Client
+Next steps:
+GAMEPLAY - ESSENTIAL
+- generate map (done)
+- unit movement
+- unit combat
+- resource gathering
+- construction
+- hud
+SYSTEMS
+- use graphics (done)
+- fog of war
+- "culling"
+- camera clamping
+- persistency
+GAMEPLAY - NEXT
+- clans/factions/groups
+- diplomacy
+- trading
+- rolling general mechanics
+- honor system
+- manpower dynamic
+- points system/ranking
