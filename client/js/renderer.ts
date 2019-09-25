@@ -7,8 +7,6 @@ import Vector2 from "../../shared/vector2";
 import * as Util from "../../shared/util";
 
 export default class Renderer {
-
-
     private game: Game;
 
     private canvas_map = $("#canvas-map");
@@ -40,37 +38,10 @@ export default class Renderer {
     public isDragging: boolean = false;
     private shouldDrawDebug: boolean = config.log_level === "debug";
 
-    readonly img_ship1 = new Image();
-    readonly img_ship2 = new Image();
-    readonly img_ship3 = new Image();
-    readonly img_ship4 = new Image();
-
-    private imgs_bg = [];
-    private spritecounter: number = 0;
-    private framecounter: number = 0;
-
-    private readonly frameskip: number = 5;
 
     constructor(game: Game) {
         this.game = game;
 
-        this.img_ship1.src = "../img/ship.png";
-        this.img_ship2.src = "../img/ship2.png";
-        this.img_ship3.src = "../img/ship3.png";
-        this.img_ship4.src = "../img/ship4.png";
-
-        for (let i = 1; i <= 250; i++) {
-            const img = new Image();
-            let imgnr = "" + i;
-            const length = imgnr.length;
-            const missingzeros = 4 - length;
-            for (let j = 0; j < missingzeros; j++) {
-                imgnr = "0" + imgnr;
-            }
-
-            img.src = "../img/background/water_055_c_" + imgnr + ".jpg";
-            this.imgs_bg.push(img);
-        }
 
         this.canvas_map[0].width = this.container.width();
         this.canvas_map[0].height = this.container.height();
@@ -116,7 +87,6 @@ export default class Renderer {
         this.ctxm.translate(-this.cameraPos.x, -this.cameraPos.y);
         this.drawMap();
 
-
         if (config.fow) {
             this.ctxf.translate(-this.cameraPos.x, -this.cameraPos.y);
             this.drawFow();
@@ -132,195 +102,52 @@ export default class Renderer {
         this.ctxm.restore();
         this.ctxf.restore();
         this.ctxe.restore();
-        this.framecounter++;
     }
 
     updateCamera() {
         if (this.isDragging) {
             this.cameraPos.x -= Math.round((this.game.cursorCanvas.x - this.cursorCanvasLast.x) / this.currentZoom);
             this.cameraPos.y -= Math.round((this.game.cursorCanvas.y - this.cursorCanvasLast.y) / this.currentZoom);
-            this.cameraPos.x = Util.clamp(this.cameraPos.x, 0, this.game.mapWidth - this.drawWidth);
-            this.cameraPos.y = Util.clamp(this.cameraPos.y, 0, this.game.mapHeight - this.drawHeight);
+            //this.cameraPos.x = Util.clamp(this.cameraPos.x, 0, this.game.mapWidth - this.drawWidth);
+            //this.cameraPos.y = Util.clamp(this.cameraPos.y, 0, this.game.mapHeight - this.drawHeight);
         }
         this.cursorCanvasLast.x = this.game.cursorCanvas.x;
         this.cursorCanvasLast.y = this.game.cursorCanvas.y;
     }
 
     drawEntities() {
-        if (this.game.aimPointRequested) {
-            this.drawAimpoint(this.game.aimPointRequested, "grey");
-        }
-
-        if (this.game.aimPoint) {
-            this.drawAimpoint(this.game.aimPoint, "yellow");
-        }
-
-        if (this.game.waypoint) {
-            this.drawWaypoint();
-        }
-
-        for (let i = 0; i < this.game.players.length; i++) {
-            this.drawShip(this.game.players[i]);
-        }
-
-        for (let i = 0; i < this.game.shells.length; i++) {
-            this.drawShell(this.game.shells[i]);
-        }
-    }
-
-    drawWaypoint() {
-        this.ctxe.save();
-
-        this.ctxe.setLineDash([5, 15]);
-        this.ctxe.strokeStyle = "red";
-        this.ctxe.fillStyle = "red";
-
-        this.ctxe.beginPath();
-        this.ctxe.arc(this.game.waypoint.x, this.game.waypoint.y, 5, 0, 2 * Math.PI);
-        this.ctxe.fill();
-
-        this.ctxe.beginPath();
-        this.ctxe.moveTo(this.game.ship.pos.x + this.game.ship.width / 2, this.game.ship.pos.y + this.game.ship.height / 2);
-        this.ctxe.lineTo(this.game.waypoint.x, this.game.waypoint.y);
-        this.ctxe.stroke();
-
-        this.ctxe.restore();
-    }
-
-    drawAimpoint(aimPoint: Vector2, color: string) {
-        this.ctxe.beginPath();
-        this.ctxe.strokeStyle = color;
-        this.ctxe.arc(aimPoint.x, aimPoint.y, 10, 0, 2 * Math.PI);
-        this.ctxe.arc(aimPoint.x, aimPoint.y, 15, 0, 2 * Math.PI);
-        this.ctxe.arc(aimPoint.x, aimPoint.y, 20, 0, 2 * Math.PI);
-        this.ctxe.stroke();
-        this.ctxe.closePath();
-    }
-
-    drawShell(shell) {
-        //"Schatten" zeichnen
-        const shadowSize = Math.max(3 * (1 - shell.pos.z / 500), 0.5); //Diese Zeile kommt von Louis
-        this.ctxe.beginPath();
-        this.ctxe.fillStyle = "gray";
-        this.ctxe.arc(shell.pos.x, shell.pos.y, shadowSize, 0, 2 * Math.PI);
-        this.ctxe.fill();
-        //Shell zeichnen
-        this.ctxe.beginPath();
-        this.ctxe.fillStyle = "yellow";
-        this.ctxe.arc(shell.pos.x, shell.pos.y - shell.pos.z, 3, 0, 2 * Math.PI);
-        this.ctxe.fill();
-
-    }
-
-    drawShip(player) {
-        this.ctxe.save();
-        const ship = player.ship;
-        if (ship) {
-            const isMine = player.uid === currentUid;
-
-            const width: number = player.ship.width;
-            const height: number = player.ship.height;
-
-            const angleOrientation: number = Util.degreeToRadians(player.ship.orientation);
-            const angleWaypoint: number = Util.degreeToRadians(this.game.angleToWaypoint);
-
-            this.ctxe.translate(player.ship.pos.x + width / 2, player.ship.pos.y + height / 2);
-
-            //draw the ship
-            let image;
-            if (player.teamId === 0) {
-                this.ctxe.fillStyle = isMine ? "pink" : "red";
-                image = isMine ? this.img_ship1 : this.img_ship2;
-            } else if (player.teamId === 1) {
-                this.ctxe.fillStyle = isMine ? "green" : "darkgreen";
-                image = isMine ? this.img_ship3 : this.img_ship4;
-            }
-
-            if (isMine) {
-                this.ctxe.strokeStyle = "green";
-            } else {
-                this.ctxe.strokeStyle = "red";
-            }
-            this.ctxe.strokeText(player.name, width / 2, 40);
-
-            this.ctxe.strokeText(player.ship.hitpoints, width + 10, height / 2);
-            this.ctxe.rotate(angleOrientation + (Math.PI / 2));
-            this.ctxe.drawImage(image, width / 2 * (-1), height / 2 * (-1), width, height);
-            this.ctxe.rotate(-(Math.PI / 2));
-            // this.ctxe.restore();
-            // this.context_entities.fillRect(width / 2 * (-1), height / 2 * (-1), width, height);
-
-            //draw the gun
-            const widthGun: number = 12; //TODO: width und height vom Server übernehmen
-            const heightGun: number = 2;
-            const offsetGun: number = 10;
-            const radGunActual = Util.degreeToRadians(player.ship.gun.angleHorizontalActual);
-            const radGunReq = Util.degreeToRadians(player.ship.gun.angleHorizontalRequested);
-            this.ctxe.fillStyle = "black";
-            this.ctxe.rotate(radGunActual);
-            this.ctxe.fillRect(widthGun + offsetGun / 2 * (-1), heightGun / 2 * (-1), widthGun, heightGun);
-
-            if (isMine) {
-                //draw the helper line            
-                const lengthHelper: number = 900;
-                const thicknessHelper: number = 2;
-                const offsetHelper: number = 30;
-                this.ctxe.setLineDash([5, 15]);
-                if (player.ship.gun.angleHorizontalRequested !== player.ship.gun.angleHorizontalActual) {
-                    this.ctxe.rotate(-radGunActual);
-                    this.ctxe.rotate(radGunReq);
-                    this.ctxe.strokeStyle = "grey";
-                    this.ctxe.beginPath();
-                    this.ctxe.moveTo(offsetHelper, 0);
-                    this.ctxe.lineTo(lengthHelper, 0);
-                    this.ctxe.stroke();
-                    this.ctxe.rotate(-radGunReq);
-                    this.ctxe.rotate(radGunActual);
-                }
-                this.ctxe.strokeStyle = "yellow";
-                this.ctxe.lineWidth = thicknessHelper;
-                this.ctxe.beginPath();
-                this.ctxe.moveTo(offsetHelper, 0);
-                this.ctxe.lineTo(lengthHelper, 0);
-                this.ctxe.stroke();
-            }
-        }
-        //reset the canvas  
-        this.ctxe.restore();
+        
     }
 
     drawMap() {
         //Clear Canvas
         this.ctxm.save();
+        if(this.game.tiles) {
+            Object.keys(this.game.tiles).forEach(key => { 
+                let hex = this.game.tiles[key].hex;
+                
+                let corners = this.game.layout.polygonCorners(hex);
+                
+                this.ctxm.beginPath();                
+                for(let i = 0; i < corners.length; i++) {
+                    //this.ctxm.fillText(""+i, corners[i].x, corners[i].y);
+                    if(i === 0) {
+                        this.ctxm.moveTo(corners[i].x, corners[i].y);
+                    } else {
+                        this.ctxm.lineTo(corners[i].x, corners[i].y);
+                    }
+                }
+                this.ctxm.closePath();
 
-        const img = this.imgs_bg[this.spritecounter];
-        if (!(img instanceof Image)) {
-            console.log("somethings fucky");
+                if(this.game.selectedHex && this.game.selectedHex.equals(hex)) {
+                    this.ctxm.fillStyle = "red";
+                } else {
+                    this.ctxm.fillStyle = "#20C20E";
+                }
+
+                this.ctxm.fill();
+            });
         }
-
-        const pattern = this.ctxm.createPattern(img, 'repeat');
-        this.ctxm.beginPath();
-        this.ctxm.rect(0, 0, this.game.mapWidth, this.game.mapHeight);
-        this.ctxm.fillStyle = pattern;
-        this.ctxm.fill();
-        this.ctxm.fillStyle = "rgba(0, 0, 0, 0.6)"; //make bg darker
-        this.ctxm.fillRect(0, 0, this.game.mapWidth, this.game.mapHeight);
-        if (this.framecounter % this.frameskip === 0) { //slow down animation
-            this.spritecounter++;
-        }
-
-        if (this.spritecounter > this.imgs_bg.length - 1) {
-            this.spritecounter = 0;
-        }
-
-
-        // this.ctxm.fillStyle = "darkblue";
-        // this.ctxm.fillRect(0, 0, this.drawWidth, this.drawHeight);
-        //TODO: draw map border
-        // this.ctxm.strokeStyle = "black";
-        // this.ctxm.rect(0,0,this.game.mapWidth, this.game.mapHeight);
-        // this.ctxm.lineWidth = 20;
-        // this.ctxm.stroke();
         this.ctxm.restore();
         // this.shouldRedrawMap = false;
     }
@@ -338,45 +165,17 @@ export default class Renderer {
         }
         this.debug.append("Camera.x   : " + this.cameraPos.x + "<br>");
         this.debug.append("Camera.y   : " + this.cameraPos.y + "<br>");
-        // this.debug.append("deadz.x   : " + this.deadzone.x + "<br>");
-        // this.debug.append("deadz.y   : " + this.deadzone.y + "<br>");
         this.debug.append("Canvas Width   : " + this.canvasWidth + "<br>");
         this.debug.append("Canvas Height   : " + this.canvasHeight + "<br>");
         this.debug.append("Draw Width   : " + this.drawWidth + "<br>");
         this.debug.append("Draw Height   : " + this.drawHeight + "<br>");
-        this.debug.append("Map Width   : " + this.game.mapWidth + "<br>");
-        this.debug.append("Map Height   : " + this.game.mapHeight + "<br>");
         this.debug.append("Cursor Position X   : " + this.game.cursorWorld.x + "<br>");
         this.debug.append("Cursor Position Y   : " + this.game.cursorWorld.y + "<br>");
         this.debug.append("Cursor Canvas Position X   : " + this.game.cursorCanvas.x + "<br>");
         this.debug.append("Cursor Canvas Position Y   : " + this.game.cursorCanvas.y + "<br>");
+        if(this.game.selectedHex) this.debug.append("Selected Hex   : " + this.game.selectedHex.q+" "+this.game.selectedHex.r+" "+this.game.selectedHex.s + "<br>");
         this.debug.append("Mouse Distance   : " + this.game.dragDistance + "<br>");
         this.debug.append("Zoom Factor   : " + this.currentZoom + "<br>");
-        if (this.game.ship) {
-            this.debug.append("<br><em>Ship</em><br>");
-            this.debug.append("Pos X   : " + Math.round(this.game.ship.pos.x) + "<br>");
-            this.debug.append("Pos Y   : " + Math.round(this.game.ship.pos.y) + "<br>");
-            this.debug.append("Orientation   : " + Math.round(this.game.ship.orientation) + "<br>");
-            this.debug.append("Speed Actual   : " + Math.round(this.game.ship.speed_actual) + "<br>");
-            this.debug.append("Speed Requested  : " + Math.round(this.game.speed) + "<br>");
-            this.debug.append("Rudder Actual  : " + Math.round(this.game.ship.rudderAngleActual) + "<br>");
-            this.debug.append("Rudder Requested  : " + Math.round(this.game.rudderPosition) + "<br>");
-            this.debug.append("Gun Vertical Actual   : " + Math.round(this.game.ship.gun.angleVerticalActual) + "<br>");
-            this.debug.append("Gun Vertical Requested   : " + Math.round(this.game.gunAngleVertical) + "<br>");
-            this.debug.append("Gun Horizontal Actual   : " + Math.round(this.game.ship.gun.angleHorizontalActual) + "<br>");
-            this.debug.append("Gun Horizontal Requested   : " + Math.round(this.game.gunAngleHorizontal) + "<br>");
-            this.debug.append("Winkel zum Cursor   : " + Math.round(Util.radiansToDegrees(Math.atan2(this.game.cursorWorld.y - this.game.ship.pos.y, this.game.cursorWorld.x - this.game.ship.pos.x))) + "<br>");
-            if (this.game.waypoint) {
-                this.debug.append("Winkel zum Waypoint   : " + Math.round(this.game.angleToWaypoint) + "<br>");
-            }
-        }
-
-        if (this.game.shells[0]) {
-            this.debug.append("<br><em>Shell</em><br>");
-            this.debug.append("shell.x   : " + Math.round(this.game.shells[0].pos.x) + "<br>");
-            this.debug.append("shell.y   : " + Math.round(this.game.shells[0].pos.y) + "<br>");
-            this.debug.append("shell.z   : " + Math.round(this.game.shells[0].pos.z) + "<br>");
-        }
     }
 
     zoomIn() {

@@ -1,10 +1,4 @@
 {
   "secure_cookie": false,
-  "log_level": "debug",
-  "ship_acceleration": 1,
-  "gun_firerate" : 100,
-  "gun_turn_speed_horizontal" : 1,
-  "gun_turn_speed_vertical" : 0.5,
-  "ship_speed_max" : 200,
-  "gun_velocity" : 3
+  "log_level": "debug"
 }

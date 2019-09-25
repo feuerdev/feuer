@@ -19,7 +19,7 @@ router.post("/", auth.deserializeAuth, function (req, res) {
     db.queryWithValues("INSERT INTO users (username, email, uid) VALUES (?, ?, ?)", [username, req.user.email, req.user.uid], function (error, results, fields) {
       if (error) {
         console.log(error);
-        res.send(error);
+        res.status(400).send(error);
       } else {
         console.log(results);
         res.sendStatus(200);

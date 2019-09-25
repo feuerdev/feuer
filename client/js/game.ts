@@ -9,6 +9,7 @@ import * as $ from "./lib/jquery-3.1.1.min";
 import * as Util from "../../shared/util";
 import { Socket } from "../../node_modules/@types/socket.io";
 import Vector2 from "../../shared/vector2";
+import Hex, {Layout, Orientation} from "../../shared/hex";
 
 export default class Game {
 
@@ -29,40 +30,20 @@ export default class Game {
     public aimPointRequested: Vector2;
     private isM2Down: boolean = false;
 
-    public ship: any;
-    public shells = [];
     public players = [];
+    
+    public tiles:{};
+
 
     public mapWidth: number;
     public mapHeight: number;
-    public teamId: number;
     public username: string;
 
-    public waypoint: Vector2 = null;
-    public angleToWaypoint: number;
+    //Hex
+    public orientation:Orientation = Layout.flat;;
+    public layout:Layout = new Layout(this.orientation, new Vector2(config.hex_width, config.hex_height), new Vector2(0,0));
 
-    public rudderPosition: number = 0;
-    public speed: number = 0;
-    public gunAngleVertical: number = 0;
-    public gunAngleHorizontal: number = 0;
-
-    private rudderLeft: boolean = false;
-    private rudderRight: boolean = false;
-    private speedUp: boolean = false;
-    private speedDown: boolean = false;
-    private gunUp: boolean = false;
-    private gunDown: boolean = false;
-    private gunLeft: boolean = false;
-    private gunRight: boolean = false;
-
-    private rudderLeftTime: number = 0;
-    private rudderRightTime: number = 0;
-    private gunLeftTime: number = 0;
-    private gunRightTime: number = 0;
-    private gunUpTime: number = 0;
-    private gunDownTime: number = 0;
-    private speedUpTime: number = 0;
-    private speedDownTime: number = 0;
+    public selectedHex:Hex;
 
     //Wrapper um window.requestAnimationFrame()
     private requestAnimationFrameWrapper: Function = (function () {
@@ -77,7 +58,6 @@ export default class Game {
     })();
 
     constructor() {
-
         let canvas;
         if ($("#canvas-entities").length > 0) {
             canvas = $("#canvas-entities");
@@ -89,33 +69,17 @@ export default class Game {
 
         window.addEventListener("keydown", event => {
             switch (event.keyCode) {
-                case 65: this.gunLeft = true;  break;//a
-                case 87: this.gunUp = true;  break;//w                    
-                case 68: this.gunRight = true;  break;//d
-                case 83: this.gunDown = true;  break;//s          
-                case 38: this.speedUp = true; break;//pfeilhoch
-                case 40: this.speedDown = true; break;//pfeilrunter
-                case 37: this.rudderLeft = true; this.waypoint = null; break;//pfeillinks
-                case 39: this.rudderRight = true; this.waypoint = null; break;//pfeilrechts
+                //case 65: this.gunLeft = true;  break;//a
             }
         }, false);
         window.addEventListener("keyup", event => {
             switch (event.keyCode) {
-                case 65: this.gunLeft = false; this.gunLeftTime = 0; this.gunAngleHorizontal = Util.clamp(--this.gunAngleHorizontal, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal); this.socket.emit("input gun horizontal", this.gunAngleHorizontal); break;//a
-                case 87: this.gunUp = false; this.gunUpTime = 0; this.gunAngleVertical = Util.clamp(++this.gunAngleVertical, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical); this.socket.emit("input gun vertical", this.gunAngleVertical); break;//w                    
-                case 68: this.gunRight = false; this.gunRightTime = 0; this.gunAngleHorizontal = Util.clamp(++this.gunAngleHorizontal, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal); this.socket.emit("input gun horizontal", this.gunAngleHorizontal); break;//d
-                case 83: this.gunDown = false; this.gunDownTime = 0; this.gunAngleVertical = Util.clamp(--this.gunAngleVertical, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical); this.socket.emit("input gun vertical", this.gunAngleVertical); break;//s
-                case 38: this.speedUp = false; this.speedUpTime = 0; this.speed = Util.clamp(++this.speed, this.ship.speed_min, this.ship.speed_max); this.socket.emit("input speed", this.speed); break;//pfeilhoch
-                case 40: this.speedDown = false; this.speedDownTime = 0; this.speed = Util.clamp(--this.speed, this.ship.speed_min, this.ship.speed_max); this.socket.emit("input speed", this.speed); break;//pfeilrunter
-                case 37: this.rudderLeft = false; this.rudderLeftTime = 0; this.rudderPosition = Util.clamp(--this.rudderPosition, -90, 90); this.socket.emit("input rudder", this.rudderPosition); break;//pfeillinks
-                case 88: this.rudderPosition = 0; this.waypoint = null; this.socket.emit("input rudder", this.rudderPosition); break;//x
-                case 39: this.rudderRight = false; this.rudderRightTime = 0; this.rudderPosition = Util.clamp(++this.rudderPosition, -90, 90); this.socket.emit("input rudder", this.rudderPosition); break;//pfeilrechts
                 case 70: this.renderer.toggleFollowMode(); break;//f
                 case 187: this.renderer.zoomIn(); break;//+
                 case 189: this.renderer.zoomOut(); break;//-   
                 case 191: this.renderer.zoomReset(); break;//#
                 case 80: this.renderer.toggleDebug(); break;//#
-                case 32: this.socket.emit("input shoot"); break;//# 
+                //case 32: this.socket.emit("input shoot"); break;//# 
             }
         }, false);
         window.addEventListener("mousewheel", event => {
@@ -125,10 +89,7 @@ export default class Game {
         window.addEventListener("click", event => {
             switch (event.which) {
                 case 1: { //Linksclick
-                    this.gunAngleHorizontal = Util.clamp(Util.calculateHorizontalAngle(this.ship.pos ,new Vector2(this.cursorWorld.x - this.ship.width / 2, this.cursorWorld.y -this.ship.width / 2), this.ship.orientation), this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal);
-                    this.gunAngleVertical = Util.clamp(Util.calculateVerticalAngle(new Vector2(this.ship.pos.x - this.ship.width / 2, this.ship.pos.y -this.ship.width / 2), this.cursorWorld, config.gravity, this.ship.gun.velocity), this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
-                    this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
-                    this.socket.emit("input gun vertical", this.gunAngleVertical);
+                    this.selectedHex = this.layout.pixelToHex(this.cursorWorld).round();
                     break;
                 }
                 // case 2: this.renderer.switchFollowMode(); break;//Mittelclick?
@@ -157,10 +118,7 @@ export default class Game {
                 this.isM2Down = false;
                 this.renderer.isDragging = false;
                 if (this.dragDistance < config.click_distance_threshold) {
-                    this.waypoint = new Vector2(this.cursorWorld.x, this.cursorWorld.y);
-                    this.speed = this.ship.speed_max;
-                    this.socket.emit("input speed", this.speed);
-                    
+                    //Rechtsklick
                 }
                 this.dragDistance = 0;
             }
@@ -183,12 +141,9 @@ export default class Game {
         this.socket.on("connect", () => this.onConnected());
         this.socket.on("disconnect", () => this.onDisconnected);
         this.socket.on("gamestate players", (data) => this.onGamestatePlayers(data));
-        this.socket.on("gamestate shells", (data) => this.onGamestateShells(data));
-        this.socket.on("gamestate death", () => this.onGamestateDeath());
-        this.socket.on("info mapwidth", (data) => { this.mapWidth = data });
-        this.socket.on("info mapheight", (data) => { this.mapHeight = data });
-        this.socket.on("info teamId", (data) => { this.teamId = data });
-        this.socket.on("info username", (data) => { this.username = data });
+        this.socket.on("gamestate tiles", (data) => this.onGamestateTiles(data));
+        //this.socket.on("gamestate death", () => this.onGamestateDeath());
+        //this.socket.on("info mapwidth", (data) => { this.mapWidth = data });
     }
 
     public run() {
@@ -219,93 +174,7 @@ export default class Game {
     }
 
     private update(deltaFactor) {
-        if (this.waypoint) {
-            if (new Vector2(this.waypoint, this.ship.pos).length() < config.waypoint_distance_threshold) {
-                this.rudderPosition = 0;
-                this.waypoint = null;
-            } else {
-                this.angleToWaypoint = Util.radiansToDegrees(Math.atan2((this.waypoint.y - this.ship.height / 2) - this.ship.pos.y, (this.waypoint.x - this.ship.width / 2) - this.ship.pos.x)) - this.ship.orientation;
-                if (this.angleToWaypoint < -180) { //Das verstehe ich nicht ganz
-                    this.angleToWaypoint += 360;
-                }
-                const autoRudder = Util.clamp(this.angleToWaypoint * 4, -90, 90);
 
-                if (Math.round(autoRudder) !== this.rudderPosition) {
-                    this.rudderPosition = autoRudder;
-                }
-            }
-            this.socket.emit("input rudder", this.rudderPosition);
-        }
-
-        if (this.rudderLeft) {
-            this.rudderLeftTime += this.delta
-            if (this.rudderLeftTime > config.input_time_threshold) {
-                this.rudderPosition -= 1 * config.input_factor * deltaFactor;
-                this.rudderPosition = Util.clamp(this.rudderPosition, -90, 90);
-                this.socket.emit("input rudder", this.rudderPosition);
-            }
-        }
-        if (this.rudderRight) {
-            this.rudderRightTime += this.delta;
-            if (this.rudderRightTime > config.input_time_threshold) {
-                this.rudderPosition += 1 * config.input_factor * deltaFactor;
-                this.rudderPosition = Util.clamp(this.rudderPosition, -90, 90);
-                this.socket.emit("input rudder", this.rudderPosition);
-            }
-        }
-        if (this.gunDown) {
-            this.gunDownTime += this.delta;
-            if (this.gunDownTime > config.input_time_threshold) {
-                this.gunAngleVertical -= 1 * config.input_factor * deltaFactor;
-                this.gunAngleVertical = Util.clamp(this.gunAngleVertical, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
-                this.socket.emit("input gun vertical", this.gunAngleVertical);
-            }
-        }
-        if (this.gunUp) {
-            this.gunUpTime += this.delta;
-            if (this.gunUpTime > config.input_time_threshold) {
-                this.gunAngleVertical += 1 * config.input_factor * deltaFactor;
-                this.gunAngleVertical = Util.clamp(this.gunAngleVertical, this.ship.gun.minAngleVertical, this.ship.gun.maxAngleVertical);
-                this.socket.emit("input gun vertical", this.gunAngleVertical);
-            }
-        }
-        if (this.gunLeft) {
-            this.gunLeftTime += this.delta;
-            if (this.gunLeftTime > config.input_time_threshold) {
-                this.gunAngleHorizontal -= 1 * config.input_factor * deltaFactor;
-                this.gunAngleHorizontal = Util.clamp(this.gunAngleHorizontal, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal);
-                this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
-            }
-        }
-        if (this.gunRight) {
-            this.gunRightTime += this.delta;
-            if (this.gunRightTime > config.input_time_threshold) {
-                this.gunAngleHorizontal += 1 * config.input_factor * deltaFactor;
-                this.gunAngleHorizontal = Util.clamp(this.gunAngleHorizontal, this.ship.gun.minAngleHorizontal, this.ship.gun.maxAngleHorizontal);
-                this.socket.emit("input gun horizontal", this.gunAngleHorizontal);
-            }
-        }
-        if (this.speedUp) {
-            this.speedUpTime += this.delta;
-            if (this.speedUpTime > config.input_time_threshold) {
-                this.speed += 1 * config.input_factor * deltaFactor;
-                this.speed = Util.clamp(this.speed, this.ship.speed_min, this.ship.speed_max);
-                this.socket.emit("input speed", this.speed);
-            }
-        }
-        if (this.speedDown) {
-            this.speedDownTime += this.delta;
-            if (this.speedDownTime > config.input_time_threshold) {
-                this.speed -= 1 * config.input_factor * deltaFactor;
-                this.speed = Util.clamp(this.speed, this.ship.speed_min, this.ship.speed_max);
-                this.socket.emit("input speed", this.speed);
-            }
-        }
-
-        if(this.ship) {
-            this.aimPointRequested = Util.calculateAimpoint(this.ship.pos, this.gunAngleHorizontal, this.gunAngleVertical, this.ship.orientation, config.gravity, this.ship.gun.velocity);
-            this.aimPoint = Util.calculateAimpoint(this.ship.pos, this.ship.gun.angleHorizontalActual,this.ship.gun.angleVerticalActual, this.ship.orientation, config.gravity, this.ship.gun.velocity);
-        }
     }
 
     private onConnected() {
@@ -330,13 +199,13 @@ export default class Game {
         this.players = players;
         players.forEach(p => {
             if(p.uid === currentUid) {
-                this.ship = p.ship;
+                //this.ship = p.ship;
             }
         });
     }
 
-    private onGamestateShells(shells) {
-        this.shells = shells;
+    private onGamestateTiles(tiles) {
+        this.tiles = tiles;
     }
 
     private onGamestateDeath() {
@@ -350,7 +219,6 @@ export default class Game {
             window.location.replace("/");
         }
         setTimeout(goBack, 2000);
-        
     }
 };
 

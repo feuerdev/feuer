@@ -33,5 +33,9 @@ firebase.auth().onAuthStateChanged(function (user) {
     } else {
         document.cookie = COOKIE_NAME + "=;max-age=-99999999;";
         console.log("User not logged in");
+        if(window.location.href.endsWith("relogin")) {
+            //Nutzer ist gerade beim relogin. Nachdem setzten des aktuellen cookies auf die startseite weiterleiten
+            window.location.replace("/");
+        }
     }
 });
