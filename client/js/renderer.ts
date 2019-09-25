@@ -5,6 +5,7 @@ import * as $ from "./lib/jquery-3.1.1.min";
 import Game from "./game";
 import Vector2 from "../../shared/vector2";
 import * as Util from "../../shared/util";
+import Maphelper from "./maphelper";
 
 export default class Renderer {
     private game: Game;
@@ -38,10 +39,8 @@ export default class Renderer {
     public isDragging: boolean = false;
     private shouldDrawDebug: boolean = config.log_level === "debug";
 
-
     constructor(game: Game) {
         this.game = game;
-
 
         this.canvas_map[0].width = this.container.width();
         this.canvas_map[0].height = this.container.height();
@@ -136,15 +135,22 @@ export default class Renderer {
                 }
                 this.ctxm.closePath();
 
-                if(this.game.selectedHex && this.game.selectedHex.equals(hex)) {
-                    this.ctxm.fillStyle = "red";
-                } else {
-                    this.ctxm.fillStyle = "#20C20E";
-                }
+                let padding = 0;
+                this.ctxm.drawImage(
+                    Maphelper.getTerrainImage(height),
+                    corners[3].x+padding, //obere linke ecke
+                    corners[3].y-this.game.layout.size.y/2+padding, //obere linke ecke- halbe höhe
+                    this.game.layout.size.x*Math.sqrt(3)-padding, //radius mal wurzel aus 3 um die reale breite des hex zu errechnen
+                    this.game.layout.size.y*2-padding);//radius mal 2 um die reale höhe des hex zu errechnen
+                
+                this.ctxm.fillStyle = "black";
+                this.ctxm.fillText(""+height, corners[0].x-100, corners[0].y-50);
 
-                this.ctxm.fill();
-                this.ctxm.fillStyle = "red";
-                this.ctxm.fillText(""+height, corners[0].x-30, corners[0].y-50);
+                if(this.game.selectedHex && this.game.selectedHex.equals(hex)) {
+                    this.ctxm.strokeStyle = "white";
+                    this.ctxm.lineWidth = 4
+                    this.ctxm.stroke();
+                }
             });
         }
         this.ctxm.restore();

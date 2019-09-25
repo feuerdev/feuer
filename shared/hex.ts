@@ -154,7 +154,7 @@ export class Layout {
     var M: Orientation = this.orientation;
     var size: Vector2 = this.size;
     var angle: number = 2.0 * Math.PI * (M.start_angle - corner) / 6.0;
-    return new Vector2((size.x * Math.cos(angle))*0.99, (size.y * Math.sin(angle))*0.99); //*0.99 um lücken zwischen den hexes zu haben
+    return new Vector2(size.x * Math.cos(angle), size.y * Math.sin(angle));
   }
 
   public polygonCorners(h: Hex): Vector2[] {
