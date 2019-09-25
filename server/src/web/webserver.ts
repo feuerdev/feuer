@@ -10,6 +10,7 @@ import * as path from "path";
 import * as bodyParser from "body-parser";
 import * as admin from 'firebase-admin';
 import * as auth from "../util/auth";
+import Log from "../util/log";
 
 import router_register from "./routes/register";
 import router_login from "./routes/login";
@@ -19,15 +20,18 @@ import router_play from "./routes/play";
 
 const directory_client = path.join(__dirname, "../../../client"); //Gibt das Client-Root-Verzeichnis zurueck.;
 
-admin.initializeApp({
-    credential: admin.credential.cert({
-        projectId: process.env.FB_project_id,
-        clientEmail: process.env.FB_client_email,
-        privateKey: process.env.FB_private_key.replace(/\\n/g, '\n')
-    }),
-    databaseURL: 'https://feuer-io.firebaseio.com'
-});
-
+try {
+    admin.initializeApp({
+        credential: admin.credential.cert({
+            projectId: process.env.FB_project_id,
+            clientEmail: process.env.FB_client_email,
+            privateKey: process.env.FB_private_key.replace(/\\n/g, '\n')
+        }),
+        databaseURL: 'https://feuer-io.firebaseio.com'
+    });
+} catch (error) {
+    Log.error("Did you forget to create the .env file?")
+}
 
 export default class Webserver {
 
