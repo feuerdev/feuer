@@ -18,6 +18,7 @@ import Vector3 from "../../../shared/vector3";
 import { Socket } from "socket.io";
 import { Hashtable } from "../../../shared/util";
 import Tile from "./tile";
+import Mapgen from "./mapgen";
 
 const GRAVITY: Vector3 = new Vector3(0, 0, config.gravity);
 
@@ -28,8 +29,7 @@ export default class GameServer {
   private uidsockets: {} = {};
   private players: Player[] = [];
 
-  public tiles:Hashtable<Tile> = {};
-
+  public tiles:Hashtable<Tile> = Mapgen.create(Math.random(), config.map_size, config.map_frequency, config.map_amplitude, config.map_min, config.map_max, config.map_octaves, config.map_persistence);
 
   //#region Gameloop Variables
   private readonly delta = Math.round(1000 / config.updaterate);
@@ -43,13 +43,7 @@ export default class GameServer {
   //#endregion
 
   constructor() {
-    for(let q:number = -config.map_radius; q <= config.map_radius; q++) {
-      let r1:number = Math.max(-config.map_radius, -q - config.map_radius);
-      let r2:number = Math.min(config.map_radius, -q + config.map_radius);
-      for (let r:number = r1; r <= r2; r++) {
-          this.tiles[q+"-"+r] = new Tile(q,r);
-      }
-    }
+    //
   }
 
   listen(httpServer: Server) {

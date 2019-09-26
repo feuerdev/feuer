@@ -18,12 +18,12 @@ const outOctaves = $("output[name=octaves]");
 const outPersistence = $("output[name=persistence]");
 
 let seed = Math.random();
-let size = 4096;
+let size = 16;
 let tilesize = 8;
 let amplitude = 1;
-let frequency = 1;
+let frequency = 0.1;
 let octaves = 1;
-let persistence = 0.5;
+let persistence = 0.1;
 let min = 0;
 let max = 1;
 let autogenerate = false;
@@ -68,6 +68,11 @@ inMax.on("input change", function() {
     updateUi();
 });
 
+inSeed.on("input change", function() {
+    seed = this.value;
+    updateUi();
+});
+
 function updateUi() {
     inSeed.val(seed);
     inAmplitude.val(amplitude);
@@ -95,7 +100,7 @@ btnGenerate.click(function() {
         amplitude: amplitude, frequency: frequency,
         octaves: octaves, persistence: persistence,
         min: min, max: max }, function(data, status, jqXhr) {
-        //success
+        console.log("finished creatting map");
     });
 });
 

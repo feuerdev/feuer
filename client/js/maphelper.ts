@@ -16,18 +16,18 @@ export default class Maphelper {
 
   private static initialized:boolean = false;
 
-  private static readonly level_water_deep:number = 0.1;
-  private static readonly level_water_shallow:number = 0.2;
-  private static readonly level_sand:number = 0.3;
-  private static readonly level_sand_grassy:number = 0.4;
-  private static readonly level_grass_sandy:number = 0.5;
+  private static readonly level_water_deep:number = 0.05;
+  private static readonly level_water_shallow:number = 0.1;
+  private static readonly level_sand:number = 0.15;
+  private static readonly level_sand_grassy:number = 0.2;
+  private static readonly level_grass_sandy:number = 0.25;
   private static readonly level_grass:number = 0.6;
   private static readonly level_grass_dirty:number = 0.65;
-  private static readonly level_dirt_grassy:number = 0.75;
-  private static readonly level_dirt:number = 0.80;
-  private static readonly level_dirt_stony:number = 0.85;
-  private static readonly level_stone_dirty:number = 0.9;
-  private static readonly level_stone:number = 0.95;
+  private static readonly level_dirt_grassy:number = 0.7;
+  private static readonly level_dirt:number = 0.7;
+  private static readonly level_dirt_stony:number = 0.75;
+  private static readonly level_stone_dirty:number = 0.8;
+  private static readonly level_stone:number = 0.9;
   private static readonly level_ice:number = 1;
 
   public static getTerrainImage(height) {
