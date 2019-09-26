@@ -120,41 +120,51 @@ export default class Renderer {
         //Clear Canvas
         this.ctxm.save();
         if(this.game.tiles) {
-            Object.keys(this.game.tiles).forEach(key => { 
-                let hex = this.game.tiles[key].hex;
-                let height  = this.game.tiles[key].height;
-                let corners = this.game.layout.polygonCorners(hex);
-                
-                this.ctxm.beginPath();                
-                for(let i = 0; i < corners.length; i++) {
-                    if(i === 0) {
-                        this.ctxm.moveTo(corners[i].x, corners[i].y);
-                    } else {
-                        this.ctxm.lineTo(corners[i].x, corners[i].y);
-                    }
-                }
-                this.ctxm.closePath();
-
-                let padding = 0;
-                this.ctxm.drawImage(
-                    Maphelper.getTerrainImage(height),
-                    corners[3].x+padding, //obere linke ecke
-                    corners[3].y-this.game.layout.size.y/2+padding, //obere linke ecke- halbe höhe
-                    this.game.layout.size.x*Math.sqrt(3)-padding, //radius mal wurzel aus 3 um die reale breite des hex zu errechnen
-                    this.game.layout.size.y*2-padding);//radius mal 2 um die reale höhe des hex zu errechnen
-                
-                this.ctxm.fillStyle = "black";
-                this.ctxm.fillText(""+height, corners[0].x-100, corners[0].y-50);
-
-                if(this.game.selectedHex && this.game.selectedHex.equals(hex)) {
-                    this.ctxm.strokeStyle = "white";
-                    this.ctxm.lineWidth = 4
-                    this.ctxm.stroke();
-                }
+            Object.keys(this.game.tiles).forEach(key => {
+                let tile = this.game.tiles[key];
+                this.drawTile(tile);
             });
+            
+            if(this.game.selectedHex) {
+                this.ctxm.filter = "brightness(110%) contrast(1.05) drop-shadow(0px 0px 25px black)";
+                this.drawTile(this.game.tiles[this.game.selectedHex.q+"-"+this.game.selectedHex.r]); //Draw the selected Tile again, so that the filter applies.
+                this.ctxm.filter = "none";
+            }
         }
         this.ctxm.restore();
-        // this.shouldRedrawMap = false;
+    }
+
+    drawTile(tile) {
+        this.ctxm.save();
+        let hex = tile.hex;
+        let corners = this.game.layout.polygonCorners(hex);
+        let padding = 10;
+
+        // if(this.game.selectedHex && this.game.selectedHex.equals(hex)) {
+        //     this.ctxm.filter = "brightness(110%) contrast(1.05) drop-shadow(0px 0px 25px black)";
+        // } else {
+        //     this.ctxm.filter = "none";
+        // }
+
+        this.ctxm.drawImage(
+            Maphelper.getTerrainImage(tile.height),
+            corners[3].x+padding, //obere linke ecke
+            corners[3].y-this.game.layout.size.y/2+padding, //obere linke ecke- halbe höhe
+            this.game.layout.size.x*Math.sqrt(3)-padding, //radius mal wurzel aus 3 um die reale breite des hex zu errechnen
+            this.game.layout.size.y*2-padding);//radius mal 2 um die reale höhe des hex zu errechnen
+    
+        this.ctxm.filter = "none";
+        
+        // this.ctxm.beginPath();                
+        // for(let i = 0; i < corners.length; i++) {
+        //     if(i === 0) {
+        //         this.ctxm.moveTo(corners[i].x, corners[i].y);
+        //     } else {
+        //         this.ctxm.lineTo(corners[i].x, corners[i].y);
+        //     }
+        // }
+        // this.ctxm.closePath();
+        this.ctxm.restore();
     }
 
     drawFow() {
