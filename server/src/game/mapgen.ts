@@ -75,7 +75,7 @@ export default class Mapgen {
         }
         
         if(treeValue > 0.3) {
-          if(treeValue < 0.5) {
+          if(treeValue < 0.5 && heightValue < GameData.level_stone_dirty) {
             envSpots[1] = GameData.Environment.envTreesFew;
           } else if(heightValue <= GameData.level_grass_dirty) {
             envSpots[1] = GameData.Environment.envTreesMixed;

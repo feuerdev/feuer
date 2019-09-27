@@ -87,7 +87,7 @@ export default class Maphelper {
       case Gamedata.Environment.envTreesFew: return this.img_trees_few;
       case Gamedata.Environment.envTreesFirs: return this.img_trees_firs;
       case Gamedata.Environment.envTreesMixed: return this.img_trees_mixed;
-      case Gamedata.Environment.envTreesFirs2: return this.img_trees_firs;
+      case Gamedata.Environment.envTreesFirs2: return this.img_trees_firs2;
       case Gamedata.Environment.envStone: return this.img_stone;
       default: return null;
     }

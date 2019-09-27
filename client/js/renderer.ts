@@ -159,7 +159,7 @@ export default class Renderer {
         // const yOffset = 70;
         // const yOffset3 = 40;
 
-        const xOffset1 = 50;
+        const xOffset1 = 70;
         const xOffset2 = 35;
         const xOffset3 = 15;
         const yOffset = 55;
