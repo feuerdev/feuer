@@ -14,7 +14,7 @@ A realtime PvP focussed hardcore persistent MMORTS in medieval setting.
 - Visible and noticeable ranking system to spark competitiveness
 - Limited focus on graphics until game is fun to play and balanced
 
-Try the current state at https://gellerlul.herokuapp.com/
+Try the current state at https://feuer.herokuapp.com/play
 
 Running the code
 1. npm install
@@ -30,12 +30,14 @@ GAMEPLAY - ESSENTIAL
 - resource gathering
 - construction
 - hud
+
 SYSTEMS
 - use graphics (done)
 - fog of war
 - "culling"
 - camera clamping
 - persistency
+
 GAMEPLAY - NEXT
 - clans/factions/groups
 - diplomacy
