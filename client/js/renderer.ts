@@ -147,11 +147,38 @@ export default class Renderer {
             this.game.layout.size.x*Math.sqrt(3)-padding, //radius mal wurzel aus 3 um die reale breite des hex zu errechnen
             this.game.layout.size.y*2-padding);//radius mal 2 um die reale höhe des hex zu errechnen
     
-        let treeImage = Maphelper.getTreeImage(tile.height);
-        if(treeImage) {
-            this.ctxm.drawImage(treeImage,
-            this.game.layout.hexToPixel(hex).x,
-            this.game.layout.hexToPixel(hex).y);
+
+        let imgEnv1 = Maphelper.getEnvironmentImage(tile.environmentSpot1);
+        let imgEnv2 = Maphelper.getEnvironmentImage(tile.environmentSpot2);
+        let imgEnv3 = Maphelper.getEnvironmentImage(tile.environmentSpot3);
+
+        //Sehr in den Ecken
+        // const xOffset1 = 70;
+        // const xOffset2 = 45;
+        // const xOffset3 = 15;
+        // const yOffset = 70;
+        // const yOffset3 = 40;
+
+        const xOffset1 = 50;
+        const xOffset2 = 35;
+        const xOffset3 = 15;
+        const yOffset = 55;
+        const yOffset3 = 30;
+
+        if(imgEnv1) {
+            this.ctxm.drawImage(imgEnv1,
+            this.game.layout.hexToPixel(hex).x-xOffset1,
+            this.game.layout.hexToPixel(hex).y-yOffset);
+        }
+        if(imgEnv2) {
+            this.ctxm.drawImage(imgEnv2,
+            this.game.layout.hexToPixel(hex).x+xOffset2,
+            this.game.layout.hexToPixel(hex).y-yOffset);
+        }
+        if(imgEnv3) {
+            this.ctxm.drawImage(imgEnv3,
+            this.game.layout.hexToPixel(hex).x-xOffset3,
+            this.game.layout.hexToPixel(hex).y+yOffset3);
         }
         
         // this.ctxm.beginPath();                

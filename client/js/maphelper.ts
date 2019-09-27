@@ -1,3 +1,5 @@
+import * as Gamedata from "../../shared/gamedata";
+
 export default class Maphelper {
 
   static readonly img_terrain_water_deep = new Image(); //Wasser-Tief
@@ -17,24 +19,12 @@ export default class Maphelper {
   static readonly img_trees_few = new Image();
   static readonly img_trees_mixed = new Image();
   static readonly img_trees_firs = new Image();
-  static readonly img_trees_pine = new Image();
+  static readonly img_trees_firs2 = new Image();
+  static readonly img_stone = new Image();
 
-  private static initialized_trees:boolean = false;
+  private static initialized_environment:boolean = false;
   private static initialized_terrain:boolean = false;
 
-  private static readonly level_water_deep:number = 0.05;
-  private static readonly level_water_shallow:number = 0.1;
-  private static readonly level_sand:number = 0.15;
-  private static readonly level_sand_grassy:number = 0.2;
-  private static readonly level_grass_sandy:number = 0.25;
-  private static readonly level_grass:number = 0.6;
-  private static readonly level_grass_dirty:number = 0.65;
-  private static readonly level_dirt_grassy:number = 0.7;
-  private static readonly level_dirt:number = 0.7;
-  private static readonly level_dirt_stony:number = 0.75;
-  private static readonly level_stone_dirty:number = 0.8;
-  private static readonly level_stone:number = 0.9;
-  private static readonly level_ice:number = 1;
 
   public static getTerrainImage(height) {
     if(!this.initialized_terrain) {
@@ -54,70 +44,52 @@ export default class Maphelper {
       this.initialized_terrain = true;
     }
 
-    if(height < this.level_water_deep) {
+    if(height < Gamedata.level_water_deep) {
       return this.img_terrain_water_deep;
-    } else if(height < this.level_water_shallow) {
+    } else if(height < Gamedata.level_water_shallow) {
       return this.img_terrain_water_shallow;
-    } else if(height < this.level_sand) {
+    } else if(height < Gamedata.level_sand) {
       return this.img_terrain_sand;
-    } else if(height < this.level_sand_grassy) {
+    } else if(height < Gamedata.level_sand_grassy) {
       return this.img_terrain_sand_grassy;
-    } else if(height < this.level_grass_sandy) {
+    } else if(height < Gamedata.level_grass_sandy) {
       return this.img_terrain_grass_sandy;
-    } else if(height < this.level_grass) {
+    } else if(height < Gamedata.level_grass) {
       return this.img_terrain_grass;
-    } else if(height < this.level_grass_dirty) {
+    } else if(height < Gamedata.level_grass_dirty) {
       return this.img_terrain_grass_dirty;
-    } else if(height < this.level_dirt_grassy) {
+    } else if(height < Gamedata.level_dirt_grassy) {
       return this.img_terrain_dirt_grassy;
-    } else if(height < this.level_dirt) {
+    } else if(height < Gamedata.level_dirt) {
       return this.img_terrain_dirt;
-    } else if(height < this.level_dirt_stony) {
+    } else if(height < Gamedata.level_dirt_stony) {
       return this.img_terrain_dirt_stony;
-    } else if(height < this.level_stone_dirty) {
+    } else if(height < Gamedata.level_stone_dirty) {
       return this.img_terrain_stone_dirty;
-    } else if(height < this.level_stone) {
+    } else if(height < Gamedata.level_stone) {
       return this.img_terrain_stone;
-    } else if(height <= this.level_ice) {
+    } else if(height <= Gamedata.level_ice) {
       return this.img_terrain_ice;
     } else return this.img_terrain_stone;
   }
 
-  public static getTreeImage(height) {
-    if(!this.initialized_trees) {
+  public static getEnvironmentImage(env:Gamedata.Environment) {
+    if(!this.initialized_environment) {
       this.img_trees_few.src = "../img/trees_few.png";
       this.img_trees_firs.src = "../img/trees_firs.png";
       this.img_trees_mixed.src = "../img/trees_mixed.png";
-      this.img_trees_pine.src = "../img/trees_pine.png";
-      this.initialized_trees = true;
+      this.img_trees_firs2.src = "../img/trees_firs2.png";
+      this.img_stone.src = "../img/stone.png";
+      this.initialized_environment = true;
     }
 
-    if(height < this.level_water_deep) {
-      return null;
-    } else if(height < this.level_water_shallow) {
-      return null;
-    } else if(height < this.level_sand) {
-      return null;
-    } else if(height < this.level_sand_grassy) {
-      return null;
-    } else if(height < this.level_grass_sandy) {
-      return null;
-    } else if(height < this.level_grass) {
-      return this.img_trees_mixed;
-    } else if(height < this.level_grass_dirty) {
-      return null;
-    } else if(height < this.level_dirt_grassy) {
-      return this.img_trees_pine;
-    } else if(height < this.level_dirt) {
-      return this.img_trees_firs;
-    } else if(height < this.level_dirt_stony) {
-      return this.img_trees_few;
-    } else if(height < this.level_stone_dirty) {
-      return this.img_trees_few;
-    } else if(height < this.level_stone) {
-      return null;
-    } else if(height <= this.level_ice) {
-      return null;
-    } else return null;
+    switch(env) {
+      case Gamedata.Environment.envTreesFew: return this.img_trees_few;
+      case Gamedata.Environment.envTreesFirs: return this.img_trees_firs;
+      case Gamedata.Environment.envTreesMixed: return this.img_trees_mixed;
+      case Gamedata.Environment.envTreesFirs2: return this.img_trees_firs;
+      case Gamedata.Environment.envStone: return this.img_stone;
+      default: return null;
+    }
   }
 }
