@@ -86,11 +86,6 @@ export default class Mapgen {
           }
         }
 
-
-        envSpots[0] = stoneValue > 0.5 ? GameData.Environment.envStone : null;
-        envSpots[1] = treeValue > 0.7 ? GameData.Environment.envTreesMixed : GameData.Environment.envTreesFew;
-        envSpots[2] = null;
-
         //Set the environment spots at different places each tile to make it look mor random
         let index = Math.round(Math.random() * 2);
         let index2 = (index + 1) % 3;
