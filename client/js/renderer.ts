@@ -15,9 +15,9 @@ export default class Renderer {
     private canvas_entities = $("#canvas-entities");
     private container = $("#canvas-container");
 
-    private ctxm: CanvasRenderingContext2D;
-    private ctxf: CanvasRenderingContext2D;
-    private ctxe: CanvasRenderingContext2D;
+    private ctxm: any;
+    private ctxf: any;
+    private ctxe: any;
 
     private canvasWidth: number;
     private canvasHeight: number;
