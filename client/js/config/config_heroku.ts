@@ -3,7 +3,7 @@
  */
 // @ts-ignore
 const config = {
-    ip: "https://gellerlul.herokuapp.com",
+    ip: "https://feuer.herokuapp.com",
     transports: ["websocket"],
     updaterate: 60,
     log_level: "warn",
