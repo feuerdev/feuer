@@ -113,21 +113,21 @@ export default class Renderer {
     }
 
     drawEntities() {
-        
+
     }
 
     drawMap() {
         //Clear Canvas
         this.ctxm.save();
-        if(this.game.tiles) {
+        if (this.game.tiles) {
             Object.keys(this.game.tiles).forEach(key => {
                 let tile = this.game.tiles[key];
                 this.drawTile(tile);
             });
-            
-            if(this.game.selectedHex) {
+
+            if (this.game.selectedHex) {
                 this.ctxm.filter = "brightness(110%) contrast(1.05) drop-shadow(0px 0px 25px black)";
-                this.drawTile(this.game.tiles[this.game.selectedHex.q+"-"+this.game.selectedHex.r]); //Draw the selected Tile again, so that the filter applies.
+                this.drawTile(this.game.tiles[this.game.selectedHex.q + "-" + this.game.selectedHex.r]); //Draw the selected Tile again, so that the filter applies.
                 this.ctxm.filter = "none";
             }
         }
@@ -135,64 +135,33 @@ export default class Renderer {
     }
 
     drawTile(tile) {
-        this.ctxm.save();
-        let hex = tile.hex;
-        let corners = this.game.layout.polygonCorners(hex);
-        let padding = 10;
+        if (tile) {
 
-        this.ctxm.drawImage(
-            Maphelper.getTerrainImage(tile.height),
-            corners[3].x+padding, //obere linke ecke
-            corners[3].y-this.game.layout.size.y/2+padding, //obere linke ecke- halbe höhe
-            this.game.layout.size.x*Math.sqrt(3)-padding, //radius mal wurzel aus 3 um die reale breite des hex zu errechnen
-            this.game.layout.size.y*2-padding);//radius mal 2 um die reale höhe des hex zu errechnen
-    
+            this.ctxm.save();
+            let hex = tile.hex;
+            let corners = this.game.layout.polygonCorners(hex);
+            let padding = 10;
 
-        let imgEnv1 = Maphelper.getEnvironmentImage(tile.environmentSpot1);
-        let imgEnv2 = Maphelper.getEnvironmentImage(tile.environmentSpot2);
-        let imgEnv3 = Maphelper.getEnvironmentImage(tile.environmentSpot3);
+            this.ctxm.drawImage(
+                Maphelper.getTerrainImage(tile.height),
+                corners[3].x + padding, //obere linke ecke
+                corners[3].y - this.game.layout.size.y / 2 + padding, //obere linke ecke- halbe höhe
+                this.game.layout.size.x * Math.sqrt(3) - padding, //radius mal wurzel aus 3 um die reale breite des hex zu errechnen
+                this.game.layout.size.y * 2 - padding);//radius mal 2 um die reale höhe des hex zu errechnen
 
-        //Sehr in den Ecken
-        // const xOffset1 = 70;
-        // const xOffset2 = 45;
-        // const xOffset3 = 15;
-        // const yOffset = 70;
-        // const yOffset3 = 40;
 
-        const xOffset1 = 70;
-        const xOffset2 = 35;
-        const xOffset3 = 15;
-        const yOffset = 55;
-        const yOffset3 = 30;
-
-        if(imgEnv1) {
-            this.ctxm.drawImage(imgEnv1,
-            this.game.layout.hexToPixel(hex).x-xOffset1,
-            this.game.layout.hexToPixel(hex).y-yOffset);
+            for(let i = 0; i<tile.environmentSpots.length; i++) {
+                let spot = tile.environmentSpots[i];
+                let img = Maphelper.getSprite(spot.type);
+                let pos = spot.pos;
+                this.ctxm.drawImage(img,
+                    this.game.layout.hexToPixel(hex).x + pos.x,
+                    this.game.layout.hexToPixel(hex).y + pos.y);
+            }
+            
+            this.ctxm.restore();
         }
-        if(imgEnv2) {
-            this.ctxm.drawImage(imgEnv2,
-            this.game.layout.hexToPixel(hex).x+xOffset2,
-            this.game.layout.hexToPixel(hex).y-yOffset);
-        }
-        if(imgEnv3) {
-            this.ctxm.drawImage(imgEnv3,
-            this.game.layout.hexToPixel(hex).x-xOffset3,
-            this.game.layout.hexToPixel(hex).y+yOffset3);
-        }
-        
-        // this.ctxm.beginPath();                
-        // for(let i = 0; i < corners.length; i++) {
-        //     if(i === 0) {
-        //         this.ctxm.moveTo(corners[i].x, corners[i].y);
-        //     } else {
-        //         this.ctxm.lineTo(corners[i].x, corners[i].y);
-        //     }
-        // }
-        // this.ctxm.closePath();
-        this.ctxm.restore();
     }
-
     drawFow() {
         //no fow yet
     }
@@ -214,7 +183,7 @@ export default class Renderer {
         this.debug.append("Cursor Position Y   : " + this.game.cursorWorld.y + "<br>");
         this.debug.append("Cursor Canvas Position X   : " + this.game.cursorCanvas.x + "<br>");
         this.debug.append("Cursor Canvas Position Y   : " + this.game.cursorCanvas.y + "<br>");
-        if(this.game.selectedHex) this.debug.append("Selected Hex   : " + this.game.selectedHex.q+" "+this.game.selectedHex.r+" "+this.game.selectedHex.s + "<br>");
+        if (this.game.selectedHex) this.debug.append("Selected Hex   : " + this.game.selectedHex.q + " " + this.game.selectedHex.r + " " + this.game.selectedHex.s + "<br>");
         this.debug.append("Mouse Distance   : " + this.game.dragDistance + "<br>");
         this.debug.append("Zoom Factor   : " + this.currentZoom + "<br>");
     }

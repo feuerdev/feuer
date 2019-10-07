@@ -1,5 +1,6 @@
 import Hex from "../../../shared/hex";
-import { Environment } from "../../../shared/gamedata";
+import { Sprite } from "../../../shared/gamedata";
+import Vector2 from "../../../shared/vector2";
 
 /**
  * Tile-Class representing one hex with all its relevant fields
@@ -12,11 +13,19 @@ export default class Tile {
   public forestation:number;
   public rockyness:number;
 
-  public environmentSpot1:Environment;
-  public environmentSpot2:Environment;
-  public environmentSpot3:Environment;
+  public environmentSpots:Spot[] = [];
 
   constructor(q:number, r:number) {
     this.hex = new Hex(q, r, -q-r);
+  }
+}
+
+export class Spot {
+  pos:Vector2;
+  type:Sprite;
+
+  constructor(pos:Vector2, type: Sprite) {
+    this.pos = pos;
+    this.type = type;
   }
 }
