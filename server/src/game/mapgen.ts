@@ -121,7 +121,7 @@ export default class Mapgen {
         while(stoneValue > 0) {
           let pos: Vector2 = Mapgen.generatePos();
           let env: GameData.Sprite = Mapgen.generateStone();
-          stoneValue-=0.1;
+          stoneValue-=0.15;
           tile.environmentSpots.push(new Spot(pos, env));
         }
         while(ironValue > 0.7) {
@@ -150,7 +150,7 @@ export default class Mapgen {
   static generatePos():Vector2 {
     let result: Vector2;
     while(!result) {
-      let x = Math.random()*125-75;
+      let x = Math.random()*130-85;
       let y = Math.random()*90-70;
       result = new Vector2(x,y);
     }
@@ -186,14 +186,12 @@ export default class Mapgen {
   }
 
   static generateStone():GameData.Sprite {
-    let rand = Math.round(Math.random()*5);
+    let rand = Math.round(Math.random()*3);
     switch(rand) {
       case 0: return GameData.Sprite.envRock01;
       case 1: return GameData.Sprite.envRock02;
-      case 2: return GameData.Sprite.envRock03;
-      case 3: return GameData.Sprite.envRock04;
-      case 4: return GameData.Sprite.envRock05;
-      case 5: return GameData.Sprite.envRock06;
+      case 2: return GameData.Sprite.envRock04;
+      case 3: return GameData.Sprite.envRock05;
     }
     return null;
   }
