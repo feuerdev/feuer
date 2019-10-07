@@ -27,10 +27,8 @@ export default class Maphelper {
   static readonly img_tree_fir_snow = new Image();
   static readonly img_rock_01 = new Image();
   static readonly img_rock_02 = new Image();
-  static readonly img_rock_03 = new Image();
   static readonly img_rock_04 = new Image();
   static readonly img_rock_05 = new Image();
-  static readonly img_rock_06 = new Image();
   static readonly img_iron = new Image();
   static readonly img_gold = new Image();
 
@@ -96,11 +94,9 @@ export default class Maphelper {
       this.img_tree_fullfir_big.src = "../img/fullfir_big.png";
       this.img_tree_fir_snow.src = "../img/fir_snow.png";
       this.img_rock_01.src = "../img/rock_01.png";
-      this.img_rock_02.src = "../img/rock_03.png";
-      this.img_rock_03.src = "../img/rock_03.png";
+      this.img_rock_02.src = "../img/rock_02.png";
       this.img_rock_04.src = "../img/rock_04.png";
       this.img_rock_05.src = "../img/rock_05.png";
-      this.img_rock_06.src = "../img/rock_06.png";
       this.img_iron.src = "../img/iron.png";
       this.img_gold.src = "../img/gold.png";
       this.initialized_sprite = true;
@@ -117,10 +113,8 @@ export default class Maphelper {
       case Gamedata.Sprite.envTreeFirSnow : return this.img_tree_fir_snow;
       case Gamedata.Sprite.envRock01 : return this.img_rock_01;
       case Gamedata.Sprite.envRock02 : return this.img_rock_02;
-      case Gamedata.Sprite.envRock03 : return this.img_rock_03;
       case Gamedata.Sprite.envRock04 : return this.img_rock_04;
       case Gamedata.Sprite.envRock05 : return this.img_rock_05;
-      case Gamedata.Sprite.envRock06 : return this.img_rock_06;
       case Gamedata.Sprite.envIron : return this.img_iron;
       case Gamedata.Sprite.envGold : return this.img_gold;
       default: return null;

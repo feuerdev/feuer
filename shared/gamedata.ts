@@ -10,10 +10,8 @@ export enum Sprite {
   envCactus2,
   envRock01,
   envRock02,
-  envRock03,
   envRock04,
   envRock05,
-  envRock06,
   envIron,
   envGold,
 }
