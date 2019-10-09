@@ -113,8 +113,8 @@ export default class Renderer implements InputListener, GameloopListener {
         //Clear Canvas
         this.ctxm.save();
         if (this.world) {
-            Object.keys(this.world).forEach(key => {
-                let tile = this.world[key];
+            Object.keys(this.world.tiles).forEach(key => {
+                let tile = this.world.tiles[key];
                 this.drawTile(tile);
             });
 
@@ -191,7 +191,7 @@ export default class Renderer implements InputListener, GameloopListener {
     }
 
     setWorld(world) {
-        this.world = world; //TODO: fix when sending real world
+        this.world = world;
     }
 
     //Inputlistener

@@ -7,10 +7,13 @@ import config from "../util/config";
 import * as GameData from "../../../shared/gamedata";
 import Log from "../util/log";
 import Vector2 from "../../../shared/vector2";
+import World from "./world";
 
 export default class Mapgen {
 
-  static create(seed, map_size, frequency, amplitude, min, max, octaves, persistence) {
+  static create(seed, map_size, frequency, amplitude, min, max, octaves, persistence):World {
+
+
     const rngHeight = seedrandom(seed);
     const heightGen = new FastSimplexNoise({
       random: rngHeight,
@@ -144,7 +147,9 @@ export default class Mapgen {
       }
     }
     Log.info("Map created");
-    return tiles;
+    
+    const world = new World(tiles);
+    return world;
   }
 
   static generatePos():Vector2 {
