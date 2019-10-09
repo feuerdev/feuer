@@ -23,6 +23,7 @@ import World from "./world";
 const GRAVITY: Vector3 = new Vector3(0, 0, config.gravity);
 
 export default class GameServer {
+  
   private io: socketio.Server;
 
   private socketplayer: {} = {};
@@ -159,5 +160,8 @@ export default class GameServer {
 
     //Send initial data
     socket.emit("gamestate world", this.world);
+  }
+  setWorld(world: World) {
+    this.world = world;
   }
 };
