@@ -1,19 +1,19 @@
 /**
  * Created by Jannik on 04.09.2016.
  */
-import * as $ from "./lib/jquery-3.1.1.min";
-import Game from "./game";
 import Vector2 from "../../shared/vector2";
-import * as Util from "../../shared/util";
 import Maphelper from "./maphelper";
+import InputListener from "./listener_input";
+import Hex, { Layout } from "../../shared/hex";
+import { GameloopListener } from "../../shared/gameloop";
 
-export default class Renderer {
-    private game: Game;
-
-    private canvas_map = $("#canvas-map");
-    private canvas_fow = $("#canvas-fow");
-    private canvas_entities = $("#canvas-entities");
-    private container = $("#canvas-container");
+export default class Renderer implements InputListener, GameloopListener {
+    
+    private canvas_map;
+    private canvas_fow;
+    private canvas_entities;
+    private div_container;
+    private div_debug;
 
     private ctxm: any;
     private ctxf: any;
@@ -25,31 +25,38 @@ export default class Renderer {
     private drawWidth: number;
     private drawHeight: number;
 
-    private zoomFactor: number = 2;
+    private layout:Layout;
 
-    public currentZoom: number = 1;
-    private debug = $("#debug");
+    //Variablen die durch Listener gesetzt werden
+    private selectedHex: Hex;
+    private cameraPosition: Vector2 = new Vector2();
 
-    private deadzone: Vector2 = new Vector2(this.canvasWidth / 2 - (50 / this.currentZoom), this.canvasHeight / 2 - (50 / this.currentZoom));
-    public cameraPos: Vector2 = new Vector2();
-    public cameraPosFollow: Vector2 = new Vector2();
+    private world:any;
 
-    private cursorCanvasLast: Vector2 = new Vector2();
-    public isFollowing: boolean = false;
-    public isDragging: boolean = false;
+    private deadzone: Vector2 = new Vector2();
     private shouldDrawDebug: boolean = config.log_level === "debug";
 
-    constructor(game: Game) {
-        this.game = game;
+    constructor(div_container, canvas_map, canvas_fow, canvas_entities, div_debug, layout) {
+        this.div_container = div_container;
+        this.div_debug = div_debug;
+        this.canvas_map = canvas_map;
+        this.canvas_fow = canvas_fow;
+        this.canvas_entities = canvas_entities;
+        this.layout = layout;
 
-        this.canvas_map[0].width = this.container.width();
-        this.canvas_map[0].height = this.container.height();
+        this.canvasWidth = this.div_container.width();
+        this.canvasHeight = this.div_container.height();
+        this.drawWidth = this.canvasWidth;
+        this.drawHeight = this.canvasHeight;
 
-        this.canvas_fow[0].width = this.container.width();
-        this.canvas_fow[0].height = this.container.height();
+        this.canvas_map[0].width = this.canvasWidth;
+        this.canvas_map[0].height = this.canvasHeight;
 
-        this.canvas_entities[0].width = this.container.width();
-        this.canvas_entities[0].height = this.container.height();
+        this.canvas_fow[0].width = this.canvasWidth;
+        this.canvas_fow[0].height = this.canvasHeight;
+
+        this.canvas_entities[0].width = this.canvasWidth;
+        this.canvas_entities[0].height = this.canvasHeight;
 
         if (this.canvas_map.length > 0) {
             this.ctxm = this.canvas_map[0].getContext("2d");
@@ -63,12 +70,6 @@ export default class Renderer {
             this.ctxe = this.canvas_entities[0].getContext("2d");
         }
 
-        this.canvasWidth = this.canvas_entities[0].width;
-        this.canvasHeight = this.canvas_entities[0].height;
-
-        this.drawWidth = this.canvasWidth;
-        this.drawHeight = this.canvasHeight;
-
         this.updateDebug()
     }
 
@@ -80,18 +81,17 @@ export default class Renderer {
 
         this.ctxe.clearRect(0, 0, this.drawWidth, this.drawHeight);
 
-        this.updateCamera();
 
         this.ctxm.clearRect(0, 0, this.drawWidth, this.drawHeight);
-        this.ctxm.translate(-this.cameraPos.x, -this.cameraPos.y);
+        this.ctxm.translate(-this.cameraPosition.x, -this.cameraPosition.y);
         this.drawMap();
 
         if (config.fow) {
-            this.ctxf.translate(-this.cameraPos.x, -this.cameraPos.y);
+            this.ctxf.translate(-this.cameraPosition.x, -this.cameraPosition.y);
             this.drawFow();
         }
 
-        this.ctxe.translate(-this.cameraPos.x, -this.cameraPos.y);
+        this.ctxe.translate(-this.cameraPosition.x, -this.cameraPosition.y);
         this.drawEntities();
 
         if (this.shouldDrawDebug) {
@@ -103,14 +103,7 @@ export default class Renderer {
         this.ctxe.restore();
     }
 
-    updateCamera() {
-        if (this.isDragging) {
-            this.cameraPos.x -= Math.round((this.game.cursorCanvas.x - this.cursorCanvasLast.x) / this.currentZoom);
-            this.cameraPos.y -= Math.round((this.game.cursorCanvas.y - this.cursorCanvasLast.y) / this.currentZoom);
-        }
-        this.cursorCanvasLast.x = this.game.cursorCanvas.x;
-        this.cursorCanvasLast.y = this.game.cursorCanvas.y;
-    }
+    
 
     drawEntities() {
 
@@ -119,15 +112,15 @@ export default class Renderer {
     drawMap() {
         //Clear Canvas
         this.ctxm.save();
-        if (this.game.tiles) {
-            Object.keys(this.game.tiles).forEach(key => {
-                let tile = this.game.tiles[key];
+        if (this.world) {
+            Object.keys(this.world).forEach(key => {
+                let tile = this.world[key];
                 this.drawTile(tile);
             });
 
-            if (this.game.selectedHex) {
+            if (this.selectedHex) {
                 this.ctxm.filter = "brightness(110%) contrast(1.05) drop-shadow(0px 0px 25px black)";
-                this.drawTile(this.game.tiles[this.game.selectedHex.q + "-" + this.game.selectedHex.r]); //Draw the selected Tile again, so that the filter applies.
+                this.drawTile(this.world[this.selectedHex.q + "-" + this.selectedHex.r]); //Draw the selected Tile again, so that the filter applies.
                 this.ctxm.filter = "none";
             }
         }
@@ -139,26 +132,26 @@ export default class Renderer {
 
             this.ctxm.save();
             let hex = tile.hex;
-            let corners = this.game.layout.polygonCorners(hex);
+            let corners = this.layout.polygonCorners(hex);
             let padding = 10;
 
             this.ctxm.drawImage(
                 Maphelper.getTerrainImage(tile.height),
                 corners[3].x + padding, //obere linke ecke
-                corners[3].y - this.game.layout.size.y / 2 + padding, //obere linke ecke- halbe höhe
-                this.game.layout.size.x * Math.sqrt(3) - padding, //radius mal wurzel aus 3 um die reale breite des hex zu errechnen
-                this.game.layout.size.y * 2 - padding);//radius mal 2 um die reale höhe des hex zu errechnen
+                corners[3].y - this.layout.size.y / 2 + padding, //obere linke ecke- halbe höhe
+                this.layout.size.x * Math.sqrt(3) - padding, //radius mal wurzel aus 3 um die reale breite des hex zu errechnen
+                this.layout.size.y * 2 - padding);//radius mal 2 um die reale höhe des hex zu errechnen
 
 
-            for(let i = 0; i<tile.environmentSpots.length; i++) {
+            for (let i = 0; i < tile.environmentSpots.length; i++) {
                 let spot = tile.environmentSpots[i];
                 let img = Maphelper.getSprite(spot.type);
                 let pos = spot.pos;
                 this.ctxm.drawImage(img,
-                    this.game.layout.hexToPixel(hex).x + pos.x,
-                    this.game.layout.hexToPixel(hex).y + pos.y);
+                    this.layout.hexToPixel(hex).x + pos.x,
+                    this.layout.hexToPixel(hex).y + pos.y);
             }
-            
+
             this.ctxm.restore();
         }
     }
@@ -167,68 +160,23 @@ export default class Renderer {
     }
 
     drawDebug() {
-        this.debug.text("");
-        this.debug.append("<em>General Information</em><br>");
-        if (this.isFollowing) {
-            this.debug.append("cameraPosFollow.pos.x   : " + this.cameraPosFollow.x + "<br>");
-            this.debug.append("cameraPosFollow.pos.y   : " + this.cameraPosFollow.y + "<br>");
-        }
-        this.debug.append("Camera.x   : " + this.cameraPos.x + "<br>");
-        this.debug.append("Camera.y   : " + this.cameraPos.y + "<br>");
-        this.debug.append("Canvas Width   : " + this.canvasWidth + "<br>");
-        this.debug.append("Canvas Height   : " + this.canvasHeight + "<br>");
-        this.debug.append("Draw Width   : " + this.drawWidth + "<br>");
-        this.debug.append("Draw Height   : " + this.drawHeight + "<br>");
-        this.debug.append("Cursor Position X   : " + this.game.cursorWorld.x + "<br>");
-        this.debug.append("Cursor Position Y   : " + this.game.cursorWorld.y + "<br>");
-        this.debug.append("Cursor Canvas Position X   : " + this.game.cursorCanvas.x + "<br>");
-        this.debug.append("Cursor Canvas Position Y   : " + this.game.cursorCanvas.y + "<br>");
-        if (this.game.selectedHex) this.debug.append("Selected Hex   : " + this.game.selectedHex.q + " " + this.game.selectedHex.r + " " + this.game.selectedHex.s + "<br>");
-        this.debug.append("Mouse Distance   : " + this.game.dragDistance + "<br>");
-        this.debug.append("Zoom Factor   : " + this.currentZoom + "<br>");
+        this.div_debug.text("");
+        this.div_debug.append("<em>General Information</em><br>");
+        this.div_debug.append("UID   : " + currentUid + "<br>");
+        this.div_debug.append("Camera.x   : " + this.cameraPosition.x + "<br>");
+        this.div_debug.append("Camera.y   : " + this.cameraPosition.y + "<br>");
+        this.div_debug.append("Canvas Width   : " + this.canvasWidth + "<br>");
+        this.div_debug.append("Canvas Height   : " + this.canvasHeight + "<br>");
+        this.div_debug.append("Draw Width   : " + this.drawWidth + "<br>");
+        this.div_debug.append("Draw Height   : " + this.drawHeight + "<br>");
+        //this.div_debug.append("Cursor Position X   : " + this.game.cursorWorld.x + "<br>");
+        //this.div_debug.append("Cursor Position Y   : " + this.game.cursorWorld.y + "<br>");
+        //this.div_debug.append("Cursor Canvas Position X   : " + this.game.cursorCanvas.x + "<br>");
+        //this.div_debug.append("Cursor Canvas Position Y   : " + this.game.cursorCanvas.y + "<br>");
+        if (this.selectedHex) this.div_debug.append("Selected Hex   : " + this.selectedHex.q + " " + this.selectedHex.r + " " + this.selectedHex.s + "<br>");
+        //this.div_debug.append("Zoom Factor   : " + this.currentZoom + "<br>");
     }
 
-    zoomIn() {
-        this.zoom(this.zoomFactor);
-    }
-
-    zoomOut() {
-        this.zoom(1 / this.zoomFactor);
-    }
-
-    zoomReset() {
-        const factor = 1 / this.currentZoom;
-        this.zoom(factor);
-    }
-
-    zoom(factor: number) {
-        const newZoom = this.currentZoom * factor;
-        if (newZoom <= config.zoom_max && newZoom >= config.zoom_min) {
-            this.currentZoom *= factor;
-            this.drawWidth = Math.floor(this.canvasWidth / this.currentZoom);
-            this.drawHeight = Math.floor(this.canvasHeight / this.currentZoom);
-            this.deadzone.x = this.drawWidth / 2 - (50 / this.currentZoom);
-            this.deadzone.y = this.drawHeight / 2 - (50 / this.currentZoom);
-            if (this.ctxm) {
-                this.ctxm.scale(factor, factor);
-            }
-            if (this.ctxf) {
-                this.ctxf.scale(factor, factor);
-            }
-
-            if (this.ctxe) {
-                this.ctxe.scale(factor, factor);
-            }
-
-            // this.camera.pos.x += ((this.input.posCursorCanvas.x) * factor);
-            // this.camera.pos.y += ((this.input.posCursorCanvas.y) * factor);
-            // }
-        }
-    }
-
-    toggleFollowMode() {
-        this.isFollowing = !this.isFollowing;
-    }
 
     toggleDebug() {
         this.shouldDrawDebug = !this.shouldDrawDebug;
@@ -236,10 +184,58 @@ export default class Renderer {
     }
     updateDebug() {
         if (this.shouldDrawDebug) {
-            this.debug.show();
+            this.div_debug.show();
         } else {
-            this.debug.hide();
+            this.div_debug.hide();
         }
+    }
+
+    setWorld(world) {
+        this.world = world; //TODO: fix when sending real world
+    }
+
+    //Inputlistener
+    onKeyUp(event: KeyboardEvent) {
+        switch (event.keyCode) {
+            case 80: this.toggleDebug(); break;//#
+            //case 32: this.socket.emit("input shoot"); break;//# 
+          }
+    }
+    onZoom(factor:number, currentZoom: number) {
+        this.drawWidth = Math.floor(this.canvasWidth / currentZoom);
+        this.drawHeight = Math.floor(this.canvasHeight / currentZoom);
+        this.deadzone.x = this.drawWidth / 2 - (50 / currentZoom);
+        this.deadzone.y = this.drawHeight / 2 - (50 / currentZoom);
+        if (this.ctxm) {
+            this.ctxm.scale(factor, factor);
+        }
+        if (this.ctxf) {
+            this.ctxf.scale(factor, factor);
+        }
+
+        if (this.ctxe) {
+            this.ctxe.scale(factor, factor);
+        }
+    }
+    onRightClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
+        throw new Error("Method not implemented.");
+    }
+    onLeftClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
+        throw new Error("Method not implemented.");
+    }
+    onKeyDown(event: KeyboardEvent) {
+        throw new Error("Method not implemented.");
+    }
+    onCameraPosition(cameraPos: Vector2) {
+        this.cameraPosition = cameraPos;
+    }
+    onHexSelected(hex:Hex) {
+        this.selectedHex = hex;
+    }
+
+    //Gamelooplistener
+    onRender() {
+        this.draw();
     }
 
 };
