@@ -18,7 +18,7 @@ import Vector3 from "../../../shared/vector3";
 import { Socket } from "socket.io";
 import { Hashtable } from "../../../shared/util";
 import Tile from "./tile";
-import Mapgen from "./mapgen";
+import World from "./world";
 
 const GRAVITY: Vector3 = new Vector3(0, 0, config.gravity);
 
@@ -29,8 +29,8 @@ export default class GameServer {
   private uidsockets: {} = {};
   private players: Player[] = [];
 
-  public tiles:Hashtable<Tile> = Mapgen.create(Math.random(), config.map_size, config.map_frequency, config.map_amplitude, config.map_min, config.map_max, config.map_octaves, config.map_persistence);
-
+  private world:World;
+  
   //#region Gameloop Variables
   private readonly delta = Math.round(1000 / config.updaterate);
   private readonly defaultDelta = Math.round(1000 / 60);
@@ -42,7 +42,8 @@ export default class GameServer {
   private timeSinceLastUpdate = 0;
   //#endregion
 
-  constructor() {
+  constructor(world:World) {
+    this.world = world;
     //
   }
 
@@ -120,7 +121,7 @@ export default class GameServer {
         const socket: Socket = this.uidsockets[player.uid];
         if (socket) {
           socket.emit("gamestate players", this.players);
-          socket.emit("gamestate tiles", this.tiles);
+          socket.emit("gamestate world", this.world);
         }
       }
     }

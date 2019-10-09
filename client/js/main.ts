@@ -42,9 +42,9 @@ $(document).ready(function () {
             Log.info("Disonnected");
         }
         onSetup(socket:Socket) {            
-            socket.on("gamestate tiles", (data) => this.onGamestateTiles(data));
+            socket.on("gamestate world", (data) => this.onGamestateWorld(data));
         }
-        onGamestateTiles(data: any): void {
+        onGamestateWorld(data: any): void {
             renderer.setWorld(data);
         }
     });
