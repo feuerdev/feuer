@@ -7,7 +7,7 @@
   "updaterate": 60,
   "netrate": 30,
   "interp": 0.05,
-  "map_size": 16,
+  "map_size": 5,
   "map_frequency": 0.1,
   "map_amplitude":1,
   "map_min":0,
