@@ -1,7 +1,7 @@
-import * as db from "../util/db";
-import Log from "../util/log";
-import Vector2 from "../../../shared/vector2";
-import * as Util from "../../../shared/util";
+import * as db from "./util/db";
+import Log from "./util/log";
+import Vector2 from "../../shared/vector2";
+import * as Util from "../../shared/util";
 
 /**
  * Klasse mit statischen Helper Funktionen um andere Klassen wie gameserver zu entlasten

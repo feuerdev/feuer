@@ -7,7 +7,7 @@ import * as socketio from "socket.io";
 import { Server } from "http";
 
 import Player from "./player";
-import Helper from "./helper";
+import Helper from "../helper";
 
 import * as db from "../util/db";
 import * as Util from "../../../shared/util";
