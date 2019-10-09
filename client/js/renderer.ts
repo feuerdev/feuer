@@ -2,12 +2,15 @@
  * Created by Jannik on 04.09.2016.
  */
 import Vector2 from "../../shared/vector2";
-import Maphelper from "./maphelper";
+import Maphelper, { MaphelperListener } from "./maphelper";
 import InputListener from "./listener_input";
 import Hex, { Layout } from "../../shared/hex";
 import { GameloopListener } from "../../shared/gameloop";
 
-export default class Renderer implements InputListener, GameloopListener {
+export default class Renderer implements InputListener, GameloopListener, MaphelperListener {
+    onImagesLoaded() {
+        this.shouldRedrawMap = true;
+    }
     
     private canvas_map;
     private canvas_fow;
@@ -36,6 +39,8 @@ export default class Renderer implements InputListener, GameloopListener {
     private deadzone: Vector2 = new Vector2();
     private shouldDrawDebug: boolean = config.log_level === "debug";
 
+    private shouldRedrawMap:boolean = true;
+
     constructor(div_container, canvas_map, canvas_fow, canvas_entities, div_debug, layout) {
         this.div_container = div_container;
         this.div_debug = div_debug;
@@ -43,6 +48,8 @@ export default class Renderer implements InputListener, GameloopListener {
         this.canvas_fow = canvas_fow;
         this.canvas_entities = canvas_entities;
         this.layout = layout;
+
+        Maphelper.loadImages(this);
 
         this.canvasWidth = this.div_container.width();
         this.canvasHeight = this.div_container.height();
@@ -81,10 +88,13 @@ export default class Renderer implements InputListener, GameloopListener {
 
         this.ctxe.clearRect(0, 0, this.drawWidth, this.drawHeight);
 
-
-        this.ctxm.clearRect(0, 0, this.drawWidth, this.drawHeight);
-        this.ctxm.translate(-this.cameraPosition.x, -this.cameraPosition.y);
-        this.drawMap();
+        if(this.shouldRedrawMap) {
+            console.log("drawing map");
+            this.shouldRedrawMap = false;
+            this.ctxm.clearRect(0, 0, this.drawWidth, this.drawHeight);
+            this.ctxm.translate(-this.cameraPosition.x, -this.cameraPosition.y);
+            this.drawMap();
+        }
 
         if (config.fow) {
             this.ctxf.translate(-this.cameraPosition.x, -this.cameraPosition.y);
@@ -113,14 +123,15 @@ export default class Renderer implements InputListener, GameloopListener {
         //Clear Canvas
         this.ctxm.save();
         if (this.world) {
-            Object.keys(this.world.tiles).forEach(key => {
+            let keys = Object.keys(this.world.tiles);
+            for(let key of keys) {
                 let tile = this.world.tiles[key];
                 this.drawTile(tile);
-            });
+            }
 
             if (this.selectedHex) {
                 this.ctxm.filter = "brightness(110%) contrast(1.05) drop-shadow(0px 0px 25px black)";
-                this.drawTile(this.world[this.selectedHex.q + "-" + this.selectedHex.r]); //Draw the selected Tile again, so that the filter applies.
+                this.drawTile(this.world.tiles[this.selectedHex.q + "-" + this.selectedHex.r]); //Draw the selected Tile again, so that the filter applies.
                 this.ctxm.filter = "none";
             }
         }
@@ -129,7 +140,7 @@ export default class Renderer implements InputListener, GameloopListener {
 
     drawTile(tile) {
         if (tile) {
-
+            console.log("drawing tile")
             this.ctxm.save();
             let hex = tile.hex;
             let corners = this.layout.polygonCorners(hex);
@@ -191,7 +202,9 @@ export default class Renderer implements InputListener, GameloopListener {
     }
 
     setWorld(world) {
+        console.log("received map");
         this.world = world;
+        this.shouldRedrawMap = true;
     }
 
     //Inputlistener
@@ -216,6 +229,7 @@ export default class Renderer implements InputListener, GameloopListener {
         if (this.ctxe) {
             this.ctxe.scale(factor, factor);
         }
+        this.shouldRedrawMap = true;
     }
     onRightClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
         throw new Error("Method not implemented.");
@@ -228,9 +242,11 @@ export default class Renderer implements InputListener, GameloopListener {
     }
     onCameraPosition(cameraPos: Vector2) {
         this.cameraPosition = cameraPos;
+        this.shouldRedrawMap = true;
     }
     onHexSelected(hex:Hex) {
         this.selectedHex = hex;
+        this.shouldRedrawMap = true;
     }
 
     //Gamelooplistener
