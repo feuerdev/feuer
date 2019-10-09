@@ -121,7 +121,6 @@ export default class GameServer {
         const socket: Socket = this.uidsockets[player.uid];
         if (socket) {
           socket.emit("gamestate players", this.players);
-          socket.emit("gamestate world", this.world);
         }
       }
     }
@@ -157,5 +156,8 @@ export default class GameServer {
       }
     }
     this.uidsockets[uid] = socket;
+
+    //Send initial data
+    socket.emit("gamestate world", this.world);
   }
 };
