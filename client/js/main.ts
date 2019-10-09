@@ -26,8 +26,8 @@ $(document).ready(function () {
     let renderer = new Renderer(div_container, canvas_map, canvas_fow, canvas_entities, div_debug, layout);
     let input = new Input(canvas_entities, layout);
 
-    gameloop.addListener(renderer);
     gameloop.addListener(input);
+    gameloop.addListener(renderer);
     input.addListener(renderer);
     connection.addListener(new class a implements ConnectionListener {
 

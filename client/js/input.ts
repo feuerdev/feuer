@@ -4,7 +4,7 @@ import InputListener from "./listener_input";
 import { GameloopListener } from "../../shared/gameloop";
 
 export default class Input implements GameloopListener {
-  onUpdate(deltafactor: number) {
+  onRender() {
     this.updateCamera();
   }
 
