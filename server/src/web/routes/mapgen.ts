@@ -12,7 +12,7 @@ router.get("/", function(req, res) {
 router.post("/generate", function(req, res) {
   const params = req.body;
   let gameserver:GameServer = req.app.get("gameserver");
-  gameserver.tiles = Mapgen.create(params.seed, params.size, params.frequency, params.amplitude, params.min, params.max, params.octaves, params.persistence);
+  gameserver.setWorld(Mapgen.create(params.seed, params.size, params.frequency, params.amplitude, params.min, params.max, params.octaves, params.persistence));
   res.sendStatus(200);
 });
 
