@@ -1,12 +1,11 @@
 
 import * as io from "./lib/socket.io.min";
 import { Socket } from "../../node_modules/@types/socket.io";
-import Log from "./util/log";
 
 export interface ConnectionListener {
-  onDisconnected(socket: Socket);
-  onConnected(socket: Socket);
-  onSetup(socket: Socket);
+  onDisconnected?(socket: Socket);
+  onConnected?(socket: Socket);
+  onSetup?(socket: Socket);
 }
 
 export default class Connection {
@@ -42,6 +41,12 @@ export default class Connection {
   private onDisconnected() {
     for (let listener of this.listeners) {
       listener.onDisconnected(this.socket);
+    }
+  }
+
+  public send(tag:string, data:any) {
+    if(this.socket) {
+      this.socket.emit(tag, data);
     }
   }
 
