@@ -19,8 +19,8 @@ import { Socket } from "socket.io";
 import { Hashtable } from "../../../shared/util";
 import Tile from "./tile";
 import World from "./world";
-
-const GRAVITY: Vector3 = new Vector3(0, 0, config.gravity);
+import Unit, { EnumUnit } from "./objects/unit";
+import Hex from "../../../shared/hex";
 
 export default class GameServer {
   
@@ -97,6 +97,16 @@ export default class GameServer {
 
   //Loops
   update(deltaFactor) {
+    for (let i = 0; i < this.world.units.length; i++) {
+      const unit:Unit = this.world.units[i];
+      if(unit.targetHex) {
+        unit.movementStatus += unit.speed*deltaFactor;
+        if(unit.movementStatus > 100) {
+          unit.pos.add(new Hex(0,1,0)); //TODO:implement
+        }
+      }    
+    }
+
     for (let i = 0; i < this.players.length; i++) {
       const player: Player = this.players[i];
       if (player.initialized) {
@@ -142,9 +152,10 @@ export default class GameServer {
           player.uid = uid;
           player.name = name;
           player.initialized = true;
+          self.world.units.push(Unit.createUnit(player.uid,EnumUnit.SCOUT,new Hex(0,0,0)));
           self.players.push(player);
           self.socketplayer[socket.id] = player;
-          Log.info("Player Connected: " + player.name);
+          Log.info("New Player Connected: " + player.name);
         })
         .catch(error => {
           Log.error(error);
@@ -153,6 +164,7 @@ export default class GameServer {
       for(let i = 0; i < self.players.length; i++) {
         if(self.players[i].uid === uid) {
           this.socketplayer[socket.id] = self.players[i];
+          Log.info("Old Player Connected: " + self.players[i].name);
         } 
       }
     }
