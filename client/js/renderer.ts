@@ -18,9 +18,9 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
     private div_container;
     private div_debug;
 
-    private ctxm: any;
-    private ctxf: any;
-    private ctxe: any;
+    private ctxm: CanvasRenderingContext2D;
+    private ctxf: CanvasRenderingContext2D;
+    private ctxe: CanvasRenderingContext2D;
 
     private canvasWidth: number;
     private canvasHeight: number;
@@ -116,11 +116,22 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
     
 
     drawEntities() {
-
+        this.ctxe.save();
+        if(this.world && this.world.units) {
+            for(let i = 0; i < this.world.units.length; i++) {
+                let unit = this.world.units[i];
+                if(unit) {
+                    this.ctxe.font = "30px Arial";
+                    this.ctxe.fillStyle = "red";
+                    this.ctxe.textAlign = "center";
+                    this.ctxe.fillText(unit.id+ " ("+Math.round(unit.movementStatus)+")", this.layout.hexToPixel(unit.pos).x,this.layout.hexToPixel(unit.pos).y)
+                }
+            }
+        }
+        this.ctxe.restore();
     }
 
     drawMap() {
-        //Clear Canvas
         this.ctxm.save();
         if (this.world) {
             let keys = Object.keys(this.world.tiles);
