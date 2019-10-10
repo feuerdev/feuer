@@ -1,7 +1,16 @@
 import Vector2 from "../../shared/vector2";
 import Hex, { Layout } from "../../shared/hex";
-import InputListener from "./listener_input";
 import { GameloopListener } from "../../shared/gameloop";
+
+export interface InputListener {
+  onHexSelected?(selectedHex: Hex):void;
+  onCameraPosition?(cameraPos: Vector2):void;
+  onZoom?(factor:number, currentZoom: number):void;
+  onRightClick?(cursorCanvas: Vector2, cursorWorld: Vector2):void;
+  onLeftClick?(cursorCanvas: Vector2, cursorWorld: Vector2):void;
+  onKeyDown?(event: KeyboardEvent):void;
+  onKeyUp?(event: KeyboardEvent):void;
+}
 
 export default class Input implements GameloopListener {
   onUpdate(factor) {
