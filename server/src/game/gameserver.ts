@@ -53,6 +53,8 @@ export default class GameServer {
     this.io.on("connection", (socket) => {
       socket.on("initialize", (data) => this.onPlayerInitialize(socket, data));
       socket.on("disconnect", () => this.onPlayerDisconnected(socket));
+
+      socket.on("request movement", (data) => this.onRequestMovement(socket, data));
     });
   }
 
@@ -99,10 +101,11 @@ export default class GameServer {
   update(deltaFactor) {
     for (let i = 0; i < this.world.units.length; i++) {
       const unit:Unit = this.world.units[i];
-      if(true/*unit.targetHex*/) {
-        unit.movementStatus += unit.speed*deltaFactor*0.01;
+      if(unit.targetHex) {
+        unit.movementStatus += unit.speed*deltaFactor*0.05;
         if(unit.movementStatus > 100) {
-          unit.pos = unit.pos.add(new Hex(0,1,-1)); //TODO:implement
+          unit.pos = unit.targetHex; //TODO:implement
+          unit.targetHex = null;
           unit.movementStatus = 0;
         }
       }    
@@ -175,7 +178,30 @@ export default class GameServer {
     //Send initial data
     socket.emit("gamestate world", this.world);
   }
-  setWorld(world: World) {
+
+  onRequestMovement(socket: Socket, hex:Hex) {
+    let uid = this.getPlayerUid(socket.id);
+    for(let unit of this.world.units) {
+      if(uid === unit.owner) {
+        unit.targetHex = hex;
+      }
+    }
+     
+  }
+
+  private getPlayerUid(socketId) {
+    const player:Player = this.getPlayer(socketId);
+    if(player) {
+      return player.uid;
+    }
+    return null;
+  }
+
+  private getPlayer(socketId:string):Player {
+    return this.socketplayer[socketId];
+  }
+
+  public setWorld(world: World) {
     this.world = world;
   }
 };

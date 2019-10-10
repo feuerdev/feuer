@@ -3,9 +3,9 @@
  */
 import Vector2 from "../../shared/vector2";
 import Maphelper, { MaphelperListener } from "./maphelper";
-import InputListener from "./listener_input";
 import Hex, { Layout } from "../../shared/hex";
 import { GameloopListener } from "../../shared/gameloop";
+import { InputListener } from "./input";
 
 export default class Renderer implements InputListener, GameloopListener, MaphelperListener {
     onImagesLoaded() {

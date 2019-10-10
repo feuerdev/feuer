@@ -1,5 +1,5 @@
 export default abstract class GameObject {
-  protected owner:string;
+  public owner:string;
   protected id:number;
   private static idcount:number = 0;
 
