@@ -99,10 +99,11 @@ export default class GameServer {
   update(deltaFactor) {
     for (let i = 0; i < this.world.units.length; i++) {
       const unit:Unit = this.world.units[i];
-      if(unit.targetHex) {
-        unit.movementStatus += unit.speed*deltaFactor;
+      if(true/*unit.targetHex*/) {
+        unit.movementStatus += unit.speed*deltaFactor*0.01;
         if(unit.movementStatus > 100) {
-          unit.pos.add(new Hex(0,1,0)); //TODO:implement
+          unit.pos = unit.pos.add(new Hex(0,1,-1)); //TODO:implement
+          unit.movementStatus = 0;
         }
       }    
     }
@@ -132,6 +133,7 @@ export default class GameServer {
         const socket: Socket = this.uidsockets[player.uid];
         if (socket) {
           socket.emit("gamestate players", this.players);
+          socket.emit("gamestate world", this.world);
         }
       }
     }
