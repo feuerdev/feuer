@@ -18,9 +18,9 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
     private div_container;
     private div_debug;
 
-    private ctxm: CanvasRenderingContext2D;
-    private ctxf: CanvasRenderingContext2D;
-    private ctxe: CanvasRenderingContext2D;
+    private ctxm: any;
+    private ctxf: any;
+    private ctxe: any;
 
     private canvasWidth: number;
     private canvasHeight: number;
