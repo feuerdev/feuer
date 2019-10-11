@@ -48,7 +48,9 @@ export default class Input implements GameloopListener {
     if (window) {
       window.addEventListener("keydown", event => {
         for (let listener of this.listeners_input) {
-          listener.onKeyDown(event);
+          if(listener.onKeyDown) {
+            listener.onKeyDown(event);
+          }
         }
       }, false);
 
@@ -59,7 +61,9 @@ export default class Input implements GameloopListener {
           case 191: this.zoomReset(); break;//#
           default:
             for (let listener of this.listeners_input) {
-              listener.onKeyUp(event);
+              if(listener.onKeyUp) {
+                listener.onKeyUp(event);
+              }
             }
             break;
           //case 32: this.socket.emit("input shoot"); break;//# 
@@ -79,10 +83,14 @@ export default class Input implements GameloopListener {
           case 1: { //Linksclick
             this.selectedHex = this.layout.pixelToHex(this.cursorWorld).round();
             for (let listener of this.listeners_input) {
-              listener.onHexSelected(this.selectedHex);
+              if(listener.onHexSelected) {
+                listener.onHexSelected(this.selectedHex);
+              }
             }
             for (let listener of this.listeners_input) {
-              listener.onLeftClick(this.cursorCanvas, this.cursorWorld);
+              if(listener.onLeftClick) {
+                listener.onLeftClick(this.cursorCanvas, this.cursorWorld);
+              }
             }
             break;
           }
@@ -98,7 +106,9 @@ export default class Input implements GameloopListener {
           this.isDragging = false;
           if (this.dragDistance < config.click_distance_threshold) {
             for (let listener of this.listeners_input) {
-              listener.onRightClick(this.cursorCanvas, this.cursorWorld);
+              if(listener.onRightClick) {
+                listener.onRightClick(this.cursorCanvas, this.cursorWorld);
+              }              
             }
           }
           this.dragDistance = 0;
@@ -155,7 +165,9 @@ export default class Input implements GameloopListener {
       this.cameraPos.x -= Math.round((this.cursorCanvas.x - this.cursorCanvasLast.x) / this.currentZoom);
       this.cameraPos.y -= Math.round((this.cursorCanvas.y - this.cursorCanvasLast.y) / this.currentZoom);
       for (let listener of this.listeners_input) {
-        listener.onCameraPosition(this.cameraPos);
+        if(listener.onCameraPosition) {
+          listener.onCameraPosition(this.cameraPos);
+        }
       }
     }
     this.cursorCanvasLast.x = this.cursorCanvas.x;
@@ -184,7 +196,9 @@ export default class Input implements GameloopListener {
       // this.camera.pos.y += ((this.input.posCursorCanvas.y) * factor);
 
       for (let listener of this.listeners_input) {
-        listener.onZoom(factor, this.currentZoom);
+        if(listener.onZoom) {
+          listener.onZoom(factor, this.currentZoom);
+        }        
       }
     }
   }
