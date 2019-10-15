@@ -32,15 +32,29 @@ canvas {
     left: 0px;
     top:0px;
     right:0px;
-    height: 30px;
+    height: 30vh;
     background: #20C20E;
 }
 
 .hud-resource {
     background: blue;
     display: inline-block;
-    width: 50px;
-    height: 20px;
+    box-sizing: border-box;
+    width: auto;
+    height: 100%;
+    padding: 2px;
+    vertical-align: middle;
+}
+
+span {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.hud-resource img {
+    max-width: 100%;
+    max-height: 100%;
+    vertical-align: middle;
 }
 
 #debug {
