@@ -27,6 +27,22 @@ canvas {
     /* Damit alle canvas Elemente übereinander gezeichnet werden */
 }
 
+.hud-top {
+    position: absolute;
+    left: 0px;
+    top:0px;
+    right:0px;
+    height: 30px;
+    background: #20C20E;
+}
+
+.hud-resource {
+    background: blue;
+    display: inline-block;
+    width: 50px;
+    height: 20px;
+}
+
 #debug {
     background: #BBBBBBBB;
     width: 200px;
