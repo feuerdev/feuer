@@ -3,8 +3,9 @@
 <html lang="en">
 
 <head>
-	<title>Louis ihm seine Kunst</title>
+	<title>Feuer</title>
 	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width,height=device-height,user-scalable=no">
 	<link rel="stylesheet" href="css/style.css">
 	<link rel="icon" type="image/x-icon" href="img/favicon.ico">
 </head>
@@ -14,11 +15,37 @@
 		<canvas id="canvas-map" oncontextmenu="return false"></canvas>
 		<canvas id="canvas-fow" oncontextmenu="return false"></canvas>
 		<canvas id="canvas-entities" oncontextmenu="return false"></canvas>
-		<div id="debug"></div>
-		<div id="death" style="display:none" >
-			<h1>Du bist tot LOL</h1>
-		</div>
 	</div>
+		<div class="hud-top">
+		<div class="hud-resource-wrapper">
+			<div class="hud-resource" id="resource_wood">
+					<img src="img/hud_tree.png">
+					<span class="hud-resource-value">10</span>			
+				</div>
+				<div class="hud-resource" id="resource_stone">
+						<img src="img/hud_stone.png">
+						<span class="hud-resource-value">10</span>
+				</div>
+				<div class="hud-resource" id="resource_iron">
+						<img src="img/hud_iron.png">
+						<span class="hud-resource-value">10</span>
+				</div>
+				<div class="hud-resource" id="resource_gold">
+						<img src="img/hud_gold.png">
+						<span class="hud-resource-value">10</span>
+				</div>
+		</div>			
+	</div>
+	<div class="hud-left">
+			sadasdasdasd
+	</div>
+	<div class="hud-right">
+		sadasdasdasd
+	</div>
+	<div id="death" style="display:none" >
+		<h1>Du bist tot LOL</h1>
+	</div>
+	<div id="debug"></div>
 
 
 	<script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-app.js"></script>

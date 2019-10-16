@@ -1,13 +1,8 @@
 body,
 html {
-    height: 100%;
-    /* Als referenz, damit die height: 100% bei #canvas-container auch etwas bedeutet */
     margin: 0;
-    /* Default body margin entfernen */
     overflow: hidden;
-    /*Verstecke die Scrollbars, theoretisch nicht nötig. Einkommentieren falls doch */
     background: black;
-    color:#20C20E;
 }
 
 #canvas-container {
@@ -18,43 +13,60 @@ html {
     bottom: 0px;
 }
 
- /* #canvas-map {
-    background: black;
-} */
-
 canvas {
     position: absolute;
-    /* Damit alle canvas Elemente übereinander gezeichnet werden */
 }
 
 .hud-top {
+    position: fixed;
+    left: 0;
+    top:0;
+    right:0;
+    height: 5vh;
+    min-height: 30px;
+    background: lightblue;
+}
+
+.hud-resource-wrapper {
     position: absolute;
-    left: 0px;
-    top:0px;
-    right:0px;
-    height: 30vh;
-    background: #20C20E;
+    top: 5px;
+    bottom: 5px;
+    left: 10px;
+    background: lightcoral
 }
 
 .hud-resource {
-    background: blue;
+    background: pink;
     display: inline-block;
-    box-sizing: border-box;
-    width: auto;
     height: 100%;
-    padding: 2px;
-    vertical-align: middle;
 }
 
-span {
-    display: inline-block;
+.hud-resource span {
     vertical-align: middle;
 }
 
 .hud-resource img {
-    max-width: 100%;
+    position: relative;
     max-height: 100%;
     vertical-align: middle;
+}
+
+.hud-left {
+    background: lightsalmon;
+    position: fixed;
+    top: calc(5vh + 10px);
+    width: 15vw;
+    left: 10px;
+    bottom: 10px;
+}
+
+.hud-right {
+    background: lightskyblue;
+    position: fixed;
+    top: calc(5vh + 10px);
+    width: 15vw;
+    right: 10px;
+    bottom: 10px;
 }
 
 #debug {
