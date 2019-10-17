@@ -89,7 +89,6 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
         this.ctxe.clearRect(0, 0, this.drawWidth, this.drawHeight);
 
         if(this.shouldRedrawMap) {
-            console.log("drawing map");
             this.shouldRedrawMap = false;
             this.ctxm.clearRect(0, 0, this.drawWidth, this.drawHeight);
             this.ctxm.translate(-this.cameraPosition.x, -this.cameraPosition.y);
@@ -142,7 +141,7 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
 
             if (this.selectedHex) {
                 this.ctxm.filter = "brightness(110%) contrast(1.05) drop-shadow(0px 0px 25px black)";
-                this.drawTile(this.world.tiles[this.selectedHex.q + "-" + this.selectedHex.r]); //Draw the selected Tile again, so that the filter applies.
+                this.drawTile(this.world.tiles[this.selectedHex.hash()]); //Draw the selected Tile again, so that the filter applies.
                 this.ctxm.filter = "none";
             }
         }
@@ -151,7 +150,6 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
 
     drawTile(tile) {
         if (tile) {
-            console.log("drawing tile")
             this.ctxm.save();
             let hex = tile.hex;
             let corners = this.layout.polygonCorners(hex);

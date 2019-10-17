@@ -8,6 +8,7 @@ import * as GameData from "../../../shared/gamedata";
 import Log from "../util/log";
 import Vector2 from "../../../shared/vector2";
 import World from "./world";
+import Hex from "../../../shared/hex";
 
 export default class Mapgen {
 
@@ -88,7 +89,8 @@ export default class Mapgen {
         tile.forestation = treeValue;
         tile.rockyness = stoneValue;
         tile.height = heightValue;
-        tiles[q + "-" + r] = tile;
+        let hex:Hex = new Hex(q,r, -q-r)
+        tiles[hex.hash()] = tile;
 
         //No rocks and trees in water obviously
         if (heightValue <= GameData.level_water_shallow) {

@@ -88,6 +88,10 @@ export default class Hex {
   public equals(hex:Hex) {
     return this.q === hex.q && this.r === hex.r && this.s === hex.s;
   }
+
+  public hash() {
+    return this.q+"-"+this.r; //TODO: make a better hash function
+  }
 }
 
 export class OffsetCoord {
