@@ -14,7 +14,7 @@ import Hud from "./hud";
 
 declare const config;
 
-class Game implements InputListener, ConnectionListener {
+export class Game implements InputListener, ConnectionListener {
     private canvas_map = $("#canvas-map");
     private canvas_fow = $("#canvas-fow");
     private canvas_entities = $("#canvas-entities");
@@ -24,8 +24,9 @@ class Game implements InputListener, ConnectionListener {
     private connection:Connection;
     private layout:Layout;
     private renderer:Renderer;
-    private input:Input;
+    public input:Input;
     private hud:Hud;
+    public world:any;
 
     constructor() {
         this.gameloop = new Gameloop(Gameloop.requestAnimationFrameWrapper, config.updaterate, config.netrate)
@@ -33,7 +34,7 @@ class Game implements InputListener, ConnectionListener {
         this.layout = new Layout(Layout.pointy, new Vector2(config.hex_width, config.hex_height), new Vector2(0, 0));
         this.renderer = new Renderer(this.div_container, this.canvas_map, this.canvas_fow, this.canvas_entities, this.div_debug, this.layout);
         this.input = new Input(this.canvas_entities, this.layout);
-        this.hud = new Hud();
+        this.hud = new Hud(this);
 
         this.hud.addListener(this);
         this.gameloop.addListener(this.input);
@@ -57,7 +58,9 @@ class Game implements InputListener, ConnectionListener {
     }
     onSetup(socket: Socket) {
         //Hier alle Gamelevel Events implementieren 
-        socket.on("gamestate world", (data) => this.renderer.setWorld(data));
+        socket.on("gamestate world", (data) => {
+            this.world = data;
+            this.renderer.setWorld(data)});
     }
 }
 

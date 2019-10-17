@@ -30,7 +30,7 @@ export default class Input implements GameloopListener {
   public currentZoom: number = 1;
   public cameraPos: Vector2 = new Vector2();
 
-  private selectedHex: Hex;
+  public selectedHex: Hex;
 
   private isM2Down: boolean = false;
   public isDragging: boolean = false;
