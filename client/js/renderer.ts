@@ -211,7 +211,6 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
     }
 
     setWorld(world) {
-        console.log("received map");
         this.world = world;
         this.shouldRedrawMap = true;
     }
