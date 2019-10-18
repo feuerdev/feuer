@@ -1,7 +1,6 @@
 import { InputListener } from "./input";
 import * as $ from "./lib/jquery-3.1.1.min";
 import Hex from "../../shared/hex";
-import { Game } from "./main";
 
 export interface HudListener {
 
@@ -26,15 +25,13 @@ export default class Hud implements InputListener {
   private btnSelectionBuildings;
   private btnSelectionUnits;
 
-  private game:Game;
 
   private tabConstruction: EnumTab = EnumTab.tabBuildings;
   private tabSelection: EnumTab = EnumTab.tabBuildings;
 
   private readonly listeners:InputListener[] = [];
 
-  constructor(game) {
-    this.game = game;
+  constructor() {
     this.divConstruction = $(".hud-left");
     this.divSelection = $(".hud-right");
 
