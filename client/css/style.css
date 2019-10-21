@@ -67,6 +67,8 @@ canvas {
     bottom: 10px;
 }
 
+
+
 .hud-tab {
     all: unset;
     background-color: pink;
@@ -82,9 +84,7 @@ canvas {
 .hud-tab:hover {
     color: #888;
     cursor: pointer;
-  }
-
-
+}
 
 .hud-tab-bar {
     display: flex;
@@ -101,6 +101,25 @@ canvas {
     right: 10px;
     bottom: 10px;
 }
+
+.hud-tab-content {
+    display: none;
+}
+
+.hud-tab-content-template {
+    display: flex;
+    flex-direction: row;
+}
+
+.hud-tab-content-template-element {
+    flex: 1;
+}
+
+label.hud-tab-content-template-element {
+    vertical-align: middle;
+    align-self: center;
+}
+
 
 #debug {
     background: #BBBBBBBB;
