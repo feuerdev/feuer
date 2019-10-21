@@ -16,7 +16,7 @@
 		<canvas id="canvas-fow" oncontextmenu="return false"></canvas>
 		<canvas id="canvas-entities" oncontextmenu="return false"></canvas>
 	</div>
-	<div class="hud-top">
+	<div class="hud hud-top">
 		<div class="hud-resource-wrapper">
 			<div class="hud-resource" id="resource_wood">
 				<img src="img/hud_tree.png">
@@ -36,24 +36,22 @@
 			</div>
 		</div>
 	</div>
-	<div class="hud-left">
+	<div class="hud hud-left">
 		<div class="hud-tab-bar">
-			<button class="hud-tab" id="button-construction-buildings">Buildings</button>
+			<button class="hud-tab active" id="button-construction-buildings">Buildings</button>
 			<button class="hud-tab" id="button-construction-units">Units</button>
 		</div>
+		<div class="hud-tab-content" id="content-construction-buildings-template">Template</div>
 		<div class="hud-tab-content" id="content-construction-buildings">Gebäude 1</div>
 		<div class="hud-tab-content" id="content-construction-units">Einheit 1</div>
 	</div>
-	<div class="hud-right">
+	<div class="hud hud-right">
 		<div class="hud-tab-bar">
-			<button class="hud-tab" id="button-selection-buildings">Buildings</button>
+			<button class="hud-tab active" id="button-selection-buildings">Buildings</button>
 			<button class="hud-tab" id="button-selection-units">Units</button>
 		</div>
 		<div class="hud-tab-content" id="content-selection-buildings">Gebäude 1</div>
 		<div class="hud-tab-content" id="content-selection-units">Einheit 1</div>
-	</div>
-	<div id="death" style="display:none">
-		<h1>Du bist tot LOL</h1>
 	</div>
 	<div id="debug"></div>
 

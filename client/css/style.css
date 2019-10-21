@@ -18,6 +18,11 @@ canvas {
     position: absolute;
 }
 
+
+.hud {
+    color: black;
+}
+
 .hud-top {
     position: fixed;
     left: 0;
@@ -52,6 +57,7 @@ canvas {
     vertical-align: middle;
 }
 
+
 .hud-left {
     background: lightsalmon;
     position: fixed;
@@ -59,6 +65,32 @@ canvas {
     width: 15vw;
     left: 10px;
     bottom: 10px;
+}
+
+.hud-tab {
+    all: unset;
+    background-color: pink;
+    text-align: center;
+    padding: 10px;
+    flex: 1;
+}
+
+.hud-tab.active {
+    background: none;
+}
+
+.hud-tab:hover {
+    color: #888;
+    cursor: pointer;
+  }
+
+
+
+.hud-tab-bar {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    align-items: stretch;
 }
 
 .hud-right {

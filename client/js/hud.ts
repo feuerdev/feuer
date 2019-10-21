@@ -39,15 +39,22 @@ export default class Hud {
 
     this.btnSelectionBuildings.click(()=>this.onSelectionTabSelected(EnumTab.tabBuildings))
     this.btnSelectionUnits.click(()=>this.onSelectionTabSelected(EnumTab.tabUnits))
+
+    this.onConstructionTabSelected(EnumTab.tabBuildings);
+    this.onSelectionTabSelected(EnumTab.tabBuildings);
   }
 
   onConstructionTabSelected(tab: EnumTab): any {
     switch(tab) {
       case EnumTab.tabBuildings:
+          this.btnConstructionBuildings.addClass("active");
+          this.btnConstructionUnits.removeClass("active");
           $("#content-construction-buildings").show(); 
           $("#content-construction-units").hide(); 
         break;
       case EnumTab.tabUnits:
+          this.btnConstructionUnits.addClass("active");
+          this.btnConstructionBuildings.removeClass("active");
           $("#content-construction-units").show(); 
           $("#content-construction-buildings").hide();
         break;
@@ -58,10 +65,14 @@ export default class Hud {
   onSelectionTabSelected(tab: EnumTab): any {
     switch(tab) {
       case EnumTab.tabBuildings:
+          this.btnSelectionBuildings.addClass("active");
+          this.btnSelectionUnits.removeClass("active");
           $("#content-selection-buildings").show(); 
           $("#content-selection-units").hide(); 
         break;
       case EnumTab.tabUnits:
+          this.btnSelectionBuildings.removeClass("active");
+          this.btnSelectionUnits.addClass("active");
           $("#content-selection-units").show(); 
           $("#content-selection-buildings").hide();
         break;
