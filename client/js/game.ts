@@ -37,7 +37,6 @@ export default class Game implements InputListener, ConnectionListener {
         this.gameloop.addListener(this.input);
         this.gameloop.addListener(this.renderer);
         this.input.addListener(this.renderer);
-        this.input.addListener(this.hud);
         this.input.addListener(this);
         this.connection.addListener(this);
         this.gameloop.run();
@@ -45,7 +44,14 @@ export default class Game implements InputListener, ConnectionListener {
         Log.info("Client ready");
     }
     onHexSelected(hex: Hex) {
-        this.connection.send("request movement", hex);
+        if(this.input.selectedHex && this.world.tiles[this.input.selectedHex.hash()]) {
+            this.hud.showSelectionHud();
+            this.hud.showConstructionHud(); //TODO: Only show this if you can xonstruct something here
+            this.connection.send("request movement", hex);        
+        } else {
+            this.hud.hideConstructionHud();
+            this.hud.hideSelectionHud();
+        }
     }
     onConnected(socket: Socket) {
         Log.info("Connected");

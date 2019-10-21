@@ -1,6 +1,5 @@
 import { InputListener } from "./input";
 import * as $ from "./lib/jquery-3.1.1.min";
-import Hex from "../../shared/hex";
 
 export interface HudListener {
 
@@ -11,12 +10,7 @@ enum EnumTab {
   tabUnits
 }
 
-export default class Hud implements InputListener {
-  
-  onHexSelected(selectedHex: Hex):void {
-    this.updateSelection();
-    this.updateConstruction();
-  }
+export default class Hud {
 
   private divConstruction;
   private divSelection;
@@ -26,10 +20,10 @@ export default class Hud implements InputListener {
   private btnSelectionUnits;
 
 
-  private tabConstruction: EnumTab = EnumTab.tabBuildings;
-  private tabSelection: EnumTab = EnumTab.tabBuildings;
+  // private tabConstruction: EnumTab = EnumTab.tabBuildings;
+  // private tabSelection: EnumTab = EnumTab.tabBuildings;
 
-  private readonly listeners:InputListener[] = [];
+  private readonly listeners:HudListener[] = [];
 
   constructor() {
     this.divConstruction = $(".hud-left");
@@ -45,57 +39,55 @@ export default class Hud implements InputListener {
 
     this.btnSelectionBuildings.click(()=>this.onSelectionTabSelected(EnumTab.tabBuildings))
     this.btnSelectionUnits.click(()=>this.onSelectionTabSelected(EnumTab.tabUnits))
-
-    this.updateConstruction();
-    this.updateSelection();
   }
 
   onConstructionTabSelected(tab: EnumTab): any {
-    this.tabConstruction = tab;
-    this.updateConstruction();
+    switch(tab) {
+      case EnumTab.tabBuildings:
+          $("#content-construction-buildings").show(); 
+          $("#content-construction-units").hide(); 
+        break;
+      case EnumTab.tabUnits:
+          $("#content-construction-units").show(); 
+          $("#content-construction-buildings").hide();
+        break;
+      default: break;
+    }
   }
 
   onSelectionTabSelected(tab: EnumTab): any {
-    this.tabSelection = tab;
-    this.updateSelection();
+    switch(tab) {
+      case EnumTab.tabBuildings:
+          $("#content-selection-buildings").show(); 
+          $("#content-selection-units").hide(); 
+        break;
+      case EnumTab.tabUnits:
+          $("#content-selection-units").show(); 
+          $("#content-selection-buildings").hide();
+        break;
+      default: break;
+    }
   }
 
-  updateConstruction() {
-    if(this.game.input.selectedHex && this.game.world.tiles[this.game.input.selectedHex.hash()]) {
-      switch(this.tabConstruction) {
-        case EnumTab.tabBuildings:
-            $("#content-construction-buildings").show(); 
-            $("#content-construction-units").hide(); 
-          break;
-        case EnumTab.tabUnits:
-            $("#content-construction-units").show(); 
-            $("#content-construction-buildings").hide();
-          break;
-        default: break;
-      }
-      this.divConstruction.show();
-    } else {
-      this.divConstruction.hide();
-    }    
+  showSelectionHud() {
+    this.divSelection.show();
   }
-  
-  updateSelection() {
-    if(this.game.input.selectedHex && this.game.world.tiles[this.game.input.selectedHex.hash()]) {
-      switch(this.tabSelection) {
-        case EnumTab.tabBuildings:
-            $("#content-selection-buildings").show(); 
-            $("#content-selection-units").hide(); 
-          break;
-        case EnumTab.tabUnits:
-            $("#content-selection-units").show(); 
-            $("#content-selection-buildings").hide();
-          break;
-        default: break;
-      }
-      this.divSelection.show();
-    } else {
-      this.divSelection.hide();
-    }
+
+  showConstructionHud() {
+    this.divConstruction.show();
+  }
+
+  hideSelectionHud() {
+    this.divSelection.hide();
+  }
+
+  hideConstructionHud() {
+    this.divConstruction.hide();
+  }
+
+  hideHud() {
+    this.hideSelectionHud();
+    this.hideConstructionHud();
   }
 
   addListener(listener:InputListener) {
