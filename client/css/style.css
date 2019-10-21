@@ -3,6 +3,7 @@ html {
     margin: 0;
     overflow: hidden;
     background: black;
+    color: white;
 }
 
 #canvas-container {
