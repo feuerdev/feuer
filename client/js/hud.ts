@@ -1,5 +1,6 @@
 import { InputListener } from "./input";
 import * as $ from "./lib/jquery-3.1.1.min";
+import * as GameData from "../../shared/gamedata";
 
 export interface HudListener {
 
@@ -18,7 +19,6 @@ export default class Hud {
   private btnConstructionUnits;
   private btnSelectionBuildings;
   private btnSelectionUnits;
-
 
   // private tabConstruction: EnumTab = EnumTab.tabBuildings;
   // private tabSelection: EnumTab = EnumTab.tabBuildings;
@@ -42,6 +42,19 @@ export default class Hud {
 
     this.onConstructionTabSelected(EnumTab.tabBuildings);
     this.onSelectionTabSelected(EnumTab.tabBuildings);
+
+    //Populate construction using template
+    let template = $(".hud-tab-content-template");
+    template.hide();
+    for(let i = 0; i<GameData.buildings.length; i++) {
+      let clone = template.clone();
+      clone.show();
+      clone.children('#construction-template-label').text(GameData.buildings[i].name);
+      clone.children('#construction-template-button').click(function(){
+        console.log(GameData.buildings[i].name+" clicked");
+      });
+      $("#content-construction-buildings").append(clone);
+    }
   }
 
   onConstructionTabSelected(tab: EnumTab): any {
