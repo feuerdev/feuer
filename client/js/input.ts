@@ -122,8 +122,10 @@ export default class Input implements GameloopListener {
        * Mausrad
        */
       window.addEventListener("mousewheel", event => {
-        event.wheelDelta > 0 ? this.zoomIn() : this.zoomOut();
-        this.updateCursor(event);
+        if(this.hasFocus) {
+          event.wheelDelta > 0 ? this.zoomIn() : this.zoomOut();
+          this.updateCursor(event);
+        }
       }, false);
 
       /**
