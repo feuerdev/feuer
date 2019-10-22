@@ -7,11 +7,12 @@ import Renderer from "./renderer";
 import Input, { InputListener } from "./input";
 import Connection, { ConnectionListener } from "./connection";
 import { Socket } from "socket.io";
-import Hud from "./hud";
+import Hud, { HudListener } from "./hud";
 
 declare const config;
 
-export default class Game implements InputListener, ConnectionListener {
+export default class Game implements InputListener, ConnectionListener, HudListener {
+    
     private canvas_map = $("#canvas-map");
     private canvas_fow = $("#canvas-fow");
     private canvas_entities = $("#canvas-entities");
@@ -43,6 +44,11 @@ export default class Game implements InputListener, ConnectionListener {
 
         Log.info("Client ready");
     }
+
+    onConstructionRequested(typeId: any): void {
+        this.connection.send("request construction", {typeId: typeId, pos:this.input.selectedHex});
+    }
+
     onHexSelected(hex: Hex) {
         if(this.input.selectedHex && this.world.tiles[this.input.selectedHex.hash()]) {
             this.hud.showSelectionHud();

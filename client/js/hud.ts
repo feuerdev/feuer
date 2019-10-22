@@ -1,9 +1,8 @@
-import { InputListener } from "./input";
 import * as $ from "./lib/jquery-3.1.1.min";
 import * as GameData from "../../shared/gamedata";
 
 export interface HudListener {
-
+  onConstructionRequested?(typeId):void;
 }
 
 enum EnumTab {
@@ -19,9 +18,6 @@ export default class Hud {
   private btnConstructionUnits;
   private btnSelectionBuildings;
   private btnSelectionUnits;
-
-  // private tabConstruction: EnumTab = EnumTab.tabBuildings;
-  // private tabSelection: EnumTab = EnumTab.tabBuildings;
 
   private readonly listeners:HudListener[] = [];
 
@@ -50,8 +46,13 @@ export default class Hud {
       let clone = template.clone();
       clone.show();
       clone.children('#construction-template-label').text(GameData.buildings[i].name);
-      clone.children('#construction-template-button').click(function(){
+      clone.children('#construction-template-button').click(function() {
         console.log(GameData.buildings[i].name+" clicked");
+        for(let listener of this.listeners) {
+          if(listener.onConstructionRequested) {
+            listener.onConstructionRequested(GameData.buildings[i].id);
+          }          
+        }
       });
       $("#content-construction-buildings").append(clone);
     }
@@ -114,11 +115,11 @@ export default class Hud {
     this.hideConstructionHud();
   }
 
-  addListener(listener:InputListener) {
+  addListener(listener:HudListener) {
     this.listeners.push(listener);
   }
 
-  removeListener(listener:InputListener) {
+  removeListener(listener:HudListener) {
     const index = this.listeners.indexOf(listener);
     if(index > -1) {
       this.listeners.splice(index, 1);
