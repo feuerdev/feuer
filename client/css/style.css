@@ -65,6 +65,7 @@ canvas {
     width: 15vw;
     left: 10px;
     bottom: 10px;
+    overflow: auto;
 }
 
 
