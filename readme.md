@@ -2,7 +2,7 @@ MMORTS in development
 
 Description: 
 
-A realtime PvP focussed hardcore persistent MMORTS in medieval setting.
+A realtime web based realtime hardcore PvP persistent MMORTS in medieval setting.
 
 - Play on procedurally generated persistent Hex based map with high player number
 - Gather resources
