@@ -1,6 +1,6 @@
 import GameObject, { Spotter } from "./gameobject";
 import Hex from "../../../../shared/hex";
-import { EnumBuilding } from "../../../../shared/gamedata";
+import { EnumBuilding, Sprite } from "../../../../shared/gamedata";
 
 
 
@@ -16,6 +16,7 @@ export default class Building extends GameObject implements Spotter {
   public stoneHarvest:number;
   public ironHarvest:number;
   public goldHarvest:number;
+  public sprite:Sprite;
 
   constructor(owner) {
     super(owner);
@@ -31,6 +32,7 @@ export default class Building extends GameObject implements Spotter {
         building.stoneHarvest = 1;
         building.ironHarvest = 1;
         building.goldHarvest = 1;
+        building.sprite = Sprite.bldTownCenter;
         break;
       case EnumBuilding.FORESTER_HUT:
         building.spottingDistance = 0;
@@ -38,6 +40,7 @@ export default class Building extends GameObject implements Spotter {
         building.stoneHarvest = 0;
         building.ironHarvest = 0;
         building.goldHarvest = 0;
+        building.sprite = Sprite.bldForesterHut;
         break;
       case EnumBuilding.QUARRY_HUT:
         building.spottingDistance = 0;
@@ -45,6 +48,7 @@ export default class Building extends GameObject implements Spotter {
         building.stoneHarvest = 100;
         building.ironHarvest = 0;
         building.goldHarvest = 0;
+        building.sprite = Sprite.bldQuarryHut;
         break;
       case EnumBuilding.IRON_HUT:
         building.spottingDistance = 0;
@@ -52,6 +56,7 @@ export default class Building extends GameObject implements Spotter {
         building.stoneHarvest = 0;
         building.ironHarvest = 100;
         building.goldHarvest = 0;
+        building.sprite = Sprite.bldIronHut;
         break;
       case EnumBuilding.GOLD_MINE:
         building.spottingDistance = 0;
@@ -59,6 +64,7 @@ export default class Building extends GameObject implements Spotter {
         building.stoneHarvest = 0;
         building.ironHarvest = 0;
         building.goldHarvest = 100;
+        building.sprite = Sprite.bldGoldMine;
         break;
       default:
         return null;

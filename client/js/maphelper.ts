@@ -37,6 +37,11 @@ export default class Maphelper {
   static readonly img_rock_05 = new Image();
   static readonly img_iron = new Image();
   static readonly img_gold = new Image();
+  static readonly img_town_center = new Image();
+  static readonly img_forester_hut = new Image();
+  static readonly img_quarry_hut = new Image();
+  static readonly img_iron_hut = new Image();
+  static readonly img_gold_mine = new Image();
 
 
   public static getTerrainImage(height) {
@@ -86,6 +91,11 @@ export default class Maphelper {
       case Gamedata.Sprite.envRock05: return this.img_rock_05;
       case Gamedata.Sprite.envIron: return this.img_iron;
       case Gamedata.Sprite.envGold: return this.img_gold;
+      case Gamedata.Sprite.bldTownCenter: return this.img_town_center;
+      case Gamedata.Sprite.bldForesterHut: return this.img_forester_hut;
+      case Gamedata.Sprite.bldQuarryHut: return this.img_quarry_hut;
+      case Gamedata.Sprite.bldIronHut: return this.img_iron_hut;
+      case Gamedata.Sprite.bldGoldMine: return this.img_gold_mine;
       default: return null;
     }
   }
@@ -118,7 +128,13 @@ export default class Maphelper {
     this.img_rock_04,
     this.img_rock_05,
     this.img_iron,
-    this.img_gold];
+    this.img_gold,
+    this.img_town_center,
+    this.img_forester_hut,
+    this.img_quarry_hut,
+    this.img_iron_hut,
+    this.img_gold_mine
+  ];
 
     let imageCount: number = images.length;
     let loadedCount: number = 0;
@@ -162,6 +178,11 @@ export default class Maphelper {
     this.img_rock_05.onload = onImageLoaded;
     this.img_iron.onload = onImageLoaded;
     this.img_gold.onload = onImageLoaded;
+    this.img_town_center.onload = onImageLoaded;
+    this.img_forester_hut.onload = onImageLoaded;
+    this.img_quarry_hut.onload = onImageLoaded;
+    this.img_iron_hut.onload = onImageLoaded;
+    this.img_gold_mine.onload = onImageLoaded;
 
     this.img_terrain_water_deep.src = "../img/water_02.png";
     this.img_terrain_water_shallow.src = "../img/water_01.png";
@@ -191,6 +212,11 @@ export default class Maphelper {
     this.img_rock_05.src = "../img/rock_05.png";
     this.img_iron.src = "../img/iron.png";
     this.img_gold.src = "../img/gold.png";
+    this.img_town_center.src = "../img/town_center.png";
+    this.img_forester_hut.src = "../img/forester_hut.png";
+    this.img_quarry_hut.src = "../img/mine.png";
+    this.img_iron_hut.src = "../img/mine.png";
+    this.img_gold_mine.src = "../img/mine.png";
 
   }
 }

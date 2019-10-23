@@ -14,6 +14,11 @@ export enum Sprite {
   envRock05,
   envIron,
   envGold,
+  bldTownCenter,
+  bldForesterHut,
+  bldQuarryHut,
+  bldIronHut,
+  bldGoldMine
 }
 
 export const 

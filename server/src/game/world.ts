@@ -5,7 +5,7 @@ import Building from "./objects/building";
 
 export default class World {
 
-  private tiles:Hashtable<Tile>;
+  public tiles:Hashtable<Tile>;
   public units:Unit[];
   public buildings:Building[];
 
