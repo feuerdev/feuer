@@ -30,10 +30,11 @@ export default class Input implements GameloopListener {
   public currentZoom: number = 1;
   public cameraPos: Vector2 = new Vector2();
 
-  private selectedHex: Hex;
+  public selectedHex: Hex;
 
   private isM2Down: boolean = false;
   public isDragging: boolean = false;
+  private hasFocus: boolean = false; //Ob die Maus auf dem Canvas ist
   private dragDistance: number = 0;
 
   constructor(canvas_input, layout) {
@@ -81,17 +82,19 @@ export default class Input implements GameloopListener {
       window.addEventListener("click", event => {
         switch (event.which) {
           case 1: { //Linksclick
-            this.selectedHex = this.layout.pixelToHex(this.cursorWorld).round();
-            for (let listener of this.listeners_input) {
-              if(listener.onHexSelected) {
-                listener.onHexSelected(this.selectedHex);
+            if(this.hasFocus) {
+              this.selectedHex = this.layout.pixelToHex(this.cursorWorld).round();
+              for (let listener of this.listeners_input) {
+                if(listener.onHexSelected) {
+                  listener.onHexSelected(this.selectedHex);
+                }
               }
-            }
-            for (let listener of this.listeners_input) {
-              if(listener.onLeftClick) {
-                listener.onLeftClick(this.cursorCanvas, this.cursorWorld);
+              for (let listener of this.listeners_input) {
+                if(listener.onLeftClick) {
+                  listener.onLeftClick(this.cursorCanvas, this.cursorWorld);
+                }
               }
-            }
+            }            
             break;
           }
         }
@@ -119,8 +122,10 @@ export default class Input implements GameloopListener {
        * Mausrad
        */
       window.addEventListener("mousewheel", event => {
-        event.wheelDelta > 0 ? this.zoomIn() : this.zoomOut();
-        this.updateCursor(event);
+        if(this.hasFocus) {
+          event.wheelDelta > 0 ? this.zoomIn() : this.zoomOut();
+          this.updateCursor(event);
+        }
       }, false);
 
       /**
@@ -149,6 +154,14 @@ export default class Input implements GameloopListener {
       this.canvas_input.mouseout(() => {
         this.isM2Down = false;
         this.isDragging = false;
+        this.hasFocus = false;
+      });
+
+      /**
+       * Für Dragging
+       */
+      this.canvas_input.mouseover(() => {
+        this.hasFocus = true;
       });
     }
   }

@@ -89,7 +89,6 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
         this.ctxe.clearRect(0, 0, this.drawWidth, this.drawHeight);
 
         if(this.shouldRedrawMap) {
-            console.log("drawing map");
             this.shouldRedrawMap = false;
             this.ctxm.clearRect(0, 0, this.drawWidth, this.drawHeight);
             this.ctxm.translate(-this.cameraPosition.x, -this.cameraPosition.y);
@@ -117,16 +116,18 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
 
     drawEntities() {
         this.ctxe.save();
-        if(this.world && this.world.units) {
-            for(let i = 0; i < this.world.units.length; i++) {
-                let unit = this.world.units[i];
-                if(unit) {
-                    this.ctxe.font = "30px Arial";
-                    this.ctxe.fillStyle = "red";
-                    this.ctxe.textAlign = "center";
-                    this.ctxe.fillText(unit.id+ " ("+Math.round(unit.movementStatus)+")", this.layout.hexToPixel(unit.pos).x,this.layout.hexToPixel(unit.pos).y)
+        if(this.world) {
+            if(this.world.units) {
+                for(let i = 0; i < this.world.units.length; i++) {
+                    let unit = this.world.units[i];
+                    if(unit) {
+                        this.ctxe.font = "30px Arial";
+                        this.ctxe.fillStyle = "red";
+                        this.ctxe.textAlign = "center";
+                        this.ctxe.fillText(unit.id+ " ("+Math.round(unit.movementStatus)+")", this.layout.hexToPixel(unit.pos).x,this.layout.hexToPixel(unit.pos).y)
+                    }
                 }
-            }
+            }            
         }
         this.ctxe.restore();
     }
@@ -142,7 +143,7 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
 
             if (this.selectedHex) {
                 this.ctxm.filter = "brightness(110%) contrast(1.05) drop-shadow(0px 0px 25px black)";
-                this.drawTile(this.world.tiles[this.selectedHex.q + "-" + this.selectedHex.r]); //Draw the selected Tile again, so that the filter applies.
+                this.drawTile(this.world.tiles[this.selectedHex.hash()]); //Draw the selected Tile again, so that the filter applies.
                 this.ctxm.filter = "none";
             }
         }
@@ -151,19 +152,22 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
 
     drawTile(tile) {
         if (tile) {
-            console.log("drawing tile")
             this.ctxm.save();
             let hex = tile.hex;
             let corners = this.layout.polygonCorners(hex);
             let padding = 10;
 
+            if(this.selectedHex && this.selectedHex.equals(tile.hex)) {
+                this.ctxm.filter = "brightness(110%) contrast(1.05) drop-shadow(0px 0px 25px black)";
+            }
             this.ctxm.drawImage(
                 Maphelper.getTerrainImage(tile.height),
                 corners[3].x + padding, //obere linke ecke
                 corners[3].y - this.layout.size.y / 2 + padding, //obere linke ecke- halbe höhe
                 this.layout.size.x * Math.sqrt(3) - padding, //radius mal wurzel aus 3 um die reale breite des hex zu errechnen
                 this.layout.size.y * 2 - padding);//radius mal 2 um die reale höhe des hex zu errechnen
-
+            
+            this.ctxm.filter = "none";
 
             for (let i = 0; i < tile.environmentSpots.length; i++) {
                 let spot = tile.environmentSpots[i];
@@ -213,7 +217,6 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
     }
 
     setWorld(world) {
-        console.log("received map");
         this.world = world;
         this.shouldRedrawMap = true;
     }

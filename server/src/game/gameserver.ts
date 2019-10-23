@@ -17,10 +17,13 @@ import Vector2 from "../../../shared/vector2";
 import Vector3 from "../../../shared/vector3";
 import { Socket } from "socket.io";
 import { Hashtable } from "../../../shared/util";
-import Tile from "./tile";
+import Tile, { Spot } from "./tile";
 import World from "./world";
-import Unit, { EnumUnit } from "./objects/unit";
+import Unit from "./objects/unit";
 import Hex from "../../../shared/hex";
+import Building from "./objects/building";
+import { EnumUnit } from "../../../shared/gamedata";
+import Mapgen from "./mapgen";
 
 export default class GameServer {
   
@@ -55,6 +58,7 @@ export default class GameServer {
       socket.on("disconnect", () => this.onPlayerDisconnected(socket));
 
       socket.on("request movement", (data) => this.onRequestMovement(socket, data));
+      socket.on("request construction", (data) => this.onRequestConstruction(socket, data));
     });
   }
 
@@ -186,7 +190,18 @@ export default class GameServer {
         unit.targetHex = hex;
       }
     }
-     
+  }
+
+  onRequestConstruction(socket: Socket, data) {
+    let uid = this.getPlayerUid(socket.id);
+    let building = Building.createBuilding(uid, data.typeId, data.pos);
+    //Todo: check if player is even allowed to do that
+    this.world.buildings.push(building);
+    let tile = this.world.tiles[new Hex(data.pos.q, data.pos.r, data.pos.s).hash()];
+    tile.environmentSpots.push(new Spot(Mapgen.generatePos(),building.sprite, building.id))
+    tile.environmentSpots.sort(function(a, b) {
+      return a.pos.y - b.pos.y;
+    });
   }
 
   private getPlayerUid(socketId) {

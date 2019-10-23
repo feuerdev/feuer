@@ -8,6 +8,7 @@ import * as GameData from "../../../shared/gamedata";
 import Log from "../util/log";
 import Vector2 from "../../../shared/vector2";
 import World from "./world";
+import Hex from "../../../shared/hex";
 
 export default class Mapgen {
 
@@ -88,7 +89,8 @@ export default class Mapgen {
         tile.forestation = treeValue;
         tile.rockyness = stoneValue;
         tile.height = heightValue;
-        tiles[q + "-" + r] = tile;
+        let hex:Hex = new Hex(q,r, -q-r)
+        tiles[hex.hash()] = tile;
 
         //No rocks and trees in water obviously
         if (heightValue <= GameData.level_water_shallow) {
@@ -118,26 +120,26 @@ export default class Mapgen {
           let pos: Vector2 = Mapgen.generatePos();
           let env: GameData.Sprite = Mapgen.generateTree(heightValue);
           treeValue-=0.05;
-          tile.environmentSpots.push(new Spot(pos, env));
+          tile.environmentSpots.push(new Spot(pos, env, 0));
         }
 
         while(stoneValue > 0) {
           let pos: Vector2 = Mapgen.generatePos();
           let env: GameData.Sprite = Mapgen.generateStone();
           stoneValue-=0.15;
-          tile.environmentSpots.push(new Spot(pos, env));
+          tile.environmentSpots.push(new Spot(pos, env, 0));
         }
         while(ironValue > 0.7) {
           let pos: Vector2 = Mapgen.generatePos();
           let env: GameData.Sprite = GameData.Sprite.envIron;
           ironValue-=0.1;
-          tile.environmentSpots.push(new Spot(pos, env));
+          tile.environmentSpots.push(new Spot(pos, env, 0));
         }
         while(goldValue > 0.7) {
           let pos: Vector2 = Mapgen.generatePos();
           let env: GameData.Sprite = GameData.Sprite.envGold;
           goldValue-=0.1;
-          tile.environmentSpots.push(new Spot(pos, env));
+          tile.environmentSpots.push(new Spot(pos, env, 0));
         }
 
         //Sort environment spots by y-Value
@@ -148,7 +150,7 @@ export default class Mapgen {
     }
     Log.info("Map created");
     
-    const world = new World(tiles, []);
+    const world = new World(tiles, [], []);
     return world;
   }
 
