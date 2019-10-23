@@ -46,7 +46,7 @@ export default class Hud {
       let clone = template.clone();
       clone.show();
       clone.children('#construction-template-label').text(GameData.buildings[i].name);
-      clone.children('#construction-template-button').click(function() {
+      clone.children('#construction-template-button').click(() => {
         console.log(GameData.buildings[i].name+" clicked");
         for(let listener of this.listeners) {
           if(listener.onConstructionRequested) {
