@@ -150,7 +150,7 @@ export default class Mapgen {
     }
     Log.info("Map created");
     
-    const world = new World(tiles, []);
+    const world = new World(tiles, [], []);
     return world;
   }
 

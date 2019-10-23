@@ -31,10 +31,24 @@ export const
   level_stone:number = 0.9,
   level_ice:number = 1;
 
-class Building {
-  id:number;
+
+export enum EnumBuilding {
+  TOWN_CENTER = 0,
+  FORESTER_HUT,
+  QUARRY_HUT,
+  IRON_HUT,
+  GOLD_MINE
+}
+
+export enum EnumUnit {
+  SCOUT = 0,
+  SWORDSMAN,
+}
+
+class BuildingTemplate {
+  id:EnumBuilding;
   name:string;
-  cost:Cost;
+  cost:CostTemplate;
   constructor(id, name, cost) {
     this.id = id;
     this.name = name;
@@ -42,7 +56,7 @@ class Building {
   }
 }
 
-class Cost {
+class CostTemplate {
   wood:number;
   stone:number;
   iron:number;
@@ -56,11 +70,11 @@ class Cost {
 }
 
 export const 
-  building_town_center = new Building(0, "Town Center", new Cost(100, 0, 0, 0)),
-  building_forester_hut = new Building(0, "Forester Hut", new Cost(100, 0, 0, 0)),
-  building_quarry_hut = new Building(0, "Quarry Hut", new Cost(100, 0, 0, 0)),
-  building_iron_hut = new Building(0, "Iron Hut", new Cost(140, 50, 0, 0)),
-  building_gold_mine = new Building(0, "Gold Mine", new Cost(140, 80, 0, 0));
+  building_town_center = new BuildingTemplate(EnumBuilding.TOWN_CENTER, "Town Center", new CostTemplate(100, 0, 0, 0)),
+  building_forester_hut = new BuildingTemplate(EnumBuilding.FORESTER_HUT, "Forester Hut", new CostTemplate(100, 0, 0, 0)),
+  building_quarry_hut = new BuildingTemplate(EnumBuilding.QUARRY_HUT, "Quarry Hut", new CostTemplate(100, 0, 0, 0)),
+  building_iron_hut = new BuildingTemplate(EnumBuilding.IRON_HUT, "Iron Hut", new CostTemplate(140, 50, 0, 0)),
+  building_gold_mine = new BuildingTemplate(EnumBuilding.GOLD_MINE, "Gold Mine", new CostTemplate(140, 80, 0, 0));
 
 export const 
   buildings = [

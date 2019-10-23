@@ -19,8 +19,10 @@ import { Socket } from "socket.io";
 import { Hashtable } from "../../../shared/util";
 import Tile from "./tile";
 import World from "./world";
-import Unit, { EnumUnit } from "./objects/unit";
+import Unit from "./objects/unit";
 import Hex from "../../../shared/hex";
+import Building from "./objects/building";
+import { EnumUnit } from "../../../shared/gamedata";
 
 export default class GameServer {
   
@@ -55,6 +57,7 @@ export default class GameServer {
       socket.on("disconnect", () => this.onPlayerDisconnected(socket));
 
       socket.on("request movement", (data) => this.onRequestMovement(socket, data));
+      socket.on("request construction", (data) => this.onRequestConstruction(socket, data));
     });
   }
 
@@ -186,7 +189,13 @@ export default class GameServer {
         unit.targetHex = hex;
       }
     }
-     
+  }
+
+  onRequestConstruction(socket: Socket, data) {
+    let uid = this.getPlayerUid(socket.id);
+    let building = Building.createBuilding(uid, data.typeId, data.pos);
+    //Todo: check if player is even allowed to do that
+    this.world.buildings.push(building);   
   }
 
   private getPlayerUid(socketId) {

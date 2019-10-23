@@ -1,18 +1,19 @@
-import GameObject from "./gameobject"
+import GameObject, { Spotter } from "./gameobject"
 import Hex from "../../../../shared/hex"
+import { EnumUnit } from "../../../../shared/gamedata";
 
-export enum EnumUnit {
-  SCOUT = 0,
-  SWORDSMAN,
-}
 
-export default class Unit extends GameObject {
+
+export default class Unit extends GameObject implements Spotter {
+  getSpottingRange(): number {
+    return this.spottingDistance;
+  }
 
   public targetHex: Hex;
   public pos: Hex;
   public speed: number;
   public movementStatus: number = 0;
-  public visibility: number;
+  public spottingDistance: number;
 
   constructor(owner) {
     super(owner);
@@ -23,11 +24,11 @@ export default class Unit extends GameObject {
     unit.pos = pos;
     switch (type) {
       case EnumUnit.SCOUT:
-        unit.visibility = 2;
+        unit.spottingDistance = 2;
         unit.speed = 10;
         break;
       case EnumUnit.SWORDSMAN:
-        unit.visibility = 1;
+        unit.spottingDistance = 1;
         unit.speed = 3;
         break;
       default:
