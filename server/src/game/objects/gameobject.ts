@@ -1,7 +1,7 @@
 export default abstract class GameObject {
   public owner:string;
   public id:number;
-  private static idcount:number = 1;
+  private static idcount:number = 1; //make entity ids start with 1 to be able to differentiate with 0 ids
 
   constructor(owner) {
     this.owner = owner;

@@ -120,26 +120,26 @@ export default class Mapgen {
           let pos: Vector2 = Mapgen.generatePos();
           let env: GameData.Sprite = Mapgen.generateTree(heightValue);
           treeValue-=0.05;
-          tile.environmentSpots.push(new Spot(pos, env));
+          tile.environmentSpots.push(new Spot(pos, env, 0));
         }
 
         while(stoneValue > 0) {
           let pos: Vector2 = Mapgen.generatePos();
           let env: GameData.Sprite = Mapgen.generateStone();
           stoneValue-=0.15;
-          tile.environmentSpots.push(new Spot(pos, env));
+          tile.environmentSpots.push(new Spot(pos, env, 0));
         }
         while(ironValue > 0.7) {
           let pos: Vector2 = Mapgen.generatePos();
           let env: GameData.Sprite = GameData.Sprite.envIron;
           ironValue-=0.1;
-          tile.environmentSpots.push(new Spot(pos, env));
+          tile.environmentSpots.push(new Spot(pos, env, 0));
         }
         while(goldValue > 0.7) {
           let pos: Vector2 = Mapgen.generatePos();
           let env: GameData.Sprite = GameData.Sprite.envGold;
           goldValue-=0.1;
-          tile.environmentSpots.push(new Spot(pos, env));
+          tile.environmentSpots.push(new Spot(pos, env, 0));
         }
 
         //Sort environment spots by y-Value

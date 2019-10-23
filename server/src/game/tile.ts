@@ -23,9 +23,11 @@ export default class Tile {
 export class Spot {
   pos:Vector2;
   type:Sprite;
+  id:number; //Entity id um den spot wieder zu entfernen
 
-  constructor(pos:Vector2, type: Sprite) {
+  constructor(pos:Vector2, type: Sprite, id) {
     this.pos = pos;
     this.type = type;
+    this.id = id;
   }
 }

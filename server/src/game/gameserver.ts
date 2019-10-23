@@ -198,7 +198,7 @@ export default class GameServer {
     //Todo: check if player is even allowed to do that
     this.world.buildings.push(building);
     let tile = this.world.tiles[new Hex(data.pos.q, data.pos.r, data.pos.s).hash()];
-    tile.environmentSpots.push(new Spot(Mapgen.generatePos(),building.sprite))
+    tile.environmentSpots.push(new Spot(Mapgen.generatePos(),building.sprite, building.id))
     tile.environmentSpots.sort(function(a, b) {
       return a.pos.y - b.pos.y;
     });
