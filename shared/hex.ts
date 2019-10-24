@@ -36,6 +36,14 @@ export default class Hex {
     return this.add(Hex.direction(direction));
   }
 
+  public neighbors(): Hex[] {
+    let result:Hex[] = [];
+    for(let direction of Hex.directions) {
+      result.push(this.add(direction));
+    }
+    return result;
+  }
+
   public static diagonals: Hex[] = [new Hex(2, -1, -1), new Hex(1, -2, 1), new Hex(-1, -1, 2), new Hex(-2, 1, 1), new Hex(-1, 2, -1), new Hex(1, 1, -2)];
 
   public diagonalNeighbor(direction: number): Hex {

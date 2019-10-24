@@ -13,7 +13,7 @@ export default class Unit extends GameObject implements Spotter, Drawable {
     return this.sprite;
   }
 
-  public targetHex: Hex;
+  public targetHexes: Hex[] = [];
   public pos: Hex;
   public speed: number;
   public movementStatus: number = 0;

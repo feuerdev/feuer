@@ -2,17 +2,18 @@ import Hex from "../../../shared/hex";
 import { Sprite } from "../../../shared/gamedata";
 import Vector2 from "../../../shared/vector2";
 import Mapgen from "./mapgen";
+import * as GameData from "../../../shared/gamedata";
 
 /**
  * Tile-Class representing one hex with all its relevant fields
  * Don't put too much functionality in here. The instances of this object will get sent to the clients
  */
 export default class Tile {
-
   private hex:Hex;
   public height:number;
   public forestation:number;
   public rockyness:number;
+  public movementFactor:number = 1;
 
   public environmentSpots:Spot[] = [];
 
@@ -43,6 +44,19 @@ export default class Tile {
     }
   }
 
+  public updateMovementFactor() { //TODO calculate correct movementcost
+    let movementFactor = 1;
+    if(this.height < GameData.level_water_deep) {
+      movementFactor = 0.01;
+    } else if (this.height < GameData.level_water_shallow) {
+      movementFactor = 0.1;
+    }
+
+    movementFactor -= this.environmentSpots.length*0.1;
+
+    this.movementFactor = Math.min(1, Math.max(0.01, movementFactor));
+  }
+
   /**
    * Setzt die Environmentspots in die richtige Reihenfolge zum zeichnen (TODO: Sollte das eher der client regeln?)
    */
@@ -51,7 +65,6 @@ export default class Tile {
       return a.pos.y - b.pos.y;
     });
   }
-
 }
 
 export class Spot {

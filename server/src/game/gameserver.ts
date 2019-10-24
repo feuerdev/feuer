@@ -13,6 +13,7 @@ import * as db from "../util/db";
 import * as Util from "../../../shared/util";
 import Log from "../util/log";
 import config from "../util/config";
+import {astar} from "../../../shared/pathfinding";
 import Vector2 from "../../../shared/vector2";
 import Vector3 from "../../../shared/vector3";
 import { Socket } from "socket.io";
@@ -105,17 +106,14 @@ export default class GameServer {
   update(deltaFactor) {
     for (let i = 0; i < this.world.units.length; i++) {
       const unit:Unit = this.world.units[i];
-      if(unit.targetHex) {
-        unit.movementStatus += unit.speed*deltaFactor*0.05;
+      if(unit.targetHexes.length > 0) {
+        let currentTile = this.world.tiles[unit.pos.hash()]
+        unit.movementStatus += (unit.speed*currentTile.movementFactor*deltaFactor*10); //TODO calculate correct movementcost
         if(unit.movementStatus > 100) {
-          this.world.tiles[unit.pos.hash()].removeSpot(unit.id);
-
-          unit.pos = unit.targetHex; //TODO:implement
+          currentTile.removeSpot(unit.id);
+          unit.pos = unit.targetHexes.splice(0,1)[0];
           this.world.tiles[unit.pos.hash()].addSpot(unit.getSprite(), unit.id);
-
-          unit.targetHex = null;
           unit.movementStatus = 0;
-
         }
       }    
     }
@@ -201,7 +199,7 @@ export default class GameServer {
     let uid = this.getPlayerUid(socket.id);
     for(let unit of this.world.units) {
       if(uid === unit.owner) {
-        unit.targetHex = new Hex(hex.q, hex.r, hex.s);
+        unit.targetHexes = astar(this.world.tiles, unit.pos, new Hex(hex.q, hex.r, hex.s));
       }
     }
   }

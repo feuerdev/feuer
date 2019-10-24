@@ -142,6 +142,8 @@ export default class Mapgen {
           tile.environmentSpots.push(new Spot(pos, env, 0));
         }
 
+        tile.updateMovementFactor();
+
         //Sort environment spots by y-Value
         tile.environmentSpots.sort(function(a, b){
           return a.pos.y - b.pos.y;
