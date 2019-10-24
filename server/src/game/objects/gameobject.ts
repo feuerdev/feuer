@@ -1,3 +1,5 @@
+import { Sprite } from "../../../../shared/gamedata";
+
 export default abstract class GameObject {
   public owner:string;
   public id:number;
@@ -17,4 +19,14 @@ export interface Spotter {
    * Returns the number of hexes that Entity can see
    */
   getSpottingRange():number;
+}
+
+/**
+ * Entities that can be drawn
+ */
+export interface Drawable {
+  /**
+   * Returns the Sprite
+   */
+  getSprite():Sprite;
 }

@@ -1,6 +1,7 @@
 import Hex from "../../../shared/hex";
 import { Sprite } from "../../../shared/gamedata";
 import Vector2 from "../../../shared/vector2";
+import Mapgen from "./mapgen";
 
 /**
  * Tile-Class representing one hex with all its relevant fields
@@ -18,6 +19,39 @@ export default class Tile {
   constructor(q:number, r:number) {
     this.hex = new Hex(q, r, -q-r);
   }
+
+  /**
+   * Fügt einen neuen Environmentspot zum Tile hinzu
+   * @param sprite Sprite
+   * @param id Id des Entities
+   */
+  public addSpot(sprite:Sprite, id:number) {
+    this.environmentSpots.push(new Spot(Mapgen.generatePos(), sprite, id));
+    this.refreshSpots();
+  }
+
+  /**
+   * Entfernt einen Environmentspot anhand der Entity-ID
+   * @param id Entity-ID
+   */
+  public removeSpot(id:number) {
+    for(let i = 0; i < this.environmentSpots.length; i++) {
+      if(this.environmentSpots[i].id === id) {
+        this.environmentSpots.splice(i,1);
+        return;
+      }
+    }
+  }
+
+  /**
+   * Setzt die Environmentspots in die richtige Reihenfolge zum zeichnen (TODO: Sollte das eher der client regeln?)
+   */
+  private refreshSpots() {
+    this.environmentSpots.sort(function(a, b) {
+      return a.pos.y - b.pos.y;
+    });
+  }
+
 }
 
 export class Spot {

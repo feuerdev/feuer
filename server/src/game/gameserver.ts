@@ -108,9 +108,14 @@ export default class GameServer {
       if(unit.targetHex) {
         unit.movementStatus += unit.speed*deltaFactor*0.05;
         if(unit.movementStatus > 100) {
+          this.world.tiles[unit.pos.hash()].removeSpot(unit.id);
+
           unit.pos = unit.targetHex; //TODO:implement
+          this.world.tiles[unit.pos.hash()].addSpot(unit.getSprite(), unit.id);
+
           unit.targetHex = null;
           unit.movementStatus = 0;
+
         }
       }    
     }
@@ -157,11 +162,20 @@ export default class GameServer {
     if (!this.uidsockets[uid]) {
       Helper.getUsername(uid)
         .then((name) => {
+          //Create new Player
           const player: Player = new Player();
           player.uid = uid;
           player.name = name;
           player.initialized = true;
-          self.world.units.push(Unit.createUnit(player.uid,EnumUnit.SCOUT,new Hex(0,0,0)));
+
+          //Give Player an initial Scout
+          let initialUnit = Unit.createUnit(player.uid,EnumUnit.SCOUT,new Hex(0,0,0));
+          self.world.units.push(initialUnit);
+
+          //Prepare Drawing of that unit
+          self.world.tiles[initialUnit.pos.hash()].addSpot(initialUnit.getSprite(), initialUnit.id);
+
+          //Register player in Gamesever
           self.players.push(player);
           self.socketplayer[socket.id] = player;
           Log.info("New Player Connected: " + player.name);
@@ -183,11 +197,11 @@ export default class GameServer {
     socket.emit("gamestate world", this.world);
   }
 
-  onRequestMovement(socket: Socket, hex:Hex) {
+  onRequestMovement(socket: Socket, hex:any) {
     let uid = this.getPlayerUid(socket.id);
     for(let unit of this.world.units) {
       if(uid === unit.owner) {
-        unit.targetHex = hex;
+        unit.targetHex = new Hex(hex.q, hex.r, hex.s);
       }
     }
   }
@@ -198,10 +212,7 @@ export default class GameServer {
     //Todo: check if player is even allowed to do that
     this.world.buildings.push(building);
     let tile = this.world.tiles[new Hex(data.pos.q, data.pos.r, data.pos.s).hash()];
-    tile.environmentSpots.push(new Spot(Mapgen.generatePos(),building.sprite, building.id))
-    tile.environmentSpots.sort(function(a, b) {
-      return a.pos.y - b.pos.y;
-    });
+    tile.addSpot(building.sprite, building.id);    
   }
 
   private getPlayerUid(socketId) {

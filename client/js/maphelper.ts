@@ -42,6 +42,7 @@ export default class Maphelper {
   static readonly img_quarry_hut = new Image();
   static readonly img_iron_hut = new Image();
   static readonly img_gold_mine = new Image();
+  static readonly img_unit_scout = new Image();
 
 
   public static getTerrainImage(height) {
@@ -96,44 +97,47 @@ export default class Maphelper {
       case Gamedata.Sprite.bldQuarryHut: return this.img_quarry_hut;
       case Gamedata.Sprite.bldIronHut: return this.img_iron_hut;
       case Gamedata.Sprite.bldGoldMine: return this.img_gold_mine;
+      case Gamedata.Sprite.unitScout: return this.img_unit_scout;
       default: return null;
     }
   }
 
   static loadImages(listener: MaphelperListener) {
-    let images = [this.img_terrain_water_deep,
-    this.img_terrain_water_shallow,
-    this.img_terrain_sand,
-    this.img_terrain_sand_grassy,
-    this.img_terrain_grass_sandy,
-    this.img_terrain_grass,
-    this.img_terrain_grass_dirty,
-    this.img_terrain_dirt_grassy,
-    this.img_terrain_dirt,
-    this.img_terrain_dirt_stony,
-    this.img_terrain_stone_dirty,
-    this.img_terrain_stone,
-    this.img_terrain_ice,
-    this.img_tree_small,
-    this.img_tree_big,
-    this.img_cactus1,
-    this.img_cactus2,
-    this.img_tree_fir_small,
-    this.img_tree_fir_big,
-    this.img_tree_fullfir_small,
-    this.img_tree_fullfir_big,
-    this.img_tree_fir_snow,
-    this.img_rock_01,
-    this.img_rock_02,
-    this.img_rock_04,
-    this.img_rock_05,
-    this.img_iron,
-    this.img_gold,
-    this.img_town_center,
-    this.img_forester_hut,
-    this.img_quarry_hut,
-    this.img_iron_hut,
-    this.img_gold_mine
+    let images = [
+      this.img_terrain_water_deep,
+      this.img_terrain_water_shallow,
+      this.img_terrain_sand,
+      this.img_terrain_sand_grassy,
+      this.img_terrain_grass_sandy,
+      this.img_terrain_grass,
+      this.img_terrain_grass_dirty,
+      this.img_terrain_dirt_grassy,
+      this.img_terrain_dirt,
+      this.img_terrain_dirt_stony,
+      this.img_terrain_stone_dirty,
+      this.img_terrain_stone,
+      this.img_terrain_ice,
+      this.img_tree_small,
+      this.img_tree_big,
+      this.img_cactus1,
+      this.img_cactus2,
+      this.img_tree_fir_small,
+      this.img_tree_fir_big,
+      this.img_tree_fullfir_small,
+      this.img_tree_fullfir_big,
+      this.img_tree_fir_snow,
+      this.img_rock_01,
+      this.img_rock_02,
+      this.img_rock_04,
+      this.img_rock_05,
+      this.img_iron,
+      this.img_gold,
+      this.img_town_center,
+      this.img_forester_hut,
+      this.img_quarry_hut,
+      this.img_iron_hut,
+      this.img_gold_mine,
+      this.img_unit_scout
   ];
 
     let imageCount: number = images.length;
@@ -150,39 +154,9 @@ export default class Maphelper {
       checkAllLoaded();
     }
 
-    this.img_terrain_water_deep.onload = onImageLoaded;
-    this.img_terrain_water_shallow.onload = onImageLoaded;
-    this.img_terrain_sand.onload = onImageLoaded;
-    this.img_terrain_sand_grassy.onload = onImageLoaded;
-    this.img_terrain_grass_sandy.onload = onImageLoaded;
-    this.img_terrain_grass.onload = onImageLoaded;
-    this.img_terrain_grass_dirty.onload = onImageLoaded;
-    this.img_terrain_dirt_grassy.onload = onImageLoaded;
-    this.img_terrain_dirt.onload = onImageLoaded;
-    this.img_terrain_dirt_stony.onload = onImageLoaded;
-    this.img_terrain_stone_dirty.onload = onImageLoaded;
-    this.img_terrain_stone.onload = onImageLoaded;
-    this.img_terrain_ice.onload = onImageLoaded;
-    this.img_tree_small.onload = onImageLoaded;
-    this.img_tree_big.onload = onImageLoaded;
-    this.img_cactus1.onload = onImageLoaded;
-    this.img_cactus2.onload = onImageLoaded;
-    this.img_tree_fir_small.onload = onImageLoaded;
-    this.img_tree_fir_big.onload = onImageLoaded;
-    this.img_tree_fullfir_small.onload = onImageLoaded;
-    this.img_tree_fullfir_big.onload = onImageLoaded;
-    this.img_tree_fir_snow.onload = onImageLoaded;
-    this.img_rock_01.onload = onImageLoaded;
-    this.img_rock_02.onload = onImageLoaded;
-    this.img_rock_04.onload = onImageLoaded;
-    this.img_rock_05.onload = onImageLoaded;
-    this.img_iron.onload = onImageLoaded;
-    this.img_gold.onload = onImageLoaded;
-    this.img_town_center.onload = onImageLoaded;
-    this.img_forester_hut.onload = onImageLoaded;
-    this.img_quarry_hut.onload = onImageLoaded;
-    this.img_iron_hut.onload = onImageLoaded;
-    this.img_gold_mine.onload = onImageLoaded;
+    for(let img of images) {
+      img.onload = onImageLoaded;
+    }
 
     this.img_terrain_water_deep.src = "../img/water_02.png";
     this.img_terrain_water_shallow.src = "../img/water_01.png";
@@ -217,6 +191,6 @@ export default class Maphelper {
     this.img_quarry_hut.src = "../img/mine.png";
     this.img_iron_hut.src = "../img/mine.png";
     this.img_gold_mine.src = "../img/mine.png";
-
+    this.img_unit_scout.src = "../img/unit_scout.png";
   }
 }

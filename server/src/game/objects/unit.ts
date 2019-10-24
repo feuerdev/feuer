@@ -1,12 +1,16 @@
-import GameObject, { Spotter } from "./gameobject"
+import GameObject, { Spotter, Drawable } from "./gameobject"
 import Hex from "../../../../shared/hex"
-import { EnumUnit } from "../../../../shared/gamedata";
+import { EnumUnit, Sprite } from "../../../../shared/gamedata";
 
 
 
-export default class Unit extends GameObject implements Spotter {
+export default class Unit extends GameObject implements Spotter, Drawable {
   getSpottingRange(): number {
     return this.spottingDistance;
+  }
+
+  getSprite():Sprite {
+    return this.sprite;
   }
 
   public targetHex: Hex;
@@ -14,6 +18,7 @@ export default class Unit extends GameObject implements Spotter {
   public speed: number;
   public movementStatus: number = 0;
   public spottingDistance: number;
+  private sprite:Sprite;
 
   constructor(owner) {
     super(owner);
@@ -24,12 +29,14 @@ export default class Unit extends GameObject implements Spotter {
     unit.pos = pos;
     switch (type) {
       case EnumUnit.SCOUT:
-        unit.spottingDistance = 2;
+        unit.spottingDistance = 1;
         unit.speed = 10;
+        unit.sprite = Sprite.unitScout;
         break;
       case EnumUnit.SWORDSMAN:
-        unit.spottingDistance = 1;
+        unit.spottingDistance = 0;
         unit.speed = 3;
+        //unit.sprite = Sprite.unitSwordsman;
         break;
       default:
         return null;

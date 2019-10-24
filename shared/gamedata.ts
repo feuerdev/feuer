@@ -18,7 +18,8 @@ export enum Sprite {
   bldForesterHut,
   bldQuarryHut,
   bldIronHut,
-  bldGoldMine
+  bldGoldMine,
+  unitScout,
 }
 
 export const 

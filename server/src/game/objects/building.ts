@@ -1,13 +1,17 @@
-import GameObject, { Spotter } from "./gameobject";
+import GameObject, { Spotter, Drawable } from "./gameobject";
 import Hex from "../../../../shared/hex";
 import { EnumBuilding, Sprite } from "../../../../shared/gamedata";
 
 
 
-export default class Building extends GameObject implements Spotter {
+export default class Building extends GameObject implements Spotter, Drawable {
   
   public getSpottingRange(): number {
     return this.spottingDistance;
+  }
+
+  public getSprite():Sprite {
+    return this.sprite;
   }
 
   private spottingDistance:number;
