@@ -2,7 +2,7 @@ MMORTS in development
 
 Description: 
 
-A realtime web based realtime hardcore PvP persistent MMORTS in medieval setting.
+A realtime web based hardcore PvP persistent MMORTS in medieval setting.
 
 - Play on procedurally generated persistent Hex based map with high player number
 - Gather resources
@@ -21,28 +21,3 @@ Running the code
 1. Open Folder in Visual Studio Code (Build tasks will start automatically)
 2. Fill .env File with credentials
 3. F5!
-
-Next steps:
-GAMEPLAY - ESSENTIAL
-- generate map (done)
-- unit movement
-- unit combat
-- resource gathering
-- construction
-- hud
-
-SYSTEMS
-- use graphics (done)
-- fog of war
-- "culling"
-- camera clamping
-- persistency
-
-GAMEPLAY - NEXT
-- clans/factions/groups
-- diplomacy
-- trading
-- rolling general mechanics
-- honor system
-- manpower dynamic
-- points system/ranking
