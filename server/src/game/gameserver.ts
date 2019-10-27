@@ -108,7 +108,7 @@ export default class GameServer {
       const unit:Unit = this.world.units[i];
       if(unit.targetHexes.length > 0) {
         let currentTile = this.world.tiles[unit.pos.hash()]
-        unit.movementStatus += (unit.speed*currentTile.movementFactor*deltaFactor*10); //TODO calculate correct movementcost
+        unit.movementStatus += (unit.speed*currentTile.movementFactor*deltaFactor*0.1); //TODO calculate correct movementcost
         if(unit.movementStatus > 100) {
           currentTile.removeSpot(unit.id);
           unit.pos = unit.targetHexes.splice(0,1)[0];
@@ -200,6 +200,9 @@ export default class GameServer {
     for(let unit of this.world.units) {
       if(uid === unit.owner) {
         unit.targetHexes = astar(this.world.tiles, unit.pos, new Hex(hex.q, hex.r, hex.s));
+        for(let hex of unit.targetHexes) {
+          console.log("Hex: "+hex + "Factor: "+this.world.tiles[hex.hash()].movementFactor);
+        }
       }
     }
   }

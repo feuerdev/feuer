@@ -46,13 +46,22 @@ export default class Tile {
 
   public updateMovementFactor() { //TODO calculate correct movementcost
     let movementFactor = 1;
-    if(this.height < GameData.level_water_deep) {
-      movementFactor = 0.01;
-    } else if (this.height < GameData.level_water_shallow) {
-      movementFactor = 0.1;
+    
+    if(this.height >= GameData.level_stone) {
+      movementFactor -= 0.3; //Its cold
     }
 
-    movementFactor -= this.environmentSpots.length*0.1;
+    if(this.forestation > 0.7) {
+      movementFactor -= 0.4; //You're in a forest
+    }
+
+    if(this.height < GameData.level_water_deep) {
+      movementFactor = 0.01; //You're now swimming
+    } else if (this.height < GameData.level_water_shallow) {
+      movementFactor = 0.1; //You're wading
+    }
+
+    // movementFactor -= this.environmentSpots.length*0.05;
 
     this.movementFactor = Math.min(1, Math.max(0.01, movementFactor));
   }
