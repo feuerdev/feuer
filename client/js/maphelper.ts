@@ -42,7 +42,7 @@ export default class Maphelper {
   static readonly img_quarry_hut = new Image();
   static readonly img_iron_hut = new Image();
   static readonly img_gold_mine = new Image();
-  static readonly img_unit_scout = new Image();
+  static readonly img_unit_scout_own = new Image();
 
 
   public static getTerrainImage(height) {
@@ -97,7 +97,7 @@ export default class Maphelper {
       case Gamedata.Sprite.bldQuarryHut: return this.img_quarry_hut;
       case Gamedata.Sprite.bldIronHut: return this.img_iron_hut;
       case Gamedata.Sprite.bldGoldMine: return this.img_gold_mine;
-      case Gamedata.Sprite.unitScout: return this.img_unit_scout;
+      case Gamedata.Sprite.unitScout: return this.img_unit_scout_own;
       default: return null;
     }
   }
@@ -137,7 +137,7 @@ export default class Maphelper {
       this.img_quarry_hut,
       this.img_iron_hut,
       this.img_gold_mine,
-      this.img_unit_scout
+      this.img_unit_scout_own
   ];
 
     let imageCount: number = images.length;
@@ -191,6 +191,6 @@ export default class Maphelper {
     this.img_quarry_hut.src = "../img/mine.png";
     this.img_iron_hut.src = "../img/mine.png";
     this.img_gold_mine.src = "../img/mine.png";
-    this.img_unit_scout.src = "../img/unit_scout.png";
+    this.img_unit_scout_own.src = "../img/unit_scout_own.png";
   }
 }
