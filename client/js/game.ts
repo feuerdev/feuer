@@ -1,17 +1,18 @@
 import * as $ from "./lib/jquery-3.1.1.min";
 import Log from "./util/log";
 import Vector2 from "../../shared/vector2";
-import Gameloop from "../../shared/gameloop";
+import Gameloop, { GameloopListener } from "../../shared/gameloop";
 import Hex, { Layout } from "../../shared/hex";
 import Renderer from "./renderer";
 import Input, { InputListener } from "./input";
 import Connection, { ConnectionListener } from "./connection";
 import { Socket } from "socket.io";
 import Hud, { HudListener } from "./hud";
+import { PlayerRelation } from "../../shared/gamedata";
 
 declare const config;
 
-export default class Game implements InputListener, ConnectionListener, HudListener {
+export default class Game implements InputListener, ConnectionListener, HudListener, GameloopListener {
     
     private canvas_map = $("#canvas-map");
     private canvas_fow = $("#canvas-fow");
@@ -36,13 +37,17 @@ export default class Game implements InputListener, ConnectionListener, HudListe
 
         this.hud.addListener(this);
         this.gameloop.addListener(this.input);
-        this.gameloop.addListener(this.renderer);
+        this.gameloop.addListener(this);
         this.input.addListener(this.renderer);
         this.input.addListener(this);
         this.connection.addListener(this);
         this.gameloop.run();
 
         Log.info("Client ready");
+    }
+
+    onRender() {
+        this.renderer.draw(this.world);
     }
 
     onConstructionRequested(typeId: any): void {
@@ -69,6 +74,20 @@ export default class Game implements InputListener, ConnectionListener, HudListe
         //Hier alle Gamelevel Events implementieren 
         socket.on("gamestate world", (data) => {
             this.world = data;
-            this.renderer.setWorld(data)});
+            for(let unit of this.world.units) {
+                if(unit.owner !== currentUid) {
+                    if(this.world.playerRelations[PlayerRelation.getHash(unit.owner, currentUid)] === undefined) {
+                        this.connection.send("request relation", {id1: unit.owner, id2:currentUid});
+                    }
+                } 
+            }
+            this.renderer.requestRedraw();
+        });
+        socket.on("gamestate relation", (data) => {
+            let hash = PlayerRelation.getHash(data.id1, data.id2);
+            this.world.playerRelations[hash] = data;
+        });
     }
 }
+
+declare const currentUid;

@@ -4,10 +4,9 @@
 import Vector2 from "../../shared/vector2";
 import Maphelper, { MaphelperListener } from "./maphelper";
 import Hex, { Layout } from "../../shared/hex";
-import { GameloopListener } from "../../shared/gameloop";
 import { InputListener } from "./input";
 
-export default class Renderer implements InputListener, GameloopListener, MaphelperListener {
+export default class Renderer implements InputListener, MaphelperListener {
     onImagesLoaded() {
         this.shouldRedrawMap = true;
     }
@@ -34,7 +33,6 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
     private selectedHex: Hex;
     private cameraPosition: Vector2 = new Vector2();
 
-    private world:any;
 
     private deadzone: Vector2 = new Vector2();
     private shouldDrawDebug: boolean = config.log_level === "debug";
@@ -81,7 +79,7 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
     }
 
     //#region Cycle
-    draw() {
+    draw(world) {
         this.ctxm.save();
         this.ctxf.save();
         this.ctxe.save();
@@ -92,7 +90,7 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
             this.shouldRedrawMap = false;
             this.ctxm.clearRect(0, 0, this.drawWidth, this.drawHeight);
             this.ctxm.translate(-this.cameraPosition.x, -this.cameraPosition.y);
-            this.drawMap();
+            this.drawMap(world);
         }
 
         if (config.fow) {
@@ -101,7 +99,7 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
         }
 
         this.ctxe.translate(-this.cameraPosition.x, -this.cameraPosition.y);
-        this.drawEntities();
+        this.drawEntities(world);
 
         if (this.shouldDrawDebug) {
             this.drawDebug();
@@ -114,12 +112,12 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
 
     
 
-    drawEntities() {
+    drawEntities(world) {
         this.ctxe.save();
-        if(this.world) {
-            if(this.world.units) {
-                for(let i = 0; i < this.world.units.length; i++) {
-                    let unit = this.world.units[i];
+        if(world) {
+            if(world.units) {
+                for(let i = 0; i < world.units.length; i++) {
+                    let unit = world.units[i];
                     if(unit) {
                         this.ctxe.font = "30px Arial";
                         this.ctxe.fillStyle = "red";
@@ -132,18 +130,18 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
         this.ctxe.restore();
     }
 
-    drawMap() {
+    drawMap(world) {
         this.ctxm.save();
-        if (this.world) {
-            let keys = Object.keys(this.world.tiles);
+        if (world) {
+            let keys = Object.keys(world.tiles);
             for(let key of keys) {
-                let tile = this.world.tiles[key];
+                let tile = world.tiles[key];
                 this.drawTile(tile);
             }
 
             if (this.selectedHex) {
                 this.ctxm.filter = "brightness(110%) contrast(1.05) drop-shadow(0px 0px 25px black)";
-                this.drawTile(this.world.tiles[this.selectedHex.hash()]); //Draw the selected Tile again, so that the filter applies.
+                this.drawTile(world.tiles[this.selectedHex.hash()]); //Draw the selected Tile again, so that the filter applies.
                 this.ctxm.filter = "none";
             }
         }
@@ -216,8 +214,7 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
         }
     }
 
-    setWorld(world) {
-        this.world = world;
+    public requestRedraw() {
         this.shouldRedrawMap = true;
     }
 
@@ -262,12 +259,6 @@ export default class Renderer implements InputListener, GameloopListener, Maphel
         this.selectedHex = hex;
         this.shouldRedrawMap = true;
     }
-
-    //Gamelooplistener
-    onRender() {
-        this.draw();
-    }
-
 };
 declare const config;
 declare const currentUid;
