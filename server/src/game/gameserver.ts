@@ -23,7 +23,7 @@ import World from "./world";
 import Unit from "./objects/unit";
 import Hex from "../../../shared/hex";
 import Building from "./objects/building";
-import { EnumUnit } from "../../../shared/gamedata";
+import { EnumUnit, PlayerRelation, EnumRelationType } from "../../../shared/gamedata";
 import Mapgen from "./mapgen";
 
 export default class GameServer {
@@ -60,6 +60,7 @@ export default class GameServer {
 
       socket.on("request movement", (data) => this.onRequestMovement(socket, data));
       socket.on("request construction", (data) => this.onRequestConstruction(socket, data));
+      socket.on("request relation", (data) => this.onRequestRelation(socket, data));
     });
   }
 
@@ -214,6 +215,17 @@ export default class GameServer {
     this.world.buildings.push(building);
     let tile = this.world.tiles[new Hex(data.pos.q, data.pos.r, data.pos.s).hash()];
     tile.addSpot(building.sprite, building.id);    
+  }
+
+  onRequestRelation(socket: Socket, data) {
+    let hash = PlayerRelation.getHash(data.id1, data.id2);
+    let playerRelation = this.world.playerRelations[hash];
+    if(!playerRelation) {
+      playerRelation = new PlayerRelation(data.id1, data.id2, EnumRelationType.rtNeutral);
+      this.world.playerRelations[hash] = playerRelation;
+    }
+    socket.emit("gamestate relation", playerRelation);
+
   }
 
   private getPlayerUid(socketId) {
