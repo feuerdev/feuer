@@ -5,6 +5,7 @@ import Vector2 from "../../shared/vector2";
 import Maphelper, { MaphelperListener } from "./maphelper";
 import Hex, { Layout } from "../../shared/hex";
 import { InputListener } from "./input";
+import ClientWorld from "./clientworld";
 
 export default class Renderer implements InputListener, MaphelperListener {
     onImagesLoaded() {
@@ -79,7 +80,7 @@ export default class Renderer implements InputListener, MaphelperListener {
     }
 
     //#region Cycle
-    draw(world) {
+    draw(world:ClientWorld) {
         this.ctxm.save();
         this.ctxf.save();
         this.ctxe.save();
@@ -169,7 +170,7 @@ export default class Renderer implements InputListener, MaphelperListener {
 
             for (let i = 0; i < tile.environmentSpots.length; i++) {
                 let spot = tile.environmentSpots[i];
-                let img = Maphelper.getSprite(spot.type);
+                let img = Maphelper.getSprite(spot);
                 let pos = spot.pos;
                 this.ctxm.drawImage(img,
                     this.layout.hexToPixel(hex).x + pos.x,

@@ -9,6 +9,7 @@ import Connection, { ConnectionListener } from "./connection";
 import { Socket } from "socket.io";
 import Hud, { HudListener } from "./hud";
 import { PlayerRelation } from "../../shared/gamedata";
+import ClientWorld from "./clientworld";
 
 declare const config;
 
@@ -25,7 +26,7 @@ export default class Game implements InputListener, ConnectionListener, HudListe
     private renderer:Renderer;
     private input:Input;
     private hud:Hud;
-    private world:any;
+    private clientWorld:ClientWorld = new ClientWorld();
 
     constructor() {
         this.gameloop = new Gameloop(Gameloop.requestAnimationFrameWrapper, config.updaterate, config.netrate)
@@ -47,7 +48,7 @@ export default class Game implements InputListener, ConnectionListener, HudListe
     }
 
     onRender() {
-        this.renderer.draw(this.world);
+        this.renderer.draw(this.clientWorld);
     }
 
     onConstructionRequested(typeId: any): void {
@@ -55,7 +56,7 @@ export default class Game implements InputListener, ConnectionListener, HudListe
     }
 
     onHexSelected(hex: Hex) {
-        if(this.input.selectedHex && this.world.tiles[this.input.selectedHex.hash()]) {
+        if(this.input.selectedHex && this.clientWorld.tiles[this.input.selectedHex.hash()]) {
             this.hud.showSelectionHud();
             this.hud.showConstructionHud(); //TODO: Only show this if you can xonstruct something here
             this.connection.send("request movement", hex);        
@@ -73,10 +74,11 @@ export default class Game implements InputListener, ConnectionListener, HudListe
     onSetup(socket: Socket) {
         //Hier alle Gamelevel Events implementieren 
         socket.on("gamestate world", (data) => {
-            this.world = data;
-            for(let unit of this.world.units) {
+            this.clientWorld.tiles = data.tiles;
+            this.clientWorld.units = data.units;
+            for(let unit of this.clientWorld.units) {
                 if(unit.owner !== currentUid) {
-                    if(this.world.playerRelations[PlayerRelation.getHash(unit.owner, currentUid)] === undefined) {
+                    if(this.clientWorld.playerRelations[PlayerRelation.getHash(unit.owner, currentUid)] === undefined) {
                         this.connection.send("request relation", {id1: unit.owner, id2:currentUid});
                     }
                 } 
@@ -85,7 +87,7 @@ export default class Game implements InputListener, ConnectionListener, HudListe
         });
         socket.on("gamestate relation", (data) => {
             let hash = PlayerRelation.getHash(data.id1, data.id2);
-            this.world.playerRelations[hash] = data;
+            this.clientWorld.playerRelations[hash] = data;
         });
     }
 }

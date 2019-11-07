@@ -1,4 +1,5 @@
 import * as Gamedata from "../../shared/gamedata";
+import { Spot } from "../../server/src/game/tile";
 
 
 export interface MaphelperListener {
@@ -75,8 +76,10 @@ export default class Maphelper {
     } else return this.img_terrain_stone;
   }
 
-  public static getSprite(env: Gamedata.Sprite) {
-    switch (env) {
+  public static getSprite(spot: Spot) {
+    let sprite = spot.type;
+    let id = spot.id;
+    switch (sprite) {
       case Gamedata.Sprite.envTreeSmall: return this.img_tree_small;
       case Gamedata.Sprite.envTreeBig: return this.img_tree_big;
       case Gamedata.Sprite.envCactus1: return this.img_cactus1;
