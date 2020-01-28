@@ -14,7 +14,7 @@ A realtime web based hardcore PvP persistent MMORTS in medieval setting.
 - Visible and noticeable ranking system to spark competitiveness
 - Limited focus on graphics until game is fun to play and balanced
 
-Try the current state at https://feuer.herokuapp.com/play
+Try the current state at https://feuer.herokuapp.com/play (Server is probably asleep, give it 1min to boot up)
 
 Running the code
 1. npm install
