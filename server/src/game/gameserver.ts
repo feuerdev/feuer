@@ -37,14 +37,11 @@ export default class GameServer {
   private world:World;
   
   //#region Gameloop Variables
-  private readonly delta = Math.round(1000 / config.updaterate);
+  private readonly updaterate = Math.round(1000 / config.updaterate);
   private readonly defaultDelta = Math.round(1000 / 60);
   private readonly netrate = Math.round(1000 / config.netrate);
   private readonly defaultNetrate = Math.round(1000 / 30);
   private isRunning = false;
-  private lastTime = Date.now();
-  private accumulator = 0;
-  private timeSinceLastUpdate = 0;
   //#endregion
 
   constructor(world:World) {
@@ -64,32 +61,29 @@ export default class GameServer {
     });
   }
 
+  //Gameloop
+  private previousTick = Date.now();
+  private actualTicks = 0
   run() {
     this.isRunning = true;
+
     let gameloop = () => {
-      let newTime = Date.now();
-      let frameTime = newTime - this.lastTime;
-
-      this.lastTime = newTime;
-
-      this.timeSinceLastUpdate += frameTime;
-      this.accumulator += frameTime;
-
-      while (this.accumulator > this.delta) {
-        this.update(this.delta / this.defaultDelta);
-        this.accumulator -= this.delta;
+      let timeSincelastFrame = Date.now() - this.previousTick;
+      this.previousTick = Date.now();
+      //this.previousTick = Date.now();
+      this.actualTicks++;
+      let dbgStart = Date.now();
+      this.update(this.updaterate / this.defaultDelta);
+      let dbgAfterUpdate = Date.now();
+      this.updateNet(this.updaterate / this.defaultNetrate);
+      let dbgAfterSend = Date.now();
+      if(this.actualTicks > 5 && Math.abs(timeSincelastFrame - this.updaterate) > 10) {
+        Log.error("Warning something is fucky with the gameloop");
       }
-
-      if (this.timeSinceLastUpdate > this.netrate) {
-        this.updateNet(this.timeSinceLastUpdate / this.defaultNetrate);
-        this.timeSinceLastUpdate = 0;
-      }
-
-      if (this.isRunning) {
-        setImmediate(gameloop);
-      }
+      Log.verbose("Update took:", dbgAfterUpdate - dbgStart, "Sending Data to clients took:", dbgAfterSend - dbgAfterUpdate, "Time since last Frame:", timeSincelastFrame ,"Gesamtticks:", this.actualTicks, "Abweichung:", timeSincelastFrame-this.updaterate);
+      
     }
-    gameloop();
+    setInterval(gameloop, this.updaterate);
   }
 
   pause() {
@@ -99,7 +93,7 @@ export default class GameServer {
 
   resume() {
     Log.info("Game resumed");
-    this.lastTime = Date.now(); //lastTime zurücksetzen, damit die pausierte Zeit nicht nachgeholt wird
+    //this.lastTime = Date.now(); //lastTime zurücksetzen, damit die pausierte Zeit nicht nachgeholt wird
     this.run();
   }
 
@@ -116,7 +110,7 @@ export default class GameServer {
           this.world.tiles[unit.pos.hash()].addSpot(unit.getSprite(), unit.id);
           unit.movementStatus = 0;
         }
-      }    
+      }
     }
 
     for (let i = 0; i < this.players.length; i++) {
