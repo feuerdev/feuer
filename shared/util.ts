@@ -49,3 +49,8 @@ export function calculateAimpoint(from: Vector2, angleHorizontal: number, angleV
   const result: Vector2 = vec.add(from);
   return result;
 }
+
+export function aVerySlowFunction(milliseconds:number) {
+  let now = Date.now();
+  while(Date.now() < now+milliseconds ) {};
+}
