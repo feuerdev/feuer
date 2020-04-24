@@ -55,16 +55,14 @@ export default class Webserver {
         this.app.use("/login", router_login);
         this.app.use("/logout", router_logout);
         this.app.use("/mapgen", router_mapgen);
-        this.app.use("/", router_home);
-        this.app.use("/play", auth.isAuthenticated, router_play);
-
         this.app.get("/relogin", function (req, res) {
             res.render("relogin");
         });
-
+        this.app.use("/play", auth.isAuthenticated, router_play);
         this.app.get("/config.js", function (req, res) {
             res.sendFile("/js/config/config_" + config.name + ".js", { root: directory_client });
         });
+        this.app.use("/", auth.isAuthenticated, router_play);//this.app.use("/", router_home);
     }
 
     run() {
