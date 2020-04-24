@@ -80,7 +80,7 @@ export default class GameServer {
       if(this.actualTicks > 5 && Math.abs(timeSincelastFrame - this.updaterate) > 10) {
         Log.error("Warning something is fucky with the gameloop");
       }
-      Log.verbose("Update took:", dbgAfterUpdate - dbgStart, "Sending Data to clients took:", dbgAfterSend - dbgAfterUpdate, "Time since last Frame:", timeSincelastFrame ,"Gesamtticks:", this.actualTicks, "Abweichung:", timeSincelastFrame-this.updaterate);
+      Log.silly("Update took:", dbgAfterUpdate - dbgStart, "Sending Data to clients took:", dbgAfterSend - dbgAfterUpdate, "Time since last Frame:", timeSincelastFrame ,"Gesamtticks:", this.actualTicks, "Abweichung:", timeSincelastFrame-this.updaterate);
       
     }
     setInterval(gameloop, this.updaterate);
@@ -196,7 +196,7 @@ export default class GameServer {
       if(uid === unit.owner) {
         unit.targetHexes = astar(this.world.tiles, unit.pos, new Hex(hex.q, hex.r, hex.s));
         for(let hex of unit.targetHexes) {
-          console.log("Hex: "+hex + "Factor: "+this.world.tiles[hex.hash()].movementFactor);
+          console.log("Hex: "+JSON.stringify(hex) + "Factor: "+this.world.tiles[hex.hash()].movementFactor);
         }
       }
     }
