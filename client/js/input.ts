@@ -26,7 +26,7 @@ export default class Input implements GameloopListener {
   private cursorCanvas: Vector2 = new Vector2();
   private cursorCanvasLast: Vector2 = new Vector2();
 
-  private zoomFactor: number = 2;
+  private zoomFactor: number = 1.2;
   public currentZoom: number = 1;
   public cameraPos: Vector2 = new Vector2();
 
@@ -40,6 +40,15 @@ export default class Input implements GameloopListener {
   constructor(canvas_input, layout) {
     this.canvas_input = canvas_input;
     this.layout = layout;
+
+    //start centered
+    this.cameraPos.x -= this.canvas_input[0].width/2;
+    this.cameraPos.y -= this.canvas_input[0].height/2;
+    for (let listener of this.listeners_input) {
+      if(listener.onCameraPosition) {
+        listener.onCameraPosition(this.cameraPos);
+      }
+    }
 
     this.setupKeys();
     this.setupMouse();
@@ -177,14 +186,14 @@ export default class Input implements GameloopListener {
     if(this.isDragging) {
       this.cameraPos.x -= Math.round((this.cursorCanvas.x - this.cursorCanvasLast.x) / this.currentZoom);
       this.cameraPos.y -= Math.round((this.cursorCanvas.y - this.cursorCanvasLast.y) / this.currentZoom);
-      for (let listener of this.listeners_input) {
-        if(listener.onCameraPosition) {
-          listener.onCameraPosition(this.cameraPos);
-        }
-      }
     }
     this.cursorCanvasLast.x = this.cursorCanvas.x;
     this.cursorCanvasLast.y = this.cursorCanvas.y;
+    for (let listener of this.listeners_input) {
+      if(listener.onCameraPosition) {
+        listener.onCameraPosition(this.cameraPos);
+      }
+    }
   }
 
   zoomIn() {
