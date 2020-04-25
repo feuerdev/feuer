@@ -231,16 +231,20 @@ export default class Renderer implements InputListener, MaphelperListener {
         this.drawHeight = Math.floor(this.canvasHeight / currentZoom);
         this.deadzone.x = this.drawWidth / 2 - (50 / currentZoom);
         this.deadzone.y = this.drawHeight / 2 - (50 / currentZoom);
+
         if (this.ctxm) {
             this.ctxm.scale(factor, factor);
         }
         if (this.ctxf) {
             this.ctxf.scale(factor, factor);
         }
-
         if (this.ctxe) {
             this.ctxe.scale(factor, factor);
         }
+
+        this.cameraPosition.x -= -(factor - 1) * this.drawWidth/2;
+        this.cameraPosition.y -= -(factor - 1) * this.drawHeight/2;
+
         this.shouldRedrawMap = true;
     }
     onRightClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
