@@ -132,7 +132,7 @@ export default class Input implements GameloopListener {
        */
       window.addEventListener("mousewheel", event => {
         if(this.hasFocus) {
-          event.wheelDelta > 0 ? this.zoomIn() : this.zoomOut();
+          (<WheelEvent>event).deltaY < 0 ? this.zoomIn() : this.zoomOut();
           this.updateCursor(event);
         }
       }, false);
