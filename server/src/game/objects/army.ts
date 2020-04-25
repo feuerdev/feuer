@@ -2,9 +2,7 @@ import GameObject, { Spotter, Drawable } from "./gameobject"
 import Hex from "../../../../shared/hex"
 import { EnumUnit, Sprite } from "../../../../shared/gamedata";
 
-
-
-export default class Unit extends GameObject implements Spotter, Drawable {
+export default class Army extends GameObject implements Spotter, Drawable {
   getSpottingRange(): number {
     return this.spottingDistance;
   }
@@ -24,8 +22,8 @@ export default class Unit extends GameObject implements Spotter, Drawable {
     super(owner);
   }
 
-  public static createUnit(owner: string, type: EnumUnit, pos: Hex): Unit {
-    const unit: Unit = new Unit(owner);
+  public static createUnit(owner: string, type: EnumUnit, pos: Hex): Army {
+    const unit: Army = new Army(owner);
     unit.pos = pos;
     switch (type) {
       case EnumUnit.SCOUT:

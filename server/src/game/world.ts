@@ -1,13 +1,13 @@
 import { Hashtable } from "../../../shared/util";
 import Tile from "./tile";
-import Unit from "./objects/unit";
+import Army from "./objects/army";
 import Building from "./objects/building";
 import { PlayerRelation } from "../../../shared/gamedata";
 
 export default class World {
 
   public tiles:Hashtable<Tile>;
-  public units:Unit[];
+  public units:Army[];
   public buildings:Building[];
   public playerRelations:Hashtable<PlayerRelation>;
 

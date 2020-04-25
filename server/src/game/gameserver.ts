@@ -20,7 +20,7 @@ import { Socket } from "socket.io";
 import { Hashtable } from "../../../shared/util";
 import Tile, { Spot } from "./tile";
 import World from "./world";
-import Unit from "./objects/unit";
+import Army from "./objects/army";
 import Hex from "../../../shared/hex";
 import Building from "./objects/building";
 import { EnumUnit, PlayerRelation, EnumRelationType } from "../../../shared/gamedata";
@@ -100,7 +100,7 @@ export default class GameServer {
   //Loops
   update(deltaFactor) {
     for (let i = 0; i < this.world.units.length; i++) {
-      const unit:Unit = this.world.units[i];
+      const unit:Army = this.world.units[i];
       if(unit.targetHexes.length > 0) {
         let currentTile = this.world.tiles[unit.pos.hash()]
         unit.movementStatus += (unit.speed*currentTile.movementFactor*deltaFactor*0.1); //TODO calculate correct movementcost
@@ -162,7 +162,7 @@ export default class GameServer {
           player.initialized = true;
 
           //Give Player an initial Scout
-          let initialUnit = Unit.createUnit(player.uid,EnumUnit.SCOUT,new Hex(0,0,0));
+          let initialUnit = Army.createUnit(player.uid,EnumUnit.SCOUT,new Hex(0,0,0));
           self.world.units.push(initialUnit);
 
           //Prepare Drawing of that unit
