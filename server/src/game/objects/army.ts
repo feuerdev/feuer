@@ -3,19 +3,43 @@ import Hex from "../../../../shared/hex"
 import { EnumUnit, Sprite } from "../../../../shared/gamedata";
 
 export default class Army extends GameObject implements Spotter, Drawable {
+  /**
+   * Spottable
+   */
   getSpottingRange(): number {
     return this.spottingDistance;
   }
 
+  /**
+   * Drawable
+   */
   getSprite():Sprite {
     return this.sprite;
   }
 
+  /**
+   * Position
+   */
   public targetHexes: Hex[] = [];
   public pos: Hex;
+
+  /**
+   * Gameplay
+   */
   public speed: number;
+  public attack: number = 5;
+  public health: number = 100;
   public movementStatus: number = 0;
   public spottingDistance: number;
+  public food:number = 0;
+  public wood:number = 0;
+  public stone:number = 0;
+  public iron:number = 0;
+  public gold:number = 0;
+
+  /**
+   * Graphics
+   */
   private sprite:Sprite;
 
   constructor(owner) {

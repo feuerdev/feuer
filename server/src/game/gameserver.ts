@@ -13,7 +13,7 @@ import * as db from "../util/db";
 import * as Util from "../../../shared/util";
 import Log from "../util/log";
 import config from "../util/config";
-import {astar} from "../../../shared/pathfinding";
+import { astar } from "../../../shared/pathfinding";
 import Vector2 from "../../../shared/vector2";
 import Vector3 from "../../../shared/vector3";
 import { Socket } from "socket.io";
@@ -24,18 +24,18 @@ import Army from "./objects/army";
 import Hex from "../../../shared/hex";
 import Building from "./objects/building";
 import { EnumUnit, PlayerRelation, EnumRelationType } from "../../../shared/gamedata";
-import Mapgen from "./mapgen";
+import Battle from "./objects/battle";
 
 export default class GameServer {
-  
+
   private io: socketio.Server;
 
   private socketplayer: {} = {};
   private uidsockets: {} = {};
   private players: Player[] = [];
 
-  private world:World;
-  
+  private world: World;
+
   //#region Gameloop Variables
   private readonly updaterate = Math.round(1000 / config.updaterate);
   private readonly defaultDelta = Math.round(1000 / 60);
@@ -44,7 +44,7 @@ export default class GameServer {
   private isRunning = false;
   //#endregion
 
-  constructor(world:World) {
+  constructor(world: World) {
     this.world = world;
     //
   }
@@ -77,11 +77,11 @@ export default class GameServer {
       let dbgAfterUpdate = Date.now();
       this.updateNet(this.updaterate / this.defaultNetrate);
       let dbgAfterSend = Date.now();
-      if(this.actualTicks > 5 && Math.abs(timeSincelastFrame - this.updaterate) > 10) {
+      if (this.actualTicks > 5 && Math.abs(timeSincelastFrame - this.updaterate) > 10) {
         Log.error("Warning something is fucky with the gameloop");
       }
-      Log.silly("Update took:", dbgAfterUpdate - dbgStart, "Sending Data to clients took:", dbgAfterSend - dbgAfterUpdate, "Time since last Frame:", timeSincelastFrame ,"Gesamtticks:", this.actualTicks, "Abweichung:", timeSincelastFrame-this.updaterate);
-      
+      Log.silly("Update took:", dbgAfterUpdate - dbgStart, "Sending Data to clients took:", dbgAfterSend - dbgAfterUpdate, "Time since last Frame:", timeSincelastFrame, "Gesamtticks:", this.actualTicks, "Abweichung:", timeSincelastFrame - this.updaterate);
+
     }
     setInterval(gameloop, this.updaterate);
   }
@@ -99,24 +99,62 @@ export default class GameServer {
 
   //Loops
   update(deltaFactor) {
-    for (let i = 0; i < this.world.units.length; i++) {
-      const unit:Army = this.world.units[i];
-      if(unit.targetHexes.length > 0) {
-        let currentTile = this.world.tiles[unit.pos.hash()]
-        unit.movementStatus += (unit.speed*currentTile.movementFactor*deltaFactor*0.1); //TODO calculate correct movementcost
-        if(unit.movementStatus > 100) {
-          currentTile.removeSpot(unit.id);
-          unit.pos = unit.targetHexes.splice(0,1)[0];
-          this.world.tiles[unit.pos.hash()].addSpot(unit.getSprite(), unit.id);
-          unit.movementStatus = 0;
+
+    //Army Movement
+    for (let i = 0; i < this.world.armies.length; i++) {
+      const army: Army = this.world.armies[i];
+      if (army.targetHexes.length > 0) {
+        let currentTile = this.world.tiles[army.pos.hash()]
+        army.movementStatus += (army.speed * currentTile.movementFactor * deltaFactor * 0.1); //TODO calculate correct movementcost
+        if (army.movementStatus > 100) { //Movement!
+          currentTile.removeSpot(army.id);
+          army.pos = army.targetHexes.splice(0, 1)[0];
+          this.world.tiles[army.pos.hash()].addSpot(army.getSprite(), army.id);
+          army.movementStatus = 0;
+
+          this.checkForBattle(army);
         }
       }
     }
 
-    for (let i = 0; i < this.players.length; i++) {
-      const player: Player = this.players[i];
-      if (player.initialized) {
-        //TODO
+    //Resource Gathering
+    for (let building of this.world.buildings) {
+      let tile = this.world.tiles[building.pos.hash()];
+      tile.food += building.foodHarvest * deltaFactor;
+      tile.wood += building.woodHarvest * deltaFactor;
+      tile.stone += building.stoneHarvest * deltaFactor;
+      tile.iron += building.ironHarvest * deltaFactor;
+      tile.gold += building.goldHarvest * deltaFactor;
+    }
+
+    //Battles
+    for (let battle of this.world.battles) {
+      battle.aDefender.health -= battle.aAttacker.attack + Math.round(Math.random() * 5);
+      battle.aAttacker.health -= battle.aDefender.attack + Math.round(Math.random() * 5);
+
+      if (battle.aAttacker.health <= 0 || battle.aDefender.health <= 0) {
+        this.world.battles.splice(this.world.battles.indexOf(battle));
+        if (battle.aAttacker.health <= 0) {
+          this.world.armies.splice(this.world.armies.indexOf(battle.aAttacker));
+        }
+        if (battle.aDefender.health <= 0) {
+          this.world.armies.splice(this.world.armies.indexOf(battle.aDefender));
+        }
+      }
+
+      for (let i = 0; i < this.players.length; i++) {
+        const player: Player = this.players[i];
+        if (player.initialized) {
+          //TODO
+        }
+      }
+    }
+  }
+
+  checkForBattle(army: Army) {
+    for (let other_army of this.world.armies) {
+      if (other_army.pos.equals(army.pos) && army.id !== other_army.id) { //TODO: Check for allie status, stances etc
+        this.world.battles.push(new Battle(army, other_army));
       }
     }
   }
@@ -138,7 +176,7 @@ export default class GameServer {
         const socket: Socket = this.uidsockets[player.uid];
         if (socket) {
           socket.emit("gamestate players", this.players);
-          socket.emit("gamestate world", this.world);
+          socket.emit("gamestate world", this.world.prepareForSending());
         }
       }
     }
@@ -146,7 +184,7 @@ export default class GameServer {
 
   onPlayerDisconnected(socket: Socket) {
     const player: Player = this.socketplayer[socket.id];
-    if(player) {
+    if (player) {
       Log.info("Player Disconnected: " + player.name);
     }
   }
@@ -162,8 +200,8 @@ export default class GameServer {
           player.initialized = true;
 
           //Give Player an initial Scout
-          let initialUnit = Army.createUnit(player.uid,EnumUnit.SCOUT,new Hex(0,0,0));
-          self.world.units.push(initialUnit);
+          let initialUnit = Army.createUnit(player.uid, EnumUnit.SCOUT, new Hex(0, 0, 0));
+          self.world.armies.push(initialUnit);
 
           //Prepare Drawing of that unit
           self.world.tiles[initialUnit.pos.hash()].addSpot(initialUnit.getSprite(), initialUnit.id);
@@ -177,11 +215,11 @@ export default class GameServer {
           Log.error(error);
         });
     } else {
-      for(let i = 0; i < self.players.length; i++) {
-        if(self.players[i].uid === uid) {
+      for (let i = 0; i < self.players.length; i++) {
+        if (self.players[i].uid === uid) {
           this.socketplayer[socket.id] = self.players[i];
           Log.info("Old Player Connected: " + self.players[i].name);
-        } 
+        }
       }
     }
     this.uidsockets[uid] = socket;
@@ -190,13 +228,13 @@ export default class GameServer {
     socket.emit("gamestate world", this.world);
   }
 
-  onRequestMovement(socket: Socket, hex:any) {
+  onRequestMovement(socket: Socket, hex: any) {
     let uid = this.getPlayerUid(socket.id);
-    for(let unit of this.world.units) {
-      if(uid === unit.owner) {
+    for (let unit of this.world.armies) {
+      if (uid === unit.owner) {
         unit.targetHexes = astar(this.world.tiles, unit.pos, new Hex(hex.q, hex.r, hex.s));
-        for(let hex of unit.targetHexes) {
-          console.log("Hex: "+JSON.stringify(hex) + "Factor: "+this.world.tiles[hex.hash()].movementFactor);
+        for (let hex of unit.targetHexes) {
+          console.log("Hex: " + JSON.stringify(hex) + "Factor: " + this.world.tiles[hex.hash()].movementFactor);
         }
       }
     }
@@ -208,13 +246,13 @@ export default class GameServer {
     //Todo: check if player is even allowed to do that
     this.world.buildings.push(building);
     let tile = this.world.tiles[new Hex(data.pos.q, data.pos.r, data.pos.s).hash()];
-    tile.addSpot(building.sprite, building.id);    
+    tile.addSpot(building.sprite, building.id);
   }
 
   onRequestRelation(socket: Socket, data) {
     let hash = PlayerRelation.getHash(data.id1, data.id2);
     let playerRelation = this.world.playerRelations[hash];
-    if(!playerRelation) {
+    if (!playerRelation) {
       playerRelation = new PlayerRelation(data.id1, data.id2, EnumRelationType.rtNeutral);
       this.world.playerRelations[hash] = playerRelation;
     }
@@ -223,14 +261,14 @@ export default class GameServer {
   }
 
   private getPlayerUid(socketId) {
-    const player:Player = this.getPlayer(socketId);
-    if(player) {
+    const player: Player = this.getPlayer(socketId);
+    if (player) {
       return player.uid;
     }
     return null;
   }
 
-  private getPlayer(socketId:string):Player {
+  private getPlayer(socketId: string): Player {
     return this.socketplayer[socketId];
   }
 

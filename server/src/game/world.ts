@@ -3,19 +3,28 @@ import Tile from "./tile";
 import Army from "./objects/army";
 import Building from "./objects/building";
 import { PlayerRelation } from "../../../shared/gamedata";
+import Battle from "./objects/battle";
 
 export default class World {
 
   public tiles:Hashtable<Tile>;
-  public units:Army[];
+  public armies:Army[];
   public buildings:Building[];
   public playerRelations:Hashtable<PlayerRelation>;
+  public battles:Battle[];
 
-  constructor(tiles, units, buildings, playerRelations) {
+  constructor(tiles, armies, buildings, playerRelations, battles) {
     this.tiles = tiles;
-    this.units = units;
+    this.armies = armies;
     this.buildings = buildings;
     this.playerRelations = playerRelations;
+    this.battles = battles;
+  }
+
+  prepareForSending() {
+    let string = JSON.stringify(this);
+    let object_again = JSON.parse(string);
+    return object_again;
   }
 
 }

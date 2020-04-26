@@ -16,11 +16,14 @@ export default class Building extends GameObject implements Spotter, Drawable {
 
   private spottingDistance:number;
   public pos:Hex;
+  public foodHarvest:number;
   public woodHarvest:number;
   public stoneHarvest:number;
   public ironHarvest:number;
   public goldHarvest:number;
   public sprite:Sprite;
+
+  public capacity = 100;
 
   constructor(owner) {
     super(owner);
