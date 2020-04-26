@@ -75,8 +75,8 @@ export default class Game implements InputListener, ConnectionListener, HudListe
         //Hier alle Gamelevel Events implementieren 
         socket.on("gamestate world", (data) => {
             this.clientWorld.tiles = data.tiles;
-            this.clientWorld.units = data.units;
-            for(let unit of this.clientWorld.units) {
+            this.clientWorld.armies = data.armies;
+            for(let unit of this.clientWorld.armies) {
                 if(unit.owner !== currentUid) {
                     if(this.clientWorld.playerRelations[PlayerRelation.getHash(unit.owner, currentUid)] === undefined) {
                         this.connection.send("request relation", {id1: unit.owner, id2:currentUid});

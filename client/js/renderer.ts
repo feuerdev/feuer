@@ -116,9 +116,9 @@ export default class Renderer implements InputListener, MaphelperListener {
     drawEntities(world) {
         this.ctxe.save();
         if(world) {
-            if(world.units) {
-                for(let i = 0; i < world.units.length; i++) {
-                    let unit = world.units[i];
+            if(world.armies) {
+                for(let i = 0; i < world.armies.length; i++) {
+                    let unit = world.armies[i];
                     if(unit) {
                         this.ctxe.font = "30px Arial";
                         this.ctxe.fillStyle = "red";
