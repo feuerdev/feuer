@@ -100,6 +100,11 @@ export default class Hex {
   public hash() {
     return this.q+"-"+this.r; //TODO: make a better hash function
   }
+
+  public static hash(hex):string {
+    return hex.q+"-"+hex.r;
+  }
+
 }
 
 export class OffsetCoord {
