@@ -128,27 +128,30 @@ export default class GameServer {
     }
 
     //Battles
-    for (let battle of this.world.battles) {
-      battle.aDefender.health -= battle.aAttacker.attack + Math.round(Math.random() * 5);
-      battle.aAttacker.health -= battle.aDefender.attack + Math.round(Math.random() * 5);
+    let i = this.world.battles.length;
+    while (i--) {
+      let battle = this.world.battles[i];
+
+      battle.aDefender.health -= battle.aAttacker.attack + Math.round(Math.random() *10);
+      battle.aAttacker.health -= battle.aDefender.attack + Math.round(Math.random() *20);
 
       if (battle.aAttacker.health <= 0 || battle.aDefender.health <= 0) {
-        this.world.battles.splice(this.world.battles.indexOf(battle));
         if (battle.aAttacker.health <= 0) {
           this.world.tiles[battle.pos.hash()].removeSpot(battle.aAttacker.id);
           this.world.armies.splice(this.world.armies.indexOf(battle.aAttacker));
         }
         if (battle.aDefender.health <= 0) {
-          this.world.armies.splice(this.world.armies.indexOf(battle.aDefender));
           this.world.tiles[battle.pos.hash()].removeSpot(battle.aDefender.id);
+          this.world.armies.splice(this.world.armies.indexOf(battle.aDefender));
         }
+        this.world.battles.splice(i, 1);
       }
+    }
 
-      for (let i = 0; i < this.players.length; i++) {
-        const player: Player = this.players[i];
-        if (player.initialized) {
-          //TODO
-        }
+    for (let i = 0; i < this.players.length; i++) {
+      const player: Player = this.players[i];
+      if (player.initialized) {
+        //TODO
       }
     }
   }
