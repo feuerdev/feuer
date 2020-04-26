@@ -19,12 +19,15 @@ export default class Tile {
   public height:number;
   public forestation:number;
   public rockyness:number;
+  public ironOre: number;
+  public goldOre: number;
   public movementFactor:number = 1;
   public food:number = 0;
   public wood:number = 0;
   public stone:number = 0;
   public iron:number = 0;
   public gold:number = 0;
+  
 
   //Graphics
   public environmentSpots:Spot[] = [];

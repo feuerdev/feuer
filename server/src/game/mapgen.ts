@@ -89,6 +89,8 @@ export default class Mapgen {
         tile.forestation = treeValue;
         tile.rockyness = stoneValue;
         tile.height = heightValue;
+        tile.ironOre = ironValue;
+        tile.goldOre = goldValue;
         let hex:Hex = new Hex(q,r, -q-r)
         tiles[hex.hash()] = tile;
 
