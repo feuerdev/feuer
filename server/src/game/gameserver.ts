@@ -135,10 +135,12 @@ export default class GameServer {
       if (battle.aAttacker.health <= 0 || battle.aDefender.health <= 0) {
         this.world.battles.splice(this.world.battles.indexOf(battle));
         if (battle.aAttacker.health <= 0) {
+          this.world.tiles[battle.pos.hash()].removeSpot(battle.aAttacker.id);
           this.world.armies.splice(this.world.armies.indexOf(battle.aAttacker));
         }
         if (battle.aDefender.health <= 0) {
           this.world.armies.splice(this.world.armies.indexOf(battle.aDefender));
+          this.world.tiles[battle.pos.hash()].removeSpot(battle.aDefender.id);
         }
       }
 
@@ -154,7 +156,7 @@ export default class GameServer {
   checkForBattle(army: Army) {
     for (let other_army of this.world.armies) {
       if (other_army.pos.equals(army.pos) && army.id !== other_army.id) { //TODO: Check for allie status, stances etc
-        this.world.battles.push(new Battle(army, other_army));
+        this.world.battles.push(new Battle(army.pos, army, other_army));
       }
     }
   }
