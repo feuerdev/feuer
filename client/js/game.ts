@@ -28,6 +28,8 @@ export default class Game implements InputListener, ConnectionListener, HudListe
     private hud:Hud;
     private cWorld:ClientWorld = new ClientWorld();
 
+    private selectedHex:Hex = null;
+
     constructor() {
         this.gameloop = new Gameloop(Gameloop.requestAnimationFrameWrapper, config.updaterate, config.netrate)
         this.connection = new Connection(config.ip, config.transports);
@@ -52,20 +54,20 @@ export default class Game implements InputListener, ConnectionListener, HudListe
     }
 
     onConstructionRequested(typeId: any): void {
-        this.connection.send("request construction", {typeId: typeId, pos:this.input.selectedHex});
+        this.connection.send("request construction", {typeId: typeId, pos:this.selectedHex});
     }
 
     onRightClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
-        let selectedHex = this.layout.pixelToHex(cursorWorld).round();
-        if(selectedHex && this.cWorld.tiles[selectedHex.hash()]) {
-            this.connection.send("request movement", selectedHex);        
+        let clickedHex = this.layout.pixelToHex(cursorWorld).round();
+        if(clickedHex && this.cWorld.tiles[clickedHex.hash()]) {
+            this.connection.send("request movement", clickedHex);        
         }
     }
 
     onLeftClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
-        let selectedHex = this.layout.pixelToHex(cursorWorld).round();
-        if(selectedHex && this.cWorld.tiles[selectedHex.hash()]) {
-            this.hud.showSelectionHud(this.cWorld, selectedHex);
+        this.selectedHex = this.layout.pixelToHex(cursorWorld).round();
+        if(this.selectedHex && this.cWorld.tiles[this.selectedHex.hash()]) {
+            this.hud.showSelectionHud(this.cWorld, this.selectedHex);
             this.hud.showConstructionHud(); //TODO: Only show this if you can xonstruct something here 
         } else {
             this.hud.hideConstructionHud();
