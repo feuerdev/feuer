@@ -55,16 +55,24 @@ export default class Game implements InputListener, ConnectionListener, HudListe
         this.connection.send("request construction", {typeId: typeId, pos:this.input.selectedHex});
     }
 
-    onHexSelected(hex: Hex) {
-        if(this.input.selectedHex && this.cWorld.tiles[this.input.selectedHex.hash()]) {
-            this.hud.showSelectionHud(this.cWorld, hex);
-            this.hud.showConstructionHud(); //TODO: Only show this if you can xonstruct something here
-            this.connection.send("request movement", hex);        
+    onRightClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
+        let selectedHex = this.layout.pixelToHex(cursorWorld).round();
+        if(selectedHex && this.cWorld.tiles[selectedHex.hash()]) {
+            this.connection.send("request movement", selectedHex);        
+        }
+    }
+
+    onLeftClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
+        let selectedHex = this.layout.pixelToHex(cursorWorld).round();
+        if(selectedHex && this.cWorld.tiles[selectedHex.hash()]) {
+            this.hud.showSelectionHud(this.cWorld, selectedHex);
+            this.hud.showConstructionHud(); //TODO: Only show this if you can xonstruct something here 
         } else {
             this.hud.hideConstructionHud();
             this.hud.hideSelectionHud();
         }
     }
+
     onConnected(socket: Socket) {
         Log.info("Connected");
     }

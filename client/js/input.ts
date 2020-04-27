@@ -3,13 +3,12 @@ import Hex, { Layout } from "../../shared/hex";
 import { GameloopListener } from "../../shared/gameloop";
 
 export interface InputListener {
-  onHexSelected?(selectedHex: Hex):void;
-  onCameraPosition?(cameraPos: Vector2):void;
-  onZoom?(factor:number, currentZoom: number):void;
-  onRightClick?(cursorCanvas: Vector2, cursorWorld: Vector2):void;
-  onLeftClick?(cursorCanvas: Vector2, cursorWorld: Vector2):void;
-  onKeyDown?(event: KeyboardEvent):void;
-  onKeyUp?(event: KeyboardEvent):void;
+  onCameraPosition?(cameraPos: Vector2): void;
+  onZoom?(factor: number, currentZoom: number): void;
+  onRightClick?(cursorCanvas: Vector2, cursorWorld: Vector2): void;
+  onLeftClick?(cursorCanvas: Vector2, cursorWorld: Vector2): void;
+  onKeyDown?(event: KeyboardEvent): void;
+  onKeyUp?(event: KeyboardEvent): void;
 }
 
 export default class Input implements GameloopListener {
@@ -18,7 +17,7 @@ export default class Input implements GameloopListener {
   }
 
   private canvas_input;
-  private layout:Layout;
+  private layout: Layout;
 
   private listeners_input: InputListener[] = [];
 
@@ -30,8 +29,7 @@ export default class Input implements GameloopListener {
   public currentZoom: number = 1;
   public cameraPos: Vector2 = new Vector2();
 
-  public selectedHex: Hex;
-
+  private isM1Down: boolean = false;
   private isM2Down: boolean = false;
   public isDragging: boolean = false;
   private hasFocus: boolean = false; //Ob die Maus auf dem Canvas ist
@@ -42,10 +40,10 @@ export default class Input implements GameloopListener {
     this.layout = layout;
 
     //start centered
-    this.cameraPos.x -= this.canvas_input[0].width/2;
-    this.cameraPos.y -= this.canvas_input[0].height/2;
+    this.cameraPos.x -= this.canvas_input[0].width / 2;
+    this.cameraPos.y -= this.canvas_input[0].height / 2;
     for (let listener of this.listeners_input) {
-      if(listener.onCameraPosition) {
+      if (listener.onCameraPosition) {
         listener.onCameraPosition(this.cameraPos);
       }
     }
@@ -58,7 +56,7 @@ export default class Input implements GameloopListener {
     if (window) {
       window.addEventListener("keydown", event => {
         for (let listener of this.listeners_input) {
-          if(listener.onKeyDown) {
+          if (listener.onKeyDown) {
             listener.onKeyDown(event);
           }
         }
@@ -71,7 +69,7 @@ export default class Input implements GameloopListener {
           case 191: this.zoomReset(); break;//#
           default:
             for (let listener of this.listeners_input) {
-              if(listener.onKeyUp) {
+              if (listener.onKeyUp) {
                 listener.onKeyUp(event);
               }
             }
@@ -90,40 +88,29 @@ export default class Input implements GameloopListener {
        */
       window.addEventListener("click", event => {
         switch (event.which) {
-          case 1: { //Linksclick
-            if(this.hasFocus) {
-              this.selectedHex = this.layout.pixelToHex(this.cursorWorld).round();
-              for (let listener of this.listeners_input) {
-                if(listener.onHexSelected) {
-                  listener.onHexSelected(this.selectedHex);
-                }
-              }
-              for (let listener of this.listeners_input) {
-                if(listener.onLeftClick) {
-                  listener.onLeftClick(this.cursorCanvas, this.cursorWorld);
-                }
-              }
-            }            
-            break;
-          }
         }
       });
 
-      /**
-       * Rechtsklick
-       */
+
       this.canvas_input.mouseup(event => {
-        if (event.button === 2) { //Rightclick
-          this.isM2Down = false;
+        if (event.button === 0) { //Linksclick
+          this.isM1Down = false;
           this.isDragging = false;
           if (this.dragDistance < config.click_distance_threshold) {
             for (let listener of this.listeners_input) {
-              if(listener.onRightClick) {
-                listener.onRightClick(this.cursorCanvas, this.cursorWorld);
-              }              
+              if (listener.onLeftClick) {
+                listener.onLeftClick(this.cursorCanvas, this.cursorWorld);
+              }
             }
           }
           this.dragDistance = 0;
+        } else if (event.button === 2) { //Rightclick
+          this.isM2Down = false;
+          for (let listener of this.listeners_input) {
+            if (listener.onRightClick) {
+              listener.onRightClick(this.cursorCanvas, this.cursorWorld);
+            }
+          }
         }
       });
 
@@ -131,7 +118,7 @@ export default class Input implements GameloopListener {
        * Mausrad
        */
       window.addEventListener("mousewheel", event => {
-        if(this.hasFocus) {
+        if (this.hasFocus) {
           (<WheelEvent>event).deltaY < 0 ? this.zoomIn() : this.zoomOut();
           this.updateCursor(event);
         }
@@ -141,7 +128,7 @@ export default class Input implements GameloopListener {
        * Cursorposition und Dragging
        */
       this.canvas_input.mousemove(event => {
-        if (this.isM2Down) {
+        if (this.isM1Down) {
           this.isDragging = true;
           this.dragDistance += (Math.abs(this.cursorCanvas.x - event.offsetX) + Math.abs(this.cursorCanvas.y - event.offsetY));
         }
@@ -154,7 +141,10 @@ export default class Input implements GameloopListener {
       this.canvas_input.mousedown(event => {
         if (event.button === 2) { //Rightclick
           this.isM2Down = true;
+        } else if (event.button === 0) { //Links
+          this.isM1Down = true;
         }
+
       });
 
       /**
@@ -162,6 +152,7 @@ export default class Input implements GameloopListener {
        */
       this.canvas_input.mouseout(() => {
         this.isM2Down = false;
+        this.isM1Down = false;
         this.isDragging = false;
         this.hasFocus = false;
       });
@@ -183,14 +174,14 @@ export default class Input implements GameloopListener {
   }
 
   updateCamera() {
-    if(this.isDragging) {
+    if (this.isDragging) {
       this.cameraPos.x -= Math.round((this.cursorCanvas.x - this.cursorCanvasLast.x) / this.currentZoom);
       this.cameraPos.y -= Math.round((this.cursorCanvas.y - this.cursorCanvasLast.y) / this.currentZoom);
     }
     this.cursorCanvasLast.x = this.cursorCanvas.x;
     this.cursorCanvasLast.y = this.cursorCanvas.y;
     for (let listener of this.listeners_input) {
-      if(listener.onCameraPosition) {
+      if (listener.onCameraPosition) {
         listener.onCameraPosition(this.cameraPos);
       }
     }
@@ -218,9 +209,9 @@ export default class Input implements GameloopListener {
       // this.camera.pos.y += ((this.input.posCursorCanvas.y) * factor);
 
       for (let listener of this.listeners_input) {
-        if(listener.onZoom) {
+        if (listener.onZoom) {
           listener.onZoom(factor, this.currentZoom);
-        }        
+        }
       }
     }
   }

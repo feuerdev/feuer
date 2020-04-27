@@ -247,21 +247,14 @@ export default class Renderer implements InputListener, MaphelperListener {
 
         this.shouldRedrawMap = true;
     }
-    onRightClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
-        throw new Error("Method not implemented.");
-    }
+
     onLeftClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
-        throw new Error("Method not implemented.");
-    }
-    onKeyDown(event: KeyboardEvent) {
-        throw new Error("Method not implemented.");
-    }
-    onCameraPosition(cameraPos: Vector2) {
-        this.cameraPosition = cameraPos;
+        this.selectedHex = this.layout.pixelToHex(cursorWorld).round();
         this.shouldRedrawMap = true;
     }
-    onHexSelected(hex:Hex) {
-        this.selectedHex = hex;
+
+    onCameraPosition(cameraPos: Vector2) {
+        this.cameraPosition = cameraPos;
         this.shouldRedrawMap = true;
     }
 };
