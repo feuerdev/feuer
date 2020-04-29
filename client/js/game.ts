@@ -98,6 +98,14 @@ export default class Game implements InputListener, ConnectionListener, HudListe
             //this.cWorld.tiles = data;
             this.renderer.requestRedraw();
         });
+        socket.on("gamestate discovered tiles", (data) => {
+            for (let property in data) {
+                if (data.hasOwnProperty(property)) {
+                    this.cWorld.tiles[property] = data[property];
+                }
+            }
+            this.renderer.requestRedraw();
+        });
         socket.on("gamestate armies", (data) => {
             this.cWorld.armies = data;
             for(let army of this.cWorld.armies) {

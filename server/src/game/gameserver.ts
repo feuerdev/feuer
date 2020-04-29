@@ -183,7 +183,7 @@ export default class GameServer {
         const socket: Socket = this.uidsockets[player.uid];
         if (socket) {
           socket.emit("gamestate players", this.players);
-          let tiles = this.getVisibleTiles(player.visibleHexes);
+          let tiles = this.getTiles(player.visibleHexes);
           let armies = this.getVisibleArmies(player.visibleHexes);
           let battles = this.getVisibleBattles(player.visibleHexes);
           socket.emit("gamestate tiles", tiles);
@@ -233,6 +233,8 @@ export default class GameServer {
         if (self.players[i].uid === uid) {
           this.socketplayer[socket.id] = self.players[i];
           Log.info("Old Player Connected: " + self.players[i].name);
+
+          socket.emit("gamestate discovered tiles", this.getTiles(self.players[i].discoveredHexes));
         }
       }
     }
@@ -329,7 +331,7 @@ export default class GameServer {
     }    
   }
 
-  private getVisibleTiles(hexes:Hex[]):Hashtable<Tile> {
+  private getTiles(hexes:Hex[]):Hashtable<Tile> {
     let result:Hashtable<Tile> = {};
     for(let hex of hexes) {
       result[hex.hash()] = this.world.tiles[hex.hash()];
