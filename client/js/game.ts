@@ -84,7 +84,18 @@ export default class Game implements InputListener, ConnectionListener, HudListe
     onSetup(socket: Socket) {
         //Hier alle Gamelevel Events implementieren
         socket.on("gamestate tiles", (data) => {
-            this.cWorld.tiles = data;
+            for (let property in this.cWorld.tiles) {
+                if (this.cWorld.tiles.hasOwnProperty(property)) {
+                    this.cWorld.tiles[property].visible = false;
+                }
+            }
+            for (let property in data) {
+                if (data.hasOwnProperty(property)) {
+                    data[property].visible = true;
+                    this.cWorld.tiles[property] = data[property];
+                }
+            }
+            //this.cWorld.tiles = data;
             this.renderer.requestRedraw();
         });
         socket.on("gamestate armies", (data) => {

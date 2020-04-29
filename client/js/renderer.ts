@@ -91,13 +91,17 @@ export default class Renderer implements InputListener, MaphelperListener {
             this.shouldRedrawMap = false;
             this.ctxm.clearRect(0, 0, this.drawWidth, this.drawHeight);
             this.ctxm.translate(-this.cameraPosition.x, -this.cameraPosition.y);
+            this.ctxf.clearRect(0, 0, this.drawWidth, this.drawHeight);
+            this.ctxf.fillStyle = "rgba(0, 0, 0, 0.75)";
+            this.ctxf.fillRect(0, 0, this.drawWidth, this.drawHeight);
+            this.ctxf.translate(-this.cameraPosition.x, -this.cameraPosition.y);
             this.drawMap(world);
         }
 
-        if (config.fow) {
-            this.ctxf.translate(-this.cameraPosition.x, -this.cameraPosition.y);
-            this.drawFow();
-        }
+        // if (config.fow) {
+        //     this.ctxf.translate(-this.cameraPosition.x, -this.cameraPosition.y);
+        //     this.drawFow();
+        // }
 
         this.ctxe.translate(-this.cameraPosition.x, -this.cameraPosition.y);
         this.drawEntities(world);
@@ -133,6 +137,7 @@ export default class Renderer implements InputListener, MaphelperListener {
 
     drawMap(world) {
         this.ctxm.save();
+        this.ctxf.save();
         if (world) {
             let keys = Object.keys(world.tiles);
             for(let key of keys) {
@@ -140,44 +145,53 @@ export default class Renderer implements InputListener, MaphelperListener {
                 this.drawTile(tile);
             }
 
-            if (this.selectedHex) {
-                this.ctxm.filter = "brightness(110%) contrast(1.05) drop-shadow(0px 0px 25px black)";
-                this.drawTile(world.tiles[this.selectedHex.hash()]); //Draw the selected Tile again, so that the filter applies.
-                this.ctxm.filter = "none";
-            }
+            // if (this.selectedHex) {
+            //     this.ctxm.filter = "brightness(110%) contrast(1.05) drop-shadow(0px 0px 25px black)";
+            //     this.drawTile(world.tiles[this.selectedHex.hash()]); //Draw the selected Tile again, so that the filter applies.
+            //     this.ctxm.filter = "none";
+            // }
         }
         this.ctxm.restore();
+        this.ctxf.restore();
     }
 
     drawTile(tile) {
         if (tile) {
-            this.ctxm.save();
+            let ctx:CanvasRenderingContext2D = tile.visible? this.ctxf : this.ctxm;
+            ctx.save();
             let hex = tile.hex;
             let corners = this.layout.polygonCorners(hex);
             let padding = 10;
 
             if(this.selectedHex && this.selectedHex.equals(tile.hex)) {
-                this.ctxm.filter = "brightness(110%) contrast(1.05) drop-shadow(0px 0px 25px black)";
+                if(!tile.visible) {
+                    ctx.filter = "brightness(50%) contrast(1.05) drop-shadow(0px 0px 25px black)";
+                } else {
+                    ctx.filter = "brightness(110%) contrast(1.05) drop-shadow(0px 0px 25px black)";
+                }
             }
-            this.ctxm.drawImage(
+
+            
+            ctx.drawImage(
                 Maphelper.getTerrainImage(tile.height),
                 corners[3].x + padding, //obere linke ecke
                 corners[3].y - this.layout.size.y / 2 + padding, //obere linke ecke- halbe höhe
                 this.layout.size.x * Math.sqrt(3) - padding, //radius mal wurzel aus 3 um die reale breite des hex zu errechnen
                 this.layout.size.y * 2 - padding);//radius mal 2 um die reale höhe des hex zu errechnen
             
-            this.ctxm.filter = "none";
 
             for (let i = 0; i < tile.environmentSpots.length; i++) {
                 let spot = tile.environmentSpots[i];
                 let img = Maphelper.getSprite(spot);
                 let pos = spot.pos;
-                this.ctxm.drawImage(img,
+                ctx.drawImage(img,
                     this.layout.hexToPixel(hex).x + pos.x,
                     this.layout.hexToPixel(hex).y + pos.y);
             }
 
-            this.ctxm.restore();
+            ctx.filter = "none";
+
+            ctx.restore();
         }
     }
     drawFow() {
