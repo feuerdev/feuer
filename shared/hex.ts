@@ -44,6 +44,26 @@ export default class Hex {
     return result;
   }
 
+  public neighborsRange(radius): Hex[] {
+    let result:Hex[] = [this];
+    for(let i = 1; i <= radius; i++) {
+      result.push(...this.ring(i));
+    }
+    return result;
+  }
+
+  public ring(radius) {
+    let results = [];
+    let pointer = this.add(this.neighbor(4).subtract(this).scale(radius));
+    for(let i = 0;i < 6;i++) {  
+      for(let j = 0; j < radius; j++) {
+        results.push(pointer);
+        pointer = pointer.neighbor(i);
+      }
+    }
+    return results
+  }
+
   public static diagonals: Hex[] = [new Hex(2, -1, -1), new Hex(1, -2, 1), new Hex(-1, -1, 2), new Hex(-2, 1, 1), new Hex(-1, 2, -1), new Hex(1, 1, -2)];
 
   public diagonalNeighbor(direction: number): Hex {
