@@ -82,17 +82,24 @@ export default class Game implements InputListener, ConnectionListener, HudListe
         Log.info("Disonnected");
     }
     onSetup(socket: Socket) {
-        //Hier alle Gamelevel Events implementieren 
-        socket.on("gamestate world", (data) => {
-            this.cWorld.tiles = data.tiles;
-            this.cWorld.armies = data.armies;
-            for(let unit of this.cWorld.armies) {
-                if(unit.owner !== currentUid) {
-                    if(this.cWorld.playerRelations[PlayerRelation.getHash(unit.owner, currentUid)] === undefined) {
-                        this.connection.send("request relation", {id1: unit.owner, id2:currentUid});
+        //Hier alle Gamelevel Events implementieren
+        socket.on("gamestate tiles", (data) => {
+            this.cWorld.tiles = data;
+            this.renderer.requestRedraw();
+        });
+        socket.on("gamestate armies", (data) => {
+            this.cWorld.armies = data;
+            for(let army of this.cWorld.armies) {
+                if(army.owner !== currentUid) {
+                    if(this.cWorld.playerRelations[PlayerRelation.getHash(army.owner, currentUid)] === undefined) {
+                        this.connection.send("request relation", {id1: army.owner, id2:currentUid});
                     }
                 } 
             }
+            this.renderer.requestRedraw();
+        });
+        socket.on("gamestate battles", (data) => {
+            this.cWorld.battles = data;
             this.renderer.requestRedraw();
         });
         socket.on("gamestate relation", (data) => {

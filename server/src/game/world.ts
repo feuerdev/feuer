@@ -21,10 +21,4 @@ export default class World {
     this.battles = battles;
   }
 
-  prepareForSending() {
-    let string = JSON.stringify(this);
-    let object_again = JSON.parse(string);
-    return object_again;
-  }
-
 }

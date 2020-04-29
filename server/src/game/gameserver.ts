@@ -111,7 +111,7 @@ export default class GameServer {
           army.pos = army.targetHexes.splice(0, 1)[0];
           this.world.tiles[army.pos.hash()].addSpot(army.getSprite(), army.id);
           army.movementStatus = 0;
-
+          this.updatePlayerVisibilities(army.owner);
           this.checkForBattle(army);
         }
       }
@@ -139,10 +139,12 @@ export default class GameServer {
         if (battle.aAttacker.health <= 0) {
           this.world.tiles[battle.pos.hash()].removeSpot(battle.aAttacker.id);
           this.world.armies.splice(this.world.armies.indexOf(battle.aAttacker));
+          this.updatePlayerVisibilities(battle.aAttacker.owner);
         }
         if (battle.aDefender.health <= 0) {
           this.world.tiles[battle.pos.hash()].removeSpot(battle.aDefender.id);
           this.world.armies.splice(this.world.armies.indexOf(battle.aDefender));
+          this.updatePlayerVisibilities(battle.aDefender.owner);
         }
         this.world.battles.splice(i, 1);
       }
@@ -181,7 +183,12 @@ export default class GameServer {
         const socket: Socket = this.uidsockets[player.uid];
         if (socket) {
           socket.emit("gamestate players", this.players);
-          socket.emit("gamestate world", this.world.prepareForSending());
+          let tiles = this.getVisibleTiles(player.visibleHexes);
+          let armies = this.getVisibleArmies(player.visibleHexes);
+          let battles = this.getVisibleBattles(player.visibleHexes);
+          socket.emit("gamestate tiles", tiles);
+          socket.emit("gamestate armies", armies);
+          socket.emit("gamestate battles", battles);
         }
       }
     }
@@ -215,6 +222,8 @@ export default class GameServer {
           self.players.push(player);
           self.socketplayer[socket.id] = player;
           Log.info("New Player Connected: " + player.name);
+
+          this.updatePlayerVisibilities(uid);
         })
         .catch(error => {
           Log.error(error);
@@ -228,9 +237,6 @@ export default class GameServer {
       }
     }
     this.uidsockets[uid] = socket;
-
-    //Send initial data
-    socket.emit("gamestate world", this.world);
   }
 
   onRequestMovement(socket: Socket, hex: any) {
@@ -265,16 +271,89 @@ export default class GameServer {
 
   }
 
-  private getPlayerUid(socketId) {
-    const player: Player = this.getPlayer(socketId);
+  private getPlayerUid(socketId):string {
+    const player: Player = this.getPlayerBySocketId(socketId);
     if (player) {
       return player.uid;
     }
     return null;
   }
 
-  private getPlayer(socketId: string): Player {
+  private getPlayerBySocketId(socketId: string): Player {
     return this.socketplayer[socketId];
+  }
+
+  private getPlayerByUid(uid: string): Player {
+    for(let player of this.players) {
+      if(player.uid === uid) return player;
+    }
+    return null;
+  }
+
+  /**
+   * Updates the player.discoveredHexes and player.visibleHexes. Call this method after something happens, that affects visibilities (movement, upgrades, deaths...)
+   * @param uid player id
+   */
+  private updatePlayerVisibilities(uid:string) {
+    let player:Player = this.getPlayerByUid(uid);
+    player.visibleHexes = [];
+
+    if(player) {
+      for(let army of this.world.armies) {
+        if(army.owner === uid) {
+          let visible:Hex[] = army.pos.neighborsRange(army.getSpottingRange());
+          this.addUniqueHexes(player.visibleHexes, visible);
+          this.addUniqueHexes(player.discoveredHexes, visible);
+        }
+      }
+      for(let building of this.world.buildings) {
+        if(building.owner === uid) {
+          this.addUniqueHexes(player.visibleHexes, [building.pos]);
+          this.addUniqueHexes(player.discoveredHexes, [building.pos]);
+        }
+      }
+    }    
+  }
+
+  private addUniqueHexes(hexarray:Hex[], newHexes:Hex[]) {
+    let found = false;
+    for(let nHex of newHexes) {
+      for(let h of hexarray) {
+        if(nHex.equals(h)) {
+          found = true;
+        }
+      }
+      if(!found) {
+        hexarray.push(nHex);
+      }
+    }    
+  }
+
+  private getVisibleTiles(hexes:Hex[]):Hashtable<Tile> {
+    let result:Hashtable<Tile> = {};
+    for(let hex of hexes) {
+      result[hex.hash()] = this.world.tiles[hex.hash()];
+    }
+    return result;
+  }
+
+  private getVisibleArmies(hexes:Hex[]):Army[] {
+    let result:Army[] = [];
+    for(let hex of hexes) {
+      for(let army of this.world.armies) {
+        if(army.pos.equals(hex)) result.push(army);
+      }
+    }
+    return result;
+  }
+  private getVisibleBattles(hexes:Hex[]):Battle[] {
+    let result:Battle[] = [];
+    for(let hex of hexes) {
+      for(let battle of this.world.battles) {
+        if(battle.pos.equals(hex)) result.push(battle);
+      }
+    }
+    return result;
   }
 
   public setWorld(world: World) {
