@@ -10,12 +10,10 @@ import Player from "./player";
 import Helper from "../helper";
 
 import * as db from "../util/db";
-import * as Util from "../../../shared/util";
 import Log from "../util/log";
 import config from "../util/config";
+import * as Rules from "../../../shared/rules.json";
 import { astar } from "../../../shared/pathfinding";
-import Vector2 from "../../../shared/vector2";
-import Vector3 from "../../../shared/vector3";
 import { Socket } from "socket.io";
 import { Hashtable } from "../../../shared/util";
 import Tile, { Spot } from "./tile";
@@ -23,7 +21,7 @@ import World from "./world";
 import Army from "./objects/army";
 import Hex from "../../../shared/hex";
 import Building from "./objects/building";
-import { EnumUnit, PlayerRelation, EnumRelationType } from "../../../shared/gamedata";
+import { PlayerRelation, EnumRelationType } from "../../../shared/gamedata";
 import Battle from "./objects/battle";
 
 export default class GameServer {
@@ -46,7 +44,6 @@ export default class GameServer {
 
   constructor(world: World) {
     this.world = world;
-    //
   }
 
   listen(httpServer: Server) {
@@ -57,6 +54,7 @@ export default class GameServer {
 
       socket.on("request movement", (data) => this.onRequestMovement(socket, data));
       socket.on("request construction", (data) => this.onRequestConstruction(socket, data));
+      socket.on("request unit", (data) => this.onRequestUnit(socket, data));
       socket.on("request relation", (data) => this.onRequestRelation(socket, data));
     });
   }
@@ -70,17 +68,16 @@ export default class GameServer {
     let gameloop = () => {
       let timeSincelastFrame = Date.now() - this.previousTick;
       this.previousTick = Date.now();
-      //this.previousTick = Date.now();
       this.actualTicks++;
       let dbgStart = Date.now();
       this.update(this.updaterate / this.defaultDelta);
       let dbgAfterUpdate = Date.now();
       this.updateNet(this.updaterate / this.defaultNetrate);
       let dbgAfterSend = Date.now();
-      if (this.actualTicks > 5 && Math.abs(timeSincelastFrame - this.updaterate) > 10) {
+      if (this.actualTicks > 5 && Math.abs(timeSincelastFrame - this.updaterate) > 30) {
         Log.error("Warning something is fucky with the gameloop");
       }
-      Log.silly("Update took:", dbgAfterUpdate - dbgStart, "Sending Data to clients took:", dbgAfterSend - dbgAfterUpdate, "Time since last Frame:", timeSincelastFrame, "Gesamtticks:", this.actualTicks, "Abweichung:", timeSincelastFrame - this.updaterate);
+      Log.silly("Update took:"+ (dbgAfterUpdate - dbgStart)+ " Sending Data to clients took:"+ (dbgAfterSend - dbgAfterUpdate)+ " Time since last Frame:"+ timeSincelastFrame+ " Gesamtticks:"+ this.actualTicks+ " Abweichung:"+ (timeSincelastFrame - this.updaterate));
 
     }
     setInterval(gameloop, this.updaterate);
@@ -93,7 +90,6 @@ export default class GameServer {
 
   resume() {
     Log.info("Game resumed");
-    //this.lastTime = Date.now(); //lastTime zurücksetzen, damit die pausierte Zeit nicht nachgeholt wird
     this.run();
   }
 
@@ -120,11 +116,12 @@ export default class GameServer {
     //Resource Gathering
     for (let building of this.world.buildings) {
       let tile = this.world.tiles[building.pos.hash()];
-      tile.food += building.foodHarvest * deltaFactor;
-      tile.wood += building.woodHarvest * deltaFactor;
-      tile.stone += building.stoneHarvest * deltaFactor;
-      tile.iron += building.ironHarvest * deltaFactor;
-      tile.gold += building.goldHarvest * deltaFactor;
+      for(let res of Object.keys(building.resourceGeneration)) {
+        if(!tile.resources[res]) {
+          tile.resources[res] = 0;
+    }
+        tile.resources[res] += building.resourceGeneration[res] * deltaFactor;
+      }
     }
 
     //Battles
@@ -132,16 +129,16 @@ export default class GameServer {
     while (i--) {
       let battle = this.world.battles[i];
 
-      battle.aDefender.health -= battle.aAttacker.attack + Math.round(Math.random() *10);
-      battle.aAttacker.health -= battle.aDefender.attack + Math.round(Math.random() *20);
+      battle.aDefender.hp -= battle.aAttacker.attack + Math.round(Math.random() *10);
+      battle.aAttacker.hp -= battle.aDefender.attack + Math.round(Math.random() *20);
 
-      if (battle.aAttacker.health <= 0 || battle.aDefender.health <= 0) {
-        if (battle.aAttacker.health <= 0) {
+      if (battle.aAttacker.hp <= 0 || battle.aDefender.hp <= 0) {
+        if (battle.aAttacker.hp <= 0) {
           this.world.tiles[battle.pos.hash()].removeSpot(battle.aAttacker.id);
           this.world.armies.splice(this.world.armies.indexOf(battle.aAttacker));
           this.updatePlayerVisibilities(battle.aAttacker.owner);
         }
-        if (battle.aDefender.health <= 0) {
+        if (battle.aDefender.hp <= 0) {
           this.world.tiles[battle.pos.hash()].removeSpot(battle.aDefender.id);
           this.world.armies.splice(this.world.armies.indexOf(battle.aDefender));
           this.updatePlayerVisibilities(battle.aDefender.owner);
@@ -186,9 +183,11 @@ export default class GameServer {
           let tiles = this.getTiles(player.visibleHexes);
           let armies = this.getVisibleArmies(player.visibleHexes);
           let battles = this.getVisibleBattles(player.visibleHexes);
+          let buildings = this.getVisibleBuildings(player.visibleHexes);
           socket.emit("gamestate tiles", tiles);
           socket.emit("gamestate armies", armies);
           socket.emit("gamestate battles", battles);
+          socket.emit("gamestate buildings", buildings);
         }
       }
     }
@@ -255,11 +254,28 @@ export default class GameServer {
 
   onRequestConstruction(socket: Socket, data) {
     let uid = this.getPlayerUid(socket.id);
-    let building = Building.createBuilding(uid, data.typeId, data.pos);
-    //Todo: check if player is even allowed to do that
+    let pos = new Hex(data.pos.q, data.pos.r, data.pos.s);
+    let tile = this.world.tiles[pos.hash()];
+
+    if(this.isAllowedToBuild(tile, uid, data.name)) {
+      let building = Building.createBuilding(uid, data.name, pos);
     this.world.buildings.push(building);
-    let tile = this.world.tiles[new Hex(data.pos.q, data.pos.r, data.pos.s).hash()];
     tile.addSpot(building.sprite, building.id);
+  }
+  }
+
+  onRequestUnit(socket: Socket, data) {
+    let uid = this.getPlayerUid(socket.id);
+    let pos = new Hex(data.pos.q, data.pos.r, data.pos.s);
+    let tile = this.world.tiles[pos.hash()];
+    if(this.isAllowedToRecruit(tile, uid, data.name)) {
+      let building = Building.createBuilding(uid, data.name, pos);
+      this.world.buildings.push(building);
+      tile.addSpot(building.sprite, building.id);
+    }
+    let army = Army.createUnit(uid, data.name, new Hex(data.pos.q, data.pos.r, data.pos.s));
+    this.world.armies.push(army);
+    tile.addSpot(army.getSprite(), army.id);
   }
 
   onRequestRelation(socket: Socket, data) {
@@ -358,6 +374,88 @@ export default class GameServer {
     return result;
   }
 
+  private getVisibleBuildings(hexes:Hex[]):Building[] {
+    let result:Building[] = [];
+    for(let hex of hexes) {
+      for(let building of this.world.buildings) {
+        if(building.pos.equals(hex)) result.push(building);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Checks if a player can build a building at a tile
+   * @param tile Tile
+   * @param uid Player uid
+   * @param name of building
+   */
+  private isAllowedToBuild(tile:Tile, uid:string, name:string):boolean{
+    let object = Rules.buildings[name];
+    return this.hasResources(tile, object) && this.hasPresence(tile.hex, uid);
+  }
+
+  /**
+   * Checks if a player can recruit an army at a tile
+   * @param tile Tile
+   * @param uid Player uid
+   * @param name of unit
+   */
+  private isAllowedToRecruit(tile:Tile, uid:string, name:string):boolean{
+    let object = Rules.units[name];
+    return this.hasResources(tile, object) && this.hasBuildingAt(tile.hex, uid);
+  }
+
+  /**
+   * Returns true if uid has army at pos
+   * @param pos 
+   * @param uid 
+   */
+  private hasArmyAt(pos:Hex, uid:string):boolean {
+    for(let army of this.world.armies) {
+      if(army.pos.equals(pos) && army.owner === uid) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Returns true if uid has building at pos
+   * @param pos 
+   * @param uid 
+   */
+  private hasBuildingAt(pos:Hex, uid:string):boolean {
+    for(let building of this.world.buildings) {
+      if(building.pos.equals(pos) && building.owner === uid) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Returns true if uid has army or building at pos
+   * @param pos 
+   * @param uid 
+   */
+  private hasPresence(pos:Hex, uid:string):boolean {
+    return this.hasArmyAt(pos, uid) || this.hasBuildingAt(pos, uid);
+  }
+
+  /**
+   * Checks if the object (building or unit) can be created on tile
+   * @param tile 
+   * @param object 
+   */
+  private hasResources(tile:Tile, object:any):boolean {
+    for(let resource of Object.keys(object.cost)) {
+      if(!tile.resources[resource] || tile.resources[resource] < object.cost[resource]) {
+        return false;
+      }
+    }
+    return true;
+  }
   public setWorld(world: World) {
     this.world = world;
   }
