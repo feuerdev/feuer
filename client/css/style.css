@@ -62,7 +62,7 @@ canvas {
 .hud-left {
     background: lightsalmon;
     position: fixed;
-    top: calc(5vh + 10px);
+    top: 10px;
     width: 15vw;
     left: 10px;
     bottom: 10px;
@@ -98,7 +98,7 @@ canvas {
 .hud-right {
     background: lightskyblue;
     position: fixed;
-    top: calc(5vh + 10px);
+    top: 10px;
     width: 15vw;
     right: 10px;
     bottom: 10px;

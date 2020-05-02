@@ -46,16 +46,18 @@
 	</div>
 	<div class="hud hud-right">
 		<div class="hud-tab-bar">
-			<button class="hud-tab active" id="button-selection-buildings">Buildings</button>
+			<button class="hud-tab active" id="button-selection-tile">Tile</button>
+			<button class="hud-tab" id="button-selection-buildings">Buildings</button>
 			<button class="hud-tab" id="button-selection-units">Units</button>
 		</div>
+		<div class="hud-tab-content" id="content-selection-tile"></div>
 		<div class="hud-tab-content" id="content-selection-buildings"></div>
 		<div class="hud-tab-content" id="content-selection-units"></div>
 	</div>
 	<div id="debug"></div>
 
 	<div class="hud-tab-content-template" id="content-construction-buildings-template">
-		<img class="hud-tab-content-template-element" id="construction-template-img" src="img/hud_iron.png">
+		{{!-- <img class="hud-tab-content-template-element" id="construction-template-img" src="img/hud_iron.png"> --}}
 		<label class="hud-tab-content-template-element" id="construction-template-label">Template</label>
 		<button class="hud-tab-content-template-element" id="construction-template-button">Create</button>
 	</div>

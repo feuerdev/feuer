@@ -165,9 +165,9 @@ export default class Renderer implements InputListener, MaphelperListener {
 
             if(this.selectedHex && this.selectedHex.equals(tile.hex)) {
                 if(!tile.visible) {
-                    ctx.filter = "brightness(50%) contrast(1.05) drop-shadow(0px 0px 25px black)";
+                    // ctx.filter = "brightness(50%) contrast(1.05) drop-shadow(0px 0px 25px black)"; Deaktiviert wegen performance
                 } else {
-                    ctx.filter = "brightness(110%) contrast(1.05) drop-shadow(0px 0px 25px black)";
+                    // ctx.filter = "brightness(110%) contrast(1.05) drop-shadow(0px 0px 25px black)"; Deaktiviert wegen performance
                 }
             }
 
