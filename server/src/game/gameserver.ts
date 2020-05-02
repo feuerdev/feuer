@@ -277,9 +277,9 @@ export default class GameServer {
     let pos = new Hex(data.pos.q, data.pos.r, data.pos.s);
     let tile = this.world.tiles[pos.hash()];
     if(this.isAllowedToRecruit(tile, uid, data.name)) {
-      let building = Building.createBuilding(uid, data.name, pos);
-      this.world.buildings.push(building);
-      tile.addSpot(building.sprite, building.id);
+      let army = Army.createUnit(uid, data.name, pos);
+      this.world.armies.push(army);
+      tile.addSpot(army.getSprite(), army.id);
     }
     let army = Army.createUnit(uid, data.name, new Hex(data.pos.q, data.pos.r, data.pos.s));
     this.world.armies.push(army);
