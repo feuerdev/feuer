@@ -119,7 +119,7 @@ export default class GameServer {
       for(let res of Object.keys(building.resourceGeneration)) {
         if(!tile.resources[res]) {
           tile.resources[res] = 0;
-    }
+        }
         tile.resources[res] += building.resourceGeneration[res] * deltaFactor;
       }
     }
@@ -210,12 +210,17 @@ export default class GameServer {
           player.name = name;
           player.initialized = true;
 
-          //Give Player an initial Scout
-          let initialUnit = Army.createUnit(player.uid, EnumUnit.SCOUT, new Hex(0, 0, 0));
+          //Give Player an initial Scout and Camp
+          let pos = self.getRandomHex();
+          let initialUnit = Army.createUnit(player.uid, "Scout", pos);
           self.world.armies.push(initialUnit);
+
+          let initialCamp = Building.createBuilding(player.uid, "Campsite", pos);
+          self.world.buildings.push(initialCamp);
 
           //Prepare Drawing of that unit
           self.world.tiles[initialUnit.pos.hash()].addSpot(initialUnit.getSprite(), initialUnit.id);
+          self.world.tiles[initialCamp.pos.hash()].addSpot(initialCamp.getSprite(), initialCamp.id);
 
           //Register player in Gamesever
           self.players.push(player);
@@ -245,12 +250,12 @@ export default class GameServer {
     for (let unit of this.world.armies) {
       if (uid === unit.owner) {
         unit.targetHexes = astar(this.world.tiles, unit.pos, new Hex(hex.q, hex.r, hex.s));
-        for (let hex of unit.targetHexes) {
-          console.log("Hex: " + JSON.stringify(hex) + "Factor: " + this.world.tiles[hex.hash()].movementFactor);
+          for (let hex of unit.targetHexes) {
+            console.log("Hex: " + JSON.stringify(hex) + "Factor: " + this.world.tiles[hex.hash()].movementFactor);
+          }
         }
       }
     }
-  }
 
   onRequestConstruction(socket: Socket, data) {
     let uid = this.getPlayerUid(socket.id);
@@ -259,9 +264,9 @@ export default class GameServer {
 
     if(this.isAllowedToBuild(tile, uid, data.name)) {
       let building = Building.createBuilding(uid, data.name, pos);
-    this.world.buildings.push(building);
-    tile.addSpot(building.sprite, building.id);
-  }
+      this.world.buildings.push(building);
+      tile.addSpot(building.sprite, building.id);
+    }    
   }
 
   onRequestUnit(socket: Socket, data) {
@@ -456,6 +461,13 @@ export default class GameServer {
     }
     return true;
   }
+
+  private getRandomHex():Hex {
+    let hashes = Object.keys(this.world.tiles);
+    let index = Math.round(Math.random()*hashes.length);
+    return this.world.tiles[hashes[index]].hex;    
+  }
+
   public setWorld(world: World) {
     this.world = world;
   }
