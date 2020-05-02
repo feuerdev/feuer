@@ -13,7 +13,7 @@ export default class Tile {
   /**
    * Position
    */
-  private hex:Hex;
+  public hex:Hex;
 
   //Gameplay
   public height:number;
@@ -22,11 +22,8 @@ export default class Tile {
   public ironOre: number;
   public goldOre: number;
   public movementFactor:number = 1;
-  public food:number = 0;
-  public wood:number = 0;
-  public stone:number = 0;
-  public iron:number = 0;
-  public gold:number = 0;
+
+  public resources = {};
   
 
   //Graphics
