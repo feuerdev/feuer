@@ -59,7 +59,7 @@ export default class Game implements InputListener, ConnectionListener, HudListe
 
     onRightClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
         let clickedHex = this.layout.pixelToHex(cursorWorld).round();
-        if(clickedHex && this.cWorld.tiles[clickedHex.hash()]) {
+        if(clickedHex /*&& this.cWorld.tiles[clickedHex.hash()]*/) {
             this.connection.send("request movement", clickedHex);        
         }
     }

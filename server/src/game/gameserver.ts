@@ -249,13 +249,16 @@ export default class GameServer {
     let uid = this.getPlayerUid(socket.id);
     for (let unit of this.world.armies) {
       if (uid === unit.owner) {
-        unit.targetHexes = astar(this.world.tiles, unit.pos, new Hex(hex.q, hex.r, hex.s));
+        let target:Hex = new Hex(hex.q, hex.r, hex.s);
+        if(this.world.tiles[target.hash()]) {
+          unit.targetHexes = astar(this.world.tiles, unit.pos, target);
           for (let hex of unit.targetHexes) {
             console.log("Hex: " + JSON.stringify(hex) + "Factor: " + this.world.tiles[hex.hash()].movementFactor);
           }
         }
       }
     }
+  }
 
   onRequestConstruction(socket: Socket, data) {
     let uid = this.getPlayerUid(socket.id);
