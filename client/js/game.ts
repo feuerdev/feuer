@@ -53,8 +53,12 @@ export default class Game implements InputListener, ConnectionListener, HudListe
         this.renderer.draw(this.cWorld);
     }
 
-    onConstructionRequested(typeId: any): void {
-        this.connection.send("request construction", {typeId: typeId, pos:this.selectedHex});
+    onConstructionRequested(name: string): void {
+        this.connection.send("request construction", {name: name, pos:this.selectedHex});
+    }
+
+    onUnitRequested(name: string): void {
+        this.connection.send("request unit", {name: name, pos:this.selectedHex});
     }
 
     onRightClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
@@ -119,6 +123,10 @@ export default class Game implements InputListener, ConnectionListener, HudListe
         });
         socket.on("gamestate battles", (data) => {
             this.cWorld.battles = data;
+            this.renderer.requestRedraw();
+        });
+        socket.on("gamestate buildings", (data) => {
+            this.cWorld.buildings = data;
             this.renderer.requestRedraw();
         });
         socket.on("gamestate relation", (data) => {
