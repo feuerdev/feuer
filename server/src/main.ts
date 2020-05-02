@@ -8,6 +8,7 @@ import GameServer from "./game/gameserver"
 import Log from "./util/log";
 import Mapgen from "./game/mapgen";
 import World from "./game/world";
+import * as Rules from "../../shared/rules.json"
 
 Log.info("Config: "+config.name);
 Log.info("Config Content: "+JSON.stringify(config));
@@ -15,7 +16,7 @@ Log.info("Starting Server");
 
 const server_web:WebServer = new WebServer();
 
-const world:World = Mapgen.create(Math.random(), config.map_size, config.map_frequency, config.map_amplitude, config.map_min, config.map_max, config.map_octaves, config.map_persistence);
+const world:World = Mapgen.create(Math.random(), Rules.settings.map_size, Rules.settings.map_frequency, Rules.settings.map_amplitude, Rules.settings.map_min, Rules.settings.map_max, Rules.settings.map_octaves, Rules.settings.map_persistence);
 
 const server_game:GameServer = new GameServer(world);
 

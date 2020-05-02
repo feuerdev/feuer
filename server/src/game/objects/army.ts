@@ -1,6 +1,7 @@
 import GameObject, { Spotter, Drawable } from "./gameobject"
 import Hex from "../../../../shared/hex"
-import { EnumUnit, Sprite } from "../../../../shared/gamedata";
+import { Sprite } from "../../../../shared/gamedata";
+import * as Rules from "../../../../shared/rules.json";
 
 export default class Army extends GameObject implements Spotter, Drawable {
   /**
@@ -27,15 +28,12 @@ export default class Army extends GameObject implements Spotter, Drawable {
    * Gameplay
    */
   public speed: number;
-  public attack: number = 5;
-  public health: number = 100;
-  public movementStatus: number = 0;
+  public attack: number;
+  public hp: number;
   public spottingDistance: number;
-  public food:number = 0;
-  public wood:number = 0;
-  public stone:number = 0;
-  public iron:number = 0;
-  public gold:number = 0;
+  public movementStatus: number = 0;
+
+  public resources = {};
 
   /**
    * Graphics
@@ -46,24 +44,15 @@ export default class Army extends GameObject implements Spotter, Drawable {
     super(owner);
   }
 
-  public static createUnit(owner: string, type: EnumUnit, pos: Hex): Army {
-    const unit: Army = new Army(owner);
-    unit.pos = pos;
-    switch (type) {
-      case EnumUnit.SCOUT:
-        unit.spottingDistance = 1;
-        unit.speed = 10;
-        unit.sprite = Sprite.unitScout;
-        break;
-      case EnumUnit.SWORDSMAN:
-        unit.spottingDistance = 0;
-        unit.speed = 3;
-        //unit.sprite = Sprite.unitSwordsman;
-        break;
-      default:
-        return null;
-    }
-    return unit;
+  public static createUnit(owner: string, name: string, pos: Hex): Army {
+    const template = Rules.units[name];
+    const army: Army = new Army(owner);
+    army.pos = pos;
+    army.spottingDistance = template.spottingDistance;
+    army.sprite = template.sprite;
+    army.speed = template.speed;
+    army.attack = template.attack;
+    army.hp = template.hp;
+    return army;
   }
-
 }
