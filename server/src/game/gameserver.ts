@@ -342,8 +342,8 @@ export default class GameServer {
   }
 
   private addUniqueHexes(hexarray:Hex[], newHexes:Hex[]) {
-    let found = false;
     for(let nHex of newHexes) {
+    let found = false;
       for(let h of hexarray) {
         if(nHex.equals(h)) {
           found = true;
