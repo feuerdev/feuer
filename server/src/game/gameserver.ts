@@ -270,7 +270,8 @@ export default class GameServer {
       let building = Building.createBuilding(uid, data.name, pos);
       this.world.buildings.push(building);
       tile.addSpot(building.sprite, building.id);
-    }    
+      this.updatePlayerVisibilities(uid);
+    }
   }
 
   onRequestUnit(socket: Socket, data) {
@@ -281,10 +282,8 @@ export default class GameServer {
       let army = Army.createUnit(uid, data.name, pos);
       this.world.armies.push(army);
       tile.addSpot(army.getSprite(), army.id);
+      this.updatePlayerVisibilities(uid);
     }
-    let army = Army.createUnit(uid, data.name, new Hex(data.pos.q, data.pos.r, data.pos.s));
-    this.world.armies.push(army);
-    tile.addSpot(army.getSprite(), army.id);
   }
 
   onRequestRelation(socket: Socket, data) {
