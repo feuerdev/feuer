@@ -6,6 +6,7 @@ import Hex from "../../shared/hex";
 export interface HudListener {
   onConstructionRequested?(name: string): void;
   onUnitRequested?(name: string): void;
+  onUnitsSelected?(uids: string[]): void;
 }
 
 enum EnumTabConstruction {
@@ -154,11 +155,33 @@ export default class Hud {
         this.divSelectionContentBuildings.append(this.generateBuildingInfoString(building));
       }
     }
+    let armies = [];
     for (let army of cWorld.armies) {
       if (hex.equals(army.pos)) {
+        armies.push(army);
+        let selectButton = $("<button/>", {
+          type: "button",
+          text: "Select",
+          click: () => {for (let listener of this.listeners) {
+            if (listener.onUnitsSelected) {
+              listener.onUnitsSelected([army.id]);
+            }
+          }}
+        });
+        this.divSelectionContentUnits.append(selectButton);
         this.divSelectionContentUnits.append(this.generateArmyInfoString(army));
       }
     }
+    let selectAllButton = $("<button/>", {
+      type: "button",
+      text: "Select All",
+      click: () => {for (let listener of this.listeners) {
+        if (listener.onUnitsSelected) {
+          listener.onUnitsSelected(armies.map((army)=>army.id));
+        }
+      }}
+    });
+    this.divSelectionContentUnits.append(selectAllButton);
   }
 
   showConstructionHud() {

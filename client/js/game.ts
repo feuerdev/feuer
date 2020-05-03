@@ -29,6 +29,7 @@ export default class Game implements InputListener, ConnectionListener, HudListe
     private cWorld:ClientWorld = new ClientWorld();
 
     private selectedHex:Hex = null;
+    private selectedArmies:string[] = [];
 
     constructor() {
         this.gameloop = new Gameloop(Gameloop.requestAnimationFrameWrapper, config.updaterate, config.netrate)
@@ -61,10 +62,14 @@ export default class Game implements InputListener, ConnectionListener, HudListe
         this.connection.send("request unit", {name: name, pos:this.selectedHex});
     }
 
+    onUnitsSelected(uids: string[]): void {
+        this.selectedArmies = uids;
+    }
+
     onRightClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
         let clickedHex = this.layout.pixelToHex(cursorWorld).round();
         if(clickedHex /*&& this.cWorld.tiles[clickedHex.hash()]*/) {
-            this.connection.send("request movement", clickedHex);        
+            this.connection.send("request movement", {selection:this.selectedArmies, target:clickedHex});        
         }
     }
 

@@ -108,7 +108,7 @@ export default class GameServer {
           this.world.tiles[army.pos.hash()].addSpot(army.getSprite(), army.id);
           army.movementStatus = 0;
           this.updatePlayerVisibilities(army.owner);
-          this.checkForBattle(army);
+          //this.checkForBattle(army);
         }
       }
     }
@@ -245,11 +245,12 @@ export default class GameServer {
     this.uidsockets[uid] = socket;
   }
 
-  onRequestMovement(socket: Socket, hex: any) {
+  onRequestMovement(socket: Socket, data: any) {
     let uid = this.getPlayerUid(socket.id);
+    let selection:number[] = data.selection;
+    let target:Hex = new Hex(data.target.q, data.target.r, data.target.s);
     for (let unit of this.world.armies) {
-      if (uid === unit.owner) {
-        let target:Hex = new Hex(hex.q, hex.r, hex.s);
+      if (uid === unit.owner && selection.includes(unit.id) ) {
         if(this.world.tiles[target.hash()]) {
           unit.targetHexes = astar(this.world.tiles, unit.pos, target);
           for (let hex of unit.targetHexes) {
@@ -343,7 +344,7 @@ export default class GameServer {
 
   private addUniqueHexes(hexarray:Hex[], newHexes:Hex[]) {
     for(let nHex of newHexes) {
-    let found = false;
+      let found = false;
       for(let h of hexarray) {
         if(nHex.equals(h)) {
           found = true;
