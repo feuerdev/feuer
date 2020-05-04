@@ -41,8 +41,8 @@ export const
  * Represents the relation of one pair of players
  */
 export class PlayerRelation {
-  public id1:number;
-  public id2:number;
+  public id1:string;
+  public id2:string;
   public relationType: EnumRelationType;
   
   constructor(id1, id2, relationType) {
@@ -58,7 +58,7 @@ export class PlayerRelation {
   /**
    * Always put the lower id first
    */
-  public static getHash(id1:number, id2:number):string {
+  public static getHash(id1:string, id2:string):string {
     if(id1 < id2) {
       return id1 + "-" + id2;
     } else {

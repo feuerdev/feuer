@@ -108,7 +108,7 @@ export default class GameServer {
           this.world.tiles[army.pos.hash()].addSpot(army.getSprite(), army.id);
           army.movementStatus = 0;
           this.updatePlayerVisibilities(army.owner);
-          //this.checkForBattle(army);
+          this.checkForBattle(army);
         }
       }
     }
@@ -135,12 +135,12 @@ export default class GameServer {
       if (battle.aAttacker.hp <= 0 || battle.aDefender.hp <= 0) {
         if (battle.aAttacker.hp <= 0) {
           this.world.tiles[battle.pos.hash()].removeSpot(battle.aAttacker.id);
-          this.world.armies.splice(this.world.armies.indexOf(battle.aAttacker));
+          this.world.armies.splice(this.world.armies.indexOf(battle.aAttacker), 1);
           this.updatePlayerVisibilities(battle.aAttacker.owner);
         }
         if (battle.aDefender.hp <= 0) {
           this.world.tiles[battle.pos.hash()].removeSpot(battle.aDefender.id);
-          this.world.armies.splice(this.world.armies.indexOf(battle.aDefender));
+          this.world.armies.splice(this.world.armies.indexOf(battle.aDefender), 1);
           this.updatePlayerVisibilities(battle.aDefender.owner);
         }
         this.world.battles.splice(i, 1);
@@ -157,8 +157,10 @@ export default class GameServer {
 
   checkForBattle(army: Army) {
     for (let other_army of this.world.armies) {
-      if (other_army.pos.equals(army.pos) && army.id !== other_army.id) { //TODO: Check for allie status, stances etc
-        this.world.battles.push(new Battle(army.pos, army, other_army));
+      if (other_army.pos.equals(army.pos) && army.owner !== other_army.owner && army.id !== other_army.id) {
+        if(this.world.playerRelations[PlayerRelation.getHash(army.owner, other_army.owner)].relationType === EnumRelationType.rtHostile) {
+          this.world.battles.push(new Battle(army.pos, army, other_army));
+        }
       }
     }
   }
@@ -290,7 +292,7 @@ export default class GameServer {
     let hash = PlayerRelation.getHash(data.id1, data.id2);
     let playerRelation = this.world.playerRelations[hash];
     if (!playerRelation) {
-      playerRelation = new PlayerRelation(data.id1, data.id2, EnumRelationType.rtNeutral);
+      playerRelation = new PlayerRelation(data.id1, data.id2, EnumRelationType.rtHostile);
       this.world.playerRelations[hash] = playerRelation;
     }
     socket.emit("gamestate relation", playerRelation);
