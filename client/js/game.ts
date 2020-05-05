@@ -32,6 +32,8 @@ export default class Game implements InputListener, ConnectionListener, HudListe
     private selectedHex:Hex = null;
     private selectedArmies:string[] = [];
 
+    private initialFocusSet = false;
+
     constructor() {
         this.gameloop = new Gameloop(Gameloop.requestAnimationFrameWrapper, config.updaterate, config.netrate)
         this.connection = new Connection(config.ip, config.transports);
@@ -133,6 +135,10 @@ export default class Game implements InputListener, ConnectionListener, HudListe
         });
         socket.on("gamestate buildings", (data) => {
             this.cWorld.buildings = data;
+            if(!this.initialFocusSet) {
+                this.initialFocusSet = true;
+                this.renderer.focus(this.cWorld.buildings[0].pos);
+            }
             this.renderer.requestRedraw();
         });
         socket.on("gamestate relation", (data) => {

@@ -271,6 +271,11 @@ export default class Renderer implements InputListener, MaphelperListener {
         this.cameraPosition = cameraPos;
         this.shouldRedrawMap = true;
     }
+
+    focus(pos: Hex) {
+        this.cameraPosition.x = this.layout.hexToPixel(pos).x - this.drawWidth/2;
+        this.cameraPosition.y = this.layout.hexToPixel(pos).y - this.drawHeight/2;
+    }
 };
 declare const config;
 declare const currentUid;
