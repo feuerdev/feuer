@@ -3,7 +3,7 @@
  * Created by geller on 30.08.2016.
  */
 
-import * as socketio from "socket.io";
+import socketio from "socket.io";
 import { Server } from "http";
 
 import Player from "./player";

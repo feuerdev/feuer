@@ -5,6 +5,8 @@
         "watch": true,
         "target": "es6",
         "lib": ["es6", "dom"],
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
     }
 }

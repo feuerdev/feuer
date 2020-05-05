@@ -3,11 +3,11 @@
  */
 import config from "../util/config";
 import * as http from "http";
-import * as express from "express";
-import * as express_handlebars from "express-handlebars";
-import * as cookieParser from "cookie-parser";
-import * as path from "path";
-import * as bodyParser from "body-parser";
+import express from "express";
+import express_handlebars from "express-handlebars";
+import cookieParser from "cookie-parser";
+import path from "path";
+import bodyParser from "body-parser";
 import * as admin from 'firebase-admin';
 import * as auth from "../util/auth";
 import Log from "../util/log";

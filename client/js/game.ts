@@ -1,4 +1,5 @@
-import * as $ from "./lib/jquery-3.1.1.min";
+import $ from 'jquery';
+import 'jquery-ui';
 import Log from "./util/log";
 import Vector2 from "../../shared/vector2";
 import Gameloop, { GameloopListener } from "../../shared/gameloop";

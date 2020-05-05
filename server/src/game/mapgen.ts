@@ -1,5 +1,5 @@
 
-import * as seedrandom from "seedrandom";
+import seedrandom from "seedrandom";
 import { Hashtable } from "../../../shared/util";
 import Tile, { Spot } from "./tile";
 import FastSimplexNoise from "../../../shared/noise";
