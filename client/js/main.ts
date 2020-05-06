@@ -3,7 +3,6 @@
  *
  */
 import $ from 'jquery';
-import 'jquery-ui';
 import Game from "./game";
 
 $(document).ready(function () {

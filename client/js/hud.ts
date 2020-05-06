@@ -1,5 +1,4 @@
 import $ from 'jquery';
-import 'jquery-ui';
 import * as Rules from "../../shared/rules.json";
 import Hex from "../../shared/hex";
 
@@ -60,8 +59,6 @@ export default class Hud {
     this.onConstructionTabSelected(EnumTabConstruction.tabBuildings);
     this.onSelectionTabSelected(EnumTabSelection.tabTile);
     this.hideHud();
-
-    $("#debug").draggable();
 
     //Populate construction using template
     let template = $(".hud-tab-content-template");
