@@ -1,22 +1,35 @@
 {
   "settings": {
-    "map_size": 5,
+    "map_size": 20,
     "map_frequency": 0.1,
     "map_amplitude": 1,
     "map_min": 0,
     "map_max": 1,
     "map_octaves": 1,
-    "map_persistence": 0.1
+    "map_persistence": 0.1,
+    "map_level_water_deep": 0.05,
+    "map_level_water_shallow": 0.1,
+    "map_level_sand": 0.15,
+    "map_level_sand_grassy": 0.2,
+    "map_level_grass_sandy": 0.25,
+    "map_level_grass": 0.6,
+    "map_level_grass_dirty": 0.65,
+    "map_level_dirt_grassy": 0.7,
+    "map_level_dirt": 0.7,
+    "map_level_dirt_stony": 0.75,
+    "map_level_stone_dirty": 0.8,
+    "map_level_stone": 0.9,
+    "map_level_ice": 1
   },
   "units": {
     "Scout": {
       "id": 1,
-      "sprite": 20,
+      "texture": "unit_scout_own",
       "hp": 100,
       "morale": 100,
       "attack": 5,
       "speed": 100,
-      "spottingDistance": 1,
+      "spottingDistance": 20,
       "cost": {
         "food": 10,
         "gold": 10
@@ -24,7 +37,7 @@
     },
     "Militia": {
       "id": 2,
-      "sprite": 20,
+      "texture": "unit_scout_own",
       "hp": 50,
       "morale": 30,
       "attack": 7,
@@ -37,7 +50,7 @@
     },
     "Spearman": {
       "id": 3,
-      "sprite": 20,
+      "texture": "unit_scout_own",
       "hp": 80,
       "morale": 40,
       "attack": 4,
@@ -52,7 +65,7 @@
   "buildings": {
     "Campsite": {
       "id": 1,
-      "sprite": 15,
+      "texture": "town_center",
       "hp": 100,
       "cost": {
         "wood": 100
@@ -64,7 +77,7 @@
     },
     "Forester Hut": {
       "id": 2,
-      "sprite": 16,
+      "texture": "forester_hut",
       "hp": 100,
       "cost": {
         "wood": 100
@@ -75,7 +88,7 @@
     },
     "Quarry Hut": {
       "id": 3,
-      "sprite": 17,
+      "texture": "quarry_hut",
       "hp": 100,
       "cost": {
         "wood": 100
@@ -86,7 +99,7 @@
     },
     "Iron Hut": {
       "id": 4,
-      "sprite": 18,
+      "texture": "iron_hut",
       "hp": 100,
       "cost": {
         "wood": 100
@@ -97,7 +110,7 @@
     },
     "Gold Mine": {
       "id": 5,
-      "sprite": 19,
+      "texture": "gold_mine",
       "hp": 100,
       "cost": {
         "wood": 100
