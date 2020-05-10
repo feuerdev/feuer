@@ -21,7 +21,7 @@ import World from "./world";
 import Army from "./objects/army";
 import Hex from "../../../shared/hex";
 import Building from "./objects/building";
-import { PlayerRelation, EnumRelationType } from "../../../shared/gamedata";
+import PlayerRelation, { EnumRelationType } from "../../../shared/relation";
 import Battle from "./objects/battle";
 
 export default class GameServer {
@@ -105,7 +105,7 @@ export default class GameServer {
         if (army.movementStatus > 100) { //Movement!
           currentTile.removeSpot(army.id);
           army.pos = army.targetHexes.splice(0, 1)[0];
-          this.world.tiles[army.pos.hash()].addSpot(army.getSprite(), army.id);
+          this.world.tiles[army.pos.hash()].addSpot(army.getTexture(), army.id);
           army.movementStatus = 0;
           this.updatePlayerVisibilities(army.owner);
           this.checkForBattle(army);
@@ -221,8 +221,8 @@ export default class GameServer {
           self.world.buildings.push(initialCamp);
 
           //Prepare Drawing of that unit
-          self.world.tiles[initialUnit.pos.hash()].addSpot(initialUnit.getSprite(), initialUnit.id);
-          self.world.tiles[initialCamp.pos.hash()].addSpot(initialCamp.getSprite(), initialCamp.id);
+          self.world.tiles[initialUnit.pos.hash()].addSpot(initialUnit.getTexture(), initialUnit.id);
+          self.world.tiles[initialCamp.pos.hash()].addSpot(initialCamp.getTexture(), initialCamp.id);
 
           //Register player in Gamesever
           self.players.push(player);
@@ -271,7 +271,7 @@ export default class GameServer {
     if(this.isAllowedToBuild(tile, uid, data.name)) {
       let building = Building.createBuilding(uid, data.name, pos);
       this.world.buildings.push(building);
-      tile.addSpot(building.sprite, building.id);
+      tile.addSpot(building.texture, building.id);
       this.updatePlayerVisibilities(uid);
     }
   }
@@ -283,7 +283,7 @@ export default class GameServer {
     if(this.isAllowedToRecruit(tile, uid, data.name)) {
       let army = Army.createUnit(uid, data.name, pos);
       this.world.armies.push(army);
-      tile.addSpot(army.getSprite(), army.id);
+      tile.addSpot(army.getTexture(), army.id);
       this.updatePlayerVisibilities(uid);
     }
   }

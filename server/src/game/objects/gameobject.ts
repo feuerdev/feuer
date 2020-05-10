@@ -1,5 +1,3 @@
-import { Sprite } from "../../../../shared/gamedata";
-
 export default abstract class GameObject {
   public owner:string;
   public id:number;
@@ -26,7 +24,7 @@ export interface Spotter {
  */
 export interface Drawable {
   /**
-   * Returns the Sprite
+   * Returns the Texture
    */
-  getSprite():Sprite;
+  getTexture():string;
 }

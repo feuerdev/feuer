@@ -4,11 +4,11 @@ import { Hashtable } from "../../../shared/util";
 import Tile, { Spot } from "./tile";
 import FastSimplexNoise from "../../../shared/noise";
 import config from "../util/config";
-import * as GameData from "../../../shared/gamedata";
 import Log from "../util/log";
 import Vector2 from "../../../shared/vector2";
 import World from "./world";
 import Hex from "../../../shared/hex";
+import * as Rules from "../../../shared/rules.json";
 
 export default class Mapgen {
 
@@ -95,7 +95,7 @@ export default class Mapgen {
         tiles[hex.hash()] = tile;
 
         //No rocks and trees in water obviously
-        if (heightValue <= GameData.level_water_shallow) {
+        if (heightValue <= Rules.settings.map_level_water_shallow) {
           treeValue = 0;
           stoneValue = 0;
           ironValue = 0;
@@ -103,7 +103,7 @@ export default class Mapgen {
         }
 
         //Less trees (cactii) but more stone in sand
-        if (heightValue <= GameData.level_sand_grassy) {
+        if (heightValue <= Rules.settings.map_level_sand_grassy) {
           treeValue/= 2;
           stoneValue = Math.min(stoneValue * 1.3, 1);
           ironValue = 0;
@@ -111,7 +111,7 @@ export default class Mapgen {
         }
 
         //Reduce trees above timberline and increase rockiness
-        if (heightValue >= GameData.level_stone) {
+        if (heightValue >= Rules.settings.map_level_stone) {
           treeValue /= 2;
           stoneValue = Math.min(stoneValue * 1.2, 1);
           ironValue = Math.min(ironValue * 1.4, 1);
@@ -120,28 +120,24 @@ export default class Mapgen {
 
         while(treeValue > 0) {
           let pos: Vector2 = Mapgen.generatePos();
-          let env: GameData.Sprite = Mapgen.generateTree(heightValue);
           treeValue-=0.05;
-          tile.environmentSpots.push(new Spot(pos, env, 0));
+          tile.environmentSpots.push(new Spot(pos, Mapgen.generateTree(heightValue), 0));
         }
 
         while(stoneValue > 0) {
           let pos: Vector2 = Mapgen.generatePos();
-          let env: GameData.Sprite = Mapgen.generateStone();
           stoneValue-=0.15;
-          tile.environmentSpots.push(new Spot(pos, env, 0));
+          tile.environmentSpots.push(new Spot(pos, Mapgen.generateStone(), 0));
         }
         while(ironValue > 0.7) {
           let pos: Vector2 = Mapgen.generatePos();
-          let env: GameData.Sprite = GameData.Sprite.envIron;
           ironValue-=0.1;
-          tile.environmentSpots.push(new Spot(pos, env, 0));
+          tile.environmentSpots.push(new Spot(pos, "iron", 0));
         }
         while(goldValue > 0.7) {
           let pos: Vector2 = Mapgen.generatePos();
-          let env: GameData.Sprite = GameData.Sprite.envGold;
           goldValue-=0.1;
-          tile.environmentSpots.push(new Spot(pos, env, 0));
+          tile.environmentSpots.push(new Spot(pos, "gold", 0));
         }
 
         tile.updateMovementFactor();
@@ -168,41 +164,41 @@ export default class Mapgen {
     return result;
   }
 
-  static generateTree(height):GameData.Sprite {
-    if(height <= GameData.level_sand_grassy) {
+  static generateTree(height):string {
+    if(height <= Rules.settings.map_level_sand_grassy) {
       let rand = Math.round(Math.random());
       switch(rand) {
-        case 0: return GameData.Sprite.envCactus1;
-        case 1: return GameData.Sprite.envCactus2;
+        case 0: return "cactus1";
+        case 1: return "cactus2";
       }
-    } else if(height <= GameData.level_grass_dirty) {
+    } else if(height <= Rules.settings.map_level_grass_dirty) {
       let rand = Math.round(Math.random()*2);
       switch(rand) {
-        case 0: return GameData.Sprite.envTreeSmall;
-        case 1: return GameData.Sprite.envTreeBig;
-        case 2: return GameData.Sprite.envTreeFullFirSmall;
+        case 0: return "treeSmall";
+        case 1: return "treeBig";
+        case 2: return "treeFullFirSmall";
       }
-    } else if(height <= GameData.level_stone) {
+    } else if(height <= Rules.settings.map_level_stone) {
       let rand = Math.round(Math.random()*3);
       switch(rand) {
-        case 0: return GameData.Sprite.envTreeFirBig;
-        case 1: return GameData.Sprite.envTreeFirSmall;
-        case 2: return GameData.Sprite.envTreeFullFirSmall;
-        case 3: return GameData.Sprite.envTreeFullFirBig;
+        case 0: return "treeFirBig";
+        case 1: return "treeFirSmall";
+        case 2: return "treeFullFirSmall";
+        case 3: return "treeFullFirBig";
       }
-    } else if(height <= GameData.level_ice) {
-      return GameData.Sprite.envTreeFirSnow;
+    } else if(height <= Rules.settings.map_level_ice) {
+      return "treeFirSnow";
     }
     return null;
   }
 
-  static generateStone():GameData.Sprite {
+  static generateStone():string {
     let rand = Math.round(Math.random()*3);
     switch(rand) {
-      case 0: return GameData.Sprite.envRock01;
-      case 1: return GameData.Sprite.envRock02;
-      case 2: return GameData.Sprite.envRock04;
-      case 3: return GameData.Sprite.envRock05;
+      case 0: return "rock01";
+      case 1: return "rock02";
+      case 2: return "rock04";
+      case 3: return "rock05";
     }
     return null;
   }

@@ -1,6 +1,5 @@
 import GameObject, { Spotter, Drawable } from "./gameobject"
 import Hex from "../../../../shared/hex"
-import { Sprite } from "../../../../shared/gamedata";
 import * as Rules from "../../../../shared/rules.json";
 
 export default class Army extends GameObject implements Spotter, Drawable {
@@ -14,8 +13,8 @@ export default class Army extends GameObject implements Spotter, Drawable {
   /**
    * Drawable
    */
-  getSprite():Sprite {
-    return this.sprite;
+  getTexture():string {
+    return this.texture;
   }
 
   /**
@@ -38,7 +37,7 @@ export default class Army extends GameObject implements Spotter, Drawable {
   /**
    * Graphics
    */
-  private sprite:Sprite;
+  private texture:string;
 
   constructor(owner) {
     super(owner);
@@ -49,7 +48,7 @@ export default class Army extends GameObject implements Spotter, Drawable {
     const army: Army = new Army(owner);
     army.pos = pos;
     army.spottingDistance = template.spottingDistance;
-    army.sprite = template.sprite;
+    army.texture = template.texture;
     army.speed = template.speed;
     army.attack = template.attack;
     army.hp = template.hp;

@@ -1,6 +1,5 @@
 import GameObject, { Spotter, Drawable } from "./gameobject";
 import Hex from "../../../../shared/hex";
-import { Sprite } from "../../../../shared/gamedata";
 import * as Rules from "../../../../shared/rules.json";
 
 export default class Building extends GameObject implements Spotter, Drawable {
@@ -9,15 +8,15 @@ export default class Building extends GameObject implements Spotter, Drawable {
     return this.spottingDistance;
   }
 
-  public getSprite():Sprite {
-    return this.sprite;
+  public getTexture():string {
+    return this.texture;
   }
 
   private spottingDistance:number;
   public pos:Hex;
   public resourceGeneration = {};
   public capacity = 100;
-  public sprite:Sprite;
+  public texture:string;
 
 
   constructor(owner) {
@@ -34,7 +33,7 @@ export default class Building extends GameObject implements Spotter, Drawable {
       building.resourceGeneration[res] = template.resource_generation[res];
     }
     building.capacity = template.capacity;
-    building.sprite = template.sprite;
+    building.texture = template.texture;
     return building;
   }
 }

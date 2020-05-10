@@ -1,5 +1,5 @@
 import { Hashtable } from "../../shared/util";
-import { PlayerRelation } from "../../shared/gamedata";
+import PlayerRelation from "../../shared/relation";
 
 export default class ClientWorld {
   public tiles: any = {};

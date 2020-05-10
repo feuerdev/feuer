@@ -1,8 +1,7 @@
 import Hex from "../../../shared/hex";
-import { Sprite } from "../../../shared/gamedata";
 import Vector2 from "../../../shared/vector2";
 import Mapgen from "./mapgen";
-import * as GameData from "../../../shared/gamedata";
+import * as Rules from "../../../shared/rules.json";
 
 /**
  * Tile-Class representing one hex with all its relevant fields
@@ -40,11 +39,11 @@ export default class Tile {
 
   /**
    * Fügt einen neuen Environmentspot zum Tile hinzu
-   * @param sprite Sprite
+   * @param texture texture
    * @param id Id des Entities
    */
-  public addSpot(sprite:Sprite, id:number) {
-    this.environmentSpots.push(new Spot(Mapgen.generatePos(), sprite, id));
+  public addSpot(texture:string, id:number) {
+    this.environmentSpots.push(new Spot(Mapgen.generatePos(), texture, id));
     this.refreshSpots();
   }
 
@@ -64,7 +63,7 @@ export default class Tile {
   public updateMovementFactor() { //TODO calculate correct movementcost
     let movementFactor = 1;
     
-    if(this.height >= GameData.level_stone) {
+    if(this.height >= Rules.settings.map_level_stone) {
       movementFactor -= 0.3; //Its cold
     }
 
@@ -72,9 +71,9 @@ export default class Tile {
       movementFactor -= 0.4; //You're in a forest
     }
 
-    if(this.height < GameData.level_water_deep) {
+    if(this.height < Rules.settings.map_level_water_deep) {
       movementFactor = 0.01; //You're now swimming
-    } else if (this.height < GameData.level_water_shallow) {
+    } else if (this.height < Rules.settings.map_level_water_shallow) {
       movementFactor = 0.1; //You're wading
     }
 
@@ -95,12 +94,12 @@ export default class Tile {
 
 export class Spot {
   pos:Vector2;
-  type:Sprite;
+  texture:string;
   id:number; //Entity id um den spot wieder zu entfernen
 
-  constructor(pos:Vector2, type: Sprite, id) {
+  constructor(pos:Vector2, texture: string, id) {
     this.pos = pos;
-    this.type = type;
+    this.texture = texture;
     this.id = id;
   }
 }

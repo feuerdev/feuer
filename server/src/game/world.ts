@@ -2,7 +2,7 @@ import { Hashtable } from "../../../shared/util";
 import Tile from "./tile";
 import Army from "./objects/army";
 import Building from "./objects/building";
-import { PlayerRelation } from "../../../shared/gamedata";
+import PlayerRelation from "../../../shared/relation";
 import Battle from "./objects/battle";
 
 export default class World {
