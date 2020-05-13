@@ -1,10 +1,8 @@
 import $ from 'jquery';
 import Log from "./util/log";
 import Vector2 from "../../shared/vector2";
-import Gameloop, { GameloopListener } from "../../shared/gameloop";
 import Hex, { Layout } from "../../shared/hex";
 // import Renderer from "./renderer";
-import Input, { InputListener } from "./input";
 import Connection, { ConnectionListener } from "./connection";
 import { Socket } from "socket.io";
 import Hud, { HudListener } from "./hud";
@@ -12,69 +10,70 @@ import PlayerRelation from "../../shared/relation";
 import ClientWorld from "./clientworld";
 import * as Rules from "../../shared/rules.json";
 import * as PIXI from "pixi.js";
+import { Viewport } from "pixi-viewport";
 
 declare const config;
 
-export default class Game implements InputListener, ConnectionListener, HudListener, GameloopListener {
+export default class Game implements ConnectionListener, HudListener {
 
     private canvas_map = $("#canvas-map");
-    private div_container = $("#canvas-container");
     private div_debug = $("#debug");
-    private gameloop: Gameloop;
+
     private connection: Connection;
     private layout: Layout;
     // private renderer:Renderer;
-    private input: Input;
     private hud: Hud;
     private cWorld: ClientWorld = new ClientWorld();
 
     private loader: PIXI.Loader;
     private p_renderer: PIXI.Renderer;
+    private viewport: Viewport;
 
     private selectedHex: Hex = null;
     private selectedArmies: string[] = [];
 
     private initialFocusSet = false;
 
-    private loaderready = false;
-    private alreadydrawn = false;
+    // private loaderready = false;
+    // private alreadydrawn = false;
 
     constructor() {
-        this.gameloop = new Gameloop(Gameloop.requestAnimationFrameWrapper, config.updaterate, config.netrate)
+
         this.connection = new Connection(config.ip, config.transports);
         this.layout = new Layout(Layout.pointy, new Vector2(config.hex_width, config.hex_height), new Vector2(0, 0));
         // this.renderer = new Renderer(this.div_container, this.canvas_map, this.div_debug, this.layout);
-        this.input = new Input(this.canvas_map, this.layout);
         this.hud = new Hud();
 
         this.hud.addListener(this);
-        this.gameloop.addListener(this.input);
-        this.gameloop.addListener(this);
-        // this.input.addListener(this.renderer);
-        this.input.addListener(this);
         this.connection.addListener(this);
-        this.gameloop.run();
-
-        //PIXI
-        let _w = window.innerWidth;
-        let _h = window.innerHeight;
 
         this.p_renderer = new PIXI.Renderer({
             view: this.canvas_map[0],
-            width: _w,
-            height: _h,
+            width: window.innerWidth,
+            height: window.innerHeight,
             resolution: window.devicePixelRatio,
             autoDensity: true
         });
 
-        window.addEventListener('resize', resize);
 
-        function resize() {
-            _w = window.innerWidth;
-            _h = window.innerHeight;
+        window.addEventListener('resize', () => {
+            this.p_renderer.resize(window.innerWidth, window.innerHeight);
+            this.viewport.dirty = true;
+        });
+        window.addEventListener("keydown", event => {
+            //
+        }, false);
 
-            this.p_renderer.resize(_w, _h);
-        }
+        window.addEventListener("keyup", event => {
+            switch (event.keyCode) {
+                // case 187: this.zoomIn(); break;//+
+                // case 189: this.zoomOut(); break;//-   
+                // case 191: this.zoomReset(); break;//#
+                case 82: this.viewport.center = new PIXI.Point(0, 0); break; //R
+                default:
+                    break;
+            }
+        }, false);
 
         this.loader = PIXI.Loader.shared
             .add("terrain_water_deep", "../img/water_02.png")
@@ -117,48 +116,83 @@ export default class Game implements InputListener, ConnectionListener, HudListe
     }
 
     loaded() {
-        this.loaderready = true;
+
+        // create viewport
+        this.viewport = new Viewport({
+            screenWidth: window.innerWidth,
+            screenHeight: window.innerHeight,
+            worldWidth: Rules.settings.map_size * config.hex_width,
+            worldHeight: Rules.settings.map_size * config.hex_height,
+            interaction: this.p_renderer.plugins.interaction // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
+        })
+
+        // activate plugins
+        this.viewport
+            .clampZoom({
+                maxScale: 2,
+                minScale: 0.2
+            })
+            .drag()
+            .pinch()
+            .wheel()
+            .decelerate();
+
+        PIXI.Ticker.shared.add(() => {
+            if (this.viewport.dirty) {
+                this.p_renderer.render(this.viewport);
+                this.viewport.dirty = false;
+                console.log("rendered");
+            }
+            this.div_debug.text("");
+            this.div_debug.append("<em>General Information</em><br>");
+            this.div_debug.append("UID   : " + currentUid + "<br>");
+            this.div_debug.append(`Screenheight : ${this.viewport.screenHeight} "<br>"`);
+            this.div_debug.append(`Screenwidth  : ${this.viewport.screenWidth} "<br>"`);
+            this.div_debug.append(`Worldheight : ${this.viewport.worldHeight} "<br>"`);
+            this.div_debug.append(`Worldwidth  : ${this.viewport.worldWidth} "<br>"`);
+            this.div_debug.append(`Left/Top: ${Math.round(this.viewport.left)}/${Math.round(this.viewport.top)} "<br>"`);
+            this.div_debug.append(`Center: ${Math.round(this.viewport.center.x)}/${Math.round(this.viewport.center.y)} "<br>"`);
+            if (this.selectedHex) this.div_debug.append("Selected Hex   : " + this.selectedHex.q + " " + this.selectedHex.r + " " + this.selectedHex.s + "<br>");
+        });
     }
 
-    pixirender() {
-        let stage = new PIXI.Container();
+    updateScenegraph(tile) {
+        let hex:Hex = new Hex(tile.hex.q, tile.hex.r, tile.hex.s);
+
+        let corners = this.layout.polygonCorners(hex);
+        let padding = 10;
+
         let container = new PIXI.Container();
-        stage.addChild(container);
+        container.name = hex.hash();
+        
+        let tint = tile.visible ? 0xFFFFFF : 0x555555;
+        
+        let texture = this.getTerrainTexture(tile.height);
+        let img = new PIXI.Sprite(texture);
+        img.tint = tint;
+        img.x = corners[3].x + padding;//obere linke ecke
+        img.y = corners[3].y - this.layout.size.y / 2 + padding; //obere linke ecke- halbe höhe
+        img.width = this.layout.size.x * Math.sqrt(3) - padding; 
+        img.height = this.layout.size.y * 2 - padding;
+        container.addChild(img);
 
-        if (this.cWorld) {
-            let keys = Object.keys(this.cWorld.tiles);
-            for (let key of keys) {
-                let tile = this.cWorld.tiles[key];
-                let hex = tile.hex;
-                let corners = this.layout.polygonCorners(hex);
-                let padding = 10;
-
-                let texture = this.getTerrainTexture(tile.height); //TODO:Replace with correct tile
-                let img = new PIXI.Sprite(texture);
-                img.x = corners[3].x + padding;//obere linke ecke
-                img.y = corners[3].y - this.layout.size.y / 2 + padding; //obere linke ecke- halbe höhe
-                img.width = this.layout.size.x * Math.sqrt(3) - padding; //radius mal wurzel aus 3 um die reale breite des hex zu errechnen
-                img.height = this.layout.size.y * 2 - padding;//radius mal 2 um die reale höhe des hex zu errechnen
-                console.log(img.x, img.y)
-                stage.addChild(img);
-
-                for (let i = 0; i < tile.environmentSpots.length; i++) {
-                    let spot = tile.environmentSpots[i];
-                    let texture = spot.texture;
-                    let img = new PIXI.Sprite(this.loader.resources[texture].texture);
-                    let pos = spot.pos;
-                    img.x = this.layout.hexToPixel(hex).x + pos.x;
-                    img.y = this.layout.hexToPixel(hex).y + pos.y;
-                    stage.addChild(img);
-                }
-
-                // ctx.filter = "none";
-
-                // ctx.restore();
-            }
+        for (let i = 0; i < tile.environmentSpots.length; i++) {
+            let spot = tile.environmentSpots[i];
+            let texture = spot.texture;
+            let img = new PIXI.Sprite(this.loader.resources[texture].texture);
+            let pos = spot.pos;
+            img.x = this.layout.hexToPixel(hex).x + pos.x;
+            img.y = this.layout.hexToPixel(hex).y + pos.y;
+            img.tint = tint;
+            container.addChild(img);
         }
 
-        this.p_renderer.render(stage);
+        let old = this.viewport.getChildByName(hex.hash());
+        if(old) {
+            this.viewport.removeChild(old);  
+        }
+        this.viewport.addChild(container);
+        this.viewport.dirty = true;
     }
 
     getTerrainTexture(height) {
@@ -209,7 +243,7 @@ export default class Game implements InputListener, ConnectionListener, HudListe
 
     onRightClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
         let clickedHex = this.layout.pixelToHex(cursorWorld).round();
-        if (clickedHex /*&& this.cWorld.tiles[clickedHex.hash()]*/) {
+        if (clickedHex) {
             this.connection.send("request movement", { selection: this.selectedArmies, target: clickedHex });
         }
     }
@@ -243,22 +277,17 @@ export default class Game implements InputListener, ConnectionListener, HudListe
                 if (data.hasOwnProperty(property)) {
                     data[property].visible = true;
                     this.cWorld.tiles[property] = data[property];
+                    this.updateScenegraph(this.cWorld.tiles[property]);
                 }
             }
-            //this.cWorld.tiles = data;
-            // this.renderer.requestRedraw();
         });
         socket.on("gamestate discovered tiles", (data) => {
             for (let property in data) {
                 if (data.hasOwnProperty(property)) {
                     this.cWorld.tiles[property] = data[property];
+                    this.updateScenegraph(this.cWorld.tiles[property]);
                 }
             }
-            if (this.loaderready && !this.alreadydrawn) {
-                this.alreadydrawn = true;
-                this.pixirender();
-            }
-            // this.renderer.requestRedraw();
         });
         socket.on("gamestate armies", (data) => {
             this.cWorld.armies = data;
@@ -269,20 +298,21 @@ export default class Game implements InputListener, ConnectionListener, HudListe
                     }
                 }
             }
-            // this.renderer.requestRedraw();
         });
         socket.on("gamestate battles", (data) => {
             this.cWorld.battles = data;
-            // this.renderer.requestRedraw();
         });
         socket.on("gamestate buildings", (data) => {
             this.cWorld.buildings = data;
             if (!this.initialFocusSet) {
                 this.initialFocusSet = true;
-                // this.pixirender()
-                // this.renderer.focus(this.cWorld.buildings[0].pos);
+                let ref = this.cWorld.buildings[0];
+                if(ref) {
+                    let x = this.layout.hexToPixel(ref.pos).x
+                    let y = this.layout.hexToPixel(ref.pos).y
+                    this.viewport.center = new PIXI.Point(x, y);  
+                }
             }
-            // this.renderer.requestRedraw();
         });
         socket.on("gamestate relation", (data) => {
             let hash = PlayerRelation.getHash(data.id1, data.id2);
