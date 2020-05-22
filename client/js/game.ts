@@ -21,7 +21,6 @@ export default class Game implements ConnectionListener, HudListener {
 
     private connection: Connection;
     private layout: Layout;
-    // private renderer:Renderer;
     private hud: Hud;
     private cWorld: ClientWorld = new ClientWorld();
 
@@ -38,7 +37,6 @@ export default class Game implements ConnectionListener, HudListener {
 
         this.connection = new Connection(config.ip, config.transports);
         this.layout = new Layout(Layout.pointy, new Vector2(config.hex_width, config.hex_height), new Vector2(0, 0));
-        // this.renderer = new Renderer(this.div_container, this.canvas_map, this.div_debug, this.layout);
         this.hud = new Hud();
 
         this.hud.addListener(this);
@@ -124,10 +122,10 @@ export default class Game implements ConnectionListener, HudListener {
 
         this.viewport.on('clicked', (click) => {
             console.log(click.event.data.button);
+            let p = click.world;
+            let v = new Vector2(p.x, p.y);
             switch (click.event.data.button) {
                 case 0: //Left
-                    let p = click.world;//this.viewport.toWorld(new PIXI.Point(event.clientX, event.clientY));
-                    let v = new Vector2(p.x, p.y);
                     this.selectedHex = this.layout.pixelToHex(v).round();
                     if (this.selectedHex && this.cWorld.tiles[this.selectedHex.hash()]) {
                         this.hud.showSelectionHud(this.cWorld, this.selectedHex);
@@ -138,15 +136,12 @@ export default class Game implements ConnectionListener, HudListener {
                     }
                     break;
                 case 2: //Right 
-                    {
-                        let p = click.world;//this.viewport.toWorld(new PIXI.Point(event.clientX, event.clientY));
-                        let v = new Vector2(p.x, p.y);
-                        let clickedHex = this.layout.pixelToHex(v).round();
-                        if (clickedHex) {
-                            this.connection.send("request movement", { selection: this.selectedArmies, target: clickedHex });
-                        }
-                        break;
+                    let clickedHex = this.layout.pixelToHex(v).round();
+                    if (clickedHex) {
+                        this.connection.send("request movement", { selection: this.selectedArmies, target: clickedHex });
                     }
+                    break;
+
             }
         })
 
