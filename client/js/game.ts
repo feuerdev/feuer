@@ -34,9 +34,6 @@ export default class Game implements ConnectionListener, HudListener {
 
     private initialFocusSet = false;
 
-    // private loaderready = false;
-    // private alreadydrawn = false;
-
     constructor() {
 
         this.connection = new Connection(config.ip, config.transports);
@@ -54,7 +51,6 @@ export default class Game implements ConnectionListener, HudListener {
             resolution: window.devicePixelRatio,
             autoDensity: true
         });
-
 
         window.addEventListener('resize', () => {
             this.p_renderer.resize(window.innerWidth, window.innerHeight);
@@ -126,6 +122,34 @@ export default class Game implements ConnectionListener, HudListener {
             interaction: this.p_renderer.plugins.interaction // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
         })
 
+        this.viewport.on('clicked', (click) => {
+            console.log(click.event.data.button);
+            switch (click.event.data.button) {
+                case 0: //Left
+                    let p = click.world;//this.viewport.toWorld(new PIXI.Point(event.clientX, event.clientY));
+                    let v = new Vector2(p.x, p.y);
+                    this.selectedHex = this.layout.pixelToHex(v).round();
+                    if (this.selectedHex && this.cWorld.tiles[this.selectedHex.hash()]) {
+                        this.hud.showSelectionHud(this.cWorld, this.selectedHex);
+                        this.hud.showConstructionHud(); //TODO: Only show this if you can xonstruct something here 
+                    } else {
+                        this.hud.hideConstructionHud();
+                        this.hud.hideSelectionHud();
+                    }
+                    break;
+                case 2: //Right 
+                    {
+                        let p = click.world;//this.viewport.toWorld(new PIXI.Point(event.clientX, event.clientY));
+                        let v = new Vector2(p.x, p.y);
+                        let clickedHex = this.layout.pixelToHex(v).round();
+                        if (clickedHex) {
+                            this.connection.send("request movement", { selection: this.selectedArmies, target: clickedHex });
+                        }
+                        break;
+                    }
+            }
+        })
+
         // activate plugins
         this.viewport
             .clampZoom({
@@ -143,6 +167,8 @@ export default class Game implements ConnectionListener, HudListener {
                 this.viewport.dirty = false;
                 console.log("rendered");
             }
+
+            //TODO: Performance - Dont update this every frame
             this.div_debug.text("");
             this.div_debug.append("<em>General Information</em><br>");
             this.div_debug.append("UID   : " + currentUid + "<br>");
@@ -157,22 +183,25 @@ export default class Game implements ConnectionListener, HudListener {
     }
 
     updateScenegraph(tile) {
-        let hex:Hex = new Hex(tile.hex.q, tile.hex.r, tile.hex.s);
+        let hex: Hex = new Hex(tile.hex.q, tile.hex.r, tile.hex.s);
 
         let corners = this.layout.polygonCorners(hex);
         let padding = 10;
 
         let container = new PIXI.Container();
         container.name = hex.hash();
-        
-        let tint = tile.visible ? 0xFFFFFF : 0x555555;
-        
+
+        let tint = tile.visible ? 0xDDDDDD : 0x555555;
+        if (this.selectedHex && this.selectedHex.equals(tile.hex)) {
+            tile.visible ? tint = 0xFFFFFF : tint += 0x333333;
+        }
+
         let texture = this.getTerrainTexture(tile.height);
         let img = new PIXI.Sprite(texture);
         img.tint = tint;
         img.x = corners[3].x + padding;//obere linke ecke
         img.y = corners[3].y - this.layout.size.y / 2 + padding; //obere linke ecke- halbe höhe
-        img.width = this.layout.size.x * Math.sqrt(3) - padding; 
+        img.width = this.layout.size.x * Math.sqrt(3) - padding;
         img.height = this.layout.size.y * 2 - padding;
         container.addChild(img);
 
@@ -188,8 +217,8 @@ export default class Game implements ConnectionListener, HudListener {
         }
 
         let old = this.viewport.getChildByName(hex.hash());
-        if(old) {
-            this.viewport.removeChild(old);  
+        if (old) {
+            this.viewport.removeChild(old);
         }
         this.viewport.addChild(container);
         this.viewport.dirty = true;
@@ -223,10 +252,6 @@ export default class Game implements ConnectionListener, HudListener {
         } else if (height <= Rules.settings.map_level_ice) {
             return this.loader.resources["terrain_ice"].texture;
         } else return this.loader.resources["terrain_stone"].texture;
-    }
-
-    onRender() {
-        // this.renderer.draw(this.pixi, this.cWorld);
     }
 
     onConstructionRequested(name: string): void {
@@ -271,6 +296,7 @@ export default class Game implements ConnectionListener, HudListener {
             for (let property in this.cWorld.tiles) {
                 if (this.cWorld.tiles.hasOwnProperty(property)) {
                     this.cWorld.tiles[property].visible = false;
+                    this.updateScenegraph(this.cWorld.tiles[property]); //TODO: Performance - Only update Tint here instead of whole tile
                 }
             }
             for (let property in data) {
@@ -307,10 +333,10 @@ export default class Game implements ConnectionListener, HudListener {
             if (!this.initialFocusSet) {
                 this.initialFocusSet = true;
                 let ref = this.cWorld.buildings[0];
-                if(ref) {
+                if (ref) {
                     let x = this.layout.hexToPixel(ref.pos).x
                     let y = this.layout.hexToPixel(ref.pos).y
-                    this.viewport.center = new PIXI.Point(x, y);  
+                    this.viewport.center = new PIXI.Point(x, y);
                 }
             }
         });
