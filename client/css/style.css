@@ -10,115 +10,52 @@ canvas {
     display: block;
 }
 
-.hud {
+#hud {
+    background-color: rgba(255, 255, 255, 0.9);
     color: black;
-}
-
-.hud-top {
-    display: none;
     position: fixed;
+    bottom: 0;
     left: 0;
-    top:0;
-    right:0;
-    height: 5vh;
-    min-height: 30px;
-    background: lightblue;
+    right: 0;
+    height: 16vh;
+    display: grid;
+    grid-template-columns: 10% 90%;
 }
 
-.hud-resource-wrapper {
-    position: absolute;
-    top: 5px;
-    bottom: 5px;
-    left: 10px;
-    background: lightcoral
+#hud-tabs {
+    background-color: lightblue;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
-
-.hud-resource {
-    background: pink;
-    display: inline-block;
-    height: 100%;
-}
-
-.hud-resource span {
-    vertical-align: middle;
-}
-
-.hud-resource img {
-    position: relative;
-    max-height: 100%;
-    vertical-align: middle;
-}
-
-
-.hud-left {
-    background: lightsalmon;
-    position: fixed;
-    top: 10px;
-    width: 15vw;
-    left: 10px;
-    bottom: 10px;
-    overflow: auto;
-}
-
-
 
 .hud-tab {
     all: unset;
-    background-color: pink;
     text-align: center;
-    padding: 10px;
-    flex: 1;
+    flex-grow: 1;
 }
 
 .hud-tab.active {
-    background: none;
+    background-color: pink;
 }
 
 .hud-tab:hover {
-    color: #888;
+    background-color: rgb(255, 151, 168);
     cursor: pointer;
-}
+  }
 
-.hud-tab-bar {
-    display: flex;
-    width: 100%;
-    flex-direction: row;
-    align-items: stretch;
+#hud-content {
+    background-color: olivedrab;
 }
-
-.hud-right {
-    background: lightskyblue;
-    position: fixed;
-    top: 10px;
-    width: 15vw;
-    right: 10px;
-    bottom: 10px;
-}
-
-.hud-tab-content {
+.hud-content {
     display: none;
 }
-
-.hud-tab-content-template {
-    display: flex;
-    flex-direction: row;
-}
-
-.hud-tab-content-template-element {
-    flex: 1;
-}
-
-label.hud-tab-content-template-element {
-    vertical-align: middle;
-    align-self: center;
-}
-
 
 #debug {
     background: #BBBBBBBB;
     width: 200px;
     margin: 20px;
-    bottom: 0;
+    bottom: 20vh;
     padding: 8px;
     position: absolute;
     font-size: xx-small;

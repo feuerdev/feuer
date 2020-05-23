@@ -121,23 +121,23 @@ export default class Mapgen {
         while(treeValue > 0) {
           let pos: Vector2 = Mapgen.generatePos();
           treeValue-=0.05;
-          tile.environmentSpots.push(new Spot(pos, Mapgen.generateTree(heightValue), 0));
+          tile.environmentSpots.push(new Spot(pos, Mapgen.generateTree(heightValue), -1));
         }
 
         while(stoneValue > 0) {
           let pos: Vector2 = Mapgen.generatePos();
           stoneValue-=0.15;
-          tile.environmentSpots.push(new Spot(pos, Mapgen.generateStone(), 0));
+          tile.environmentSpots.push(new Spot(pos, Mapgen.generateStone(), -1));
         }
         while(ironValue > 0.7) {
           let pos: Vector2 = Mapgen.generatePos();
           ironValue-=0.1;
-          tile.environmentSpots.push(new Spot(pos, "iron", 0));
+          tile.environmentSpots.push(new Spot(pos, "iron", -1));
         }
         while(goldValue > 0.7) {
           let pos: Vector2 = Mapgen.generatePos();
           goldValue-=0.1;
-          tile.environmentSpots.push(new Spot(pos, "gold", 0));
+          tile.environmentSpots.push(new Spot(pos, "gold", -1));
         }
 
         tile.updateMovementFactor();

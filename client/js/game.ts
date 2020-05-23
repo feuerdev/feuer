@@ -2,26 +2,25 @@ import $ from 'jquery';
 import Log from "./util/log";
 import Vector2 from "../../shared/vector2";
 import Hex, { Layout } from "../../shared/hex";
-// import Renderer from "./renderer";
 import Connection, { ConnectionListener } from "./connection";
 import { Socket } from "socket.io";
-import Hud, { HudListener } from "./hud";
 import PlayerRelation from "../../shared/relation";
 import ClientWorld from "./clientworld";
 import * as Rules from "../../shared/rules.json";
 import * as PIXI from "pixi.js";
 import { Viewport } from "pixi-viewport";
+import { GlowFilter } from "pixi-filters";
+import * as Util from "../../shared/util";
 
 declare const config;
 
-export default class Game implements ConnectionListener, HudListener {
+export default class Game implements ConnectionListener {
 
     private canvas_map = $("#canvas-map");
     private div_debug = $("#debug");
 
     private connection: Connection;
     private layout: Layout;
-    private hud: Hud;
     private cWorld: ClientWorld = new ClientWorld();
 
     private loader: PIXI.Loader;
@@ -33,13 +32,13 @@ export default class Game implements ConnectionListener, HudListener {
 
     private initialFocusSet = false;
 
+    static GLOWFILTER = new GlowFilter({ distance: 15, outerStrength: 2 });
+
     constructor() {
 
         this.connection = new Connection(config.ip, config.transports);
         this.layout = new Layout(Layout.pointy, new Vector2(config.hex_width, config.hex_height), new Vector2(0, 0));
-        this.hud = new Hud();
 
-        this.hud.addListener(this);
         this.connection.addListener(this);
 
         this.p_renderer = new PIXI.Renderer({
@@ -68,6 +67,24 @@ export default class Game implements ConnectionListener, HudListener {
                     break;
             }
         }, false);
+
+        //Setup Hud
+        let tabs = $(".hud-tab");
+        let contents = $(".hud-content")
+        tabs.click(e => {
+            let id:string = e.target.id;
+            let name:string = id.substring(1, id.length);
+            
+            console.log(`clicked ${id}`);
+
+            tabs.removeClass("active");
+            contents.hide();
+            
+            $(`#b${name}`).addClass("active");
+            $(`#t${name}`).show();
+        });
+
+        $("#bInfo").click(); //Start on Info Tab
 
         this.loader = PIXI.Loader.shared
             .add("terrain_water_deep", "../img/water_02.png")
@@ -126,14 +143,26 @@ export default class Game implements ConnectionListener, HudListener {
             let v = new Vector2(p.x, p.y);
             switch (click.event.data.button) {
                 case 0: //Left
+                    this.selectedHex = null;
+                    this.selectedArmies = [];
+                    for(let child of (<any>click.viewport).viewport.children) {
+                        for(let s of (<PIXI.Container>child).children) {
+                            if(s.name && parseInt(s.name) !== -1) {//Dont click on environment
+                                if(Util.isPointInRectangle(p.x,p.y,s.x,s.y, (<PIXI.Sprite>s).width, (<PIXI.Sprite>s).height)) {
+                                    this.selectedArmies.push(s.name);
+                                    return;
+                                }
+                            }
+                        }
+                    }                    
                     this.selectedHex = this.layout.pixelToHex(v).round();
-                    if (this.selectedHex && this.cWorld.tiles[this.selectedHex.hash()]) {
-                        this.hud.showSelectionHud(this.cWorld, this.selectedHex);
-                        this.hud.showConstructionHud(); //TODO: Only show this if you can xonstruct something here 
-                    } else {
-                        this.hud.hideConstructionHud();
-                        this.hud.hideSelectionHud();
-                    }
+                    // if (this.selectedHex && this.cWorld.tiles[this.selectedHex.hash()]) {
+                    //     this.hud.showSelectionHud(this.cWorld, this.selectedHex);
+                    //     this.hud.showConstructionHud(); //TODO: Only show this if you can xonstruct something here 
+                    // } else {
+                    //     this.hud.hideConstructionHud();
+                    //     this.hud.hideSelectionHud();
+                    // }
                     break;
                 case 2: //Right 
                     let clickedHex = this.layout.pixelToHex(v).round();
@@ -141,7 +170,6 @@ export default class Game implements ConnectionListener, HudListener {
                         this.connection.send("request movement", { selection: this.selectedArmies, target: clickedHex });
                     }
                     break;
-
             }
         })
 
@@ -160,7 +188,6 @@ export default class Game implements ConnectionListener, HudListener {
             if (this.viewport.dirty) {
                 this.p_renderer.render(this.viewport);
                 this.viewport.dirty = false;
-                console.log("rendered");
             }
 
             //TODO: Performance - Dont update this every frame
@@ -198,6 +225,7 @@ export default class Game implements ConnectionListener, HudListener {
         img.y = corners[3].y - this.layout.size.y / 2 + padding; //obere linke ecke- halbe höhe
         img.width = this.layout.size.x * Math.sqrt(3) - padding;
         img.height = this.layout.size.y * 2 - padding;
+        
         container.addChild(img);
 
         for (let i = 0; i < tile.environmentSpots.length; i++) {
@@ -208,6 +236,14 @@ export default class Game implements ConnectionListener, HudListener {
             img.x = this.layout.hexToPixel(hex).x + pos.x;
             img.y = this.layout.hexToPixel(hex).y + pos.y;
             img.tint = tint;
+            img.name = spot.id;
+            for(let army of this.selectedArmies) {
+                if(army === spot.id) {
+                    img.filters = [               
+                        Game.GLOWFILTER
+                    ];
+                }
+            }
             container.addChild(img);
         }
 
@@ -259,24 +295,6 @@ export default class Game implements ConnectionListener, HudListener {
 
     onUnitsSelected(uids: string[]): void {
         this.selectedArmies = uids;
-    }
-
-    onRightClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
-        let clickedHex = this.layout.pixelToHex(cursorWorld).round();
-        if (clickedHex) {
-            this.connection.send("request movement", { selection: this.selectedArmies, target: clickedHex });
-        }
-    }
-
-    onLeftClick(cursorCanvas: Vector2, cursorWorld: Vector2) {
-        this.selectedHex = this.layout.pixelToHex(cursorWorld).round();
-        if (this.selectedHex && this.cWorld.tiles[this.selectedHex.hash()]) {
-            this.hud.showSelectionHud(this.cWorld, this.selectedHex);
-            this.hud.showConstructionHud(); //TODO: Only show this if you can xonstruct something here 
-        } else {
-            this.hud.hideConstructionHud();
-            this.hud.hideSelectionHud();
-        }
     }
 
     onConnected(socket: Socket) {

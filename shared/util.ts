@@ -54,3 +54,12 @@ export function aVerySlowFunction(milliseconds:number) {
   let now = Date.now();
   while(Date.now() < now+milliseconds ) {};
 }
+
+export function isPointInRectangle(pointX, pointY, rectX, rectY, rectWidth, rectHeight) {
+  if(pointX > rectX && pointX < rectX + rectWidth) {
+    if(pointY > rectY && pointY < rectY + rectHeight) {
+      return true;
+    }
+  }
+  return false;
+}

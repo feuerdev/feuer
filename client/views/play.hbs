@@ -12,53 +12,22 @@
 
 <body>
 	<canvas id="canvas-map" oncontextmenu="return false"></canvas>
-	<div class="hud hud-top">
-		<div class="hud-resource-wrapper">
-			<div class="hud-resource" id="resource_wood">
-				<img src="img/hud_tree.png">
-				<span class="hud-resource-value">10</span>
-			</div>
-			<div class="hud-resource" id="resource_stone">
-				<img src="img/hud_stone.png">
-				<span class="hud-resource-value">10</span>
-			</div>
-			<div class="hud-resource" id="resource_iron">
-				<img src="img/hud_iron.png">
-				<span class="hud-resource-value">10</span>
-			</div>
-			<div class="hud-resource" id="resource_gold">
-				<img src="img/hud_gold.png">
-				<span class="hud-resource-value">10</span>
-			</div>
+	<div id="hud">
+		<div id="hud-tabs">
+			<button class="hud-tab active" id="bInfo">Info</button>
+			<button class="hud-tab" id="bConstruction">Construction</button>
+			<button class="hud-tab" id="bArmy">Army</button>
+			<button class="hud-tab" id="bChat">Chat</button>
+		</div>
+		<div id="hud-content">
+			<div class="hud-content" id="tInfo">wood = 100</div>
+			<div class="hud-content" id="tConstruction">Construction</div>
+			<div class="hud-content" id="tArmy">Army</div>
+			<div class="hud-content" id="tChat">Chat</div>
 		</div>
 	</div>
-	<div class="hud hud-left">
-		<div class="hud-tab-bar">
-			<button class="hud-tab active" id="button-construction-buildings">Buildings</button>
-			<button class="hud-tab" id="button-construction-units">Units</button>
-		</div>
-		<div class="hud-tab-content" id="content-construction-buildings"></div>
-		<div class="hud-tab-content" id="content-construction-units"></div>
-	</div>
-	<div class="hud hud-right">
-		<div class="hud-tab-bar">
-			<button class="hud-tab active" id="button-selection-tile">Tile</button>
-			<button class="hud-tab" id="button-selection-buildings">Buildings</button>
-			<button class="hud-tab" id="button-selection-units">Units</button>
-		</div>
-		<div class="hud-tab-content" id="content-selection-tile"></div>
-		<div class="hud-tab-content" id="content-selection-buildings"></div>
-		<div class="hud-tab-content" id="content-selection-units"></div>
-	</div>
+
 	<div id="debug"></div>
-
-	<div class="hud-tab-content-template" id="content-construction-buildings-template">
-		{{!-- <img class="hud-tab-content-template-element" id="construction-template-img" src="img/hud_iron.png"> --}}
-		<label class="hud-tab-content-template-element" id="construction-template-label">Template</label>
-		<button class="hud-tab-content-template-element" id="construction-template-button">Create</button>
-	</div>
-
-
 	<script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-app.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-auth.js"></script>
 	<script type="application/javascript" src="js/web/firebase.js"></script>
