@@ -67,7 +67,7 @@ export default class Webserver {
 
     run() {
         this.httpServer.listen(process.env.PORT || config.port);
-        this.app.set('gameserver', this.gameserver);
+        this.app.set("gameserver", this.gameserver);
     }
 
     public getHttpServer() {

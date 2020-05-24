@@ -1,7 +1,5 @@
 const form_register = document.getElementById("register");
 
-
-
 if (form_register) {
   form_register.addEventListener("submit", function (e) {
     e.preventDefault(); //stop form from submitting
