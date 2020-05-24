@@ -1,0 +1,4 @@
+{
+    "ip": "https://feuer.herokuapp.com",
+    "transports": ["websocket"]
+}

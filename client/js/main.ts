@@ -6,5 +6,9 @@ import $ from 'jquery';
 import Game from "./game";
 
 $(document).ready(function () {
-    new Game();
+    $.get("/config.json", function (config, status) {
+        if(status === "success") {
+            new Game(config);
+        }
+    });
 });

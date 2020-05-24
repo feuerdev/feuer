@@ -59,8 +59,8 @@ export default class Webserver {
             res.render("relogin");
         });
         this.app.use("/play", auth.isAuthenticated, router_play);
-        this.app.get("/config.js", function (req, res) {
-            res.sendFile("/js/config/config_" + config.name + ".js", { root: directory_client });
+        this.app.get("/config.json", function (req, res) {
+            res.sendFile("/js/config/config_" + config.name + ".json", { root: directory_client });
         });
         this.app.use("/", auth.isAuthenticated, router_play);//this.app.use("/", router_home);
     }

@@ -1,5 +1,4 @@
 import $ from 'jquery';
-import Log from "./util/log";
 import Vector2 from "../../shared/vector2";
 import Hex, { Layout } from "../../shared/hex";
 import Connection, { ConnectionListener } from "./connection";
@@ -11,8 +10,6 @@ import * as PIXI from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { GlowFilter } from "pixi-filters";
 import * as Util from "../../shared/util";
-
-declare const config;
 
 export default class Game implements ConnectionListener {
 
@@ -34,10 +31,9 @@ export default class Game implements ConnectionListener {
 
     static GLOWFILTER = new GlowFilter({ distance: 15, outerStrength: 2 });
 
-    constructor() {
-
+    constructor(config) {
         this.connection = new Connection(config.ip, config.transports);
-        this.layout = new Layout(Layout.pointy, new Vector2(config.hex_width, config.hex_height), new Vector2(0, 0));
+        this.layout = new Layout(Layout.pointy, new Vector2(Rules.settings.map_hex_width, Rules.settings.map_hex_height), new Vector2(0, 0));
 
         this.connection.addListener(this);
 
@@ -123,7 +119,7 @@ export default class Game implements ConnectionListener {
             .add("unit_scout_own", "../img/unit_scout_own.png")
             .load(() => this.loaded());
 
-        Log.info("Client ready");
+        console.info("Client ready");
     }
 
     loaded() {
@@ -132,9 +128,10 @@ export default class Game implements ConnectionListener {
         this.viewport = new Viewport({
             screenWidth: window.innerWidth,
             screenHeight: window.innerHeight,
-            worldWidth: Rules.settings.map_size * config.hex_width,
-            worldHeight: Rules.settings.map_size * config.hex_height,
+            worldWidth: Rules.settings.map_size * Rules.settings.map_hex_width,
+            worldHeight: Rules.settings.map_size * Rules.settings.map_hex_height,
             interaction: this.p_renderer.plugins.interaction // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
+        
         })
 
         this.viewport.on('clicked', (click) => {
@@ -298,10 +295,10 @@ export default class Game implements ConnectionListener {
     }
 
     onConnected(socket: Socket) {
-        Log.info("Connected");
+        console.info("Connected");
     }
     onDisconnected(socket: Socket) {
-        Log.info("Disonnected");
+        console.info("Disonnected");
     }
     onSetup(socket: Socket) {
         //Hier alle Gamelevel Events implementieren
