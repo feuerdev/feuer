@@ -1,14 +1,33 @@
-<h1>Login</h1>
-<form id="login" method="POST" action="/login">
-  E-Mail: <input id="email" type="text" name="email"><br>
-  Password: <input id="password" type="password" name="password"><br>
-  <input type="submit" value="Login">
-</form>
+<!DOCTYPE html>
+<html lang="en">
 
-<a href="/register">Registrieren</a>
-<a href="#" onclick="onGuestClicked()">Als Gast spielen</a>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/login.css">
+  <title>feuer</title>
+</head>
 
-<script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-auth.js"></script>
-<script type="application/javascript" src="js/web/firebase.js"></script>
-<script type="application/javascript" src="js/web/login.js"></script>
+<body>
+  <div class="container">
+    <h1>Login</h1>
+    <form id="login" method="POST" action="/login">
+      <input id="email" type="text" name="email">
+      <input id="password" type="password" name="password">
+      <input type="submit" value="Login">
+    </form>
+    {{!-- <div class="pass-link">
+      <a href="#">Lost your password?</a>
+    </div> --}}
+  </div>
+
+  <a href="/register">Register</a>
+  <a href="#" onclick="onGuestClicked()">Play as guest</a>
+
+  <script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-auth.js"></script>
+  <script type="application/javascript" src="js/web/firebase.js"></script>
+  <script type="application/javascript" src="js/web/login.js"></script>
+</body>
+
+</html>
