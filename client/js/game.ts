@@ -55,9 +55,9 @@ export default class Game implements ConnectionListener {
 
         window.addEventListener("keyup", event => {
             switch (event.keyCode) {
-                // case 187: this.zoomIn(); break;//+
-                // case 189: this.zoomOut(); break;//-   
-                // case 191: this.zoomReset(); break;//#
+                case 187: this.viewport.zoom(-200, true); break;//+
+                case 189: this.viewport.zoom(200, true); break;//-   
+                case 191: this.viewport.setZoom(1, true); break;//#
                 case 82: this.viewport.center = new PIXI.Point(0, 0); break; //R
                 default:
                     break;
@@ -131,7 +131,6 @@ export default class Game implements ConnectionListener {
             worldWidth: Rules.settings.map_size * Rules.settings.map_hex_width,
             worldHeight: Rules.settings.map_size * Rules.settings.map_hex_height,
             interaction: this.p_renderer.plugins.interaction // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
-        
         })
 
         this.viewport.on('clicked', (click) => {
