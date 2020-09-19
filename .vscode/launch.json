@@ -5,19 +5,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "node",
+      "command": "npm run launch",
+      "name": "Run Server",
       "request": "launch",
-      "name": "Launch Server",
-      "program": "${workspaceFolder}/server/src/main.ts",
-      "args": [
-        "debug"
-      ],
-      "outFiles": [
-        "${workspaceFolder}/build/**/*.js",
-        "${workspaceFolder}/server/**/*.js"
-      ],
-      "outputCapture": "std",
-      "preLaunchTask": "Browserify"
+      "type": "node-terminal"
     }
   ]
 }
