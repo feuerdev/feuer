@@ -1,20 +1,24 @@
-import $ from 'jquery';
-import Vector2 from "../../shared/vector2";
-import Hex, { Layout } from "../../shared/hex";
-import Connection, { ConnectionListener } from "./connection";
 import { Socket } from "socket.io";
-import PlayerRelation from "../../shared/relation";
-import ClientWorld from "./clientworld";
-import * as Rules from "../../shared/rules.json";
 import * as PIXI from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { GlowFilter } from "pixi-filters";
-import * as Util from "../../shared/util";
 
+import Vector2 from "../../shared/vector2";
+import Hex, { Layout } from "../../shared/hex";
+import * as Rules from "../../shared/rules.json";
+import * as Util from "../../shared/util";
+import PlayerRelation from "../../shared/relation";
+
+import Connection, { ConnectionListener } from "./connection";
+import ClientWorld from "./clientworld";
+
+/**
+ * Client side game logic
+ */
 export default class Game implements ConnectionListener {
 
-    private canvas_map = $("#canvas-map");
-    private div_debug = $("#debug");
+    private canvas_map = <HTMLCanvasElement> document.querySelector("#canvas-map");
+    private div_debug = document.querySelector("#debug");
 
     private connection: Connection;
     private layout: Layout;
@@ -25,7 +29,8 @@ export default class Game implements ConnectionListener {
     private viewport: Viewport;
 
     private selectedHex: Hex = null;
-    private selectedArmies: string[] = [];
+    private selectedBuilding: any = null;
+    private selectedUnits: any[] = [];
 
     private initialFocusSet = false;
 
@@ -38,7 +43,7 @@ export default class Game implements ConnectionListener {
         this.connection.addListener(this);
 
         this.p_renderer = new PIXI.Renderer({
-            view: this.canvas_map[0],
+            view: this.canvas_map,
             width: window.innerWidth,
             height: window.innerHeight,
             resolution: window.devicePixelRatio,
@@ -64,23 +69,23 @@ export default class Game implements ConnectionListener {
             }
         }, false);
 
-        //Setup Hud
-        let tabs = $(".hud-tab");
-        let contents = $(".hud-content")
-        tabs.click(e => {
-            let id:string = e.target.id;
-            let name:string = id.substring(1, id.length);
+        // //Setup Hud
+        // let tabs = $(".hud-tab");
+        // let contents = $(".hud-content")
+        // tabs.click(e => {
+        //     let id:string = e.target.id;
+        //     let name:string = id.substring(1, id.length);
             
-            console.log(`clicked ${id}`);
+        //     console.log(`clicked ${id}`);
 
-            tabs.removeClass("active");
-            contents.hide();
+        //     tabs.removeClass("active");
+        //     contents.hide();
             
-            $(`#b${name}`).addClass("active");
-            $(`#t${name}`).show();
-        });
+        //     document.querySelectorAll((`#b${name}`).classList.add("active");
+        //     document.querySelectorAll((`#t${name}`).show();
+        // });
 
-        $("#bInfo").click(); //Start on Info Tab
+        // $("#bInfo").click(); //Start on Info Tab
 
         this.loader = PIXI.Loader.shared
             .add("terrain_water_deep", "../img/water_02.png")
@@ -139,31 +144,44 @@ export default class Game implements ConnectionListener {
             let v = new Vector2(p.x, p.y);
             switch (click.event.data.button) {
                 case 0: //Left
-                    this.selectedHex = null;
-                    this.selectedArmies = [];
+                    this.clearSelection();
                     for(let child of (<any>click.viewport).viewport.children) {
                         for(let s of (<PIXI.Container>child).children) {
                             if(s.name && parseInt(s.name) !== -1) {//Dont click on environment
                                 if(Util.isPointInRectangle(p.x,p.y,s.x,s.y, (<PIXI.Sprite>s).width, (<PIXI.Sprite>s).height)) {
-                                    this.selectedArmies.push(s.name);
-                                    return;
+                                    for(let unit of this.cWorld.armies) {
+                                        if(s.name === unit.id) {
+                                            this.selectedUnits.push(unit);
+                                            this.updateHudInfo();
+                                            this.updateScenegraph(this.cWorld.tiles[this.layout.pixelToHex(v).round().hash()]);
+                                            return;
+                                        }
+                                    }
+                                    for(let building of this.cWorld.buildings) {
+                                        if(s.name === building.id) {
+                                            this.clearSelection();
+                                            this.selectedBuilding = building;
+                                            this.updateScenegraph(this.cWorld.tiles[this.layout.pixelToHex(v).round().hash()]);
+                                            this.updateHudInfo();
+                                            return;
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }                    
+                    }
                     this.selectedHex = this.layout.pixelToHex(v).round();
-                    // if (this.selectedHex && this.cWorld.tiles[this.selectedHex.hash()]) {
-                    //     this.hud.showSelectionHud(this.cWorld, this.selectedHex);
-                    //     this.hud.showConstructionHud(); //TODO: Only show this if you can xonstruct something here 
-                    // } else {
-                    //     this.hud.hideConstructionHud();
-                    //     this.hud.hideSelectionHud();
-                    // }
+                    if (this.selectedHex && this.cWorld.tiles[this.selectedHex.hash()]) {
+                        this.updateScenegraph(this.cWorld.tiles[this.selectedHex.hash()]);
+                        this.updateHudInfo();
+                    } else {
+                        this.selectedHex = null;
+                    }
                     break;
                 case 2: //Right 
                     let clickedHex = this.layout.pixelToHex(v).round();
                     if (clickedHex) {
-                        this.connection.send("request movement", { selection: this.selectedArmies, target: clickedHex });
+                        this.connection.send("request movement", { selection: this.selectedUnits.map((unit) => {return unit.id}), target: clickedHex });
                     }
                     break;
             }
@@ -187,17 +205,24 @@ export default class Game implements ConnectionListener {
             }
 
             //TODO: Performance - Dont update this every frame
-            this.div_debug.text("");
-            this.div_debug.append("<em>General Information</em><br>");
-            this.div_debug.append("UID   : " + currentUid + "<br>");
-            this.div_debug.append(`Screenheight : ${this.viewport.screenHeight} "<br>"`);
-            this.div_debug.append(`Screenwidth  : ${this.viewport.screenWidth} "<br>"`);
-            this.div_debug.append(`Worldheight : ${this.viewport.worldHeight} "<br>"`);
-            this.div_debug.append(`Worldwidth  : ${this.viewport.worldWidth} "<br>"`);
-            this.div_debug.append(`Left/Top: ${Math.round(this.viewport.left)}/${Math.round(this.viewport.top)} "<br>"`);
-            this.div_debug.append(`Center: ${Math.round(this.viewport.center.x)}/${Math.round(this.viewport.center.y)} "<br>"`);
-            if (this.selectedHex) this.div_debug.append("Selected Hex   : " + this.selectedHex.q + " " + this.selectedHex.r + " " + this.selectedHex.s + "<br>");
+            this.div_debug.innerHTML = "";
+            this.div_debug.innerHTML +=("<em>General Information</em><br>");
+            this.div_debug.innerHTML +=("UID   : " + currentUid + "<br>");
+            this.div_debug.innerHTML +=(`Screenheight : ${this.viewport.screenHeight} "<br>"`);
+            this.div_debug.innerHTML +=(`Screenwidth  : ${this.viewport.screenWidth} "<br>"`);
+            this.div_debug.innerHTML +=(`Worldheight : ${this.viewport.worldHeight} "<br>"`);
+            this.div_debug.innerHTML +=(`Worldwidth  : ${this.viewport.worldWidth} "<br>"`);
+            this.div_debug.innerHTML +=(`Left/Top: ${Math.round(this.viewport.left)}/${Math.round(this.viewport.top)} "<br>"`);
+            this.div_debug.innerHTML +=(`Center: ${Math.round(this.viewport.center.x)}/${Math.round(this.viewport.center.y)} "<br>"`);
+            if (this.selectedHex) this.div_debug.innerHTML +=("Selected Hex   : " + this.selectedHex.q + " " + this.selectedHex.r + " " + this.selectedHex.s + "<br>");
         });
+    }
+
+    clearSelection() {
+        this.selectedHex = null;
+        this.selectedUnits = [];
+        this.selectedBuilding = null;
+        this.updateHudInfo();
     }
 
     updateScenegraph(tile) {
@@ -233,8 +258,13 @@ export default class Game implements ConnectionListener {
             img.y = this.layout.hexToPixel(hex).y + pos.y;
             img.tint = tint;
             img.name = spot.id;
-            for(let army of this.selectedArmies) {
-                if(army === spot.id) {
+            if(this.selectedBuilding && this.selectedBuilding.id === spot.id) {
+                img.filters = [               
+                    Game.GLOWFILTER
+                ];
+            }
+            for(let army of this.selectedUnits) {
+                if(army.id === spot.id) {
                     img.filters = [               
                         Game.GLOWFILTER
                     ];
@@ -290,7 +320,7 @@ export default class Game implements ConnectionListener {
     }
 
     onUnitsSelected(uids: string[]): void {
-        this.selectedArmies = uids;
+        this.selectedUnits = uids;
     }
 
     onConnected(socket: Socket) {
@@ -354,6 +384,85 @@ export default class Game implements ConnectionListener {
             this.cWorld.playerRelations[hash] = data;
         });
     }
+
+    updateHudInfo() {
+        let info:string;
+        if(this.selectedUnits.length > 0) {
+            info = this.generateUnitInfoString(this.selectedUnits);
+        } else if(this.selectedBuilding != null) {
+            info = this.generateBuildingInfoString(this.selectedBuilding);
+        } else if(this.selectedHex) {
+            info = this.generateHexInfoString(this.selectedHex);
+        } else {
+            info = "Select something to display more Information";
+        }
+        document.querySelector("#tInfo").innerHTML = info;
+    }
+
+    generateUnitInfoString(units) {
+        let result = "";
+        for(let unit of units) {
+            result += "<b>Army Info</b></br>";
+            result += "Id: " + unit.id + "</br>";
+            result += "Speed: " + unit.speed.toFixed(2) + "</br>";
+            result += "Attack: " + unit.attack.toFixed(2) + "</br>";
+            result += "Health: " + unit.hp.toFixed(2) + "</br>";
+            result += "Spotting Distance: " + unit.spottingDistance.toFixed(2) + "</br>";
+            result += "Target: " + unit.targetHexes.slice(-1).pop(); +"</br>";
+            result += "</br>";
+            result += "<b>Carrying</b></br>";
+            result += "Food: " + unit.food + "</br>";
+            result += "Wood: " + unit.wood + "</br>";
+            result += "Stone: " + unit.stone + "</br>";
+            result += "Iron: " + unit.iron + "</br>";
+            result += "Gold: " + unit.gold + "</br>";
+            result += "</br>";
+            result += "</br>";
+        }        
+        return result;
+    }
+
+    generateBuildingInfoString(building) {
+        let result = "";
+    result += "<b>Building Info</b></br>";
+    result += "Id: " + building.id + "</br>";
+    if (building.foodHarvest) {
+      result += "Food Generation: " + building.foodHarvest + "</br>";
+    }
+    if (building.woodHarvest) {
+      result += "Wood Generation: " + building.woodHarvest + "</br>";
+    }
+    if (building.stoneHarvest) {
+      result += "Stone Generation: " + building.stoneHarvest + "</br>";
+    }
+    if (building.ironHarvest) {
+      result += "Iron Generation: " + building.ironHarvest + "</br>";
+    }
+    if (building.goldHarvest) {
+      result += "Iron Generation: " + building.goldHarvest + "</br>";
+    }
+    return result;
+    }
+
+    generateHexInfoString(tile) {
+        let result = "";
+        result += "Position: " + Hex.hash(tile.hex) + "</br>";
+        result += "</br>";
+        result += "<b>Resources</b></br>";
+        for(let res of Object.keys(tile.resources)) {
+          result += `${res}: ${tile.resources[res]}</br>`;
+        }
+        result += "</br>";
+        result += "<b>Tile Info</b></br>";
+        result += "Forestation: " + tile.forestation.toFixed(2) + "</br>";
+        result += "Iron Ore: " + tile.ironOre.toFixed(2) + "</br>";
+        result += "Gold Ore: " + tile.goldOre.toFixed(2) + "</br>";
+        result += "Height: " + tile.height.toFixed(2) + "</br>";
+        result += "Rockyness: " + tile.rockyness.toFixed(2) + "</br>";
+        result += "Movementfactor: " + tile.movementFactor.toFixed(2) + "</br>";
+        return result;
+    }
+
 }
 
 declare const currentUid;

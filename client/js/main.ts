@@ -1,14 +1,15 @@
 /**
  * Created by geller on 31.08.2016.
- *
  */
-import $ from 'jquery';
 import Game from "./game";
 
-$(document).ready(function () {
-    $.get("/config.json", function (config, status) {
-        if(status === "success") {
-            new Game(config);
+document.addEventListener('DOMContentLoaded', function() {
+    let configRequest = new XMLHttpRequest()
+    configRequest.onreadystatechange = function (data) {
+        if(this.readyState == 4 && this.status == 200) {
+            new Game(JSON.parse(this.responseText));
         }
-    });
+    }
+    configRequest.open('GET', "/config.json");
+    configRequest.send();
 });
