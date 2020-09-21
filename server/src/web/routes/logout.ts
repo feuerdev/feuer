@@ -1,14 +1,15 @@
 import * as express from "express";
 const router = express.Router();
+import path from "path";
+const directory_client = path.join(__dirname, "../../../../client"); //Gibt das Client-Root-Verzeichnis zurueck.;
 
 //Route: /login/
-
 router.get("/", function(req, res) {
-  res.render("logout");
+  res.sendFile("logout.html", { root: directory_client });
 });
 
 router.post("/", function(req, res) {
-  //Not needed. Login will be handled on the client side
+  //Not needed. Logout will be handled on the client side
 });
 
 export default router;

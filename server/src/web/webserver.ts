@@ -50,19 +50,19 @@ export default class Webserver {
         this.app.use(bodyParser.urlencoded({ extended: true }));
         this.app.use(bodyParser.json());
         this.app.use(express.static(directory_client, { index: false }));
-
+        
         this.app.use("/register", router_register);
         this.app.use("/login", router_login);
         this.app.use("/logout", router_logout);
         this.app.use("/mapgen", router_mapgen);
         this.app.get("/relogin", function (req, res) {
-            res.render("relogin");
+            res.sendFile("relogin.html", { root: directory_client });
         });
         this.app.use("/play", auth.isAuthenticated, router_play);
         this.app.get("/config.json", function (req, res) {
             res.sendFile("/js/config/config_" + config.name + ".json", { root: directory_client });
         });
-        this.app.use("/", auth.isAuthenticated, router_play);//this.app.use("/", router_home);
+        this.app.use("/", auth.isAuthenticated, router_play);
     }
 
     run() {

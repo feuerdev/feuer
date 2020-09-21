@@ -1,14 +1,14 @@
 import * as express from "express";
-import * as admin from 'firebase-admin';
 import * as db from "../../util/db";
 import * as auth from "../../util/auth";
-const router = express.Router();
+import path from "path";
 
-//TODO: outsource firebase admin in separate import
+const directory_client = path.join(__dirname, "../../../../client"); //Gibt das Client-Root-Verzeichnis zurueck.;
+const router = express.Router();
 
 //Route: /register/
 router.get("/", function (req, res) {
-  res.render("register");
+  res.sendFile("register.html", { root: directory_client });
 });
 
 router.post("/", auth.deserializeAuth, function (req, res) {
