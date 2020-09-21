@@ -4,6 +4,5 @@
   "secure_cookie": true,
   "port": 8000,
   "transports": ["websocket"],  
-  "updaterate": 3,
-  "netrate": 0.5
+  "updaterate": 1
 }
