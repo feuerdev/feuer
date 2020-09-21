@@ -2,7 +2,6 @@
  * Einstiegspunkt für den Gameserver Code
  * Created by geller on 30.08.2016.
  */
-
 import socketio from "socket.io";
 import { Server } from "http";
 
@@ -16,7 +15,7 @@ import * as Rules from "../../../shared/rules.json";
 import { astar } from "../../../shared/pathfinding";
 import { Socket } from "socket.io";
 import { Hashtable } from "../../../shared/util";
-import Tile, { Spot } from "./tile";
+import Tile from "./tile";
 import World from "./world";
 import Army from "./objects/army";
 import Hex from "../../../shared/hex";
@@ -36,9 +35,7 @@ export default class GameServer {
 
   //#region Gameloop Variables
   private readonly updaterate = Math.round(1000 / config.updaterate);
-  private readonly defaultDelta = Math.round(1000 / 60);
-  private readonly netrate = Math.round(1000 / config.netrate);
-  private readonly defaultNetrate = Math.round(1000 / 30);
+  private readonly defaultDelta = Math.round(1000 / 1000);
   private isRunning = false;
   //#endregion
 
@@ -72,13 +69,12 @@ export default class GameServer {
       let dbgStart = Date.now();
       this.update(this.updaterate / this.defaultDelta);
       let dbgAfterUpdate = Date.now();
-      this.updateNet(this.updaterate / this.defaultNetrate);
+      this.updateNet(this.updaterate / this.defaultDelta);
       let dbgAfterSend = Date.now();
       if (this.actualTicks > 5 && Math.abs(timeSincelastFrame - this.updaterate) > 30) {
         Log.error("Warning something is fucky with the gameloop");
       }
       Log.silly("Update took:"+ (dbgAfterUpdate - dbgStart)+ " Sending Data to clients took:"+ (dbgAfterSend - dbgAfterUpdate)+ " Time since last Frame:"+ timeSincelastFrame+ " Gesamtticks:"+ this.actualTicks+ " Abweichung:"+ (timeSincelastFrame - this.updaterate));
-
     }
     setInterval(gameloop, this.updaterate);
   }
