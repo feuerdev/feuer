@@ -28,7 +28,7 @@ export default class Game implements ConnectionListener {
     private p_renderer: PIXI.Renderer;
     private viewport: Viewport;
 
-    private selectedHex: Hex = null;
+    private selectedHex = null;
     private selectedBuilding: any = null;
     private selectedUnits: any[] = [];
 
@@ -170,9 +170,10 @@ export default class Game implements ConnectionListener {
                             }
                         }
                     }
-                    this.selectedHex = this.layout.pixelToHex(v).round();
-                    if (this.selectedHex && this.cWorld.tiles[this.selectedHex.hash()]) {
-                        this.updateScenegraph(this.cWorld.tiles[this.selectedHex.hash()]);
+                    let hex = this.layout.pixelToHex(v).round();
+                    this.selectedHex = this.cWorld.tiles[hex.hash()];
+                    if (this.selectedHex && this.cWorld.tiles[hex.hash()]) {
+                        this.updateScenegraph(this.cWorld.tiles[hex.hash()]);
                         this.updateHudInfo();
                     } else {
                         this.selectedHex = null;
@@ -235,7 +236,7 @@ export default class Game implements ConnectionListener {
         container.name = hex.hash();
 
         let tint = tile.visible ? 0xDDDDDD : 0x555555;
-        if (this.selectedHex && this.selectedHex.equals(tile.hex)) {
+        if (this.selectedHex && Hex.equals(this.selectedHex.hex, tile.hex)) {
             tile.visible ? tint = 0xFFFFFF : tint += 0x333333;
         }
 
