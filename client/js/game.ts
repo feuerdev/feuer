@@ -10,17 +10,21 @@ import * as Util from "../../shared/util";
 import PlayerRelation from "../../shared/relation";
 
 import Connection, { ConnectionListener } from "./connection";
+import Hud, { HudListener } from "./hud";
+import Selection from "./selection";
 import ClientWorld from "./clientworld";
 
 /**
  * Client side game logic
  */
-export default class Game implements ConnectionListener {
+export default class Game implements ConnectionListener, HudListener {
 
     private canvas_map = <HTMLCanvasElement> document.querySelector("#canvas-map");
     private div_debug = document.querySelector("#debug");
 
+    private selection: Selection;
     private connection: Connection;
+    private hud: Hud;
     private layout: Layout;
     private cWorld: ClientWorld = new ClientWorld();
 
@@ -28,19 +32,18 @@ export default class Game implements ConnectionListener {
     private p_renderer: PIXI.Renderer;
     private viewport: Viewport;
 
-    private selectedHex = null;
-    private selectedBuilding: any = null;
-    private selectedUnits: any[] = [];
-
     private initialFocusSet = false;
 
     static GLOWFILTER = new GlowFilter({ distance: 15, outerStrength: 2 });
 
     constructor(config) {
+        this.selection = new Selection();
+        this.hud = new Hud();
         this.connection = new Connection(config.ip, config.transports);
         this.layout = new Layout(Layout.pointy, new Vector2(Rules.settings.map_hex_width, Rules.settings.map_hex_height), new Vector2(0, 0));
 
         this.connection.addListener(this);
+        this.hud.addListener(this);
 
         this.p_renderer = new PIXI.Renderer({
             view: this.canvas_map,
@@ -68,24 +71,6 @@ export default class Game implements ConnectionListener {
                     break;
             }
         }, false);
-
-        // //Setup Hud
-        // let tabs = $(".hud-tab");
-        // let contents = $(".hud-content")
-        // tabs.click(e => {
-        //     let id:string = e.target.id;
-        //     let name:string = id.substring(1, id.length);
-            
-        //     console.log(`clicked ${id}`);
-
-        //     tabs.removeClass("active");
-        //     contents.hide();
-            
-        //     document.querySelectorAll((`#b${name}`).classList.add("active");
-        //     document.querySelectorAll((`#t${name}`).show();
-        // });
-
-        // $("#bInfo").click(); //Start on Info Tab
 
         this.loader = PIXI.Loader.shared
             .add("terrain_water_deep", "../img/water_02.png")
@@ -144,25 +129,24 @@ export default class Game implements ConnectionListener {
             let v = new Vector2(p.x, p.y);
             switch (click.event.data.button) {
                 case 0: //Left
-                    this.clearSelection();
+                    this.selection.clearSelection();
                     for(let child of (<any>click.viewport).viewport.children) {
                         for(let s of (<PIXI.Container>child).children) {
                             if(s.name && parseInt(s.name) !== -1) {//Dont click on environment
                                 if(Util.isPointInRectangle(p.x,p.y,s.x,s.y, (<PIXI.Sprite>s).width, (<PIXI.Sprite>s).height)) {
-                                    for(let unit of this.cWorld.armies) {
+                                    for(let unit of this.cWorld.groups) {
                                         if(s.name === unit.id) {
-                                            this.selectedUnits.push(unit);
-                                            this.updateHudInfo();
+                                            this.selection.selectGroup(unit.id);
+                                            // this.updateHudInfo();
                                             this.updateScenegraph(this.cWorld.tiles[this.layout.pixelToHex(v).round().hash()]);
                                             return;
                                         }
                                     }
                                     for(let building of this.cWorld.buildings) {
                                         if(s.name === building.id) {
-                                            this.clearSelection();
-                                            this.selectedBuilding = building;
+                                            this.selection.selectBuilding(building.id);
                                             this.updateScenegraph(this.cWorld.tiles[this.layout.pixelToHex(v).round().hash()]);
-                                            this.updateHudInfo();
+                                            // this.updateHudInfo();
                                             return;
                                         }
                                     }
@@ -171,18 +155,16 @@ export default class Game implements ConnectionListener {
                         }
                     }
                     let hex = this.layout.pixelToHex(v).round();
-                    this.selectedHex = this.cWorld.tiles[hex.hash()];
-                    if (this.selectedHex && this.cWorld.tiles[hex.hash()]) {
+                    if (this.cWorld.tiles[hex.hash()]) {
+                        this.selection.selectHex(hex);
                         this.updateScenegraph(this.cWorld.tiles[hex.hash()]);
-                        this.updateHudInfo();
-                    } else {
-                        this.selectedHex = null;
+                        // this.updateHudInfo();
                     }
                     break;
                 case 2: //Right 
                     let clickedHex = this.layout.pixelToHex(v).round();
                     if (clickedHex) {
-                        this.connection.send("request movement", { selection: this.selectedUnits.map((unit) => {return unit.id}), target: clickedHex });
+                        this.connection.send("request movement", { selection: this.selection.selectedGroup, target: clickedHex });
                     }
                     break;
             }
@@ -215,15 +197,8 @@ export default class Game implements ConnectionListener {
             this.div_debug.innerHTML +=(`Worldwidth  : ${this.viewport.worldWidth} "<br>"`);
             this.div_debug.innerHTML +=(`Left/Top: ${Math.round(this.viewport.left)}/${Math.round(this.viewport.top)} "<br>"`);
             this.div_debug.innerHTML +=(`Center: ${Math.round(this.viewport.center.x)}/${Math.round(this.viewport.center.y)} "<br>"`);
-            if (this.selectedHex) this.div_debug.innerHTML +=("Selected Hex   : " + this.selectedHex.q + " " + this.selectedHex.r + " " + this.selectedHex.s + "<br>");
+            if (this.selection.isHex()) this.div_debug.innerHTML +=("Selected Hex   : " + this.selection.selectedHex.q + " " + this.selection.selectedHex.r + " " + this.selection.selectedHex.s + "<br>");
         });
-    }
-
-    clearSelection() {
-        this.selectedHex = null;
-        this.selectedUnits = [];
-        this.selectedBuilding = null;
-        this.updateHudInfo();
     }
 
     updateScenegraph(tile) {
@@ -236,7 +211,7 @@ export default class Game implements ConnectionListener {
         container.name = hex.hash();
 
         let tint = tile.visible ? 0xDDDDDD : 0x555555;
-        if (this.selectedHex && Hex.equals(this.selectedHex.hex, tile.hex)) {
+        if (this.selection.isHex() && Hex.equals(this.selection.selectedHex, tile.hex)) {
             tile.visible ? tint = 0xFFFFFF : tint += 0x333333;
         }
 
@@ -259,17 +234,15 @@ export default class Game implements ConnectionListener {
             img.y = this.layout.hexToPixel(hex).y + pos.y;
             img.tint = tint;
             img.name = spot.id;
-            if(this.selectedBuilding && this.selectedBuilding.id === spot.id) {
+            if(this.selection.isBuilding() && this.selection.selectedBuilding === spot.id) {
                 img.filters = [               
                     Game.GLOWFILTER
                 ];
             }
-            for(let army of this.selectedUnits) {
-                if(army.id === spot.id) {
-                    img.filters = [               
-                        Game.GLOWFILTER
-                    ];
-                }
+            if(this.selection.selectedGroup === spot.id) {
+                img.filters = [               
+                    Game.GLOWFILTER
+                ];
             }
             container.addChild(img);
         }
@@ -313,15 +286,11 @@ export default class Game implements ConnectionListener {
     }
 
     onConstructionRequested(name: string): void {
-        this.connection.send("request construction", { name: name, pos: this.selectedHex });
+        this.connection.send("request construction", { name: name, pos: this.selection.selectedHex });
     }
 
     onUnitRequested(name: string): void {
-        this.connection.send("request unit", { name: name, pos: this.selectedHex });
-    }
-
-    onUnitsSelected(uids: string[]): void {
-        this.selectedUnits = uids;
+        this.connection.send("request unit", { name: name, pos: this.selection.selectedHex });
     }
 
     onConnected(socket: Socket) {
@@ -355,12 +324,12 @@ export default class Game implements ConnectionListener {
                 }
             }
         });
-        socket.on("gamestate armies", (data) => {
-            this.cWorld.armies = data;
-            for (let army of this.cWorld.armies) {
-                if (army.owner !== currentUid) {
-                    if (this.cWorld.playerRelations[PlayerRelation.getHash(army.owner, currentUid)] === undefined) {
-                        this.connection.send("request relation", { id1: army.owner, id2: currentUid });
+        socket.on("gamestate groups", (data) => {
+            this.cWorld.groups = data;
+            for (let group of this.cWorld.groups) {
+                if (group.owner !== currentUid) {
+                    if (this.cWorld.playerRelations[PlayerRelation.getHash(group.owner, currentUid)] === undefined) {
+                        this.connection.send("request relation", { id1: group.owner, id2: currentUid });
                     }
                 }
             }
@@ -385,85 +354,6 @@ export default class Game implements ConnectionListener {
             this.cWorld.playerRelations[hash] = data;
         });
     }
-
-    updateHudInfo() {
-        let info:string;
-        if(this.selectedUnits.length > 0) {
-            info = this.generateUnitInfoString(this.selectedUnits);
-        } else if(this.selectedBuilding != null) {
-            info = this.generateBuildingInfoString(this.selectedBuilding);
-        } else if(this.selectedHex) {
-            info = this.generateHexInfoString(this.selectedHex);
-        } else {
-            info = "Select something to display more Information";
-        }
-        document.querySelector("#tInfo").innerHTML = info;
-    }
-
-    generateUnitInfoString(units) {
-        let result = "";
-        for(let unit of units) {
-            result += "<b>Army Info</b></br>";
-            result += "Id: " + unit.id + "</br>";
-            result += "Speed: " + unit.speed.toFixed(2) + "</br>";
-            result += "Attack: " + unit.attack.toFixed(2) + "</br>";
-            result += "Health: " + unit.hp.toFixed(2) + "</br>";
-            result += "Spotting Distance: " + unit.spottingDistance.toFixed(2) + "</br>";
-            result += "Target: " + unit.targetHexes.slice(-1).pop(); +"</br>";
-            result += "</br>";
-            result += "<b>Carrying</b></br>";
-            result += "Food: " + unit.food + "</br>";
-            result += "Wood: " + unit.wood + "</br>";
-            result += "Stone: " + unit.stone + "</br>";
-            result += "Iron: " + unit.iron + "</br>";
-            result += "Gold: " + unit.gold + "</br>";
-            result += "</br>";
-            result += "</br>";
-        }        
-        return result;
-    }
-
-    generateBuildingInfoString(building) {
-        let result = "";
-    result += "<b>Building Info</b></br>";
-    result += "Id: " + building.id + "</br>";
-    if (building.foodHarvest) {
-      result += "Food Generation: " + building.foodHarvest + "</br>";
-    }
-    if (building.woodHarvest) {
-      result += "Wood Generation: " + building.woodHarvest + "</br>";
-    }
-    if (building.stoneHarvest) {
-      result += "Stone Generation: " + building.stoneHarvest + "</br>";
-    }
-    if (building.ironHarvest) {
-      result += "Iron Generation: " + building.ironHarvest + "</br>";
-    }
-    if (building.goldHarvest) {
-      result += "Iron Generation: " + building.goldHarvest + "</br>";
-    }
-    return result;
-    }
-
-    generateHexInfoString(tile) {
-        let result = "";
-        result += "Position: " + Hex.hash(tile.hex) + "</br>";
-        result += "</br>";
-        result += "<b>Resources</b></br>";
-        for(let res of Object.keys(tile.resources)) {
-          result += `${res}: ${tile.resources[res]}</br>`;
-        }
-        result += "</br>";
-        result += "<b>Tile Info</b></br>";
-        result += "Forestation: " + tile.forestation.toFixed(2) + "</br>";
-        result += "Iron Ore: " + tile.ironOre.toFixed(2) + "</br>";
-        result += "Gold Ore: " + tile.goldOre.toFixed(2) + "</br>";
-        result += "Height: " + tile.height.toFixed(2) + "</br>";
-        result += "Rockyness: " + tile.rockyness.toFixed(2) + "</br>";
-        result += "Movementfactor: " + tile.movementFactor.toFixed(2) + "</br>";
-        return result;
-    }
-
 }
 
 declare const currentUid;
