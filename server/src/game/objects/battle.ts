@@ -1,11 +1,11 @@
 import GameObject from "./gameobject";
-import Army from "./army";
+import Group from "./group";
 import Hex from "../../../../shared/hex";
 
 export default class Battle extends GameObject {
 
-  public aAttacker: Army;
-  public aDefender: Army;
+  public aAttacker: Group;
+  public aDefender: Group;
   public pos:Hex;
 
   constructor(pos, aAttacker, aDefender) {

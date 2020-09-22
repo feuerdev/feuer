@@ -2,7 +2,7 @@ import GameObject, { Spotter, Drawable } from "./gameobject"
 import Hex from "../../../../shared/hex"
 import * as Rules from "../../../../shared/rules.json";
 
-export default class Army extends GameObject implements Spotter, Drawable {
+export default class Group extends GameObject implements Spotter, Drawable {
   /**
    * Spottable
    */
@@ -43,15 +43,15 @@ export default class Army extends GameObject implements Spotter, Drawable {
     super(owner);
   }
 
-  public static createUnit(owner: string, name: string, pos: Hex): Army {
+  public static createUnit(owner: string, name: string, pos: Hex): Group {
     const template = Rules.units[name];
-    const army: Army = new Army(owner);
-    army.pos = pos;
-    army.spottingDistance = template.spottingDistance;
-    army.texture = template.texture;
-    army.speed = template.speed;
-    army.attack = template.attack;
-    army.hp = template.hp;
-    return army;
+    const group: Group = new Group(owner);
+    group.pos = pos;
+    group.spottingDistance = template.spottingDistance;
+    group.texture = template.texture;
+    group.speed = template.speed;
+    group.attack = template.attack;
+    group.hp = template.hp;
+    return group;
   }
 }

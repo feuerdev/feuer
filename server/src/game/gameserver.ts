@@ -17,7 +17,7 @@ import { Socket } from "socket.io";
 import { Hashtable } from "../../../shared/util";
 import Tile from "./tile";
 import World from "./world";
-import Army from "./objects/army";
+import Group from "./objects/group";
 import Hex from "../../../shared/hex";
 import Building from "./objects/building";
 import PlayerRelation, { EnumRelationType } from "../../../shared/relation";
@@ -92,19 +92,19 @@ export default class GameServer {
   //Loops
   update(deltaFactor) {
 
-    //Army Movement
-    for (let i = 0; i < this.world.armies.length; i++) {
-      const army: Army = this.world.armies[i];
-      if (army.targetHexes.length > 0) {
-        let currentTile = this.world.tiles[army.pos.hash()]
-        army.movementStatus += (army.speed * currentTile.movementFactor * deltaFactor * 0.1); //TODO calculate correct movementcost
-        if (army.movementStatus > 100) { //Movement!
-          currentTile.removeSpot(army.id);
-          army.pos = army.targetHexes.splice(0, 1)[0];
-          this.world.tiles[army.pos.hash()].addSpot(army.getTexture(), army.id);
-          army.movementStatus = 0;
-          this.updatePlayerVisibilities(army.owner);
-          this.checkForBattle(army);
+    //Group Movement
+    for (let i = 0; i < this.world.groups.length; i++) {
+      const group: Group = this.world.groups[i];
+      if (group.targetHexes.length > 0) {
+        let currentTile = this.world.tiles[group.pos.hash()]
+        group.movementStatus += (group.speed * currentTile.movementFactor * deltaFactor * 0.1); //TODO calculate correct movementcost
+        if (group.movementStatus > 100) { //Movement!
+          currentTile.removeSpot(group.id);
+          group.pos = group.targetHexes.splice(0, 1)[0];
+          this.world.tiles[group.pos.hash()].addSpot(group.getTexture(), group.id);
+          group.movementStatus = 0;
+          this.updatePlayerVisibilities(group.owner);
+          this.checkForBattle(group);
         }
       }
     }
@@ -131,12 +131,12 @@ export default class GameServer {
       if (battle.aAttacker.hp <= 0 || battle.aDefender.hp <= 0) {
         if (battle.aAttacker.hp <= 0) {
           this.world.tiles[battle.pos.hash()].removeSpot(battle.aAttacker.id);
-          this.world.armies.splice(this.world.armies.indexOf(battle.aAttacker), 1);
+          this.world.groups.splice(this.world.groups.indexOf(battle.aAttacker), 1);
           this.updatePlayerVisibilities(battle.aAttacker.owner);
         }
         if (battle.aDefender.hp <= 0) {
           this.world.tiles[battle.pos.hash()].removeSpot(battle.aDefender.id);
-          this.world.armies.splice(this.world.armies.indexOf(battle.aDefender), 1);
+          this.world.groups.splice(this.world.groups.indexOf(battle.aDefender), 1);
           this.updatePlayerVisibilities(battle.aDefender.owner);
         }
         this.world.battles.splice(i, 1);
@@ -151,11 +151,11 @@ export default class GameServer {
     }
   }
 
-  checkForBattle(army: Army) {
-    for (let other_army of this.world.armies) {
-      if (other_army.pos.equals(army.pos) && army.owner !== other_army.owner && army.id !== other_army.id) {
-        if(this.world.playerRelations[PlayerRelation.getHash(army.owner, other_army.owner)].relationType === EnumRelationType.rtHostile) {
-          this.world.battles.push(new Battle(army.pos, army, other_army));
+  checkForBattle(group: Group) {
+    for (let other_group of this.world.groups) {
+      if (other_group.pos.equals(group.pos) && group.owner !== other_group.owner && group.id !== other_group.id) {
+        if(this.world.playerRelations[PlayerRelation.getHash(group.owner, other_group.owner)].relationType === EnumRelationType.rtHostile) {
+          this.world.battles.push(new Battle(group.pos, group, other_group));
         }
       }
     }
@@ -179,11 +179,11 @@ export default class GameServer {
         if (socket) {
           socket.emit("gamestate players", this.players);
           let tiles = this.getTiles(player.visibleHexes);
-          let armies = this.getVisibleArmies(player.visibleHexes);
+          let groups = this.getVisibleGroups(player.visibleHexes);
           let battles = this.getVisibleBattles(player.visibleHexes);
           let buildings = this.getVisibleBuildings(player.visibleHexes);
           socket.emit("gamestate tiles", tiles);
-          socket.emit("gamestate armies", armies);
+          socket.emit("gamestate groups", groups);
           socket.emit("gamestate battles", battles);
           socket.emit("gamestate buildings", buildings);
         }
@@ -210,8 +210,8 @@ export default class GameServer {
 
           //Give Player an initial Scout and Camp
           let pos = self.getRandomHex();
-          let initialUnit = Army.createUnit(player.uid, "Scout", pos);
-          self.world.armies.push(initialUnit);
+          let initialUnit = Group.createUnit(player.uid, "Scout", pos);
+          self.world.groups.push(initialUnit);
 
           let initialCamp = Building.createBuilding(player.uid, "Campsite", pos);
           self.world.buildings.push(initialCamp);
@@ -245,10 +245,10 @@ export default class GameServer {
 
   onRequestMovement(socket: Socket, data: any) {
     let uid = this.getPlayerUid(socket.id);
-    let selection:number[] = data.selection;
+    let selection:number = data.selection;
     let target:Hex = new Hex(data.target.q, data.target.r, data.target.s);
-    for (let unit of this.world.armies) {
-      if (uid === unit.owner && selection.includes(unit.id) ) {
+    for (let unit of this.world.groups) {
+      if (uid === unit.owner && selection === unit.id) {
         if(this.world.tiles[target.hash()]) {
           unit.targetHexes = astar(this.world.tiles, unit.pos, target);
           for (let hex of unit.targetHexes) {
@@ -277,9 +277,9 @@ export default class GameServer {
     let pos = new Hex(data.pos.q, data.pos.r, data.pos.s);
     let tile = this.world.tiles[pos.hash()];
     if(this.isAllowedToRecruit(tile, uid, data.name)) {
-      let army = Army.createUnit(uid, data.name, pos);
-      this.world.armies.push(army);
-      tile.addSpot(army.getTexture(), army.id);
+      let group = Group.createUnit(uid, data.name, pos);
+      this.world.groups.push(group);
+      tile.addSpot(group.getTexture(), group.id);
       this.updatePlayerVisibilities(uid);
     }
   }
@@ -323,9 +323,9 @@ export default class GameServer {
     player.visibleHexes = [];
 
     if(player) {
-      for(let army of this.world.armies) {
-        if(army.owner === uid) {
-          let visible:Hex[] = army.pos.neighborsRange(army.getSpottingRange());
+      for(let group of this.world.groups) {
+        if(group.owner === uid) {
+          let visible:Hex[] = group.pos.neighborsRange(group.getSpottingRange());
           this.addUniqueHexes(player.visibleHexes, visible);
           this.addUniqueHexes(player.discoveredHexes, visible);
         }
@@ -361,11 +361,11 @@ export default class GameServer {
     return result;
   }
 
-  private getVisibleArmies(hexes:Hex[]):Army[] {
-    let result:Army[] = [];
+  private getVisibleGroups(hexes:Hex[]):Group[] {
+    let result:Group[] = [];
     for(let hex of hexes) {
-      for(let army of this.world.armies) {
-        if(army.pos.equals(hex)) result.push(army);
+      for(let group of this.world.groups) {
+        if(group.pos.equals(hex)) result.push(group);
       }
     }
     return result;
@@ -402,7 +402,7 @@ export default class GameServer {
   }
 
   /**
-   * Checks if a player can recruit an army at a tile
+   * Checks if a player can recruit a group at a tile
    * @param tile Tile
    * @param uid Player uid
    * @param name of unit
@@ -413,13 +413,13 @@ export default class GameServer {
   }
 
   /**
-   * Returns true if uid has army at pos
+   * Returns true if uid has group at pos
    * @param pos 
    * @param uid 
    */
-  private hasArmyAt(pos:Hex, uid:string):boolean {
-    for(let army of this.world.armies) {
-      if(army.pos.equals(pos) && army.owner === uid) {
+  private hasGroupAt(pos:Hex, uid:string):boolean {
+    for(let group of this.world.groups) {
+      if(group.pos.equals(pos) && group.owner === uid) {
         return true;
       }
     }
@@ -441,12 +441,12 @@ export default class GameServer {
   }
 
   /**
-   * Returns true if uid has army or building at pos
+   * Returns true if uid has group or building at pos
    * @param pos 
    * @param uid 
    */
   private hasPresence(pos:Hex, uid:string):boolean {
-    return this.hasArmyAt(pos, uid) || this.hasBuildingAt(pos, uid);
+    return this.hasGroupAt(pos, uid) || this.hasBuildingAt(pos, uid);
   }
 
   /**
