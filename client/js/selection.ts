@@ -2,20 +2,20 @@ import Hex from "../../shared/hex";
 
 export default class Selection {
 
-  public selectedGroup:number;
-  public selectedBuilding:number;
-  public selectedHex:Hex;
+  public selectedGroup:number = null;
+  public selectedBuilding:number = null;
+  public selectedHex:Hex = null;
 
   isGroup():boolean {
-    return this.selectedGroup === null;
+    return this.selectedGroup !== null;
   }
 
   isBuilding(): boolean {
-    return this.selectedBuilding === null;
+    return this.selectedBuilding !== null;
   }
 
   isHex(): boolean {
-    return this.selectedHex === null;
+    return this.selectedHex !== null;
   }
 
   clearSelection():void {
