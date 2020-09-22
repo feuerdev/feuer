@@ -125,6 +125,10 @@ export default class Hex {
     return hex.q+"-"+hex.r;
   }
 
+  public static equals(a:Hex, b:Hex) {
+    return a.q === b.q && a.r === b.r && a.s === b.s;
+  }
+
 }
 
 export class OffsetCoord {
