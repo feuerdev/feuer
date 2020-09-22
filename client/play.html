@@ -10,18 +10,29 @@
 <body>
 	<canvas id="canvas-map" oncontextmenu="return false"></canvas>
 	<div id="hud">
-		<div id="hud-tabs">
-			<button class="hud-tab active" id="bInfo">Info</button>
-			<button class="hud-tab" id="bConstruction">Construction</button>
-			<button class="hud-tab" id="bArmy">Army</button>
-			<button class="hud-tab" id="bChat">Chat</button>
+		<div class="draggable" id="hud-selection-tile">
+			<div class="draggable-header">
+				A
+				<div class="close">X</div>
+			</div>
 		</div>
-		<div id="hud-content">
-			<div class="hud-content" id="tInfo">wood = 100</div>
-			<div class="hud-content" id="tConstruction">Construction</div>
-			<div class="hud-content" id="tArmy">Army</div>
-			<div class="hud-content" id="tChat">Chat</div>
+		<div class="draggable" id="hud-selection-tile">
+			<div class="draggable-header">
+				B
+				<div class="close">X</div>
+			</div>
 		</div>
+		<div class="draggable" id="hud-selection-tile">
+			<div class="draggable-header">
+				C
+				<div class="close">X</div>
+			</div>
+		</div>
+		<!-- <div class="draggable" id="hud-selection-group"></div>
+		<div class="draggable" id="hud-selection-building"></div>
+		<div class="draggable" id="hud-chat"></div>
+		<div class="draggable" id="hud-help"></div>
+		<div class="draggable" id="hud-diplomacy"></div> -->
 	</div>
 	<div id="debug"></div>
 	<script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-app.js"></script>
