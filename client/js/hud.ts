@@ -26,13 +26,13 @@ export default class Hud {
     e.preventDefault();
     this.posBefore = new Vector2(e.clientX, e.clientY);
 
-    this.divHud.onmouseup = () => this.onDragMouseUp();
-    this.divHud.onmousemove = (event) => this.onDragMoved(event, element);
+    document.onmouseup = () => this.onDragMouseUp();
+    document.onmousemove = (event) => this.onDragMoved(event, element);
   }
 
   onDragMouseUp() {
-    this.divHud.onmouseup = null;
-    this.divHud.onmousemove = null;
+    document.onmouseup = null;
+    document.onmousemove = null;
   }
 
   onDragMoved(event, element) {
