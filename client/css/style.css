@@ -1,26 +1,28 @@
 :root {
-    --color-1:#E3E6DF;
-    --color-2:#A19388;
-    --color-3:#A08A7D;
-    --color-4:#92685A;
-    --color-5:#474F42;
-    --color-6:#383320;
-    --color-7:#000000;
-    --color-white-shade:var(--color-1);
+    --color-1: #E3E6DF;
+    --color-2: #A19388;
+    --color-3: #A08A7D;
+    --color-4: #92685A;
+    --color-5: #474F42;
+    --color-6: #383320;
+    --color-7: #000000;
+    --color-white-shade: var(--color-1);
     --color-primary-light: var(--color-2);
     --color-secondary-light: var(--color-3);
     --color-tertiary-light: var(--color-4);
     --color-primary-dark: var(--color-5);
     --color-secondary-dark: var(--color-6);
-    --color-black-shade:var(--color-7);
+    --color-black-shade: var(--color-7);
 }
 
 body,
 html {
     margin: 0;
+    padding: 0;
     overflow: hidden;
-    background:var(--color-black-shade);
-    color: var(--color-primary-light);
+    background: var(--color-black-shade);
+    color: var(--color-white-shade);
+    font-family: Garamond, Georgia, serif;
 }
 
 canvas {
@@ -28,7 +30,8 @@ canvas {
 }
 
 #hud {
-    pointer-events: none; /* Let click events pass through to canvas */
+    pointer-events: none;
+    /* Let click events pass through to canvas */
     position: absolute;
     top: 0;
     left: 0;
@@ -36,44 +39,74 @@ canvas {
     bottom: 0;
 }
 
-#hud > * {
-    pointer-events: all; /* Catch click events for actual Hud elements */
+#hud>* {
+    pointer-events: all;
+    /* Catch click events for actual Hud elements */
 }
 
-#hud > aside {
+#hud>aside {
     position: absolute;
     width: 200px;
-    height:600px;
-    background-color: var(--color-primary-light);
-    color:var(--color-primary-dark);
+    height: 600px;
+    border-radius: 5px;
+    overflow: hidden;
+    background: linear-gradient(to bottom, var(--color-2) 80%, var(--color-3) 100%);
+    box-shadow: inset 0 2px 2px rgba(255, 255, 255, 0.2),
+        inset 0 -2px rgba(0, 0, 0, 0.3),
+        0 2px 2px 3px rgba(255, 255, 255, 0.04),
+        0 0 3px rgba(0, 0, 0, 0.5);
+    color: var(--color-black-shade);
 }
 
-#hud > aside > header {
-    height: 40px;
-    background-color: var(--color-secondary-light);
+#hud>aside>header {
     cursor: move;
+    display: flex;
+    background: linear-gradient(to bottom, var(--color-2) 60%, var(--color-3) 100%);
+    justify-content: space-between;
+    align-items: center;
 }
 
-header > .hud-header-title {
-    line-height: 40px;
-    float: left;
-    font-size: 15pt;
-    padding-left: 10px;
+header>h3 {
+    margin-left: 8px;
+    margin-block-start: 0.5em;
+    margin-block-end: 0.5em;
 }
 
-.header > .close {    
-    line-height: 40px;
-    float: right;
-    font-size: 15pt;
-    padding-right: 10px;
-}
-
-.close {
+header>.close {
+    margin-right: 8px;
+    font-size: 20pt;
+    font-weight: 700;
     cursor: pointer;
 }
 
+aside>.hud-content {
+    margin-top: 4px;
+    margin-left: 8px;
+    margin-right: 8px;
+}
+
+button {
+    font-size: 20pt;
+    font-weight: 700;
+    background: linear-gradient(to bottom, var(--color-primary-light) 0%, var(--color-secondary-light) 100%);
+    color: var(--color-black-shade);
+    border-radius: 3px;
+    box-shadow:
+        inset 0 2px 2px rgba(255, 255, 255, 0.2),
+        inset 0 -2px rgba(0, 0, 0, 0.3),
+        0 2px 2px 3px rgba(255, 255, 255, 0.04),
+        0 0 3px rgba(0, 0, 0, 0.5);
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: linear-gradient(to bottom, var(--color-primary-dark) 0%, var(--color-secondary-dark) 100%);
+    color: var(--color-white-shade);
+}
 
 #debug {
+    display: none;
     background: #BBBBBBBB;
     width: 200px;
     margin: 20px;
