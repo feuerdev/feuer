@@ -137,7 +137,7 @@ export default class Game implements ConnectionListener, HudListener {
                                     for(let unit of this.cWorld.groups) {
                                         if(s.name === unit.id) {
                                             this.selection.selectGroup(unit.id);
-                                            // this.updateHudInfo();
+                                            this.hud.showGroupSelection(this.cWorld.getGroup(unit.id));
                                             this.updateScenegraph(this.cWorld.tiles[this.layout.pixelToHex(v).round().hash()]);
                                             return;
                                         }

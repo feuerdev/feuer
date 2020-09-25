@@ -1,4 +1,5 @@
 import Vector2 from "../../shared/vector2";
+import * as Handlebars from "handlebars";
 
 export interface HudListener {
   //onConstructionRequested?(name: string): void;
@@ -15,6 +16,8 @@ export default class Hud {
 
   private draggables: HTMLElement[] = [];
 
+  private templateGroup = Handlebars.compile(this.divHud.querySelector("#template-group").innerHTML);
+
   constructor() {
     this.divHud.querySelectorAll("#hud > aside").forEach(el => {
       let element = el as HTMLElement;
@@ -25,6 +28,15 @@ export default class Hud {
     });
   }
 
+  showGroupSelection(group:any) {
+    this.draggables.forEach(el => {el.style.display = "none"});
+    let div = this.divHud.querySelector("#hud-selection-group") as HTMLElement;
+    div.style.display = "block";
+    div.querySelector("header > h3").innerHTML = group.id;
+    div.querySelector(".hud-content").innerHTML = this.templateGroup({group: group});    
+  }
+
+  //Draggables
   onDragMouseDown(event, element:HTMLElement) {
     let e = event || window.event;
     e.preventDefault();
