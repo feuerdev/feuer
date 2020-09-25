@@ -19,14 +19,17 @@
 				"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
 			</div>
 		</aside>
-		<aside id="hud-selection-tile">
+		<aside id="hud-selection-group">
 			<header>
 				<h3>Lorem ipsum</h3>
 				<button class="close">&times;</button>
 			</header>
 			<div class="hud-content">
-				"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+				
 			</div>
+			<script id="template-group" type="text/x-handlebars-template">
+				<p> Hi, my name is {{group.id}} and i live in {{group.hp}} </p>
+			</script>
 		</aside>
 		<!-- <div class="draggable" id="hud-selection-group"></div>
 		<div class="draggable" id="hud-selection-building"></div>
