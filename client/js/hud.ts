@@ -14,9 +14,9 @@ export default class Hud {
   private posFinal: Vector2;
 
   constructor() {
-    let draggables = this.divHud.querySelectorAll(".draggable");
+    let draggables = this.divHud.querySelectorAll("#hud > aside");
     draggables.forEach(el => {
-      let header = el.getElementsByClassName("draggable-header").item(0) as HTMLElement;
+      let header = el.querySelector("header") as HTMLElement;
       header.onmousedown = (event) => this.onDragMouseDown(event, el);
     });
   }

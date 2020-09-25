@@ -1,9 +1,26 @@
+:root {
+    --color-1:#E3E6DF;
+    --color-2:#A19388;
+    --color-3:#A08A7D;
+    --color-4:#92685A;
+    --color-5:#474F42;
+    --color-6:#383320;
+    --color-7:#000000;
+    --color-white-shade:var(--color-1);
+    --color-primary-light: var(--color-2);
+    --color-secondary-light: var(--color-3);
+    --color-tertiary-light: var(--color-4);
+    --color-primary-dark: var(--color-5);
+    --color-secondary-dark: var(--color-6);
+    --color-black-shade:var(--color-7);
+}
+
 body,
 html {
     margin: 0;
     overflow: hidden;
-    background: #121113;
-    color: white;
+    background:var(--color-black-shade);
+    color: var(--color-primary-light);
 }
 
 canvas {
@@ -23,21 +40,36 @@ canvas {
     pointer-events: all; /* Catch click events for actual Hud elements */
 }
 
-.draggable {
+#hud > aside {
     position: absolute;
-    width: 100px;
-    height:100px;
-    background-color: green;
+    width: 200px;
+    height:600px;
+    background-color: var(--color-primary-light);
+    color:var(--color-primary-dark);
 }
 
-.draggable > .draggable-header {
-    height: 30px;
-    background-color: pink;
+#hud > aside > header {
+    height: 40px;
+    background-color: var(--color-secondary-light);
     cursor: move;
 }
 
-.draggable-header > .close {
+header > .hud-header-title {
+    line-height: 40px;
+    float: left;
+    font-size: 15pt;
+    padding-left: 10px;
+}
+
+.header > .close {    
+    line-height: 40px;
     float: right;
+    font-size: 15pt;
+    padding-right: 10px;
+}
+
+.close {
+    cursor: pointer;
 }
 
 

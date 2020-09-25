@@ -9,31 +9,20 @@
 </head>
 <body>
 	<canvas id="canvas-map" oncontextmenu="return false"></canvas>
-	<div id="hud">
-		<div class="draggable" id="hud-selection-tile">
-			<div class="draggable-header">
-				A
-				<div class="close">X</div>
-			</div>
-		</div>
-		<div class="draggable" id="hud-selection-tile">
-			<div class="draggable-header">
-				B
-				<div class="close">X</div>
-			</div>
-		</div>
-		<div class="draggable" id="hud-selection-tile">
-			<div class="draggable-header">
-				C
-				<div class="close">X</div>
-			</div>
-		</div>
+	<main id="hud">
+		<aside id="hud-selection-tile">
+			<header>
+				<span class="hud-header-title">A</span>
+				<span class="close">&times;</span>
+			</header>
+			<div class="hud-content"></div>
+		</aside>
 		<!-- <div class="draggable" id="hud-selection-group"></div>
 		<div class="draggable" id="hud-selection-building"></div>
 		<div class="draggable" id="hud-chat"></div>
 		<div class="draggable" id="hud-help"></div>
 		<div class="draggable" id="hud-diplomacy"></div> -->
-	</div>
+	</main>
 	<div id="debug"></div>
 	<script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-app.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-auth.js"></script>
