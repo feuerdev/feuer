@@ -13,18 +13,27 @@ export default class Hud {
   private posBefore: Vector2;
   private posFinal: Vector2;
 
+  private draggables: HTMLElement[] = [];
+
   constructor() {
-    let draggables = this.divHud.querySelectorAll("#hud > aside");
-    draggables.forEach(el => {
+    this.divHud.querySelectorAll("#hud > aside").forEach(el => {
+      let element = el as HTMLElement;
+      this.draggables.push(element);
       let header = el.querySelector("header") as HTMLElement;
-      header.onmousedown = (event) => this.onDragMouseDown(event, el);
+      (el.querySelector("header > button") as HTMLElement).onclick = () => {element.style.display = "none"};
+      header.onmousedown = (event) => this.onDragMouseDown(event, element);
     });
   }
 
-  onDragMouseDown(event, element) {
+  onDragMouseDown(event, element:HTMLElement) {
     let e = event || window.event;
     e.preventDefault();
     this.posBefore = new Vector2(e.clientX, e.clientY);
+
+    this.draggables.forEach(el => {
+      el.style.zIndex = "1";
+    });
+    element.style.zIndex = "2";
 
     document.onmouseup = () => this.onDragMouseUp();
     document.onmousemove = (event) => this.onDragMoved(event, element);
