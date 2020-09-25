@@ -10,7 +10,7 @@ export default class ClientWorld {
   public playerRelations:Hashtable<PlayerRelation> = {};
 
   getGroup(id:number):any|undefined {
-    this.groups.find(group => { return group.id === id});
+    return this.groups.find(group => { return group.id === id});
   }
 
   getTile(hex:Hex):any|undefined {
@@ -22,11 +22,10 @@ export default class ClientWorld {
   }
 
   getBattleById(id:number):any|undefined {
-    this.battles.find(battle => { return battle.id === id});
+    return this.battles.find(battle => { return battle.id === id});
   }
 
   getBuilding(id:number):any|undefined {
-    this.buildings.find(building => { return building.id === id});
-  }
-  
+    return this.buildings.find(building => { return building.id === id});
+  } 
 }
