@@ -42,20 +42,8 @@ export default class Hud {
     this.posFinal = new Vector2(this.posBefore.x - e.clientX, this.posBefore.y - e.clientY);
     this.posBefore = new Vector2(e.clientX, e.clientY);
     
-    element.style.top = (element.offsetTop - this.posFinal.y) + "px";
-    element.style.left = (element.offsetLeft - this.posFinal.x) + "px";
-  }
-
-  showSelectionHud() {
-  }
-
-  showConstructionHud() {
-  }
-
-  hideSelectionHud() {
-  }
-
-  hideConstructionHud() {
+    element.style.top = Math.max(0, element.offsetTop - this.posFinal.y) + "px";
+    element.style.left = Math.max(0, element.offsetLeft - this.posFinal.x) + "px";
   }
 
   addListener(listener: HudListener) {
@@ -68,7 +56,6 @@ export default class Hud {
       this.listeners.splice(index, 1);
     }
   }
-
 }
 
 
