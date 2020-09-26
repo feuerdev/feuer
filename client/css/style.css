@@ -102,6 +102,15 @@ button {
     cursor: pointer;
 }
 
+button:active {
+    transform: scale(0.98); 
+    box-shadow: 3px 2px 10px 1px rgba(0, 0, 0, 0.24); 
+}
+
+button:focus {
+    outline:none;
+}
+
 button:hover {
     background: linear-gradient(to bottom, var(--color-primary-dark) 0%, var(--color-secondary-dark) 100%);
     color: var(--color-white-shade);
