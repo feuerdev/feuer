@@ -22,6 +22,7 @@ import Hex from "../../../shared/hex";
 import Building from "./objects/building";
 import PlayerRelation, { EnumRelationType } from "../../../shared/relation";
 import Battle from "./objects/battle";
+import { threadId } from "worker_threads";
 
 export default class GameServer {
 
@@ -53,6 +54,7 @@ export default class GameServer {
       socket.on("request construction", (data) => this.onRequestConstruction(socket, data));
       socket.on("request unit", (data) => this.onRequestUnit(socket, data));
       socket.on("request relation", (data) => this.onRequestRelation(socket, data));
+      socket.on("request disband", (data) => this.onRequestDisband(socket, data));
     });
   }
 
@@ -293,6 +295,16 @@ export default class GameServer {
     }
     socket.emit("gamestate relation", playerRelation);
 
+  }
+
+  onRequestDisband(socket: Socket, data) {
+    let uid = this.getPlayerUid(socket.id);
+    let groupToDisband = this.world.groups.find((group) => {
+      return group.id === data.id && group.owner === uid});
+    if(groupToDisband) {
+      this.world.tiles[groupToDisband.pos.hash()].removeSpot(groupToDisband.id);
+      this.world.groups.splice(this.world.groups.indexOf(groupToDisband), 1);
+    }
   }
 
   private getPlayerUid(socketId):string {

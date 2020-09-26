@@ -111,6 +111,9 @@ export default class Game implements ConnectionListener, HudListener {
 
         console.info("Client ready");
     }
+    onDisbandRequested(id: number): void {
+        this.connection.send("request disband", {id: id});
+    }
 
     loaded() {
 

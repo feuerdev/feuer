@@ -2,6 +2,7 @@ import Vector2 from "../../shared/vector2";
 import * as Handlebars from "handlebars";
 
 export interface HudListener {
+  onDisbandRequested(id: number): void;
   //onConstructionRequested?(name: string): void;
 }
 
@@ -34,6 +35,11 @@ export default class Hud {
     div.style.display = "block";
     div.querySelector("header > h3").innerHTML = group.id;
     div.querySelector(".hud-content").innerHTML = this.templateGroup({group: group});    
+
+    (div.querySelector("#disband") as HTMLElement).onclick = () => {
+      this.listeners.forEach((l) => l.onDisbandRequested(group.id))
+      div.style.display = "none";
+    };
   }
 
   //Draggables

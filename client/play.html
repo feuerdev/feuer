@@ -24,11 +24,46 @@
 				<h3>Lorem ipsum</h3>
 				<button class="close">&times;</button>
 			</header>
-			<div class="hud-content">
-				
-			</div>
+			<div class="hud-content"></div>
 			<script id="template-group" type="text/x-handlebars-template">
-				<p> Hi, my name is {{group.id}} and i live in {{group.hp}} </p>
+				<section id="stats">
+					<table>
+						<tr>
+							<td>ID:</td>
+							<td>{{group.id}}</td>
+						</tr>
+						<tr>
+							<td>Speed:</td>
+							<td>{{group.speed}}</td>
+						</tr>
+						<tr>
+							<td>Attack:</td>
+							<td>{{group.attack}}</td>
+						</tr>		
+						<tr>
+							<td>Spotting:</td>
+							<td>{{group.spottingDistance}}</td>
+						</tr>
+					</table>
+				</section>
+				<section id="resources">
+					{{#each resource}}
+						<div class="resources-container">
+							<!-- <img src="img/{{name}}.png" alt="{{name}}"> -->
+							<span>{{name}}</span>
+							<span>{{amountGroup}}</span>
+							<span>{{amountTile}}</span>
+							<button id="{{name}}-plus-one">&gt;1</button>
+							<button id="{{name}}-plus-ten">&gt;10</button>
+							<button id="{{name}}-plus-hundred">&gt;100</button>
+							<button id="{{name}}-minus-one">&lt;1</button>
+							<button id="{{name}}-minus-ten">&lt;10</button>
+							<button id="{{name}}-minus-hundred">&lt;100</button>
+						</div>
+					{{/each}}
+					<button id="disband">Disband</button>
+					
+				</section>
 			</script>
 		</aside>
 		<!-- <div class="draggable" id="hud-selection-group"></div>
