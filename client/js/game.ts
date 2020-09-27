@@ -121,8 +121,8 @@ export default class Game implements ConnectionListener, HudListener {
         this.viewport = new Viewport({
             screenWidth: window.innerWidth,
             screenHeight: window.innerHeight,
-            worldWidth: Rules.settings.map_size * Rules.settings.map_hex_width,
-            worldHeight: Rules.settings.map_size * Rules.settings.map_hex_height,
+            worldWidth: ((Rules.settings.map_size * 2) + 1) * Rules.settings.map_hex_width,
+            worldHeight: ((Rules.settings.map_size * 2) + 1) * Rules.settings.map_hex_height,
             interaction: this.p_renderer.plugins.interaction // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
         })
 
@@ -198,6 +198,7 @@ export default class Game implements ConnectionListener, HudListener {
             this.div_debug.innerHTML +=(`Screenwidth  : ${this.viewport.screenWidth} "<br>"`);
             this.div_debug.innerHTML +=(`Worldheight : ${this.viewport.worldHeight} "<br>"`);
             this.div_debug.innerHTML +=(`Worldwidth  : ${this.viewport.worldWidth} "<br>"`);
+            this.div_debug.innerHTML +=(`Zoom  : ${this.viewport.scale.x.toFixed(2)}/${this.viewport.scale.y.toFixed(2)} "<br>"`);
             this.div_debug.innerHTML +=(`Left/Top: ${Math.round(this.viewport.left)}/${Math.round(this.viewport.top)} "<br>"`);
             this.div_debug.innerHTML +=(`Center: ${Math.round(this.viewport.center.x)}/${Math.round(this.viewport.center.y)} "<br>"`);
             if (this.selection.isHex()) this.div_debug.innerHTML +=("Selected Hex   : " + this.selection.selectedHex.q + " " + this.selection.selectedHex.r + " " + this.selection.selectedHex.s + "<br>");
