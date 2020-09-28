@@ -14,7 +14,7 @@ export default class ClientWorld {
   }
 
   getTile(hex:Hex):any|undefined {
-    return this.tiles[hex.hash()];
+    return this.tiles[Hex.hash(hex)];
   }
 
   getTileWithHash(hash:string):any|undefined {

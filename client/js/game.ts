@@ -22,9 +22,9 @@ export default class Game implements ConnectionListener, HudListener {
     private canvas_map = <HTMLCanvasElement> document.querySelector("#canvas-map");
     private div_debug = document.querySelector("#debug");
 
-    private selection: Selection;
+    private selection: Selection = new Selection();
+    private hud: Hud = new Hud();
     private connection: Connection;
-    private hud: Hud;
     private layout: Layout;
     private cWorld: ClientWorld = new ClientWorld();
 
@@ -37,8 +37,8 @@ export default class Game implements ConnectionListener, HudListener {
     static GLOWFILTER = new GlowFilter({ distance: 15, outerStrength: 2 });
 
     constructor(config) {
-        this.selection = new Selection();
-        this.hud = new Hud();
+        this.hud.world = this.cWorld;
+        this.hud.selection = this.selection;
         this.connection = new Connection(config.ip, config.transports);
         this.layout = new Layout(Layout.pointy, new Vector2(Rules.settings.map_hex_width, Rules.settings.map_hex_height), new Vector2(0, 0));
 
@@ -111,6 +111,10 @@ export default class Game implements ConnectionListener, HudListener {
 
         console.info("Client ready");
     }
+    onResourceTransfer(id: number, resource: string, amount: number): void {
+        this.connection.send("request transfer", {id: id, resource:resource, amount: amount});
+    }
+
     onDisbandRequested(id: number): void {
         this.connection.send("request disband", {id: id});
     }
@@ -140,7 +144,8 @@ export default class Game implements ConnectionListener, HudListener {
                                     for(let unit of this.cWorld.groups) {
                                         if(s.name === unit.id) {
                                             this.selection.selectGroup(unit.id);
-                                            this.hud.showGroupSelection(this.cWorld.getGroup(unit.id));
+                                            this.hud.update();
+                                            this.hud.showGroupSelection();
                                             this.updateScenegraph(this.cWorld.tiles[this.layout.pixelToHex(v).round().hash()]);
                                             return;
                                         }
@@ -319,6 +324,7 @@ export default class Game implements ConnectionListener, HudListener {
                     this.updateScenegraph(this.cWorld.tiles[property]);
                 }
             }
+            this.hud.update();
         });
         socket.on("gamestate discovered tiles", (data) => {
             for (let property in data) {
@@ -337,9 +343,11 @@ export default class Game implements ConnectionListener, HudListener {
                     }
                 }
             }
+            this.hud.update();
         });
         socket.on("gamestate battles", (data) => {
             this.cWorld.battles = data;
+            this.hud.update();
         });
         socket.on("gamestate buildings", (data) => {
             this.cWorld.buildings = data;
@@ -352,6 +360,7 @@ export default class Game implements ConnectionListener, HudListener {
                     this.viewport.center = new PIXI.Point(x, y);
                 }
             }
+            this.hud.update();
         });
         socket.on("gamestate relation", (data) => {
             let hash = PlayerRelation.getHash(data.id1, data.id2);

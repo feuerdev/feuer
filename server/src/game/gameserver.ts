@@ -55,6 +55,7 @@ export default class GameServer {
       socket.on("request unit", (data) => this.onRequestUnit(socket, data));
       socket.on("request relation", (data) => this.onRequestRelation(socket, data));
       socket.on("request disband", (data) => this.onRequestDisband(socket, data));
+      socket.on("request transfer", (data) => this.onRequestTransfer(socket, data));
     });
   }
 
@@ -115,9 +116,6 @@ export default class GameServer {
     for (let building of this.world.buildings) {
       let tile = this.world.tiles[building.pos.hash()];
       for(let res of Object.keys(building.resourceGeneration)) {
-        if(!tile.resources[res]) {
-          tile.resources[res] = 0;
-        }
         tile.resources[res] += building.resourceGeneration[res] * deltaFactor;
       }
     }
@@ -296,6 +294,23 @@ export default class GameServer {
     socket.emit("gamestate relation", playerRelation);
 
   }
+
+  onRequestTransfer(socket: Socket, data) {
+    let uid = this.getPlayerUid(socket.id);
+    let group = this.world.groups.find((group) => {
+      return group.id === data.id && group.owner === uid});
+    if(group) {
+      let tile = this.world.tiles[group.pos.hash()];
+      let amount = data.amount;
+      let resource = data.resource;
+      if((tile.resources[resource] + amount >= 0) && (group.resources[resource] - amount >= 0)) {
+        tile.resources[resource] += amount;
+        group.resources[resource] -= amount; //TODO: Check if allowed
+
+      }
+    }
+  }
+
 
   onRequestDisband(socket: Socket, data) {
     let uid = this.getPlayerUid(socket.id);

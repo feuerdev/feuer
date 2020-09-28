@@ -21,7 +21,7 @@
 		</aside>
 		<aside id="hud-selection-group">
 			<header>
-				<h3>Lorem ipsum</h3>
+				<h3>Selection</h3>
 				<button class="close">&times;</button>
 			</header>
 			<div class="hud-content"></div>
@@ -47,19 +47,23 @@
 					</table>
 				</section>
 				<section id="resources">
-					{{#each resource}}
-						<div class="resources-container">
+					<span>Resource</span>
+					<span>Group</span>
+					<span id="transfer">Transfer</span>
+					<span>Tile</span>
+					{{#each resources}}
+						<!-- <div class="resources-container"> -->
 							<!-- <img src="img/{{name}}.png" alt="{{name}}"> -->
 							<span>{{name}}</span>
-							<span>{{amountGroup}}</span>
-							<span>{{amountTile}}</span>
-							<button id="{{name}}-plus-one">&gt;1</button>
-							<button id="{{name}}-plus-ten">&gt;10</button>
-							<button id="{{name}}-plus-hundred">&gt;100</button>
+							<span>{{group}}</span>
 							<button id="{{name}}-minus-one">&lt;1</button>
 							<button id="{{name}}-minus-ten">&lt;10</button>
 							<button id="{{name}}-minus-hundred">&lt;100</button>
-						</div>
+							<button id="{{name}}-plus-hundred">100&gt;</button>
+							<button id="{{name}}-plus-ten">10&gt;</button>
+							<button id="{{name}}-plus-one">1&gt;</button>
+							<span>{{tile}}</span>
+						<!-- </div> -->
 					{{/each}}
 					<button id="disband">Disband</button>
 					

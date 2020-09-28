@@ -73,7 +73,7 @@
         "wood": 100
       },
       "resource_generation": {
-        "food": 1,
+        "berries": 1,
         "wood": 1
       }
     },

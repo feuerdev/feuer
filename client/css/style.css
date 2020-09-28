@@ -50,8 +50,8 @@ canvas {
 #hud>aside {
     position: absolute;
     display: none;
-    width: 300px;
-    height: 400px;
+    /* width: 300px;
+    height: 400px; */
     border-radius: 5px;
     overflow: hidden;
     background: linear-gradient(to bottom, var(--color-2) 80%, var(--color-3) 100%);
@@ -89,7 +89,18 @@ aside>.hud-content {
     margin-top: 4px;
     margin-left: 8px;
     margin-right: 8px;
-    overflow-wrap: break-word;
+}
+
+#resources {
+    display: grid;
+    grid-template-columns: repeat(9, auto);
+    grid-auto-rows: auto;
+    column-gap: 10px;
+}
+
+#transfer {
+    grid-column: 3 / 9;
+    text-align: center;
 }
 
 button {
@@ -120,7 +131,7 @@ button:hover {
 }
 
 #debug {
-    display: none;
+    /* display: none; */
     background: #BBBBBBBB;
     width: 200px;
     margin: 20px;

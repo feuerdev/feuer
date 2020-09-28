@@ -1,9 +1,11 @@
 import Vector2 from "../../shared/vector2";
 import * as Handlebars from "handlebars";
+import ClientWorld from "./clientworld";
+import Selection from "./selection";
 
 export interface HudListener {
   onDisbandRequested(id: number): void;
-  //onConstructionRequested?(name: string): void;
+  onResourceTransfer(id: number, resource:string, amount:number): void;
 }
 
 export default class Hud {
@@ -14,6 +16,8 @@ export default class Hud {
 
   private posBefore: Vector2;
   private posFinal: Vector2;
+  public world:ClientWorld;
+  public selection:Selection;
 
   private draggables: HTMLElement[] = [];
 
@@ -29,17 +33,59 @@ export default class Hud {
     });
   }
 
-  showGroupSelection(group:any) {
+  update() {
+    if(this.selection.isGroup()) {
+      let div = this.divHud.querySelector("#hud-selection-group") as HTMLElement;
+      (div.querySelector("header > button") as HTMLElement).onclick = () => {div.style.display = "none"; this.selection.clearSelection()};
+      //Resources
+      let group = this.world.getGroup(this.selection.selectedGroup);
+      let tile = this.world.getTile(group.pos);
+      let allKeys = Object.keys(tile.resources).concat(Object.keys(group.resources));
+      allKeys = allKeys.filter((item, pos) => allKeys.indexOf(item) === pos);
+      let resources = [];
+      for(let key of allKeys) {
+        let resObj = {
+          name: key,
+          tile: tile.resources[key],
+          group: group.resources[key]
+        }
+        if(resObj.tile > 0 || resObj.group > 0) {
+          resources.push(resObj);
+        }      
+      }
+  
+      div.querySelector(".hud-content").innerHTML = this.templateGroup({group: group, resources: resources});    
+  
+      //Resources Listener
+      for(let res of resources) {
+        (div.querySelector(`#${res.name}-plus-one`) as HTMLElement).onclick = () => {this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, 1))}
+        (div.querySelector(`#${res.name}-minus-one`) as HTMLElement).onclick = () => {this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, -1))}
+        (div.querySelector(`#${res.name}-plus-ten`) as HTMLElement).onclick = () => {this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, 10))}
+        (div.querySelector(`#${res.name}-minus-ten`) as HTMLElement).onclick = () => {this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, -10))}
+        (div.querySelector(`#${res.name}-plus-hundred`) as HTMLElement).onclick = () => {this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, 100))}
+        (div.querySelector(`#${res.name}-minus-hundred`) as HTMLElement).onclick = () => {this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, -100))}
+  
+      }
+  
+      //Disband
+      (div.querySelector("#disband") as HTMLElement).onclick = () => {
+        this.listeners.forEach((l) => l.onDisbandRequested(group.id))
+        div.style.display = "none";
+      };
+    } else if(this.selection.isBuilding()) {
+      //TODO:Fill out
+    }
+  }
+
+  showGroupSelection() {
     this.draggables.forEach(el => {el.style.display = "none"});
     let div = this.divHud.querySelector("#hud-selection-group") as HTMLElement;
     div.style.display = "block";
-    div.querySelector("header > h3").innerHTML = group.id;
-    div.querySelector(".hud-content").innerHTML = this.templateGroup({group: group});    
+    // div.querySelector("header > h3").innerHTML = group.id;
 
-    (div.querySelector("#disband") as HTMLElement).onclick = () => {
-      this.listeners.forEach((l) => l.onDisbandRequested(group.id))
-      div.style.display = "none";
-    };
+    // setInterval(() => {
+    //   console.log(this.world.getGroup(group.id).resources["wood"]);
+    // },1000);
   }
 
   //Draggables
