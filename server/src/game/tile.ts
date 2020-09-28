@@ -2,6 +2,7 @@ import Hex from "../../../shared/hex";
 import Vector2 from "../../../shared/vector2";
 import Mapgen from "./mapgen";
 import * as Rules from "../../../shared/rules.json";
+import Resources from "./objects/resources";
 
 /**
  * Tile-Class representing one hex with all its relevant fields
@@ -22,7 +23,7 @@ export default class Tile {
   public goldOre: number;
   public movementFactor:number = 1;
 
-  public resources = {};
+  public resources = new Resources();
   
 
   //Graphics

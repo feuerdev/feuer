@@ -1,6 +1,7 @@
 import GameObject, { Spotter, Drawable } from "./gameobject"
 import Hex from "../../../../shared/hex"
 import * as Rules from "../../../../shared/rules.json";
+import Resources from "./resources";
 
 export default class Group extends GameObject implements Spotter, Drawable {
   /**
@@ -32,7 +33,7 @@ export default class Group extends GameObject implements Spotter, Drawable {
   public spottingDistance: number;
   public movementStatus: number = 0;
 
-  public resources = {};
+  public resources = new Resources();
 
   /**
    * Graphics
