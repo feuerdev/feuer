@@ -131,7 +131,7 @@ button:hover {
 }
 
 #debug {
-    /* display: none; */
+    display: none;
     background: #BBBBBBBB;
     width: 200px;
     margin: 20px;
