@@ -24,18 +24,6 @@
       }
     },
     {
-      "label": "Browserify",
-      "type": "shell",
-      "command": "browserify client/js/main.js -o client/bin/bundle.js --debug",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "never",
-        "focus": false,
-        "panel": "shared"
-      }
-    },
-    {
       "label": "Watchify",
       "type": "shell",
       "command": "watchify client/js/main.js -o client/bin/bundle.js --debug",
