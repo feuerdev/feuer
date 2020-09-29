@@ -64,7 +64,6 @@ export default class Hud {
         (div.querySelector(`#${res.name}-minus-ten`) as HTMLElement).onclick = () => { this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, -10)) }
         (div.querySelector(`#${res.name}-plus-hundred`) as HTMLElement).onclick = () => { this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, 100)) }
         (div.querySelector(`#${res.name}-minus-hundred`) as HTMLElement).onclick = () => { this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, -100)) }
-
       }
 
       //Disband

@@ -66,9 +66,9 @@ export default class Game implements ConnectionListener, HudListener, RendererLi
                         for (let s of (<PIXI.Container>child).children) {
                             if (s.name && parseInt(s.name) !== -1) {//Dont click on environment
                                 if (Util.isPointInRectangle(p.x, p.y, s.x, s.y, (<PIXI.Sprite>s).width, (<PIXI.Sprite>s).height)) {
-                                    for (let unit of this.cWorld.groups) {
-                                        if (s.name === unit.id) {
-                                            this.selection.selectGroup(unit.id);
+                                    for (let group of this.cWorld.groups) {
+                                        if (s.name === group.id) {
+                                            this.selection.selectGroup(group.id);
                                             this.hud.update();
                                             this.hud.showGroupSelection();
                                             this.renderer.updateScenegraph(this.cWorld.getTile(this.getHex(v)));
@@ -117,8 +117,8 @@ export default class Game implements ConnectionListener, HudListener, RendererLi
         this.connection.send("request construction", { name: name, pos: this.selection.selectedHex });
     }
 
-    onUnitRequested(name: string): void {
-        this.connection.send("request unit", { name: name, pos: this.selection.selectedHex });
+    onGroupRequested(name: string): void {
+        this.connection.send("request group", { name: name, pos: this.selection.selectedHex });
     }
 
     onConnected(socket: Socket) {

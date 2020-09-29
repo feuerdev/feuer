@@ -2,6 +2,7 @@ import GameObject, { Spotter, Drawable } from "./gameobject"
 import Hex from "../../../../shared/hex"
 import * as Rules from "../../../../shared/rules.json";
 import Resources from "./resources";
+import Unit from "./unit";
 
 export default class Group extends GameObject implements Spotter, Drawable {
   /**
@@ -33,6 +34,8 @@ export default class Group extends GameObject implements Spotter, Drawable {
   public spottingDistance: number;
   public movementStatus: number = 0;
 
+  public units:Unit[] = [];
+
   public resources = new Resources();
 
   /**
@@ -44,7 +47,7 @@ export default class Group extends GameObject implements Spotter, Drawable {
     super(owner);
   }
 
-  public static createUnit(owner: string, name: string, pos: Hex): Group {
+  public static createGroup(owner: string, name: string, pos: Hex): Group {
     const template = Rules.units[name];
     const group: Group = new Group(owner);
     group.pos = pos;

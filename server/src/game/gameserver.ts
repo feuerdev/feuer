@@ -52,7 +52,7 @@ export default class GameServer {
 
       socket.on("request movement", (data) => this.onRequestMovement(socket, data));
       socket.on("request construction", (data) => this.onRequestConstruction(socket, data));
-      socket.on("request unit", (data) => this.onRequestUnit(socket, data));
+      socket.on("request group", (data) => this.onRequestGroup(socket, data));
       socket.on("request relation", (data) => this.onRequestRelation(socket, data));
       socket.on("request disband", (data) => this.onRequestDisband(socket, data));
       socket.on("request transfer", (data) => this.onRequestTransfer(socket, data));
@@ -210,14 +210,14 @@ export default class GameServer {
 
           //Give Player an initial Scout and Camp
           let pos = self.getRandomHex();
-          let initialUnit = Group.createUnit(player.uid, "Scout", pos);
-          self.world.groups.push(initialUnit);
+          let initialGroup = Group.createGroup(player.uid, "Scout", pos);
+          self.world.groups.push(initialGroup);
 
           let initialCamp = Building.createBuilding(player.uid, "Campsite", pos);
           self.world.buildings.push(initialCamp);
 
-          //Prepare Drawing of that unit
-          self.world.tiles[initialUnit.pos.hash()].addSpot(initialUnit.getTexture(), initialUnit.id);
+          //Prepare Drawing of that group
+          self.world.tiles[initialGroup.pos.hash()].addSpot(initialGroup.getTexture(), initialGroup.id);
           self.world.tiles[initialCamp.pos.hash()].addSpot(initialCamp.getTexture(), initialCamp.id);
 
           //Register player in Gamesever
@@ -247,11 +247,11 @@ export default class GameServer {
     let uid = this.getPlayerUid(socket.id);
     let selection:number = data.selection;
     let target:Hex = new Hex(data.target.q, data.target.r, data.target.s);
-    for (let unit of this.world.groups) {
-      if (uid === unit.owner && selection === unit.id) {
+    for (let group of this.world.groups) {
+      if (uid === group.owner && selection === group.id) {
         if(this.world.tiles[target.hash()]) {
-          unit.targetHexes = astar(this.world.tiles, unit.pos, target);
-          for (let hex of unit.targetHexes) {
+          group.targetHexes = astar(this.world.tiles, group.pos, target);
+          for (let hex of group.targetHexes) {
             console.log("Hex: " + JSON.stringify(hex) + "Factor: " + this.world.tiles[hex.hash()].movementFactor);
           }
         }
@@ -272,12 +272,12 @@ export default class GameServer {
     }
   }
 
-  onRequestUnit(socket: Socket, data) {
+  onRequestGroup(socket: Socket, data) {
     let uid = this.getPlayerUid(socket.id);
     let pos = new Hex(data.pos.q, data.pos.r, data.pos.s);
     let tile = this.world.tiles[pos.hash()];
     if(this.isAllowedToRecruit(tile, uid, data.name)) {
-      let group = Group.createUnit(uid, data.name, pos);
+      let group = Group.createGroup(uid, data.name, pos);
       this.world.groups.push(group);
       tile.addSpot(group.getTexture(), group.id);
       this.updatePlayerVisibilities(uid);
@@ -432,7 +432,7 @@ export default class GameServer {
    * Checks if a player can recruit a group at a tile
    * @param tile Tile
    * @param uid Player uid
-   * @param name of unit
+   * @param name of group
    */
   private isAllowedToRecruit(tile:Tile, uid:string, name:string):boolean{
     let object = Rules.units[name];
