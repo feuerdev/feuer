@@ -178,7 +178,7 @@ export default class GameServer {
       const player: Player = this.players[i];
       if (player.initialized) {
         const socket: Socket = this.uidsockets[player.uid];
-        if (socket) {
+        if (socket && socket.connected) {
           socket.emit("gamestate players", this.players);
           let tiles = this.getTiles(player.visibleHexes);
           let groups = this.getVisibleGroups(player.visibleHexes);
@@ -342,7 +342,6 @@ export default class GameServer {
       }
     }
   }
-
 
   onRequestDisband(socket: Socket, data) {
     let uid = this.getPlayerUid(socket.id);
