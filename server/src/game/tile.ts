@@ -27,7 +27,6 @@ export default class Tile {
   public resources = new Resources();
 
   public units:Unit[] = [Unit.generateUnit(null)];
-  
 
   //Graphics
   public environmentSpots:Spot[] = [];

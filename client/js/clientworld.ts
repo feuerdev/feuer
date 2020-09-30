@@ -27,5 +27,17 @@ export default class ClientWorld {
 
   getBuilding(id:number):any|undefined {
     return this.buildings.find(building => { return building.id === id});
-  } 
+  }
+
+  getBuildings(pos:Hex) {
+    return this.buildings.filter((building) => {
+      return Hex.equals(building.pos, pos);
+    });
+  }
+
+  getGroups(pos:Hex) {
+    return this.groups.filter((group) => {
+      return Hex.equals(group.pos, pos);
+    });
+  }
 }

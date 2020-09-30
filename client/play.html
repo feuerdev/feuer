@@ -10,14 +10,52 @@
 <body>
 	<canvas id="canvas-map" oncontextmenu="return false"></canvas>
 	<main id="hud">
-		<aside id="hud-selection-tile">
+		<aside id="hud-selection-building">
 			<header>
-				<h3>Lorem ipsum</h3>
+				<h3>Selection</h3>
 				<button class="close">&times;</button>
 			</header>
-			<div class="hud-content">
-				"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-			</div>
+			<div class="hud-content"></div>
+			<script id="template-building" type="text/x-handlebars-template">
+				
+			</script>
+		</aside>
+		<aside id="hud-selection-tile">
+			<header>
+				<h3>Selection</h3>
+				<button class="close">&times;</button>
+			</header>
+			<div class="hud-content"></div>
+			<script id="template-tile" type="text/x-handlebars-template">
+				<section id="buildings">
+					{{#each buildings}}
+						<span>{{id}}</span>
+						<button id="building-{{id}}-select">Details</button>
+					{{/each}}
+				</section>
+				<section id="groups">
+					{{#each groups}}
+						<span>{{id}}</span>
+						<button id="group-{{id}}-select">Details</button>
+					{{/each}}
+				</section>
+				<section id="resources">
+					<span>Resource</span>
+					<span>Value</span>
+					{{#each resources}}
+						<span>{{name}}</span>
+						<span>{{value}}</span>
+					{{/each}}			
+				</section>
+				<section id="info">
+					<span>Position</span>
+					<span>{{tile.hex.q}}-{{tile.hex.r}}</span>
+					<span>Height</span>
+					<span>{{tile.height}}</span>
+					<span>Forestation</span>
+					<span>{{tile.forestation}}</span>
+				</section>
+			</script>
 		</aside>
 		<aside id="hud-selection-group">
 			<header>
@@ -26,25 +64,15 @@
 			</header>
 			<div class="hud-content"></div>
 			<script id="template-group" type="text/x-handlebars-template">
-				<section id="stats">
-					<table>
-						<tr>
-							<td>ID:</td>
-							<td>{{group.id}}</td>
-						</tr>
-						<tr>
-							<td>Speed:</td>
-							<td>{{group.speed}}</td>
-						</tr>
-						<tr>
-							<td>Attack:</td>
-							<td>{{group.attack}}</td>
-						</tr>		
-						<tr>
-							<td>Spotting:</td>
-							<td>{{group.spottingDistance}}</td>
-						</tr>
-					</table>
+				<section id="stats">	
+					<span>ID:</span>
+					<span>{{group.id}}</span>
+					<span>Speed:</span>
+					<span>{{group.speed}}</span>
+					<span>Attack:</span>
+					<span>{{group.attack}}</span>
+					<span>Spotting:</span>
+					<span>{{group.spottingDistance}}</span>
 				</section>
 				<section id="resources">
 					<span>Resource</span>
@@ -78,11 +106,6 @@
 				</section>
 			</script>
 		</aside>
-		<!-- <div class="draggable" id="hud-selection-group"></div>
-		<div class="draggable" id="hud-selection-building"></div>
-		<div class="draggable" id="hud-chat"></div>
-		<div class="draggable" id="hud-help"></div>
-		<div class="draggable" id="hud-diplomacy"></div> -->
 	</main>
 	<div id="debug"></div>
 	<script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-app.js"></script>

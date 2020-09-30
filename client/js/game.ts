@@ -75,8 +75,9 @@ export default class Game implements ConnectionListener, HudListener, RendererLi
                                     for (let building of this.cWorld.buildings) {
                                         if (s.name === building.id) {
                                             this.selection.selectBuilding(building.id);
+                                            this.hud.update();
+                                            this.hud.showBuildingSelection();
                                             this.renderer.updateScenegraph(this.cWorld.getTile(this.getHex(v)));
-                                            // this.updateHudInfo();
                                             return;
                                         }
                                     }
@@ -87,6 +88,8 @@ export default class Game implements ConnectionListener, HudListener, RendererLi
                     let hex = this.renderer.layout.pixelToHex(v).round();
                     if (this.cWorld.tiles[hex.hash()]) {
                         this.selection.selectHex(hex);
+                        this.hud.update();
+                        this.hud.showTileSelection();
                         this.renderer.updateScenegraph(this.cWorld.tiles[hex.hash()]);
                         // this.updateHudInfo();
                     }

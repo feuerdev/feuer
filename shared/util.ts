@@ -1,7 +1,14 @@
 import Vector2 from "./vector2";
 
+
 export interface Hashtable<T> {
   [key: string]:T;
+}
+
+export function union(list1:any[], list2:any[]): any[] {
+  let result = list1.concat(list2);
+  result = result.filter((item, pos) => result.indexOf(item) === pos);
+  return result;
 }
 
 export function scale(value: number, oldmin: number, oldmax: number, newmin: number, newmax: number): number {
