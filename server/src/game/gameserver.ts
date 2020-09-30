@@ -56,6 +56,8 @@ export default class GameServer {
       socket.on("request relation", (data) => this.onRequestRelation(socket, data));
       socket.on("request disband", (data) => this.onRequestDisband(socket, data));
       socket.on("request transfer", (data) => this.onRequestTransfer(socket, data));
+      socket.on("request unit add", (data) => this.onRequestUnitAdd(socket, data));
+      socket.on("request unit remove", (data) => this.onRequestUnitRemove(socket, data));
     });
   }
 
@@ -295,6 +297,36 @@ export default class GameServer {
 
   }
 
+  onRequestUnitAdd(socket: Socket, data) {
+    let uid = this.getPlayerUid(socket.id);
+    let group = this.world.groups.find((group) => {
+      return group.id === data.groupId && group.owner === uid
+    });
+    let tile = this.world.tiles[Hex.hash(group.pos)];
+    let unit = tile.units.find((unit) => {
+      return unit.id === data.unitId;
+    });
+    if(group && unit) {
+      tile.units.splice(tile.units.indexOf(unit), 1);
+      group.units.push(unit);
+    }
+  }
+  onRequestUnitRemove(socket: Socket, data) {
+    let uid = this.getPlayerUid(socket.id);
+    let group = this.world.groups.find((group) => {
+      return group.id === data.groupId && group.owner === uid;
+    });
+    let tile = this.world.tiles[Hex.hash(group.pos)];
+    if(group) {
+      let unit = group.units.find((unit) => {
+        return unit.id === data.unitId;
+      });
+      if(unit) {
+        group.units.splice(group.units.indexOf(unit), 1);
+        tile.units.push(unit);
+      }
+    }
+  }
   onRequestTransfer(socket: Socket, data) {
     let uid = this.getPlayerUid(socket.id);
     let group = this.world.groups.find((group) => {

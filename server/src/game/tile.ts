@@ -3,6 +3,7 @@ import Vector2 from "../../../shared/vector2";
 import Mapgen from "./mapgen";
 import * as Rules from "../../../shared/rules.json";
 import Resources from "./objects/resources";
+import Unit from "./objects/unit";
 
 /**
  * Tile-Class representing one hex with all its relevant fields
@@ -24,6 +25,8 @@ export default class Tile {
   public movementFactor:number = 1;
 
   public resources = new Resources();
+
+  public units:Unit[] = [Unit.generateUnit(null)];
   
 
   //Graphics

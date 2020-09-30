@@ -56,6 +56,7 @@ export default class Group extends GameObject implements Spotter, Drawable {
     group.speed = template.speed;
     group.attack = template.attack;
     group.hp = template.hp;
+    group.units.push(Unit.generateUnit(owner));
     return group;
   }
 }

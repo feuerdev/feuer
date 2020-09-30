@@ -1,4 +1,6 @@
-export default class Unit {
+import GameObject from "./gameobject";
+
+export default class Unit extends GameObject {
 
   //Character Traits (Can only slightly be altered):
   //Leadership:
@@ -25,8 +27,20 @@ export default class Unit {
   private strength: number;
   private endurance: number;
 
-  //  Experience:
+  //Experience:
   private experience_theory: number;
   private experience_combat: number;
+
+  private name:string = "Peter";//Randomly Generate name
+
+  constructor(owner:string) {
+    super(owner);
+  }
+
+  static generateUnit(owner:string):Unit {
+    let unit = new Unit(owner);
+    //TODO: Randomly generate stats here
+    return unit;
+  }
 
 }

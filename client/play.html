@@ -52,21 +52,29 @@
 					<span id="transfer">Transfer</span>
 					<span>Tile</span>
 					{{#each resources}}
-						<!-- <div class="resources-container"> -->
-							<!-- <img src="img/{{name}}.png" alt="{{name}}"> -->
-							<span>{{name}}</span>
-							<span>{{group}}</span>
-							<button id="{{name}}-minus-one">&lt;1</button>
-							<button id="{{name}}-minus-ten">&lt;10</button>
-							<button id="{{name}}-minus-hundred">&lt;100</button>
-							<button id="{{name}}-plus-hundred">100&gt;</button>
-							<button id="{{name}}-plus-ten">10&gt;</button>
-							<button id="{{name}}-plus-one">1&gt;</button>
-							<span>{{tile}}</span>
-						<!-- </div> -->
+						<span>{{name}}</span>
+						<span>{{group}}</span>
+						<button id="{{name}}-minus-one">&lt;1</button>
+						<button id="{{name}}-minus-ten">&lt;10</button>
+						<button id="{{name}}-minus-hundred">&lt;100</button>
+						<button id="{{name}}-plus-hundred">100&gt;</button>
+						<button id="{{name}}-plus-ten">10&gt;</button>
+						<button id="{{name}}-plus-one">1&gt;</button>
+						<span>{{tile}}</span>
+					{{/each}}			
+				</section>
+				<section id="units">
+					{{#each group.units}}
+						<span>{{id}}</span>
+						<button id="unit-{{id}}-remove">-</button>
 					{{/each}}
+					{{#each units_tile}}
+						<span>{{id}}</span>
+						<button id="unit-{{id}}-add">+</button>
+					{{/each}}
+				</section>
+				<section>
 					<button id="disband">Disband</button>
-					
 				</section>
 			</script>
 		</aside>

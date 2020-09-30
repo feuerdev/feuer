@@ -2,10 +2,13 @@ import Vector2 from "../../shared/vector2";
 import * as Handlebars from "handlebars";
 import ClientWorld from "./clientworld";
 import Selection from "./selection";
+import Hex from "../../shared/hex";
 
 export interface HudListener {
   onDisbandRequested(id: number): void;
   onResourceTransfer(id: number, resource: string, amount: number): void;
+  onUnitAdd(groupId:number, unitId:number);
+  onUnitRemove(groupId:number, unitId:number);
 }
 
 export default class Hud {
@@ -54,7 +57,7 @@ export default class Hud {
         }
       }
 
-      div.querySelector(".hud-content").innerHTML = this.templateGroup({ group: group, resources: resources });
+      div.querySelector(".hud-content").innerHTML = this.templateGroup({ group: group, resources: resources, units_tile: tile.units});
 
       //Resources Listener
       for (let res of resources) {
@@ -66,7 +69,15 @@ export default class Hud {
         (div.querySelector(`#${res.name}-minus-hundred`) as HTMLElement).onclick = () => { this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, -100)) }
       }
 
-      //Disband
+      //Units Listener
+      for(let unit of group.units) {
+        (div.querySelector(`#unit-${unit.id}-remove`) as HTMLElement).onclick = () => { this.listeners.forEach((l) => l.onUnitRemove(group.id, unit.id)) }
+      }
+      for(let unit of tile.units) {
+        (div.querySelector(`#unit-${unit.id}-add`) as HTMLElement).onclick = () => { this.listeners.forEach((l) => l.onUnitAdd(group.id, unit.id)) }
+      }
+
+      //Disband Listener
       (div.querySelector("#disband") as HTMLElement).onclick = () => {
         this.listeners.forEach((l) => l.onDisbandRequested(group.id))
         div.style.display = "none";

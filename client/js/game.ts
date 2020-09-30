@@ -10,12 +10,12 @@ import Selection from "./selection";
 import ClientWorld from "./clientworld";
 import Renderer, { RendererListener } from "./renderer";
 import Hex from "../../shared/hex";
+import Tile from "../../server/src/game/tile";
 
 /**
  * Client side game logic
  */
 export default class Game implements ConnectionListener, HudListener, RendererListener {
-
 
     private selection: Selection = new Selection();
     private hud: Hud = new Hud();
@@ -35,7 +35,6 @@ export default class Game implements ConnectionListener, HudListener, RendererLi
         this.hud.addListener(this);
         this.renderer.addListener(this);
 
-
         window.addEventListener("keydown", event => {
             //
         }, false);
@@ -50,11 +49,9 @@ export default class Game implements ConnectionListener, HudListener, RendererLi
                     break;
             }
         }, false);
-
-
-
         console.info("Client ready");
     }
+    
     onRendererLoaded(): void {
         this.renderer.viewport.on('clicked', (click) => {
             let p = click.world;
@@ -102,9 +99,14 @@ export default class Game implements ConnectionListener, HudListener, RendererLi
                     break;
             }
         })
-
-
     }
+    onUnitAdd(groupId: number, unitId: number) {
+        this.connection.send("request unit add", { groupId: groupId, unitId: unitId });
+    }
+    onUnitRemove(groupId: number, unitId: number) {
+        this.connection.send("request unit remove", { groupId: groupId, unitId: unitId });
+    }
+
     onResourceTransfer(id: number, resource: string, amount: number): void {
         this.connection.send("request transfer", { id: id, resource: resource, amount: amount });
     }
