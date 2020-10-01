@@ -36,7 +36,7 @@ export default class GameServer {
 
   //#region Gameloop Variables
   private readonly updaterate = Math.round(1000 / config.updaterate);
-  private readonly defaultDelta = Math.round(1000 / 1000);
+  private readonly defaultDelta = Math.round(1000 / 1);
   private isRunning = false;
   //#endregion
 

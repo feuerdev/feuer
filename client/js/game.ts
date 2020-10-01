@@ -10,7 +10,6 @@ import Selection from "./selection";
 import ClientWorld from "./clientworld";
 import Renderer, { RendererListener } from "./renderer";
 import Hex from "../../shared/hex";
-import Tile from "../../server/src/game/tile";
 
 /**
  * Client side game logic
