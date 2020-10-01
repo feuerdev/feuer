@@ -12,6 +12,7 @@ export default class Building extends GameObject implements Spotter, Drawable {
     return this.texture;
   }
 
+  public name: string;
   private spottingDistance:number;
   public pos:Hex;
   public resourceGeneration = {};
@@ -26,7 +27,7 @@ export default class Building extends GameObject implements Spotter, Drawable {
   public static createBuilding(owner: string, name: string, pos: Hex): Building {
     const building: Building = new Building(owner);
     building.pos = pos;
-
+    building.name = name;
     const template = Rules.buildings[name];
     //building.spottingDistance = template.spottingDistance;
     for(let res of Object.keys(template.resource_generation)) {
