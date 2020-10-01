@@ -11,6 +11,10 @@ export interface HudListener {
   onUnitRemove(groupId: number, unitId: number): void;
 }
 
+Handlebars.registerHelper('twodigits', function(text) {
+  return text.toFixed(2);
+});
+
 export default class Hud {
 
   private readonly listeners: HudListener[] = [];
@@ -27,6 +31,7 @@ export default class Hud {
   private templateGroup = Handlebars.compile(this.divHud.querySelector("#template-group").innerHTML);
   private templateTile = Handlebars.compile(this.divHud.querySelector("#template-tile").innerHTML);
   // private templateBuilding = Handlebars.compile(this.divHud.querySelector("#template-building").innerHTML);
+
 
   constructor() {
     //Setup dragging and closing

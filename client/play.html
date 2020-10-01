@@ -1,5 +1,6 @@
 <!DOCTYPE HTML>
 <html lang="en">
+
 <head>
 	<title>Feuer</title>
 	<meta charset="utf-8">
@@ -7,6 +8,7 @@
 	<link rel="stylesheet" href="css/style.css">
 	<link rel="icon" type="image/x-icon" href="img/favicon.ico">
 </head>
+
 <body>
 	<canvas id="canvas-map" oncontextmenu="return false"></canvas>
 	<main id="hud">
@@ -17,7 +19,7 @@
 			</header>
 			<div class="hud-content"></div>
 			<script id="template-building" type="text/x-handlebars-template">
-				
+
 			</script>
 		</aside>
 		<aside id="hud-selection-tile">
@@ -28,32 +30,46 @@
 			<div class="hud-content"></div>
 			<script id="template-tile" type="text/x-handlebars-template">
 				<section id="buildings">
+					{{#if buildings.length}}
+					<div class="section-header">Buildings</div>
+					{{/if}}
 					{{#each buildings}}
-						<span>{{id}}</span>
+						<span>Name:</span>
+						<span>{{name}}({{id}})</span>
 						<button id="building-{{id}}-select">Details</button>
 					{{/each}}
 				</section>
 				<section id="groups">
+					{{#if groups.length}}
+						<div class="section-header">Groups</div>
+					{{/if}}
 					{{#each groups}}
+						<span>Id:</span>
 						<span>{{id}}</span>
 						<button id="group-{{id}}-select">Details</button>
 					{{/each}}
 				</section>
-				<section id="resources">
-					<span>Resource</span>
-					<span>Value</span>
-					{{#each resources}}
-						<span>{{name}}</span>
-						<span>{{value}}</span>
-					{{/each}}			
+				<section id="resources-tile">
+					{{#if resources.length}}
+					<div class="section-header">Resources</div>
+					{{/if}}
+					<div class="two-columns">
+						{{#each resources}}
+							<div>{{name}}</div>
+							<div>{{value}}</div>
+						{{/each}}			
+					</div>
 				</section>
 				<section id="info">
-					<span>Position</span>
-					<span>{{tile.hex.q}}-{{tile.hex.r}}</span>
-					<span>Height</span>
-					<span>{{tile.height}}</span>
-					<span>Forestation</span>
-					<span>{{tile.forestation}}</span>
+					<div class="section-header">Information</div>
+					<div class="two-columns">
+						<div>Position</div>
+						<div>{{tile.hex.q}}:{{tile.hex.r}}</div>
+						<div>Height</div>
+						<div>{{twodigits tile.height}}</div>
+						<div>Forestation</div>
+						<div>{{twodigits tile.forestation}}</div>
+					</div>
 				</section>
 			</script>
 		</aside>
@@ -64,17 +80,20 @@
 			</header>
 			<div class="hud-content"></div>
 			<script id="template-group" type="text/x-handlebars-template">
-				<section id="stats">	
-					<span>ID:</span>
-					<span>{{group.id}}</span>
-					<span>Speed:</span>
-					<span>{{group.speed}}</span>
-					<span>Attack:</span>
-					<span>{{group.attack}}</span>
-					<span>Spotting:</span>
-					<span>{{group.spottingDistance}}</span>
+				<section id="stats">
+					<div class="section-header">Resources</div>
+					<div class="two-columns">
+						<div>ID:</div>
+						<div>{{group.id}}</div>
+						<div>Speed:</div>
+						<div>{{group.speed}}</div>
+						<div>Attack:</div>
+						<div>{{group.attack}}</div>
+						<div>Spotting:</div>
+						<div>{{group.spottingDistance}}</div>
+					</div>
 				</section>
-				<section id="resources">
+				<section id="resources-group">
 					<span>Resource</span>
 					<span>Group</span>
 					<span id="transfer">Transfer</span>
@@ -113,4 +132,5 @@
 	<script type="application/javascript" src="js/web/firebase.js"></script>
 	<script type="application/javascript" src="bin/bundle.js"></script>
 </body>
+
 </html>

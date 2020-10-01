@@ -19,6 +19,7 @@
     font-family: Garamond, Georgia, serif;
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
 body,
@@ -76,14 +77,6 @@ header>h3 {
     margin-block-end: 0.5em;
 }
 
-#stats {
-    display: flex;
-}
-
-#stats > span {
-    flex: 50%
-} 
-
 header>.close {
     font-size: 20pt;
     font-weight: 700;
@@ -99,7 +92,20 @@ aside>.hud-content {
     margin-right: 8px;
 }
 
-#resources {
+.section-header {
+    font-weight: bold;
+}
+
+.two-columns{
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.two-columns > div {
+    width: 50%;
+}
+
+#resources-group {
     display: grid;
     grid-template-columns: repeat(9, auto);
     grid-auto-rows: auto;
