@@ -53,7 +53,7 @@ export default class Hud {
     union(Object.keys(tile.resources), Object.keys(group.resources)).forEach(key => {
       let valueTile = tile.resources[key];
       let valueGroup = group.resources[key];
-      if (valueTile.tile > 0 || valueGroup.group > 0) {
+      if (valueTile > 0 || valueGroup > 0) {
         resources.push({ name: key, tile: valueTile, group: valueGroup });
       }
     });
