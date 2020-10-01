@@ -66,30 +66,27 @@
   },
   "buildings": {
     "Campsite": {
-      "id": 1,
       "texture": "town_center",
       "hp": 100,
       "cost": {
-        "wood": 100
+        "Wood": 100
       },
       "resource_generation": {
-        "berries": 1,
-        "wood": 1
+        "Berries": 1,
+        "Wood": 1
       }
     },
     "Forester Hut": {
-      "id": 2,
       "texture": "forester_hut",
       "hp": 100,
       "cost": {
-        "wood": 100
+        "Wood": 100
       },
       "resource_generation": {
         "wood": 100
       }
     },
     "Quarry Hut": {
-      "id": 3,
       "texture": "quarry_hut",
       "hp": 100,
       "cost": {
@@ -100,7 +97,6 @@
       }
     },
     "Iron Hut": {
-      "id": 4,
       "texture": "iron_hut",
       "hp": 100,
       "cost": {
@@ -111,7 +107,6 @@
       }
     },
     "Gold Mine": {
-      "id": 5,
       "texture": "gold_mine",
       "hp": 100,
       "cost": {
