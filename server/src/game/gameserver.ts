@@ -255,10 +255,8 @@ export default class GameServer {
     for (let group of this.world.groups) {
       if (uid === group.owner && selection === group.id) {
         if(this.world.tiles[target.hash()]) {
+          group.movementStatus = 0;
           group.targetHexes = astar(this.world.tiles, group.pos, target);
-          for (let hex of group.targetHexes) {
-            console.log("Hex: " + JSON.stringify(hex) + "Factor: " + this.world.tiles[hex.hash()].movementFactor);
-          }
         }
       }
     }
