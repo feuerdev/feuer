@@ -3,8 +3,11 @@ import * as Handlebars from "handlebars";
 import ClientWorld from "./clientworld";
 import Selection from "./selection";
 import { union } from "../../shared/util";
+import * as Rules from "../../shared/rules.json";
 
 export interface HudListener {
+  onDemolishRequested(id: number): void;
+  onUpgradeRequested(id: number): void;
   onDisbandRequested(id: number): void;
   onResourceTransfer(id: number, resource: string, amount: number): void;
   onUnitAdd(groupId: number, unitId: number): void;
@@ -133,14 +136,23 @@ export default class Hud {
     (div.querySelector("header > button") as HTMLElement).onclick = () => { div.style.display = "none"; this.selection.clearSelection() };
     
     //Setup data objects
-    // let tile = ;
-    // let resources = ;
     let building = this.world.getBuilding(this.selection.selectedBuilding);
+    let upgrade = Rules.buildings[building.type].levels[building.level+1];
 
     //Populate template
-    div.querySelector(".hud-content").innerHTML = this.templateBuilding({ building: building });
+    div.querySelector(".hud-content").innerHTML = this.templateBuilding({ building: building, upgrade: upgrade});
 
     //Setup listeners
+    (div.querySelector("#demolish") as HTMLElement).onclick = () => {
+      this.listeners.forEach((l) => l.onDemolishRequested(building.id));
+      div.style.display = "none";
+    };
+    if(upgrade) {
+      (div.querySelector("#upgrade") as HTMLElement).onclick = () => {
+        this.listeners.forEach((l) => l.onUpgradeRequested(building.id));
+      };
+    }
+
   }
 
   update() {

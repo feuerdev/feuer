@@ -43,7 +43,7 @@ export default class Building extends GameObject implements Spotter, Drawable {
     return building;
   }
 
-  public static updateBuilding(building:Building) {
+  public static upgradeBuilding(building:Building) {
     let template = Rules.buildings[building.type];
     if(template.levels.length >= building.level+1) {
       building.level++;

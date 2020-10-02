@@ -58,6 +58,8 @@ export default class GameServer {
       socket.on("request transfer", (data) => this.onRequestTransfer(socket, data));
       socket.on("request unit add", (data) => this.onRequestUnitAdd(socket, data));
       socket.on("request unit remove", (data) => this.onRequestUnitRemove(socket, data));
+      socket.on("request upgrade", (data) => this.onRequestUpgrade(socket, data));
+      socket.on("request demolish", (data) => this.onRequestDemolish(socket, data));
     });
   }
 
@@ -216,6 +218,7 @@ export default class GameServer {
           self.world.groups.push(initialGroup);
 
           let initialCamp = Building.createBuilding(player.uid, "Town Hall", pos);
+          // Building.updateBuilding(initialCamp);
           self.world.buildings.push(initialCamp);
 
           //Prepare Drawing of that group
@@ -340,6 +343,28 @@ export default class GameServer {
         group.resources[resource] -= amount; //TODO: Check if allowed
 
       }
+    }
+  }
+
+  onRequestDemolish(socket: Socket, data) {
+    let uid = this.getPlayerUid(socket.id);
+    let buildingToDemolish = this.world.buildings.find((building) => {
+      return building.id === data.buildingId && building.owner === uid});
+    if(buildingToDemolish) {
+      this.world.tiles[buildingToDemolish.pos.hash()].removeSpot(buildingToDemolish.id);
+      this.world.buildings.splice(this.world.buildings.indexOf(buildingToDemolish), 1);
+    }
+  }
+
+  onRequestUpgrade(socket: Socket, data) {
+    let uid = this.getPlayerUid(socket.id);
+    let buildingToUpgrade = this.world.buildings.find((building) => {
+      return building.id === data.buildingId && building.owner === uid});
+    if(buildingToUpgrade) { 
+      //TODO: Check if has enogh money here and reduct money
+      Building.upgradeBuilding(buildingToUpgrade);
+      this.world.tiles[buildingToUpgrade.pos.hash()].removeSpot(buildingToUpgrade.id);
+      this.world.tiles[buildingToUpgrade.pos.hash()].addSpot(buildingToUpgrade.texture, buildingToUpgrade.id); //TODO: Should that be handled here?
     }
   }
 

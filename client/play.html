@@ -31,6 +31,40 @@
 						<div>HP</div>
 						<div>{{building.hp}}</div>
 					</div>
+					<section>
+						<div class="section-header">Resource Gathering</div>
+						<div class="two-columns">
+							{{#each building.resourceGeneration}}
+								<div>{{@key}}</div>
+								<div>{{this}}</div>
+							{{/each}}
+						</div>
+					</section>
+					{{#if upgrade}}
+					<section id="upgrade">
+						<div class="section-header">Upgrade</div>
+						<div class="two-columns">
+							<div>Name</div>
+							<div>{{upgrade.name}}</div>
+							<div>Spotting</div>
+							<div>{{upgrade.spotting}}</div>
+							<div>HP</div>
+							<div>{{upgrade.hp}}</div>
+						</div>
+						<div>Cost</div>
+						<div class="two-columns">
+							{{#each upgrade.cost}}
+								<div>{{@key}}</div>
+								<div>{{this}}</div>
+							{{/each}}
+						</div>
+					</div>
+						<button id="upgrade">Upgrade</button>
+					</section>
+					{{/if}}
+					<section id="demolish">
+						<button id="demolish">Demolish</button>
+					</section>
 				</section>
 			</script>
 		</aside>
@@ -103,6 +137,8 @@
 						<div>{{group.attack}}</div>
 						<div>Spotting:</div>
 						<div>{{group.spottingDistance}}</div>
+						<div>Movement:</div>
+						<div>{{#if group.movementStatus}}{{group.movementStatus}}%{{else}}Resting{{/if}}</div>
 					</div>
 				</section>
 				<section id="resources-group">
