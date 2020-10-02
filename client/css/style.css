@@ -105,7 +105,7 @@ aside>.hud-content {
     width: 50%;
 }
 
-#resources-group {
+.resources-group {
     display: grid;
     grid-template-columns: repeat(9, auto);
     grid-auto-rows: auto;

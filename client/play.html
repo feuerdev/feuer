@@ -81,7 +81,7 @@
 			<div class="hud-content"></div>
 			<script id="template-group" type="text/x-handlebars-template">
 				<section id="stats">
-					<div class="section-header">Resources</div>
+					<div class="section-header">Information</div>
 					<div class="two-columns">
 						<div>ID:</div>
 						<div>{{group.id}}</div>
@@ -94,30 +94,47 @@
 					</div>
 				</section>
 				<section id="resources-group">
-					<span>Resource</span>
-					<span>Group</span>
-					<span id="transfer">Transfer</span>
-					<span>Tile</span>
-					{{#each resources}}
-						<span>{{name}}</span>
-						<span>{{group}}</span>
-						<button id="{{name}}-minus-one">&lt;1</button>
-						<button id="{{name}}-minus-ten">&lt;10</button>
-						<button id="{{name}}-minus-hundred">&lt;100</button>
-						<button id="{{name}}-plus-hundred">100&gt;</button>
-						<button id="{{name}}-plus-ten">10&gt;</button>
-						<button id="{{name}}-plus-one">1&gt;</button>
-						<span>{{tile}}</span>
-					{{/each}}			
+					{{#if resources.length}}
+						<div class="section-header">Resources</div>
+					{{/if}}
+					<div class="resources-group">
+						{{#if resources.length}}
+							<span>Resource</span>
+							<span>Group</span>
+							<span id="transfer">Transfer</span>
+							<span>Tile</span>
+						{{/if}}
+						{{#each resources}}
+							<span>{{name}}</span>
+							<span>{{group}}</span>
+							<button id="{{name}}-minus-one">&lt;1</button>
+							<button id="{{name}}-minus-ten">&lt;10</button>
+							<button id="{{name}}-minus-hundred">&lt;100</button>
+							<button id="{{name}}-plus-hundred">100&gt;</button>
+							<button id="{{name}}-plus-ten">10&gt;</button>
+							<button id="{{name}}-plus-one">1&gt;</button>
+							<span>{{tile}}</span>
+						{{/each}}			
+					</div>
 				</section>
 				<section id="units">
+					{{#if group.units.length}}
+						<div class="section-header">Units</div>
+					{{/if}}
 					{{#each group.units}}
+					<div>
 						<span>{{id}}</span>
-						<button id="unit-{{id}}-remove">-</button>
+						<button id="unit-{{id}}-remove">Release</button>
+					</div>
 					{{/each}}
+					{{#if units_tile.length}}
+						<div class="section-header">Available Units</div>
+					{{/if}}
 					{{#each units_tile}}
+					<div>
 						<span>{{id}}</span>
-						<button id="unit-{{id}}-add">+</button>
+						<button id="unit-{{id}}-add">Enlist</button>
+					</div>
 					{{/each}}
 				</section>
 				<section>
