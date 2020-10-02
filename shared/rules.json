@@ -83,6 +83,7 @@
           "name": "Town Center",
           "texture": "town_center",
           "hp": 500,
+          "spotting": 2,
           "cost": {
             "Wood": 300
           },

@@ -19,7 +19,19 @@
 			</header>
 			<div class="hud-content"></div>
 			<script id="template-building" type="text/x-handlebars-template">
-
+				<section id="info">
+					<div class="section-header">Information</div>
+					<div class="two-columns">
+						<div>Name</div>
+						<div>{{building.name}}</div>
+						<div>Level</div>
+						<div>{{building.level}}</div>
+						<div>Spotting</div>
+						<div>{{building.spotting}}</div>
+						<div>HP</div>
+						<div>{{building.hp}}</div>
+					</div>
+				</section>
 			</script>
 		</aside>
 		<aside id="hud-selection-tile">

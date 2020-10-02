@@ -30,7 +30,7 @@ export default class Hud {
 
   private templateGroup = Handlebars.compile(this.divHud.querySelector("#template-group").innerHTML);
   private templateTile = Handlebars.compile(this.divHud.querySelector("#template-tile").innerHTML);
-  // private templateBuilding = Handlebars.compile(this.divHud.querySelector("#template-building").innerHTML);
+  private templateBuilding = Handlebars.compile(this.divHud.querySelector("#template-building").innerHTML);
 
 
   constructor() {
@@ -135,10 +135,10 @@ export default class Hud {
     //Setup data objects
     // let tile = ;
     // let resources = ;
-    // let buildings = ;
+    let building = this.world.getBuilding(this.selection.selectedBuilding);
 
     //Populate template
-    // div.querySelector(".hud-content").innerHTML = this.templateGroup({ tile: tile, resources: resources, buildings: buildings });
+    div.querySelector(".hud-content").innerHTML = this.templateBuilding({ building: building });
 
     //Setup listeners
   }
