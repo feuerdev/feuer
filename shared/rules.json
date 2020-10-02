@@ -65,16 +65,33 @@
     }
   },
   "buildings": {
-    "Campsite": {
-      "texture": "town_center",
-      "hp": 100,
-      "cost": {
-        "Wood": 100
-      },
-      "resource_generation": {
-        "Berries": 1,
-        "Wood": 1
-      }
+    "Town Hall": {
+      "levels": [{
+          "name": "Campsite",
+          "texture": "town_center",
+          "hp": 100,
+          "cost": {
+            "Wood": 100
+          },
+          "spotting": 1,
+          "resource_generation": {
+            "Berries": 1,
+            "Wood": 1
+          }
+        },
+        {
+          "name": "Town Center",
+          "texture": "town_center",
+          "hp": 500,
+          "cost": {
+            "Wood": 300
+          },
+          "resource_generation": {
+            "Berries": 10,
+            "Wood": 10
+          }
+        }
+      ]
     },
     "Forester Hut": {
       "texture": "forester_hut",

@@ -215,7 +215,7 @@ export default class GameServer {
           let initialGroup = Group.createGroup(player.uid, "Scout", pos);
           self.world.groups.push(initialGroup);
 
-          let initialCamp = Building.createBuilding(player.uid, "Campsite", pos);
+          let initialCamp = Building.createBuilding(player.uid, "Town Hall", pos);
           self.world.buildings.push(initialCamp);
 
           //Prepare Drawing of that group
@@ -390,8 +390,9 @@ export default class GameServer {
       }
       for(let building of this.world.buildings) {
         if(building.owner === uid) {
-          this.addUniqueHexes(player.visibleHexes, [building.pos]);
-          this.addUniqueHexes(player.discoveredHexes, [building.pos]);
+          let visible:Hex[] = building.pos.neighborsRange(building.getSpottingRange());
+          this.addUniqueHexes(player.visibleHexes, visible);
+          this.addUniqueHexes(player.discoveredHexes, visible);
         }
       }
     }    
