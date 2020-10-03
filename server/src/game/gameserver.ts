@@ -351,6 +351,7 @@ export default class GameServer {
     if(buildingToDemolish) {
       this.world.tiles[buildingToDemolish.pos.hash()].removeSpot(buildingToDemolish.id);
       this.world.buildings.splice(this.world.buildings.indexOf(buildingToDemolish), 1);
+      this.updatePlayerVisibilities(uid);
     }
   }
 
@@ -363,6 +364,7 @@ export default class GameServer {
       Building.upgradeBuilding(buildingToUpgrade);
       this.world.tiles[buildingToUpgrade.pos.hash()].removeSpot(buildingToUpgrade.id);
       this.world.tiles[buildingToUpgrade.pos.hash()].addSpot(buildingToUpgrade.texture, buildingToUpgrade.id); //TODO: Should that be handled here?
+      this.updatePlayerVisibilities(uid);
     }
   }
 
@@ -373,6 +375,7 @@ export default class GameServer {
     if(groupToDisband) {
       this.world.tiles[groupToDisband.pos.hash()].removeSpot(groupToDisband.id);
       this.world.groups.splice(this.world.groups.indexOf(groupToDisband), 1);
+      this.updatePlayerVisibilities(uid);
     }
   }
 
