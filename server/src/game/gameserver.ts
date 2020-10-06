@@ -36,7 +36,7 @@ export default class GameServer {
 
   //#region Gameloop Variables
   private readonly updaterate = Math.round(1000 / config.updaterate);
-  private readonly defaultDelta = Math.round(1000 / 1);
+  private readonly defaultDelta = Math.round(1000 / config.referencerate);
   private isRunning = false;
   //#endregion
 
@@ -257,6 +257,7 @@ export default class GameServer {
         if(this.world.tiles[target.hash()]) {
           group.movementStatus = 0;
           group.targetHexes = astar(this.world.tiles, group.pos, target);
+          return;
         }
       }
     }

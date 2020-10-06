@@ -1,4 +1,5 @@
 {
   "secure_cookie": false,
-  "log_level": "debug"
+  "log_level": "debug",
+  "referencerate": 50
 }

@@ -5,6 +5,16 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Launch Program",
+      "program": "${workspaceFolder}/server/src/main",
+      "request": "launch",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "pwa-node",
+      "args": ["debug"]
+    },
+    {
       "command": "npm run launch",
       "name": "Run Server",
       "request": "launch",
