@@ -5,7 +5,7 @@
   "author": "jannik@feuer.io",
   "license": "UNLICENSED",
   "scripts": {
-    "vserver": "npm run deploy && node server/src/main vserver",
+    "vserver": "git pull && npm run deploy && node server/src/main vserver",
     "heroku": "npm run deploy && node server/src/main heroku",
     "start": "npm run deploy && npm run launch",
     "launch": "node server/src/main",
