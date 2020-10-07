@@ -1,4 +1,4 @@
 {
-    "ip": "https://feuer.io:8000",
+    "ip": "http://feuer.io:8000",
     "transports": ["websocket"]
 }
