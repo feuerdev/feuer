@@ -76,6 +76,7 @@ export default class Renderer {
       .add("iron_hut", "../img/mine.png")
       .add("gold_mine", "../img/mine.png")
       .add("unit_scout_own", "../img/unit_scout_own.png")
+      .add("mine", "../img/mine.png") //This one shouldn't be here
       .load(() => this.loaded());
 
 
