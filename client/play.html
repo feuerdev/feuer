@@ -80,9 +80,11 @@
 					<div class="section-header">Buildings</div>
 					{{/if}}
 					{{#each buildings}}
+					<div>
 						<span>Name:</span>
 						<span>{{name}}({{id}})</span>
 						<button id="building-{{id}}-select">Details</button>
+					</div>
 					{{/each}}
 				</section>
 				<section id="groups">
@@ -90,9 +92,11 @@
 						<div class="section-header">Groups</div>
 					{{/if}}
 					{{#each groups}}
+					<div>
 						<span>Id:</span>
 						<span>{{id}}</span>
 						<button id="group-{{id}}-select">Details</button>
+					</div>
 					{{/each}}
 				</section>
 				<section id="resources-tile">
@@ -117,6 +121,23 @@
 						<div>{{twodigits tile.forestation}}</div>
 					</div>
 				</section>
+				{{#if constructions}}
+				<section id="construction">
+					<div class="section-header">Construction</div>
+					{{#each constructions}}
+						<div class="container">
+							<img src="img/{{this.levels.[0].texture}}.png">
+							<div>{{this.levels.[0].name}}</div>
+							<div>
+								{{#each this.levels.[0].cost}}
+									{{@key}}:{{this}}</br>
+								{{/each}}
+							</div>
+							<button id="construct-{{this.id}}">Construct</button>
+						</div>
+					{{/each}}
+				</section>
+				{{/if}}
 			</script>
 		</aside>
 		<aside id="hud-selection-group">

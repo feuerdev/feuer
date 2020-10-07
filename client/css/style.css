@@ -117,6 +117,17 @@ aside>.hud-content {
     text-align: center;
 }
 
+#construction > .container {
+    display:flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+/* 
+#construction > .container > * {
+    jus
+} */
+
 button {
     background: linear-gradient(to bottom, var(--color-primary-light) 0%, var(--color-secondary-light) 100%);
     color: var(--color-black-shade);

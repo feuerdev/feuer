@@ -22,7 +22,6 @@ import Hex from "../../../shared/hex";
 import Building from "./objects/building";
 import PlayerRelation, { EnumRelationType } from "../../../shared/relation";
 import Battle from "./objects/battle";
-import { threadId } from "worker_threads";
 
 export default class GameServer {
 
@@ -52,7 +51,6 @@ export default class GameServer {
 
       socket.on("request movement", (data) => this.onRequestMovement(socket, data));
       socket.on("request construction", (data) => this.onRequestConstruction(socket, data));
-      socket.on("request group", (data) => this.onRequestGroup(socket, data));
       socket.on("request relation", (data) => this.onRequestRelation(socket, data));
       socket.on("request disband", (data) => this.onRequestDisband(socket, data));
       socket.on("request transfer", (data) => this.onRequestTransfer(socket, data));
@@ -268,22 +266,10 @@ export default class GameServer {
     let pos = new Hex(data.pos.q, data.pos.r, data.pos.s);
     let tile = this.world.tiles[pos.hash()];
 
-    if(this.isAllowedToBuild(tile, uid, data.name)) {
-      let building = Building.createBuilding(uid, data.name, pos);
+    if(this.isAllowedToBuild(tile, uid, data.type)) {
+      let building = Building.createBuilding(uid, data.type, pos);
       this.world.buildings.push(building);
       tile.addSpot(building.texture, building.id);
-      this.updatePlayerVisibilities(uid);
-    }
-  }
-
-  onRequestGroup(socket: Socket, data) {
-    let uid = this.getPlayerUid(socket.id);
-    let pos = new Hex(data.pos.q, data.pos.r, data.pos.s);
-    let tile = this.world.tiles[pos.hash()];
-    if(this.isAllowedToRecruit(tile, uid, data.name)) {
-      let group = Group.createGroup(uid, data.name, pos);
-      this.world.groups.push(group);
-      tile.addSpot(group.getTexture(), group.id);
       this.updatePlayerVisibilities(uid);
     }
   }
@@ -482,20 +468,10 @@ export default class GameServer {
    * @param uid Player uid
    * @param name of building
    */
-  private isAllowedToBuild(tile:Tile, uid:string, name:string):boolean{
-    let object = Rules.buildings[name];
-    return this.hasResources(tile, object) && this.hasPresence(tile.hex, uid);
-  }
+  private isAllowedToBuild(tile:Tile, uid:string, type:string):boolean{
+    let object = Rules.buildings[type];
 
-  /**
-   * Checks if a player can recruit a group at a tile
-   * @param tile Tile
-   * @param uid Player uid
-   * @param name of group
-   */
-  private isAllowedToRecruit(tile:Tile, uid:string, name:string):boolean{
-    let object = Rules.units[name];
-    return this.hasResources(tile, object) && this.hasBuildingAt(tile.hex, uid);
+    return this.hasResources(tile, object.levels[0].cost) && this.hasPresence(tile.hex, uid);
   }
 
   /**
@@ -540,9 +516,9 @@ export default class GameServer {
    * @param tile 
    * @param object 
    */
-  private hasResources(tile:Tile, object:any):boolean {
-    for(let resource of Object.keys(object.cost)) {
-      if(!tile.resources[resource] || tile.resources[resource] < object.cost[resource]) {
+  private hasResources(tile:Tile, cost:any):boolean {
+    for(let resource of Object.keys(cost)) {
+      if(!tile.resources[resource] || tile.resources[resource] < cost[resource]) {
         return false;
       }
     }

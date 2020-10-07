@@ -50,7 +50,6 @@ export default class Game implements ConnectionListener, HudListener, RendererLi
         }, false);
         console.info("Client ready");
     }
-
     
     onRendererLoaded(): void {
         this.renderer.viewport.on('clicked', (click) => {
@@ -104,6 +103,10 @@ export default class Game implements ConnectionListener, HudListener, RendererLi
         })
     }
 
+    onConstructionRequested(pos: Hex, type: string) {
+        this.connection.send("request construction", { pos: pos, type: type });
+    }
+
     onDemolishRequested(id: number): void {
         this.connection.send("request demolish", { buildingId: id });
     }
@@ -124,14 +127,6 @@ export default class Game implements ConnectionListener, HudListener, RendererLi
 
     onDisbandRequested(id: number): void {
         this.connection.send("request disband", { id: id });
-    }
-
-    onConstructionRequested(name: string): void {
-        this.connection.send("request construction", { name: name, pos: this.selection.selectedHex });
-    }
-
-    onGroupRequested(name: string): void {
-        this.connection.send("request group", { name: name, pos: this.selection.selectedHex });
     }
 
     onConnected(socket: Socket) {

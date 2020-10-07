@@ -4,11 +4,13 @@ import ClientWorld from "./clientworld";
 import Selection from "./selection";
 import { union } from "../../shared/util";
 import * as Rules from "../../shared/rules.json";
+import Hex from "../../shared/hex";
 
 export interface HudListener {
   onDemolishRequested(id: number): void;
   onUpgradeRequested(id: number): void;
   onDisbandRequested(id: number): void;
+  onConstructionRequested(pos: Hex, type:string);
   onResourceTransfer(id: number, resource: string, amount: number): void;
   onUnitAdd(groupId: number, unitId: number): void;
   onUnitRemove(groupId: number, unitId: number): void;
@@ -109,9 +111,15 @@ export default class Hud {
     });
     let buildings = this.world.getBuildings(tile.hex);
     let groups = this.world.getGroups(tile.hex);
+    let constructions;
+    if(buildings.length || groups.length) {
+      constructions = Rules.buildings;
+    } else {
+      constructions = null;
+    }
 
     //Populate template
-    div.querySelector(".hud-content").innerHTML = this.templateTile({ tile: tile, resources: resources, buildings: buildings, groups: groups });
+    div.querySelector(".hud-content").innerHTML = this.templateTile({ tile: tile, resources: resources, buildings: buildings, groups: groups, constructions:constructions });
 
     //Setup listeners
     for (let building of buildings) {
@@ -127,6 +135,14 @@ export default class Hud {
         this.showGroupSelection();
         this.update();
        }
+    }
+    if(constructions) {
+      for(let k of Object.keys(constructions)) {
+        let construction = constructions[k];
+        (div.querySelector(`#construct-${construction.id}`) as HTMLElement).onclick = () => { 
+          this.listeners.forEach((l) => l.onConstructionRequested(tile.hex, k));
+        }
+      }
     }
   }
 
