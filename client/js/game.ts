@@ -16,6 +16,7 @@ import Hex from "../../shared/hex";
  */
 export default class Game implements ConnectionListener, HudListener, RendererListener {
 
+    private config;
     private selection: Selection = new Selection();
     private hud: Hud = new Hud();
     private renderer: Renderer = new Renderer();
@@ -25,12 +26,10 @@ export default class Game implements ConnectionListener, HudListener, RendererLi
     private initialFocusSet = false;
 
     constructor(config) {
+        this.config = config;
         this.renderer.selection = this.selection;
         this.hud.world = this.cWorld;
         this.hud.selection = this.selection;
-        this.connection = new Connection(config.ip, config.transports);
-
-        this.connection.addListener(this);
         this.hud.addListener(this);
         this.renderer.addListener(this);
 
@@ -52,6 +51,10 @@ export default class Game implements ConnectionListener, HudListener, RendererLi
     }
     
     onRendererLoaded(): void {
+        //Only connect after renderer is loaded
+        this.connection = new Connection(this.config.ip, this.config.transports);
+        this.connection.addListener(this);
+
         this.renderer.viewport.on('clicked', (click) => {
             let p = click.world;
             let v = new Vector2(p.x, p.y);
