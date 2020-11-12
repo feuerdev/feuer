@@ -1,13 +1,36 @@
-<h1>Register</h1>
-<form id="register" method="POST" action="/register">
-  Username: <input id="username" type="text" name="username"><br>
-  E-Mail: <input id="email" type="text" name="email"><br>
-  Password: <input id="password" type="password" name="password"><br>
-  Repeat Password: <input id="passwordRepeat" type="password" name="passwordRepeat"><br>
-  <input type="submit" value="Register">
-</form>
+<!DOCTYPE html>
+<html lang="en">
 
-<script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-auth.js"></script>
-<script type="application/javascript" src="js/web/firebase.js"></script>
-<script type="application/javascript" src="js/web/register.js"></script>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" type="text/css" href="css/login.css">
+  <link rel="icon" type="image/x-icon" href="img/favicon.png">
+  <title>feuer.io - Registration</title>
+</head>
+
+<body>
+  <div class="container">
+    <div class="content">
+      <div class="image">
+        <img src="img/login_title.png" alt="">
+      </div>
+      <h1>feuer.io</h1>
+      <form id="register" method="POST" action="/register">
+        <input id="username" type="text" name="username" placeholder="Username">
+        <input id="email" type="text" name="email" placeholder="E-mail">
+        <input id="password" type="password" name="password" placeholder="Password">
+        <input id="passwordRepeat" type="password" name="passwordRepeat" placeholder="Repeat Password">
+        <input type="submit" value="Register!">
+      </form>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-auth.js"></script>
+  <script type="application/javascript" src="js/web/firebase.js"></script>
+  <script type="application/javascript" src="js/web/register.js"></script>
+
+</body>
+
+</html>
