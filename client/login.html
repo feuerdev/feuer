@@ -12,6 +12,7 @@
 <body>
   <div class="container">
     <div class="content">
+      <span class="loading hidden">loading...</span>
       <div class="image">
         <img src="img/login_title.png" alt="">
       </div>
@@ -21,8 +22,8 @@
         <input id="password" type="password" name="password" placeholder="Password">
         <input type="submit" value="Play!">
         <div class="or">OR</div>
-        <button onclick="location.href='/register';" id="regbutton" type="submit">Register</button>
-        <button onclick="onGuestClicked()" type="submit">Play as Guest!</button>
+        <button onclick="location.href='/register';" id="regbutton" type="button">Register</button>
+        <button onclick="onGuestClicked()" type="button">Play as Guest!</button>
       </form>
     </div>
   </div>
