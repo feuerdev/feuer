@@ -1,0 +1,62 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: monospace;
+}
+
+body {
+  background-color: #000;
+  color: #ffffff;
+  background-image: url(../img/login_bg.png);
+  background-repeat: no-repeat;
+  background-position: 80%;
+  background-size: cover;
+}
+
+.container {
+  position: relative;
+  height: 100vh;
+}
+
+.content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  margin-bottom: 1rem;
+
+  width: 30%;
+  padding: 15px 30px;
+  background-color: rgba(0, 0, 0, 0.753);
+  box-shadow: 0px 3px 13px 0px rgba(0, 0, 0, 0.5);
+}
+
+h1, .or {
+  color: rgba(216, 142, 6, 0.9);
+  text-align: center;
+}
+
+.image {
+  text-align: center;
+}
+
+:focus {
+  outline-color: #000;
+}
+
+input, button {
+    background-color: rgba(255, 255, 255, 0.877);
+    display: block;
+    padding: 0.7em;
+    margin: 1em auto;
+    border: none;
+    font-weight: 600;
+    font-size: 0.9em;
+    width: 100%;
+}
+::placeholder { 
+  opacity: 0.7;
+}
+

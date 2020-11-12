@@ -4,21 +4,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>feuer</title>
+  <link rel="stylesheet" type="text/css" href="css/login.css">
+  <title>feuer.io</title>
 </head>
 
 <body>
   <div class="container">
-    <h1>Login</h1>
-    <form id="login" method="POST" action="/login">
-      <input id="email" type="text" name="email">
-      <input id="password" type="password" name="password">
-      <input type="submit" value="Login">
-    </form>
+    <div class="content">
+      <div class="image">
+        <img src="img/login_title.png" alt="">
+      </div>
+      <h1>feuer.io</h1>
+      <form id="login" method="POST" action="/login">
+        <input id="email" type="text" name="email" placeholder="E-mail">
+        <input id="password" type="password" name="password" placeholder="Password">
+        <input type="submit" value="Play!">
+        <div class="or">OR</div>
+        <button onclick="location.href='/register';" id="regbutton" type="submit">Register</button>
+        <button onclick="onGuestClicked()" type="submit">Play as Guest!</button>
+      </form>
+    </div>
   </div>
 
-  <a href="/register">Register</a>
-  <a href="#" onclick="onGuestClicked()">Play as guest</a>
 
   <script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-auth.js"></script>
