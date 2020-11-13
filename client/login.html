@@ -9,21 +9,21 @@
   <title>feuer.io - Login</title>
 </head>
 
-<body>
-  <div class="container">
-    <div class="content">
+<body class="base-bg">
+  <div class="center-container">
+    <div class="center-content base-box">
       <span class="loading hidden">loading...</span>
       <div class="image">
         <img src="img/login_title.png" alt="">
       </div>
       <h1>feuer.io</h1>
       <form id="login" method="POST" action="/login">
-        <input id="email" type="text" name="email" placeholder="E-mail">
-        <input id="password" type="password" name="password" placeholder="Password">
-        <input type="submit" value="Play!">
+        <input class="base" id="email" type="text" name="email" placeholder="E-mail">
+        <input class="base"id="password" type="password" name="password" placeholder="Password">
+        <input class="base"type="submit" value="Play!">
         <div class="or">OR</div>
-        <button onclick="location.href='/register';" id="regbutton" type="button">Register</button>
-        <button onclick="onGuestClicked()" type="button">Play as Guest!</button>
+        <button class="base" onclick="location.href='/register';" id="regbutton" type="button">Register</button>
+        <button class="base" onclick="onGuestClicked()" type="button">Play as Guest!</button>
       </form>
     </div>
   </div>

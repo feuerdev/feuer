@@ -5,7 +5,7 @@
   font-family: monospace;
 }
 
-body {
+.base-bg {
   background-color: #000;
   color: #ffffff;
   background-image: url(../img/login_bg.png);
@@ -14,19 +14,26 @@ body {
   background-size: cover;
 }
 
-.container {
+.center-container {
   position: relative;
+  width: 100vw;
   height: 100vh;
 }
 
-.content {
+.center-content {
   position: absolute;
   top: 50%;
   left: 50%;
   -ms-transform: translate(-50%, -50%);
   transform: translate(-50%, -50%);
   margin-bottom: 1rem;
+}
 
+.absolute {
+  position: absolute;
+}
+
+.base-box {
   padding: 15px 30px;
   background-color: rgba(0, 0, 0, 0.753);
   box-shadow: 0px 3px 13px 0px rgba(0, 0, 0, 0.5);
@@ -45,7 +52,7 @@ h1, .or {
   outline-color: #000;
 }
 
-input, button {
+input.base, button.base {
     background-color: rgba(255, 255, 255, 0.877);
     display: block;
     padding: 0.7em;

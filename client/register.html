@@ -9,19 +9,19 @@
   <title>feuer.io - Registration</title>
 </head>
 
-<body>
-  <div class="container">
-    <div class="content">
+<body class="base-bg">
+  <div class="center-container">
+    <div class="center-content base-box">
       <div class="image">
         <img src="img/login_title.png" alt="">
       </div>
       <h1>feuer.io</h1>
       <form id="register" method="POST" action="/register">
-        <input id="username" type="text" name="username" placeholder="Username">
-        <input id="email" type="text" name="email" placeholder="E-mail">
-        <input id="password" type="password" name="password" placeholder="Password">
-        <input id="passwordRepeat" type="password" name="passwordRepeat" placeholder="Repeat Password">
-        <input type="submit" value="Register!">
+        <input class="base" id="username" type="text" name="username" placeholder="Username" autocomplete="username">
+        <input class="base" id="email" type="text" name="email" placeholder="E-mail" autocomplete="email">
+        <input class="base" id="password" type="password" name="password" placeholder="Password" autocomplete="new-password">
+        <input class="base" id="passwordRepeat" type="password" name="passwordRepeat" placeholder="Repeat Password" autocomplete="new-password">
+        <input class="base" type="submit" value="Register!">
       </form>
     </div>
   </div>
