@@ -186,7 +186,7 @@ export default class Game implements ConnectionListener, HudListener, RendererLi
                 let ref = this.cWorld.buildings[0];
                 if (ref) {
                     this.renderer.center(ref.pos);
-
+                    this.stopLoading()
                 }
             }
             this.hud.update();
@@ -199,6 +199,14 @@ export default class Game implements ConnectionListener, HudListener, RendererLi
     
     getHex(vector:Vector2):Hex {
         return this.renderer.layout.pixelToHex(vector).round();
+    }
+
+    startLoading() {
+        document.querySelector(".loading").classList.remove("hidden")
+    }
+
+    stopLoading() {
+        document.querySelector(".loading").classList.add("hidden")
     }
 }
 
