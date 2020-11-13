@@ -183,10 +183,11 @@ export default class Game implements ConnectionListener, HudListener, RendererLi
             this.cWorld.buildings = data;
             if (!this.initialFocusSet) {
                 this.initialFocusSet = true;
+                this.stopLoading()
                 let ref = this.cWorld.buildings[0];
                 if (ref) {
                     this.renderer.center(ref.pos);
-                    this.stopLoading()
+                    
                 }
             }
             this.hud.update();
