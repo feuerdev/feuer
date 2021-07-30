@@ -1,7 +1,7 @@
 // Initialize Firebase
 console.log("initializing firebase")
 firebase.initializeApp({
-    apiKey: "AIzaSyDB54KU7NIyHAd_VLo2it2jSqaxB0SPass",
+    apiKey: "AIzaSyBJFITLUMkRyVvG8CH3m9waEEyweGhTS84",
     authDomain: "feuer-io.firebaseapp.com",
     databaseURL: "https://feuer-io.firebaseio.com",
     projectId: "feuer-io",
