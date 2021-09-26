@@ -2,8 +2,8 @@
  * Einstiegspunkt für den Gameserver Code
  * Created by geller on 30.08.2016.
  */
-import socketio from "socket.io";
-import { Server } from "http";
+import { Server } from "socket.io";
+import * as Http from "http";
 
 import Player from "./player";
 import Helper from "../helper";
@@ -25,7 +25,7 @@ import Battle from "./objects/battle";
 
 export default class GameServer {
 
-  private io: socketio.Server;
+  private io: Server;
 
   private socketplayer: {} = {};
   private uidsockets: {} = {};
@@ -43,8 +43,8 @@ export default class GameServer {
     this.world = world;
   }
 
-  listen(httpServer: Server) {
-    this.io = socketio(httpServer, { transports: config.transports });
+  listen(httpServer: Http.Server) {
+    this.io = new Server(httpServer, { transports: config.transports });
     this.io.on("connection", (socket) => {
       socket.on("initialize", (data) => this.onPlayerInitialize(socket, data));
       socket.on("disconnect", () => this.onPlayerDisconnected(socket));
