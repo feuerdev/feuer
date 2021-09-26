@@ -1,4 +1,3 @@
-import { Socket } from "socket.io";
 
 import Vector2 from "../../shared/vector2";
 import * as Util from "../../shared/util";
@@ -10,6 +9,7 @@ import Selection from "./selection";
 import ClientWorld from "./clientworld";
 import Renderer, { RendererListener } from "./renderer";
 import Hex from "../../shared/hex";
+import { Socket } from "socket.io-client";
 
 /**
  * Client side game logic

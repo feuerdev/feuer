@@ -1,6 +1,5 @@
 
-import * as io from "./lib/socket.io.min";
-import { Socket } from "../../node_modules/@types/socket.io";
+import  { io, Socket } from "socket.io-client"
 
 export interface ConnectionListener {
   onDisconnected?(socket: Socket);
@@ -15,7 +14,7 @@ export default class Connection {
   private listeners: ConnectionListener[] = [];
 
   constructor(ip, transports) {
-    this.socket = io.connect(ip, { transports: transports });
+    this.socket = io(ip, { transports: transports });
     this.socket.on("connect", () => this.onConnected());
     this.socket.on("disconnect", () => this.onDisconnected);
   }
