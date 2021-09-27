@@ -1,12 +1,6 @@
 {
+    "extends": "./tsconfig",
     "compilerOptions": {
-        "module": "commonjs",
-        "sourceMap": true,
-        "watch": false,
-        "target": "es6",
-        "lib": ["es6", "dom"],
-        "resolveJsonModule": true,
-        "allowSyntheticDefaultImports": true,
-        "esModuleInterop": true
+        "watch": false
     }
 }
