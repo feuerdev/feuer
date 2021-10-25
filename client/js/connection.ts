@@ -1,64 +1,61 @@
-
-import  { io, Socket } from "socket.io-client"
+import { io, Socket } from "socket.io-client"
 
 export interface ConnectionListener {
-  onDisconnected?(socket: Socket);
-  onConnected?(socket: Socket);
-  onSetup?(socket: Socket);
+  onDisconnected?(socket: Socket)
+  onConnected?(socket: Socket)
+  onSetup?(socket: Socket)
 }
 
 export default class Connection {
+  private readonly socket: Socket
 
-  private readonly socket: Socket;
-
-  private listeners: ConnectionListener[] = [];
+  private listeners: ConnectionListener[] = []
 
   constructor(ip, transports) {
-    this.socket = io(ip, { transports: transports });
-    this.socket.on("connect", () => this.onConnected());
-    this.socket.on("disconnect", () => this.onDisconnected);
+    this.socket = io(ip, { transports: transports })
+    this.socket.on("connect", () => this.onConnected())
+    this.socket.on("disconnect", () => this.onDisconnected)
   }
 
   private onConnected() {
-    const self = this;
+    const self = this
     function waitForUid() {
       if (currentUid) {
         for (let listener of self.listeners) {
-          listener.onSetup(self.socket);
-          listener.onConnected(self.socket);
+          listener.onSetup(self.socket)
+          listener.onConnected(self.socket)
         }
-        self.socket.emit("initialize", currentUid);
+        self.socket.emit("initialize", currentUid)
       } else {
-        console.log("uid not set yet. trying again...");
-        setTimeout(waitForUid, 300);
+        console.log("uid not set yet. trying again...")
+        setTimeout(waitForUid, 300)
       }
     }
-    waitForUid();
-    
+    waitForUid()
   }
 
   private onDisconnected() {
     for (let listener of this.listeners) {
-      listener.onDisconnected(this.socket);
+      listener.onDisconnected(this.socket)
     }
   }
 
-  public send(tag:string, data:any) {
-    if(this.socket) {
-      this.socket.emit(tag, data);
+  public send(tag: string, data: any) {
+    if (this.socket) {
+      this.socket.emit(tag, data)
     }
   }
 
   public addListener(listener: ConnectionListener) {
-    this.listeners.push(listener);
+    this.listeners.push(listener)
   }
 
   public removeListener(listener: ConnectionListener) {
-    const index = this.listeners.indexOf(listener);
+    const index = this.listeners.indexOf(listener)
     if (index > -1) {
-      this.listeners.splice(index, 1);
+      this.listeners.splice(index, 1)
     }
   }
 }
 
-declare const currentUid;
+declare const currentUid

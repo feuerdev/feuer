@@ -67,7 +67,8 @@
   "buildings": {
     "Town Hall": {
       "id": 0,
-      "levels": [{
+      "levels": [
+        {
           "name": "Campsite",
           "texture": "town_center",
           "hp": 100,
@@ -97,60 +98,68 @@
     },
     "Forester Hut": {
       "id": 1,
-      "levels": [{
-        "name": "Forester Hut",
-        "texture": "forester_hut",
-        "hp": 100,
-        "cost": {
-          "Wood": 100
-        },
-        "resource_generation": {
-          "Wood": 100
+      "levels": [
+        {
+          "name": "Forester Hut",
+          "texture": "forester_hut",
+          "hp": 100,
+          "cost": {
+            "Wood": 100
+          },
+          "resource_generation": {
+            "Wood": 100
+          }
         }
-      }]
+      ]
     },
     "Quarry Hut": {
       "id": 2,
-      "levels": [{
-        "name": "Quarry Hut",
-        "texture": "mine",
-        "hp": 100,
-        "cost": {
-          "Wood": 100,
-          "Gold": 100
-        },
-        "resource_generation": {
-          "Stone": 100
+      "levels": [
+        {
+          "name": "Quarry Hut",
+          "texture": "mine",
+          "hp": 100,
+          "cost": {
+            "Wood": 100,
+            "Gold": 100
+          },
+          "resource_generation": {
+            "Stone": 100
+          }
         }
-      }]
+      ]
     },
     "Iron Hut": {
       "id": 3,
-      "levels": [{
-        "name": "Iron Hut",
-        "texture": "mine",
-        "hp": 100,
-        "cost": {
-          "Wood": 100
-        },
-        "resource_generation": {
-          "Iron": 100
+      "levels": [
+        {
+          "name": "Iron Hut",
+          "texture": "mine",
+          "hp": 100,
+          "cost": {
+            "Wood": 100
+          },
+          "resource_generation": {
+            "Iron": 100
+          }
         }
-      }]
+      ]
     },
     "Gold Mine": {
       "id": 4,
-      "levels": [{
-        "name": "Gold Hut",
-        "texture": "mine",
-        "hp": 100,
-        "cost": {
-          "Wood": 100
-        },
-        "resource_generation": {
-          "Gold": 100
+      "levels": [
+        {
+          "name": "Gold Hut",
+          "texture": "mine",
+          "hp": 100,
+          "cost": {
+            "Wood": 100
+          },
+          "resource_generation": {
+            "Gold": 100
+          }
         }
-      }]
+      ]
     }
   }
 }

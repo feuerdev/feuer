@@ -1,38 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="css/base.css" />
+    <link rel="icon" type="image/x-icon" href="img/favicon.png" />
+    <title>feuer.io - Login</title>
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" type="text/css" href="css/base.css">
-	<link rel="icon" type="image/x-icon" href="img/favicon.png">
-  <title>feuer.io - Login</title>
-</head>
-
-<body class="base-bg">
-  <div class="center-container">
-    <div class="center-content base-box">
-      <span class="loading hidden">loading...</span>
-      <div class="image">
-        <img src="img/login_title.png" alt="">
+  <body class="base-bg">
+    <div class="center-container">
+      <div class="center-content base-box">
+        <span class="loading hidden">loading...</span>
+        <div class="image">
+          <img src="img/login_title.png" alt="" />
+        </div>
+        <h1>feuer.io</h1>
+        <form id="login" method="POST" action="/login">
+          <input
+            class="base"
+            id="email"
+            type="text"
+            name="email"
+            placeholder="E-mail"
+          />
+          <input
+            class="base"
+            id="password"
+            type="password"
+            name="password"
+            placeholder="Password"
+          />
+          <input class="base" type="submit" value="Play!" />
+          <div class="or">OR</div>
+          <button
+            class="base"
+            onclick="location.href='/register';"
+            id="regbutton"
+            type="button"
+          >
+            Register
+          </button>
+          <button class="base" onclick="onGuestClicked()" type="button">
+            Play as Guest!
+          </button>
+        </form>
       </div>
-      <h1>feuer.io</h1>
-      <form id="login" method="POST" action="/login">
-        <input class="base" id="email" type="text" name="email" placeholder="E-mail">
-        <input class="base"id="password" type="password" name="password" placeholder="Password">
-        <input class="base"type="submit" value="Play!">
-        <div class="or">OR</div>
-        <button class="base" onclick="location.href='/register';" id="regbutton" type="button">Register</button>
-        <button class="base" onclick="onGuestClicked()" type="button">Play as Guest!</button>
-      </form>
     </div>
-  </div>
 
-
-  <script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-auth.js"></script>
-  <script type="application/javascript" src="js/web/firebase.js"></script>
-  <script type="application/javascript" src="js/web/login.js"></script>
-</body>
-
+    <script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-auth.js"></script>
+    <script type="application/javascript" src="js/web/firebase.js"></script>
+    <script type="application/javascript" src="js/web/login.js"></script>
+  </body>
 </html>
