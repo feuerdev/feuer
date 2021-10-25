@@ -40,9 +40,8 @@ export default class Webserver {
     private app = express();
     private httpServer: http.Server = http.createServer(this.app);
 
-    public gameserver:GameServer;
-
-    constructor() {
+    constructor(gameserver: GameServer) {
+        this.app.set("gameserver", gameserver);
         this.app.engine("hbs", express_handlebars({ extname: ".hbs", defaultLayout: null }));
         this.app.set("views", path.join(directory_client, "views"));
         this.app.set("view engine", "hbs");
@@ -67,7 +66,6 @@ export default class Webserver {
 
     run() {
         this.httpServer.listen(process.env.PORT || config.port);
-        this.app.set("gameserver", this.gameserver);
     }
 
     public getHttpServer() {
