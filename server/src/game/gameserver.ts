@@ -25,8 +25,6 @@ import Battle from "./objects/battle";
 
 export default class GameServer {
 
-  private io: Server;
-
   private socketplayer: {} = {};
   private uidsockets: {} = {};
   private players: Player[] = [];
@@ -44,9 +42,12 @@ export default class GameServer {
   }
 
   listen(httpServer: Http.Server) {
-    this.io = new Server(httpServer, { transports: config.transports });
-    this.io.on("connection", (socket) => {
+    const socketServer = new Server(httpServer, { transports: config.transports });
+    socketServer.on("connection", (socket) => {
       socket.on("initialize", (data) => this.onPlayerInitialize(socket, data));
+      
+      const player = this.getPlayerBySocketId(socket.id)
+
       socket.on("disconnect", () => this.onPlayerDisconnected(socket));
 
       socket.on("request movement", (data) => this.onRequestMovement(socket, data));
