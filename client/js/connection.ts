@@ -1,9 +1,9 @@
 import { io, Socket } from "socket.io-client"
 
 export interface ConnectionListener {
-  onDisconnected?(socket: Socket)
-  onConnected?(socket: Socket)
-  onSetup?(socket: Socket)
+  onDisconnected(socket: Socket): void
+  onConnected(socket: Socket): void
+  onSetup(socket: Socket): void
 }
 
 export default class Connection {
@@ -11,7 +11,7 @@ export default class Connection {
 
   private listeners: ConnectionListener[] = []
 
-  constructor(ip, transports) {
+  constructor(ip: string, transports: string[]) {
     this.socket = io(ip, { transports: transports })
     this.socket.on("connect", () => this.onConnected())
     this.socket.on("disconnect", () => this.onDisconnected)
@@ -58,4 +58,4 @@ export default class Connection {
   }
 }
 
-declare const currentUid
+declare const currentUid: string

@@ -14,11 +14,11 @@ router.get("/", function (req, res) {
 router.post("/", auth.deserializeAuth, function (req, res) {
   const username = req.body.username
   console.log("Registration: Username=" + username)
-
-  if (req.user) {
+  let user = (req as any).user
+  if (user) {
     db.queryWithValues(
       "INSERT INTO users (username, email, uid) VALUES (?, ?, ?)",
-      [username, req.user.email, req.user.uid],
+      [username, user.email, user.uid],
       function (error, results, fields) {
         if (error) {
           console.log(error)

@@ -10,7 +10,7 @@ export interface HudListener {
   onDemolishRequested(id: number): void
   onUpgradeRequested(id: number): void
   onDisbandRequested(id: number): void
-  onConstructionRequested(pos: Hex, type: string)
+  onConstructionRequested(pos: Hex, type: string): void
   onResourceTransfer(id: number, resource: string, amount: number): void
   onUnitAdd(groupId: number, unitId: number): void
   onUnitRemove(groupId: number, unitId: number): void
@@ -25,21 +25,21 @@ export default class Hud {
 
   private divHud = document.getElementById("hud") as HTMLElement
 
-  private posBefore: Vector2
-  private posFinal: Vector2
-  public world: ClientWorld
-  public selection: Selection
+  private posBefore?: Vector2
+  private posFinal?: Vector2
+  public world?: ClientWorld
+  public selection?: Selection
 
   private draggables: HTMLElement[] = []
 
   private templateGroup = Handlebars.compile(
-    this.divHud.querySelector("#template-group").innerHTML
+    this.divHud.querySelector("#template-group")?.innerHTML
   )
   private templateTile = Handlebars.compile(
-    this.divHud.querySelector("#template-tile").innerHTML
+    this.divHud.querySelector("#template-tile")?.innerHTML
   )
   private templateBuilding = Handlebars.compile(
-    this.divHud.querySelector("#template-building").innerHTML
+    this.divHud.querySelector("#template-building")?.innerHTML
   )
 
   constructor() {
@@ -51,7 +51,7 @@ export default class Hud {
           ;(el as HTMLElement).style.display = "none"
         }
       })
-      el.querySelector("header").onmousedown = (event) =>
+      el.querySelector("header")!.onmousedown = (event) =>
         this.onDragMouseDown(event, el as HTMLElement)
     })
   }
@@ -61,13 +61,13 @@ export default class Hud {
     //Setup closing
     ;(div.querySelector("header > button") as HTMLElement).onclick = () => {
       div.style.display = "none"
-      this.selection.clearSelection()
+      this.selection?.clearSelection()
     }
 
     //Setup data objects
-    let group = this.world.getGroup(this.selection.selectedGroup)
-    let tile = this.world.getTile(group.pos)
-    let resources = []
+    let group = this.world?.getGroup(this.selection!.selectedGroup!)
+    let tile = this.world?.getTile(group.pos)
+    let resources: any = []
     union(Object.keys(tile.resources), Object.keys(group.resources)).forEach(
       (key) => {
         let valueTile = tile.resources[key]
@@ -79,7 +79,7 @@ export default class Hud {
     )
 
     //Populate template
-    div.querySelector(".hud-content").innerHTML = this.templateGroup({
+    div.querySelector(".hud-content")!.innerHTML = this.templateGroup({
       group: group,
       resources: resources,
       units_tile: tile.units,
@@ -151,20 +151,20 @@ export default class Hud {
     //Setup closing
     ;(div.querySelector("header > button") as HTMLElement).onclick = () => {
       div.style.display = "none"
-      this.selection.clearSelection()
+      this.selection!.clearSelection()
     }
 
     //Setup data objects
-    let tile = this.world.getTile(this.selection.selectedHex)
-    let resources = []
+    let tile = this.world!.getTile(this.selection!.selectedHex!)
+    let resources: any[] = []
     Object.keys(tile.resources).forEach((res) => {
       let value = tile.resources[res]
       if (value > 0) {
         resources.push({ name: res, value: value })
       }
     })
-    let buildings = this.world.getBuildings(tile.hex)
-    let groups = this.world.getGroups(tile.hex)
+    let buildings = this.world!.getBuildings(tile.hex)
+    let groups = this.world!.getGroups(tile.hex)
     let constructions
     if (buildings.length || groups.length) {
       constructions = Rules.buildings
@@ -173,7 +173,7 @@ export default class Hud {
     }
 
     //Populate template
-    div.querySelector(".hud-content").innerHTML = this.templateTile({
+    div.querySelector(".hud-content")!.innerHTML = this.templateTile({
       tile: tile,
       resources: resources,
       buildings: buildings,
@@ -186,7 +186,7 @@ export default class Hud {
       ;(
         div.querySelector(`#building-${building.id}-select`) as HTMLElement
       ).onclick = () => {
-        this.selection.selectBuilding(building.id)
+        this.selection!.selectBuilding(building.id)
         this.showBuildingSelection()
         this.update()
       }
@@ -194,14 +194,14 @@ export default class Hud {
     for (let group of groups) {
       ;(div.querySelector(`#group-${group.id}-select`) as HTMLElement).onclick =
         () => {
-          this.selection.selectGroup(group.id)
+          this.selection!.selectGroup(group.id)
           this.showGroupSelection()
           this.update()
         }
     }
     if (constructions) {
       for (let k of Object.keys(constructions)) {
-        let construction = constructions[k]
+        let construction: any = constructions[k as keyof typeof constructions]
         ;(
           div.querySelector(`#construct-${construction.id}`) as HTMLElement
         ).onclick = () => {
@@ -218,15 +218,18 @@ export default class Hud {
     //Setup closing
     ;(div.querySelector("header > button") as HTMLElement).onclick = () => {
       div.style.display = "none"
-      this.selection.clearSelection()
+      this.selection!.clearSelection()
     }
 
     //Setup data objects
-    let building = this.world.getBuilding(this.selection.selectedBuilding)
-    let upgrade = Rules.buildings[building.type].levels[building.level + 1]
+    let building = this.world!.getBuilding(this.selection!.selectedBuilding!)
+    let upgrade =
+      Rules.buildings[building.type as keyof typeof Rules.buildings].levels[
+        building.level + 1
+      ]
 
     //Populate template
-    div.querySelector(".hud-content").innerHTML = this.templateBuilding({
+    div.querySelector(".hud-content")!.innerHTML = this.templateBuilding({
       building: building,
       upgrade: upgrade,
     })
@@ -244,11 +247,11 @@ export default class Hud {
   }
 
   update() {
-    if (this.selection.isGroup()) {
+    if (this.selection!.isGroup()) {
       this.setupGroupSelection()
-    } else if (this.selection.isHex()) {
+    } else if (this.selection!.isHex()) {
       this.setupTileSelection()
-    } else if (this.selection.isBuilding()) {
+    } else if (this.selection!.isBuilding()) {
       this.setupBuildingSelection()
     }
   }
@@ -280,8 +283,8 @@ export default class Hud {
   }
 
   //Draggables
-  onDragMouseDown(event, element: HTMLElement) {
-    let e = event || window.event
+  onDragMouseDown(event: MouseEvent, element: HTMLElement) {
+    let e = event || (window.event as MouseEvent)
     e.preventDefault()
     this.posBefore = new Vector2(e.clientX, e.clientY)
 
@@ -299,13 +302,13 @@ export default class Hud {
     document.onmousemove = null
   }
 
-  onDragMoved(event, element) {
-    let e = event || window.event
+  onDragMoved(event: MouseEvent, element: HTMLElement) {
+    let e = event || (window.event as MouseEvent)
     e.preventDefault()
 
     this.posFinal = new Vector2(
-      this.posBefore.x - e.clientX,
-      this.posBefore.y - e.clientY
+      this.posBefore!.x - e.clientX,
+      this.posBefore!.y - e.clientY
     )
     this.posBefore = new Vector2(e.clientX, e.clientY)
 
