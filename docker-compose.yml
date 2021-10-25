@@ -1,0 +1,18 @@
+version: "3.5"
+services:
+  feuer:
+    build: .
+    image: "feuer_${ENVIRONMENT}"
+    ports:
+      - 5000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.feuer_${ENVIRONMENT}.rule=Host(${HOST})"
+      - "traefik.http.routers.feuer_${ENVIRONMENT}.entrypoints=websecure"
+      - "traefik.http.routers.feuer_${ENVIRONMENT}.tls.certresolver=letsencrypt"
+    networks:
+      - jnet
+networks:
+  jnet:
+    external:
+      name: jnet
