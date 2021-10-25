@@ -129,19 +129,19 @@ export default class GameServer {
   }
 
   //Loops
-  update(deltaFactor) {
+  update(deltaFactor: number) {
     //Group Movement
     for (let i = 0; i < this.world.groups.length; i++) {
-      const group: Group = this.world.groups[i]
+      const group: Group = this.world.groups[i]!
       if (group.targetHexes.length > 0) {
-        let currentTile = this.world.tiles[group.pos.hash()]
+        let currentTile = this.world.tiles[group.pos.hash()]!
         group.movementStatus +=
           group.speed * currentTile.movementFactor * deltaFactor * 0.1 //TODO calculate correct movementcost
         if (group.movementStatus > 100) {
           //Movement!
           currentTile.removeSpot(group.id)
-          group.pos = group.targetHexes.splice(0, 1)[0]
-          this.world.tiles[group.pos.hash()].addSpot(
+          group.pos = group.targetHexes.splice(0, 1)[0]!
+          this.world.tiles[group.pos.hash()]!.addSpot(
             group.getTexture(),
             group.id
           )
@@ -163,7 +163,7 @@ export default class GameServer {
     //Battles
     let i = this.world.battles.length
     while (i--) {
-      let battle = this.world.battles[i]
+      let battle = this.world.battles[i]!
 
       battle.aDefender.hp -=
         battle.aAttacker.attack + Math.round(Math.random() * 10)

@@ -15,9 +15,9 @@ export default class Renderer {
 
   private loader: PIXI.Loader
   private p_renderer: PIXI.Renderer
-  public viewport: Viewport
+  public viewport?: Viewport
   public layout: Layout
-  public selection: Selection
+  public selection?: Selection
 
   static GLOWFILTER = new GlowFilter({ distance: 15, outerStrength: 2 })
 
@@ -40,7 +40,9 @@ export default class Renderer {
 
     window.addEventListener("resize", () => {
       this.p_renderer.resize(window.innerWidth, window.innerHeight)
-      this.viewport.dirty = true
+      if (this.viewport) {
+        this.viewport.dirty = true
+      }
     })
 
     this.loader = PIXI.Loader.shared
@@ -106,7 +108,7 @@ export default class Renderer {
       .decelerate()
 
     PIXI.Ticker.shared.add(() => {
-      if (this.viewport.dirty) {
+      if (this.viewport?.dirty) {
         this.p_renderer.render(this.viewport)
         this.viewport.dirty = false
       }
@@ -128,7 +130,7 @@ export default class Renderer {
     this.listeners.forEach((l) => l.onRendererLoaded())
   }
 
-  updateScenegraph(tile) {
+  updateScenegraph(tile: any) {
     let hex: Hex = new Hex(tile.hex.q, tile.hex.r, tile.hex.s)
 
     let corners = this.layout.polygonCorners(hex)
@@ -139,8 +141,8 @@ export default class Renderer {
 
     let tint = tile.visible ? 0xdddddd : 0x555555
     if (
-      this.selection.isHex() &&
-      Hex.equals(this.selection.selectedHex, tile.hex)
+      this.selection?.isHex() &&
+      Hex.equals(this.selection.selectedHex!, tile.hex)
     ) {
       tile.visible ? (tint = 0xffffff) : (tint += 0x333333)
     }
@@ -148,8 +150,8 @@ export default class Renderer {
     let texture = this.getTerrainTexture(tile.height)
     let img = new PIXI.Sprite(texture)
     img.tint = tint
-    img.x = corners[3].x + padding //obere linke ecke
-    img.y = corners[3].y - this.layout.size.y / 2 + padding //obere linke ecke- halbe höhe
+    img.x = corners[3]!.x + padding //obere linke ecke
+    img.y = corners[3]!.y - this.layout.size.y / 2 + padding //obere linke ecke- halbe höhe
     img.width = this.layout.size.x * Math.sqrt(3) - padding
     img.height = this.layout.size.y * 2 - padding
 
@@ -158,66 +160,66 @@ export default class Renderer {
     for (let i = 0; i < tile.environmentSpots.length; i++) {
       let spot = tile.environmentSpots[i]
       let texture = spot.texture
-      let img = new PIXI.Sprite(this.loader.resources[texture].texture)
+      let img = new PIXI.Sprite(this.loader.resources[texture]!.texture)
       let pos = spot.pos
       img.x = this.layout.hexToPixel(hex).x + pos.x
       img.y = this.layout.hexToPixel(hex).y + pos.y
       img.tint = tint
       img.name = spot.id
       if (
-        this.selection.isBuilding() &&
+        this.selection?.isBuilding() &&
         this.selection.selectedBuilding === spot.id
       ) {
         img.filters = [Renderer.GLOWFILTER]
       }
-      if (this.selection.selectedGroup === spot.id) {
+      if (this.selection?.selectedGroup === spot.id) {
         img.filters = [Renderer.GLOWFILTER]
       }
       container.addChild(img)
     }
 
-    let old = this.viewport.getChildByName(hex.hash())
+    let old = this.viewport?.getChildByName(hex.hash())
     if (old) {
-      this.viewport.removeChild(old)
+      this.viewport?.removeChild(old)
     }
-    this.viewport.addChild(container)
-    this.viewport.dirty = true
+    this.viewport?.addChild(container)
+    this.viewport!.dirty = true
   }
 
   center(pos: any) {
     let x = this.layout.hexToPixel(pos).x
     let y = this.layout.hexToPixel(pos).y
-    this.viewport.center = new PIXI.Point(x, y)
+    this.viewport!.center = new PIXI.Point(x, y)
   }
 
-  getTerrainTexture(height) {
+  getTerrainTexture(height: number) {
     if (height < Rules.settings.map_level_water_deep) {
-      return this.loader.resources["terrain_water_deep"].texture
+      return this.loader.resources["terrain_water_deep"]!.texture
     } else if (height < Rules.settings.map_level_water_shallow) {
-      return this.loader.resources["terrain_water_shallow"].texture
+      return this.loader.resources["terrain_water_shallow"]!.texture
     } else if (height < Rules.settings.map_level_sand) {
-      return this.loader.resources["terrain_sand"].texture
+      return this.loader.resources["terrain_sand"]!.texture
     } else if (height < Rules.settings.map_level_sand_grassy) {
-      return this.loader.resources["terrain_sand_grassy"].texture
+      return this.loader.resources["terrain_sand_grassy"]!.texture
     } else if (height < Rules.settings.map_level_grass_sandy) {
-      return this.loader.resources["terrain_grass_sandy"].texture
+      return this.loader.resources["terrain_grass_sandy"]!.texture
     } else if (height < Rules.settings.map_level_grass) {
-      return this.loader.resources["terrain_grass"].texture
+      return this.loader.resources["terrain_grass"]!.texture
     } else if (height < Rules.settings.map_level_grass_dirty) {
-      return this.loader.resources["terrain_grass_dirty"].texture
+      return this.loader.resources["terrain_grass_dirty"]!.texture
     } else if (height < Rules.settings.map_level_dirt_grassy) {
-      return this.loader.resources["terrain_dirt_grassy"].texture
+      return this.loader.resources["terrain_dirt_grassy"]!.texture
     } else if (height < Rules.settings.map_level_dirt) {
-      return this.loader.resources["terrain_dirt"].texture
+      return this.loader.resources["terrain_dirt"]!.texture
     } else if (height < Rules.settings.map_level_dirt_stony) {
-      return this.loader.resources["terrain_dirt_stony"].texture
+      return this.loader.resources["terrain_dirt_stony"]!.texture
     } else if (height < Rules.settings.map_level_stone_dirty) {
-      return this.loader.resources["terrain_stone_dirty"].texture
+      return this.loader.resources["terrain_stone_dirty"]!.texture
     } else if (height < Rules.settings.map_level_stone) {
-      return this.loader.resources["terrain_stone"].texture
+      return this.loader.resources["terrain_stone"]!.texture
     } else if (height <= Rules.settings.map_level_ice) {
-      return this.loader.resources["terrain_ice"].texture
-    } else return this.loader.resources["terrain_stone"].texture
+      return this.loader.resources["terrain_ice"]!.texture
+    } else return this.loader.resources["terrain_stone"]!.texture
   }
   addListener(listener: RendererListener) {
     this.listeners.push(listener)
@@ -231,4 +233,4 @@ export default class Renderer {
   }
 }
 
-declare const currentUid
+declare const currentUid: string

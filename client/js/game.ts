@@ -16,16 +16,16 @@ import { Socket } from "socket.io-client"
 export default class Game
   implements ConnectionListener, HudListener, RendererListener
 {
-  private config
+  private config: any
   private selection: Selection = new Selection()
   private hud: Hud = new Hud()
   private renderer: Renderer = new Renderer()
-  private connection: Connection
+  private connection?: Connection
   private cWorld: ClientWorld = new ClientWorld()
 
   private initialFocusSet = false
 
-  constructor(config) {
+  constructor(config: any) {
     this.config = config
     this.renderer.selection = this.selection
     this.hud.world = this.cWorld
@@ -46,16 +46,16 @@ export default class Game
       (event) => {
         switch (event.keyCode) {
           case 187:
-            this.renderer.viewport.zoom(-200, true)
+            this.renderer.viewport?.zoom(-200, true)
             break //+
           case 189:
-            this.renderer.viewport.zoom(200, true)
+            this.renderer.viewport?.zoom(200, true)
             break //-
           case 191:
-            this.renderer.viewport.setZoom(1, true)
+            this.renderer.viewport?.setZoom(1, true)
             break //#
           case 82:
-            this.renderer.viewport.center = new PIXI.Point(0, 0)
+            this.renderer.viewport!.center = new PIXI.Point(0, 0)
             break //R
           default:
             break
@@ -71,7 +71,7 @@ export default class Game
     this.connection = new Connection(this.config.ip, this.config.transports)
     this.connection.addListener(this)
 
-    this.renderer.viewport.on("clicked", (click) => {
+    this.renderer.viewport?.on("clicked", (click) => {
       let p = click.world
       let v = new Vector2(p.x, p.y)
       switch (click.event.data.button) {
@@ -129,7 +129,7 @@ export default class Game
         case 2: //Right
           let clickedHex = this.renderer.layout.pixelToHex(v).round()
           if (clickedHex) {
-            this.connection.send("request movement", {
+            this.connection?.send("request movement", {
               selection: this.selection.selectedGroup,
               target: clickedHex,
             })
@@ -140,31 +140,31 @@ export default class Game
   }
 
   onConstructionRequested(pos: Hex, type: string) {
-    this.connection.send("request construction", { pos: pos, type: type })
+    this.connection?.send("request construction", { pos: pos, type: type })
   }
 
   onDemolishRequested(id: number): void {
-    this.connection.send("request demolish", { buildingId: id })
+    this.connection?.send("request demolish", { buildingId: id })
   }
   onUpgradeRequested(id: number): void {
-    this.connection.send("request upgrade", { buildingId: id })
+    this.connection?.send("request upgrade", { buildingId: id })
   }
 
   onUnitAdd(groupId: number, unitId: number) {
-    this.connection.send("request unit add", {
+    this.connection?.send("request unit add", {
       groupId: groupId,
       unitId: unitId,
     })
   }
   onUnitRemove(groupId: number, unitId: number) {
-    this.connection.send("request unit remove", {
+    this.connection?.send("request unit remove", {
       groupId: groupId,
       unitId: unitId,
     })
   }
 
   onResourceTransfer(id: number, resource: string, amount: number): void {
-    this.connection.send("request transfer", {
+    this.connection?.send("request transfer", {
       id: id,
       resource: resource,
       amount: amount,
@@ -172,7 +172,7 @@ export default class Game
   }
 
   onDisbandRequested(id: number): void {
-    this.connection.send("request disband", { id: id })
+    this.connection?.send("request disband", { id: id })
   }
 
   onConnected(socket: Socket) {
@@ -216,7 +216,7 @@ export default class Game
               PlayerRelation.getHash(group.owner, currentUid)
             ] === undefined
           ) {
-            this.connection.send("request relation", {
+            this.connection?.send("request relation", {
               id1: group.owner,
               id2: currentUid,
             })
@@ -252,12 +252,12 @@ export default class Game
   }
 
   startLoading() {
-    document.querySelector(".loading").classList.remove("hidden")
+    document.querySelector(".loading")?.classList.remove("hidden")
   }
 
   stopLoading() {
-    document.querySelector(".loading").classList.add("hidden")
+    document.querySelector(".loading")?.classList.add("hidden")
   }
 }
 
-declare const currentUid
+declare const currentUid: string

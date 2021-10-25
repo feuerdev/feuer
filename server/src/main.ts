@@ -1,6 +1,3 @@
-import * as dotenv from "dotenv"
-dotenv.config()
-
 import config from "./util/config"
 import WebServer from "./web/webserver"
 import GameServer from "./game/gameserver"

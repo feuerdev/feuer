@@ -1,9 +1,9 @@
 import Hex from "../../shared/hex"
 
 export default class Selection {
-  public selectedGroup: number = null
-  public selectedBuilding: number = null
-  public selectedHex: Hex = null
+  public selectedGroup?: number = undefined
+  public selectedBuilding?: number = undefined
+  public selectedHex?: Hex = undefined
 
   isGroup(): boolean {
     return this.selectedGroup !== null
@@ -18,9 +18,9 @@ export default class Selection {
   }
 
   clearSelection(): void {
-    this.selectedBuilding = null
-    this.selectedGroup = null
-    this.selectedHex = null
+    this.selectedBuilding = undefined
+    this.selectedGroup = undefined
+    this.selectedHex = undefined
   }
 
   selectGroup(group: number): void {
