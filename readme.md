@@ -8,7 +8,7 @@ Tech Stack: Node.js, TypeScript, Firebase Auth, MySQL, HTML5, CSS
 - Procedurally Generated Map
 - Hexagonal Tile System
 - Firebase Authentication + Custom MySql Database
-- A* Pathfinding
+- A\* Pathfinding
 - Client/Server code sharing
 - Client Side Dependency Bundling using browserify
 - HTML5 Canvas graphics using pixi.js
