@@ -1,10 +1,10 @@
-import Hex from "../../../shared/hex";
+import Hex from "../../../shared/hex"
 
 export default class Player {
-  public initialized: boolean = false;
-  public uid: string;
-  public name: string;
+  public initialized: boolean = false
+  public uid: string
+  public name: string
 
-  public discoveredHexes:Hex[] = [];
-  public visibleHexes:Hex[] = [];
+  public discoveredHexes: Hex[] = []
+  public visibleHexes: Hex[] = []
 }

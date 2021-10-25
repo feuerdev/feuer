@@ -1,233 +1,236 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html lang="en">
+  <head>
+    <title>feuer.io</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,height=device-height,user-scalable=no"
+    />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/game.css" />
+    <link rel="icon" type="image/x-icon" href="img/favicon.png" />
+  </head>
 
-<head>
-	<title>feuer.io</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width,height=device-height,user-scalable=no">
-	<link rel="stylesheet" href="css/base.css">
-	<link rel="stylesheet" href="css/game.css">
-	<link rel="icon" type="image/x-icon" href="img/favicon.png">
-</head>
-
-<body>
-	<div class="center-container absolute loading">
-    <div class="center-content base-box">
-      <span class="loading ">loading...</span>
-			<div class="image rotate">
-        <img src="img/login_title.png" alt="">
+  <body>
+    <div class="center-container absolute loading">
+      <div class="center-content base-box">
+        <span class="loading">loading...</span>
+        <div class="image rotate">
+          <img src="img/login_title.png" alt="" />
+        </div>
       </div>
     </div>
-  </div>
 
-	<canvas id="canvas-map" oncontextmenu="return false"></canvas>
-	
-	<main id="hud">
-		<aside id="hud-selection-building">
-			<header>
-				<h3>Selection</h3>
-				<button class="close">&times;</button>
-			</header>
-			<div class="hud-content"></div>
-			<script id="template-building" type="text/x-handlebars-template">
-				<section id="info">
-					<div class="section-header">Information</div>
-					<div class="two-columns">
-						<div>Name</div>
-						<div>{{building.name}}</div>
-						<div>Level</div>
-						<div>{{building.level}}</div>
-						<div>Spotting</div>
-						<div>{{building.spotting}}</div>
-						<div>HP</div>
-						<div>{{building.hp}}</div>
-					</div>
-					<section>
-						<div class="section-header">Resource Gathering</div>
-						<div class="two-columns">
-							{{#each building.resourceGeneration}}
-								<div>{{@key}}</div>
-								<div>{{this}}</div>
-							{{/each}}
-						</div>
-					</section>
-					{{#if upgrade}}
-					<section id="upgrade">
-						<div class="section-header">Upgrade</div>
-						<div class="two-columns">
-							<div>Name</div>
-							<div>{{upgrade.name}}</div>
-							<div>Spotting</div>
-							<div>{{upgrade.spotting}}</div>
-							<div>HP</div>
-							<div>{{upgrade.hp}}</div>
-						</div>
-						<div>Cost</div>
-						<div class="two-columns">
-							{{#each upgrade.cost}}
-								<div>{{@key}}</div>
-								<div>{{this}}</div>
-							{{/each}}
-						</div>
-					</div>
-						<button id="upgrade">Upgrade</button>
-					</section>
-					{{/if}}
-					<section id="demolish">
-						<button id="demolish">Demolish</button>
-					</section>
-				</section>
-			</script>
-		</aside>
-		<aside id="hud-selection-tile">
-			<header>
-				<h3>Selection</h3>
-				<button class="close">&times;</button>
-			</header>
-			<div class="hud-content"></div>
-			<script id="template-tile" type="text/x-handlebars-template">
-				<section id="buildings">
-					{{#if buildings.length}}
-					<div class="section-header">Buildings</div>
-					{{/if}}
-					{{#each buildings}}
-					<div>
-						<span>Name:</span>
-						<span>{{name}}({{id}})</span>
-						<button id="building-{{id}}-select">Details</button>
-					</div>
-					{{/each}}
-				</section>
-				<section id="groups">
-					{{#if groups.length}}
-						<div class="section-header">Groups</div>
-					{{/if}}
-					{{#each groups}}
-					<div>
-						<span>Id:</span>
-						<span>{{id}}</span>
-						<button id="group-{{id}}-select">Details</button>
-					</div>
-					{{/each}}
-				</section>
-				<section id="resources-tile">
-					{{#if resources.length}}
-					<div class="section-header">Resources</div>
-					{{/if}}
-					<div class="two-columns">
-						{{#each resources}}
-							<div>{{name}}</div>
-							<div>{{value}}</div>
-						{{/each}}			
-					</div>
-				</section>
-				<section id="info">
-					<div class="section-header">Information</div>
-					<div class="two-columns">
-						<div>Position</div>
-						<div>{{tile.hex.q}}:{{tile.hex.r}}</div>
-						<div>Height</div>
-						<div>{{twodigits tile.height}}</div>
-						<div>Forestation</div>
-						<div>{{twodigits tile.forestation}}</div>
-					</div>
-				</section>
-				{{#if constructions}}
-				<section id="construction">
-					<div class="section-header">Construction</div>
-					{{#each constructions}}
-						<div class="container">
-							<img src="img/{{this.levels.[0].texture}}.png">
-							<div>{{this.levels.[0].name}}</div>
-							<div>
-								{{#each this.levels.[0].cost}}
-									{{@key}}:{{this}}</br>
-								{{/each}}
-							</div>
-							<button id="construct-{{this.id}}">Construct</button>
-						</div>
-					{{/each}}
-				</section>
-				{{/if}}
-			</script>
-		</aside>
-		<aside id="hud-selection-group">
-			<header>
-				<h3>Selection</h3>
-				<button class="close">&times;</button>
-			</header>
-			<div class="hud-content"></div>
-			<script id="template-group" type="text/x-handlebars-template">
-				<section id="stats">
-					<div class="section-header">Information</div>
-					<div class="two-columns">
-						<div>ID:</div>
-						<div>{{group.id}}</div>
-						<div>Speed:</div>
-						<div>{{group.speed}}</div>
-						<div>Attack:</div>
-						<div>{{group.attack}}</div>
-						<div>Spotting:</div>
-						<div>{{group.spottingDistance}}</div>
-						<div>Movement:</div>
-						<div>{{#if group.movementStatus}}{{group.movementStatus}}%{{else}}Resting{{/if}}</div>
-					</div>
-				</section>
-				<section id="resources-group">
-					{{#if resources.length}}
-						<div class="section-header">Resources</div>
-					{{/if}}
-					<div class="resources-group">
-						{{#if resources.length}}
-							<span>Resource</span>
-							<span>Group</span>
-							<span id="transfer">Transfer</span>
-							<span>Tile</span>
-						{{/if}}
-						{{#each resources}}
-							<span>{{name}}</span>
-							<span>{{group}}</span>
-							<button id="{{name}}-minus-one">&lt;1</button>
-							<button id="{{name}}-minus-ten">&lt;10</button>
-							<button id="{{name}}-minus-hundred">&lt;100</button>
-							<button id="{{name}}-plus-hundred">100&gt;</button>
-							<button id="{{name}}-plus-ten">10&gt;</button>
-							<button id="{{name}}-plus-one">1&gt;</button>
-							<span>{{tile}}</span>
-						{{/each}}			
-					</div>
-				</section>
-				<section id="units">
-					{{#if group.units.length}}
-						<div class="section-header">Units</div>
-					{{/if}}
-					{{#each group.units}}
-					<div>
-						<span>{{id}}</span>
-						<button id="unit-{{id}}-remove">Release</button>
-					</div>
-					{{/each}}
-					{{#if units_tile.length}}
-						<div class="section-header">Available Units</div>
-					{{/if}}
-					{{#each units_tile}}
-					<div>
-						<span>{{id}}</span>
-						<button id="unit-{{id}}-add">Enlist</button>
-					</div>
-					{{/each}}
-				</section>
-				<section>
-					<button id="disband">Disband</button>
-				</section>
-			</script>
-		</aside>
-	</main>
-	<div id="debug"></div>
-	<script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-app.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-auth.js"></script>
-	<script type="application/javascript" src="js/web/firebase.js"></script>
-	<script type="application/javascript" src="bin/bundle.js"></script>
-</body>
+    <canvas id="canvas-map" oncontextmenu="return false"></canvas>
 
+    <main id="hud">
+      <aside id="hud-selection-building">
+        <header>
+          <h3>Selection</h3>
+          <button class="close">&times;</button>
+        </header>
+        <div class="hud-content"></div>
+        <script id="template-building" type="text/x-handlebars-template">
+          <section id="info">
+          	<div class="section-header">Information</div>
+          	<div class="two-columns">
+          		<div>Name</div>
+          		<div>{{building.name}}</div>
+          		<div>Level</div>
+          		<div>{{building.level}}</div>
+          		<div>Spotting</div>
+          		<div>{{building.spotting}}</div>
+          		<div>HP</div>
+          		<div>{{building.hp}}</div>
+          	</div>
+          	<section>
+          		<div class="section-header">Resource Gathering</div>
+          		<div class="two-columns">
+          			{{#each building.resourceGeneration}}
+          				<div>{{@key}}</div>
+          				<div>{{this}}</div>
+          			{{/each}}
+          		</div>
+          	</section>
+          	{{#if upgrade}}
+          	<section id="upgrade">
+          		<div class="section-header">Upgrade</div>
+          		<div class="two-columns">
+          			<div>Name</div>
+          			<div>{{upgrade.name}}</div>
+          			<div>Spotting</div>
+          			<div>{{upgrade.spotting}}</div>
+          			<div>HP</div>
+          			<div>{{upgrade.hp}}</div>
+          		</div>
+          		<div>Cost</div>
+          		<div class="two-columns">
+          			{{#each upgrade.cost}}
+          				<div>{{@key}}</div>
+          				<div>{{this}}</div>
+          			{{/each}}
+          		</div>
+          	</div>
+          		<button id="upgrade">Upgrade</button>
+          	</section>
+          	{{/if}}
+          	<section id="demolish">
+          		<button id="demolish">Demolish</button>
+          	</section>
+          </section>
+        </script>
+      </aside>
+      <aside id="hud-selection-tile">
+        <header>
+          <h3>Selection</h3>
+          <button class="close">&times;</button>
+        </header>
+        <div class="hud-content"></div>
+        <script id="template-tile" type="text/x-handlebars-template">
+          <section id="buildings">
+          	{{#if buildings.length}}
+          	<div class="section-header">Buildings</div>
+          	{{/if}}
+          	{{#each buildings}}
+          	<div>
+          		<span>Name:</span>
+          		<span>{{name}}({{id}})</span>
+          		<button id="building-{{id}}-select">Details</button>
+          	</div>
+          	{{/each}}
+          </section>
+          <section id="groups">
+          	{{#if groups.length}}
+          		<div class="section-header">Groups</div>
+          	{{/if}}
+          	{{#each groups}}
+          	<div>
+          		<span>Id:</span>
+          		<span>{{id}}</span>
+          		<button id="group-{{id}}-select">Details</button>
+          	</div>
+          	{{/each}}
+          </section>
+          <section id="resources-tile">
+          	{{#if resources.length}}
+          	<div class="section-header">Resources</div>
+          	{{/if}}
+          	<div class="two-columns">
+          		{{#each resources}}
+          			<div>{{name}}</div>
+          			<div>{{value}}</div>
+          		{{/each}}
+          	</div>
+          </section>
+          <section id="info">
+          	<div class="section-header">Information</div>
+          	<div class="two-columns">
+          		<div>Position</div>
+          		<div>{{tile.hex.q}}:{{tile.hex.r}}</div>
+          		<div>Height</div>
+          		<div>{{twodigits tile.height}}</div>
+          		<div>Forestation</div>
+          		<div>{{twodigits tile.forestation}}</div>
+          	</div>
+          </section>
+          {{#if constructions}}
+          <section id="construction">
+          	<div class="section-header">Construction</div>
+          	{{#each constructions}}
+          		<div class="container">
+          			<img src="img/{{this.levels.[0].texture}}.png">
+          			<div>{{this.levels.[0].name}}</div>
+          			<div>
+          				{{#each this.levels.[0].cost}}
+          					{{@key}}:{{this}}</br>
+          				{{/each}}
+          			</div>
+          			<button id="construct-{{this.id}}">Construct</button>
+          		</div>
+          	{{/each}}
+          </section>
+          {{/if}}
+        </script>
+      </aside>
+      <aside id="hud-selection-group">
+        <header>
+          <h3>Selection</h3>
+          <button class="close">&times;</button>
+        </header>
+        <div class="hud-content"></div>
+        <script id="template-group" type="text/x-handlebars-template">
+          <section id="stats">
+            <div class="section-header">Information</div>
+            <div class="two-columns">
+              <div>ID:</div>
+              <div>{{group.id}}</div>
+              <div>Speed:</div>
+              <div>{{group.speed}}</div>
+              <div>Attack:</div>
+              <div>{{group.attack}}</div>
+              <div>Spotting:</div>
+              <div>{{group.spottingDistance}}</div>
+              <div>Movement:</div>
+              <div>{{#if
+                  group.movementStatus
+                }}{{group.movementStatus}}%{{else}}Resting{{/if}}</div>
+            </div>
+          </section>
+          <section id="resources-group">
+            {{#if resources.length}}
+              <div class="section-header">Resources</div>
+            {{/if}}
+            <div class="resources-group">
+              {{#if resources.length}}
+                <span>Resource</span>
+                <span>Group</span>
+                <span id="transfer">Transfer</span>
+                <span>Tile</span>
+              {{/if}}
+              {{#each resources}}
+                <span>{{name}}</span>
+                <span>{{group}}</span>
+                <button id="{{name}}-minus-one">&lt;1</button>
+                <button id="{{name}}-minus-ten">&lt;10</button>
+                <button id="{{name}}-minus-hundred">&lt;100</button>
+                <button id="{{name}}-plus-hundred">100&gt;</button>
+                <button id="{{name}}-plus-ten">10&gt;</button>
+                <button id="{{name}}-plus-one">1&gt;</button>
+                <span>{{tile}}</span>
+              {{/each}}
+            </div>
+          </section>
+          <section id="units">
+            {{#if group.units.length}}
+              <div class="section-header">Units</div>
+            {{/if}}
+            {{#each group.units}}
+              <div>
+                <span>{{id}}</span>
+                <button id="unit-{{id}}-remove">Release</button>
+              </div>
+            {{/each}}
+            {{#if units_tile.length}}
+              <div class="section-header">Available Units</div>
+            {{/if}}
+            {{#each units_tile}}
+              <div>
+                <span>{{id}}</span>
+                <button id="unit-{{id}}-add">Enlist</button>
+              </div>
+            {{/each}}
+          </section>
+          <section>
+            <button id="disband">Disband</button>
+          </section>
+        </script>
+      </aside>
+    </main>
+    <div id="debug"></div>
+    <script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.8/firebase-auth.js"></script>
+    <script type="application/javascript" src="js/web/firebase.js"></script>
+    <script type="application/javascript" src="bin/bundle.js"></script>
+  </body>
 </html>

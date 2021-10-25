@@ -1,11 +1,11 @@
 export default abstract class GameObject {
-  public owner:string;
-  public id:number;
-  private static idcount:number = 1; //make entity ids start with 1 to be able to differentiate with 0 ids
+  public owner: string
+  public id: number
+  private static idcount: number = 1 //make entity ids start with 1 to be able to differentiate with 0 ids
 
   constructor(owner) {
-    this.owner = owner;
-    this.id = GameObject.idcount++;
+    this.owner = owner
+    this.id = GameObject.idcount++
   }
 }
 
@@ -16,7 +16,7 @@ export interface Spotter {
   /**
    * Returns the number of hexes that Entity can see
    */
-  getSpottingRange():number;
+  getSpottingRange(): number
 }
 
 /**
@@ -26,5 +26,5 @@ export interface Drawable {
   /**
    * Returns the Texture
    */
-  getTexture():string;
+  getTexture(): string
 }

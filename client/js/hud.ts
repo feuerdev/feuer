@@ -1,247 +1,330 @@
-import Vector2 from "../../shared/vector2";
-import * as Handlebars from "handlebars";
-import ClientWorld from "./clientworld";
-import Selection from "./selection";
-import { union } from "../../shared/util";
-import * as Rules from "../../shared/rules.json";
-import Hex from "../../shared/hex";
+import Vector2 from "../../shared/vector2"
+import * as Handlebars from "handlebars"
+import ClientWorld from "./clientworld"
+import Selection from "./selection"
+import { union } from "../../shared/util"
+import * as Rules from "../../shared/rules.json"
+import Hex from "../../shared/hex"
 
 export interface HudListener {
-  onDemolishRequested(id: number): void;
-  onUpgradeRequested(id: number): void;
-  onDisbandRequested(id: number): void;
-  onConstructionRequested(pos: Hex, type:string);
-  onResourceTransfer(id: number, resource: string, amount: number): void;
-  onUnitAdd(groupId: number, unitId: number): void;
-  onUnitRemove(groupId: number, unitId: number): void;
+  onDemolishRequested(id: number): void
+  onUpgradeRequested(id: number): void
+  onDisbandRequested(id: number): void
+  onConstructionRequested(pos: Hex, type: string)
+  onResourceTransfer(id: number, resource: string, amount: number): void
+  onUnitAdd(groupId: number, unitId: number): void
+  onUnitRemove(groupId: number, unitId: number): void
 }
 
-Handlebars.registerHelper('twodigits', function(text) {
-  return text.toFixed(2);
-});
+Handlebars.registerHelper("twodigits", function (text) {
+  return text.toFixed(2)
+})
 
 export default class Hud {
+  private readonly listeners: HudListener[] = []
 
-  private readonly listeners: HudListener[] = [];
+  private divHud = document.getElementById("hud") as HTMLElement
 
-  private divHud = document.getElementById("hud") as HTMLElement;
+  private posBefore: Vector2
+  private posFinal: Vector2
+  public world: ClientWorld
+  public selection: Selection
 
-  private posBefore: Vector2;
-  private posFinal: Vector2;
-  public world: ClientWorld;
-  public selection: Selection;
+  private draggables: HTMLElement[] = []
 
-  private draggables: HTMLElement[] = [];
-
-  private templateGroup = Handlebars.compile(this.divHud.querySelector("#template-group").innerHTML);
-  private templateTile = Handlebars.compile(this.divHud.querySelector("#template-tile").innerHTML);
-  private templateBuilding = Handlebars.compile(this.divHud.querySelector("#template-building").innerHTML);
-
+  private templateGroup = Handlebars.compile(
+    this.divHud.querySelector("#template-group").innerHTML
+  )
+  private templateTile = Handlebars.compile(
+    this.divHud.querySelector("#template-tile").innerHTML
+  )
+  private templateBuilding = Handlebars.compile(
+    this.divHud.querySelector("#template-building").innerHTML
+  )
 
   constructor() {
     //Setup dragging and closing
-    this.divHud.querySelectorAll("#hud > aside").forEach(el => {
-      this.draggables.push(el as HTMLElement);
-      el.querySelectorAll("header > button").forEach(btn => {
-        (btn as HTMLElement).onclick = () => {
-          (el as HTMLElement).style.display = "none"
+    this.divHud.querySelectorAll("#hud > aside").forEach((el) => {
+      this.draggables.push(el as HTMLElement)
+      el.querySelectorAll("header > button").forEach((btn) => {
+        ;(btn as HTMLElement).onclick = () => {
+          ;(el as HTMLElement).style.display = "none"
         }
-      });
-      el.querySelector("header").onmousedown = (event) => this.onDragMouseDown(event, el as HTMLElement);
-    });
+      })
+      el.querySelector("header").onmousedown = (event) =>
+        this.onDragMouseDown(event, el as HTMLElement)
+    })
   }
 
   setupGroupSelection() {
-    let div = this.divHud.querySelector("#hud-selection-group") as HTMLElement;
+    let div = this.divHud.querySelector("#hud-selection-group") as HTMLElement
     //Setup closing
-    (div.querySelector("header > button") as HTMLElement).onclick = () => { div.style.display = "none"; this.selection.clearSelection() };
+    ;(div.querySelector("header > button") as HTMLElement).onclick = () => {
+      div.style.display = "none"
+      this.selection.clearSelection()
+    }
 
     //Setup data objects
-    let group = this.world.getGroup(this.selection.selectedGroup);
-    let tile = this.world.getTile(group.pos);
-    let resources = [];
-    union(Object.keys(tile.resources), Object.keys(group.resources)).forEach(key => {
-      let valueTile = tile.resources[key];
-      let valueGroup = group.resources[key];
-      if (valueTile > 0 || valueGroup > 0) {
-        resources.push({ name: key, tile: valueTile, group: valueGroup });
+    let group = this.world.getGroup(this.selection.selectedGroup)
+    let tile = this.world.getTile(group.pos)
+    let resources = []
+    union(Object.keys(tile.resources), Object.keys(group.resources)).forEach(
+      (key) => {
+        let valueTile = tile.resources[key]
+        let valueGroup = group.resources[key]
+        if (valueTile > 0 || valueGroup > 0) {
+          resources.push({ name: key, tile: valueTile, group: valueGroup })
+        }
       }
-    });
+    )
 
     //Populate template
-    div.querySelector(".hud-content").innerHTML = this.templateGroup({ group: group, resources: resources, units_tile: tile.units });
+    div.querySelector(".hud-content").innerHTML = this.templateGroup({
+      group: group,
+      resources: resources,
+      units_tile: tile.units,
+    })
 
     //Setup listeners
     for (let res of resources) {
-      (div.querySelector(`#${res.name}-plus-one`) as HTMLElement).onclick = () => { this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, 1)) }
-      (div.querySelector(`#${res.name}-minus-one`) as HTMLElement).onclick = () => { this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, -1)) }
-      (div.querySelector(`#${res.name}-plus-ten`) as HTMLElement).onclick = () => { this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, 10)) }
-      (div.querySelector(`#${res.name}-minus-ten`) as HTMLElement).onclick = () => { this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, -10)) }
-      (div.querySelector(`#${res.name}-plus-hundred`) as HTMLElement).onclick = () => { this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, 100)) }
-      (div.querySelector(`#${res.name}-minus-hundred`) as HTMLElement).onclick = () => { this.listeners.forEach((l) => l.onResourceTransfer(group.id, res.name, -100)) }
+      ;(div.querySelector(`#${res.name}-plus-one`) as HTMLElement).onclick =
+        () => {
+          this.listeners.forEach((l) =>
+            l.onResourceTransfer(group.id, res.name, 1)
+          )
+        }
+      ;(div.querySelector(`#${res.name}-minus-one`) as HTMLElement).onclick =
+        () => {
+          this.listeners.forEach((l) =>
+            l.onResourceTransfer(group.id, res.name, -1)
+          )
+        }
+      ;(div.querySelector(`#${res.name}-plus-ten`) as HTMLElement).onclick =
+        () => {
+          this.listeners.forEach((l) =>
+            l.onResourceTransfer(group.id, res.name, 10)
+          )
+        }
+      ;(div.querySelector(`#${res.name}-minus-ten`) as HTMLElement).onclick =
+        () => {
+          this.listeners.forEach((l) =>
+            l.onResourceTransfer(group.id, res.name, -10)
+          )
+        }
+      ;(div.querySelector(`#${res.name}-plus-hundred`) as HTMLElement).onclick =
+        () => {
+          this.listeners.forEach((l) =>
+            l.onResourceTransfer(group.id, res.name, 100)
+          )
+        }
+      ;(
+        div.querySelector(`#${res.name}-minus-hundred`) as HTMLElement
+      ).onclick = () => {
+        this.listeners.forEach((l) =>
+          l.onResourceTransfer(group.id, res.name, -100)
+        )
+      }
     }
 
     for (let unit of group.units) {
-      (div.querySelector(`#unit-${unit.id}-remove`) as HTMLElement).onclick = () => { this.listeners.forEach((l) => l.onUnitRemove(group.id, unit.id)) }
+      ;(div.querySelector(`#unit-${unit.id}-remove`) as HTMLElement).onclick =
+        () => {
+          this.listeners.forEach((l) => l.onUnitRemove(group.id, unit.id))
+        }
     }
     for (let unit of tile.units) {
-      (div.querySelector(`#unit-${unit.id}-add`) as HTMLElement).onclick = () => { this.listeners.forEach((l) => l.onUnitAdd(group.id, unit.id)) }
+      ;(div.querySelector(`#unit-${unit.id}-add`) as HTMLElement).onclick =
+        () => {
+          this.listeners.forEach((l) => l.onUnitAdd(group.id, unit.id))
+        }
     }
 
     //Disband Listener
-    (div.querySelector("#disband") as HTMLElement).onclick = () => {
+    ;(div.querySelector("#disband") as HTMLElement).onclick = () => {
       this.listeners.forEach((l) => l.onDisbandRequested(group.id))
-      div.style.display = "none";
-    };
+      div.style.display = "none"
+    }
   }
 
   setupTileSelection() {
-    let div = this.divHud.querySelector("#hud-selection-tile") as HTMLElement;
+    let div = this.divHud.querySelector("#hud-selection-tile") as HTMLElement
     //Setup closing
-    (div.querySelector("header > button") as HTMLElement).onclick = () => { div.style.display = "none"; this.selection.clearSelection() };
+    ;(div.querySelector("header > button") as HTMLElement).onclick = () => {
+      div.style.display = "none"
+      this.selection.clearSelection()
+    }
 
     //Setup data objects
-    let tile = this.world.getTile(this.selection.selectedHex);
-    let resources = [];
-    Object.keys(tile.resources).forEach(res => {
+    let tile = this.world.getTile(this.selection.selectedHex)
+    let resources = []
+    Object.keys(tile.resources).forEach((res) => {
       let value = tile.resources[res]
-      if(value > 0) {
-        resources.push({name: res, value:value});
+      if (value > 0) {
+        resources.push({ name: res, value: value })
       }
-    });
-    let buildings = this.world.getBuildings(tile.hex);
-    let groups = this.world.getGroups(tile.hex);
-    let constructions;
-    if(buildings.length || groups.length) {
-      constructions = Rules.buildings;
+    })
+    let buildings = this.world.getBuildings(tile.hex)
+    let groups = this.world.getGroups(tile.hex)
+    let constructions
+    if (buildings.length || groups.length) {
+      constructions = Rules.buildings
     } else {
-      constructions = null;
+      constructions = null
     }
 
     //Populate template
-    div.querySelector(".hud-content").innerHTML = this.templateTile({ tile: tile, resources: resources, buildings: buildings, groups: groups, constructions:constructions });
+    div.querySelector(".hud-content").innerHTML = this.templateTile({
+      tile: tile,
+      resources: resources,
+      buildings: buildings,
+      groups: groups,
+      constructions: constructions,
+    })
 
     //Setup listeners
     for (let building of buildings) {
-      (div.querySelector(`#building-${building.id}-select`) as HTMLElement).onclick = () => { 
-        this.selection.selectBuilding(building.id); 
-        this.showBuildingSelection();
-        this.update();
+      ;(
+        div.querySelector(`#building-${building.id}-select`) as HTMLElement
+      ).onclick = () => {
+        this.selection.selectBuilding(building.id)
+        this.showBuildingSelection()
+        this.update()
       }
     }
     for (let group of groups) {
-      (div.querySelector(`#group-${group.id}-select`) as HTMLElement).onclick = () => { 
-        this.selection.selectGroup(group.id); 
-        this.showGroupSelection();
-        this.update();
-       }
+      ;(div.querySelector(`#group-${group.id}-select`) as HTMLElement).onclick =
+        () => {
+          this.selection.selectGroup(group.id)
+          this.showGroupSelection()
+          this.update()
+        }
     }
-    if(constructions) {
-      for(let k of Object.keys(constructions)) {
-        let construction = constructions[k];
-        (div.querySelector(`#construct-${construction.id}`) as HTMLElement).onclick = () => { 
-          this.listeners.forEach((l) => l.onConstructionRequested(tile.hex, k));
+    if (constructions) {
+      for (let k of Object.keys(constructions)) {
+        let construction = constructions[k]
+        ;(
+          div.querySelector(`#construct-${construction.id}`) as HTMLElement
+        ).onclick = () => {
+          this.listeners.forEach((l) => l.onConstructionRequested(tile.hex, k))
         }
       }
     }
   }
 
   setupBuildingSelection() {
-    let div = this.divHud.querySelector("#hud-selection-building") as HTMLElement;
+    let div = this.divHud.querySelector(
+      "#hud-selection-building"
+    ) as HTMLElement
     //Setup closing
-    (div.querySelector("header > button") as HTMLElement).onclick = () => { div.style.display = "none"; this.selection.clearSelection() };
-    
-    //Setup data objects
-    let building = this.world.getBuilding(this.selection.selectedBuilding);
-    let upgrade = Rules.buildings[building.type].levels[building.level+1];
-
-    //Populate template
-    div.querySelector(".hud-content").innerHTML = this.templateBuilding({ building: building, upgrade: upgrade});
-
-    //Setup listeners
-    (div.querySelector("#demolish") as HTMLElement).onclick = () => {
-      this.listeners.forEach((l) => l.onDemolishRequested(building.id));
-      div.style.display = "none";
-    };
-    if(upgrade) {
-      (div.querySelector("#upgrade") as HTMLElement).onclick = () => {
-        this.listeners.forEach((l) => l.onUpgradeRequested(building.id));
-      };
+    ;(div.querySelector("header > button") as HTMLElement).onclick = () => {
+      div.style.display = "none"
+      this.selection.clearSelection()
     }
 
+    //Setup data objects
+    let building = this.world.getBuilding(this.selection.selectedBuilding)
+    let upgrade = Rules.buildings[building.type].levels[building.level + 1]
+
+    //Populate template
+    div.querySelector(".hud-content").innerHTML = this.templateBuilding({
+      building: building,
+      upgrade: upgrade,
+    })
+
+    //Setup listeners
+    ;(div.querySelector("#demolish") as HTMLElement).onclick = () => {
+      this.listeners.forEach((l) => l.onDemolishRequested(building.id))
+      div.style.display = "none"
+    }
+    if (upgrade) {
+      ;(div.querySelector("#upgrade") as HTMLElement).onclick = () => {
+        this.listeners.forEach((l) => l.onUpgradeRequested(building.id))
+      }
+    }
   }
 
   update() {
     if (this.selection.isGroup()) {
-      this.setupGroupSelection();
+      this.setupGroupSelection()
     } else if (this.selection.isHex()) {
-      this.setupTileSelection();
-    } else if(this.selection.isBuilding()) {
-      this.setupBuildingSelection();
+      this.setupTileSelection()
+    } else if (this.selection.isBuilding()) {
+      this.setupBuildingSelection()
     }
   }
 
   showGroupSelection() {
-    this.draggables.forEach(el => { el.style.display = "none" });
-    let div = this.divHud.querySelector("#hud-selection-group") as HTMLElement;
-    div.style.display = "block";
+    this.draggables.forEach((el) => {
+      el.style.display = "none"
+    })
+    let div = this.divHud.querySelector("#hud-selection-group") as HTMLElement
+    div.style.display = "block"
   }
 
   showTileSelection() {
-    this.draggables.forEach(el => { el.style.display = "none" });
-    let div = this.divHud.querySelector("#hud-selection-tile") as HTMLElement;
-    div.style.display = "block";
+    this.draggables.forEach((el) => {
+      el.style.display = "none"
+    })
+    let div = this.divHud.querySelector("#hud-selection-tile") as HTMLElement
+    div.style.display = "block"
   }
 
   showBuildingSelection() {
-    this.draggables.forEach(el => { el.style.display = "none" });
-    let div = this.divHud.querySelector("#hud-selection-building") as HTMLElement;
-    div.style.display = "block";
+    this.draggables.forEach((el) => {
+      el.style.display = "none"
+    })
+    let div = this.divHud.querySelector(
+      "#hud-selection-building"
+    ) as HTMLElement
+    div.style.display = "block"
   }
 
   //Draggables
   onDragMouseDown(event, element: HTMLElement) {
-    let e = event || window.event;
-    e.preventDefault();
-    this.posBefore = new Vector2(e.clientX, e.clientY);
+    let e = event || window.event
+    e.preventDefault()
+    this.posBefore = new Vector2(e.clientX, e.clientY)
 
-    this.draggables.forEach(el => {
-      el.style.zIndex = "1";
-    });
-    element.style.zIndex = "2";
+    this.draggables.forEach((el) => {
+      el.style.zIndex = "1"
+    })
+    element.style.zIndex = "2"
 
-    document.onmouseup = () => this.onDragMouseUp();
-    document.onmousemove = (event) => this.onDragMoved(event, element);
+    document.onmouseup = () => this.onDragMouseUp()
+    document.onmousemove = (event) => this.onDragMoved(event, element)
   }
 
   onDragMouseUp() {
-    document.onmouseup = null;
-    document.onmousemove = null;
+    document.onmouseup = null
+    document.onmousemove = null
   }
 
   onDragMoved(event, element) {
-    let e = event || window.event;
-    e.preventDefault();
+    let e = event || window.event
+    e.preventDefault()
 
-    this.posFinal = new Vector2(this.posBefore.x - e.clientX, this.posBefore.y - e.clientY);
-    this.posBefore = new Vector2(e.clientX, e.clientY);
+    this.posFinal = new Vector2(
+      this.posBefore.x - e.clientX,
+      this.posBefore.y - e.clientY
+    )
+    this.posBefore = new Vector2(e.clientX, e.clientY)
 
-    element.style.top = Math.max(0, element.offsetTop - this.posFinal.y) + "px";
-    element.style.left = Math.max(0, element.offsetLeft - this.posFinal.x) + "px";
+    element.style.top = Math.max(0, element.offsetTop - this.posFinal.y) + "px"
+    element.style.left =
+      Math.max(0, element.offsetLeft - this.posFinal.x) + "px"
   }
 
   addListener(listener: HudListener) {
-    this.listeners.push(listener);
+    this.listeners.push(listener)
   }
 
   removeListener(listener: HudListener) {
-    const index = this.listeners.indexOf(listener);
+    const index = this.listeners.indexOf(listener)
     if (index > -1) {
-      this.listeners.splice(index, 1);
+      this.listeners.splice(index, 1)
     }
   }
 }
-
 
 // generateUnitInfoString(units) {
 //   let result = "";
@@ -262,7 +345,7 @@ export default class Hud {
 //       result += "Gold: " + unit.gold + "</br>";
 //       result += "</br>";
 //       result += "</br>";
-//   }        
+//   }
 //   return result;
 // }
 

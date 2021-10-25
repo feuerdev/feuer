@@ -39,7 +39,8 @@
   box-shadow: 0px 3px 13px 0px rgba(0, 0, 0, 0.5);
 }
 
-h1, .or {
+h1,
+.or {
   color: rgba(216, 142, 6, 0.9);
   text-align: center;
 }
@@ -52,17 +53,18 @@ h1, .or {
   outline-color: #000;
 }
 
-input.base, button.base {
-    background-color: rgba(255, 255, 255, 0.877);
-    display: block;
-    padding: 0.7em;
-    margin: 1em auto;
-    border: none;
-    font-weight: 600;
-    font-size: 0.9em;
-    width: 100%;
+input.base,
+button.base {
+  background-color: rgba(255, 255, 255, 0.877);
+  display: block;
+  padding: 0.7em;
+  margin: 1em auto;
+  border: none;
+  font-weight: 600;
+  font-size: 0.9em;
+  width: 100%;
 }
-::placeholder { 
+::placeholder {
   opacity: 0.7;
 }
 
@@ -86,4 +88,3 @@ input.base, button.base {
     transform: rotate(359deg);
   }
 }
-
