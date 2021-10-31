@@ -5,7 +5,7 @@
   "author": "jannik@feuer.io",
   "license": "UNLICENSED",
   "scripts": {
-    "start": "node -r dotenv/config build/index.js",
+    "start": "node -r dotenv/config build/server/src/main.js",
     "build": "tsc && browserify build/client/js/main.js -o build/bundle.js --debug",
     "lint": "eslint --cache && npx prettier . -c --config .prettierrc.json",
     "lint:fix": "eslint --cache --fix && npx prettier . -c -w --config .prettierrc.json"
