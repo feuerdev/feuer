@@ -10,7 +10,7 @@ Log.info("Config Content: " + JSON.stringify(config))
 Log.info("Starting Server")
 
 const world = Mapgen.create(
-  Math.random(),
+  `${Math.random()}`,
   Rules.settings.map_size,
   Rules.settings.map_frequency,
   Rules.settings.map_amplitude,

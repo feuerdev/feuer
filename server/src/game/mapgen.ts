@@ -10,15 +10,15 @@ import Hex from "../../../shared/hex"
 import * as Rules from "../../../shared/rules.json"
 
 export default class Mapgen {
-  static create(
-    seed,
-    map_size,
-    frequency,
-    amplitude,
-    min,
-    max,
-    octaves,
-    persistence
+  public static create(
+    seed:string,
+    map_size:number,
+    frequency:number,
+    amplitude:number,
+    min:number,
+    max:number,
+    octaves:number,
+    persistence:number
   ): World {
     const rngHeight = seedrandom(seed)
     const heightGen = new FastSimplexNoise({
