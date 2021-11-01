@@ -17,7 +17,7 @@ import router_mapgen from "./routes/mapgen"
 import GameServer from "../game/gameserver"
 import { Config } from "../main"
 
-const directory_client = path.join(__dirname, "../../../client") //Gibt das Client-Root-Verzeichnis zurueck.;
+const directory_client = path.join(__dirname, "../../../../client") //Gibt das Client-Root-Verzeichnis zurueck.;
 
 try {
   admin.initializeApp({

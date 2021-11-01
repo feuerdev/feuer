@@ -3,7 +3,7 @@ import * as db from "../../util/db"
 import * as auth from "../../util/auth"
 import path from "path"
 
-const directory_client = path.join(__dirname, "../../../../client") //Gibt das Client-Root-Verzeichnis zurueck.;
+const directory_client = path.join(__dirname, "../../../../../client") //Gibt das Client-Root-Verzeichnis zurueck.;
 const router = express.Router()
 
 //Route: /register/

@@ -1,7 +1,7 @@
 import * as express from "express"
 const router = express.Router()
 import path from "path"
-const directory_client = path.join(__dirname, "../../../../client") //Gibt das Client-Root-Verzeichnis zurueck.;
+const directory_client = path.join(__dirname, "../../../../../client") //Gibt das Client-Root-Verzeichnis zurueck.;
 
 //Route: /login/
 router.get("/", function (req, res) {
