@@ -1,5 +1,5 @@
 import * as mysql from "mysql"
-import Log from "./log"
+import { Config } from "../main"
 
 let pool
 
@@ -7,10 +7,10 @@ function getPool() {
   if (!pool) {
     pool = mysql.createPool({
       connectionLimit: 10,
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
+      host: Config.dbHost,
+      user: Config.dbUser,
+      password: Config.dbPassword,
+      database: Config.dbName,
     })
   }
   return pool

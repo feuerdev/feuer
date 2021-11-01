@@ -10,7 +10,6 @@ import Helper from "../helper"
 
 import * as db from "../util/db"
 import Log from "../util/log"
-import config from "../util/config"
 import * as Rules from "../../../shared/rules.json"
 import { astar } from "../../../shared/pathfinding"
 import { Socket } from "socket.io"
@@ -22,6 +21,7 @@ import Hex from "../../../shared/hex"
 import Building from "./objects/building"
 import PlayerRelation, { EnumRelationType } from "../../../shared/relation"
 import Battle from "./objects/battle"
+import { Config } from "../main"
 
 export default class GameServer {
   private socketplayer: {} = {}
@@ -31,8 +31,8 @@ export default class GameServer {
   private world: World
 
   //#region Gameloop Variables
-  private readonly updaterate = Math.round(1000 / config.updaterate)
-  private readonly defaultDelta = Math.round(1000 / config.referencerate)
+  private readonly updaterate = Math.round(1000 / Config.updateRate)
+  private readonly defaultDelta = Math.round(1000 / Config.referenceRate)
   private isRunning = false
   //#endregion
 
