@@ -42,7 +42,7 @@ export default class GameServer {
 
   listen(httpServer: Http.Server) {
     const socketServer = new Server(httpServer, {
-      transports: config.transports,
+      transports: ["websocket"],
     })
     socketServer.on("connection", (socket) => {
       socket.on("initialize", (data) => this.onPlayerInitialize(socket, data))

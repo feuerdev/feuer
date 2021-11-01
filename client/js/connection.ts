@@ -11,8 +11,8 @@ export default class Connection {
 
   private listeners: ConnectionListener[] = []
 
-  constructor(ip: string, transports: string[]) {
-    this.socket = io(ip, { transports: transports })
+  constructor(ip: string) {
+    this.socket = io(ip, { transports: ["websocket"] })
     this.socket.on("connect", () => this.onConnected())
     this.socket.on("disconnect", () => this.onDisconnected)
   }
