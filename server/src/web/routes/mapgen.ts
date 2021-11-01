@@ -4,7 +4,7 @@ import Mapgen from "../../game/mapgen"
 import path from "path"
 
 const router = express.Router()
-const directory_client = path.join(__dirname, "../../../../client") //Gibt das Client-Root-Verzeichnis zurueck.;
+const directory_client = path.join(__dirname, "../../../../../client") //Gibt das Client-Root-Verzeichnis zurueck.;
 
 //Route: /mapgen
 router.get("/", function (req, res) {
