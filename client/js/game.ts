@@ -69,7 +69,9 @@ export default class Game
 
   onRendererLoaded(): void {
     //Only connect after renderer is loaded //TODO: why?
-    this.connection = new Connection(`${window.location.hostname}:${this.config.port}`)
+    this.connection = new Connection(
+      `${window.location.hostname}:${this.config.port}`
+    )
     this.connection.addListener(this)
 
     this.renderer.viewport?.on("clicked", (click) => {
