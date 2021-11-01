@@ -2,6 +2,7 @@ import { Hashtable } from "../../shared/util"
 import PlayerRelation from "../../shared/relation"
 import Hex from "../../shared/hex"
 
+//TODO: just have one world class in /shared/, make methods static
 export default class ClientWorld {
   public tiles: any = {}
   public groups: any[] = []
