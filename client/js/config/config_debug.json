@@ -1,6 +1,0 @@
-{
-  "ip": "localhost:8000",
-  "transports": ["websocket"],
-  "hex_width": 100,
-  "hex_height": 100
-}

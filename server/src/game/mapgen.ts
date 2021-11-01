@@ -2,7 +2,6 @@ import seedrandom from "seedrandom"
 import { Hashtable } from "../../../shared/util"
 import Tile, { Spot } from "./tile"
 import FastSimplexNoise from "../../../shared/noise"
-import config from "../util/config"
 import Log from "../util/log"
 import Vector2 from "../../../shared/vector2"
 import World from "./world"
@@ -11,14 +10,14 @@ import * as Rules from "../../../shared/rules.json"
 
 export default class Mapgen {
   public static create(
-    seed:string,
-    map_size:number,
-    frequency:number,
-    amplitude:number,
-    min:number,
-    max:number,
-    octaves:number,
-    persistence:number
+    seed: string,
+    map_size: number,
+    frequency: number,
+    amplitude: number,
+    min: number,
+    max: number,
+    octaves: number,
+    persistence: number
   ): World {
     const rngHeight = seedrandom(seed)
     const heightGen = new FastSimplexNoise({

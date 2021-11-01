@@ -3,7 +3,7 @@
  * Created by geller on 31.08.2016.
  */
 import * as winston from "winston"
-import config from "./config"
+import { Config } from "../main"
 
 let logger = null
 
@@ -25,7 +25,7 @@ function getLogger() {
  */
 function initLogger() {
   return winston.createLogger({
-    level: config.log_level,
+    level: Config.logLevel,
     format: winston.format.combine(
       winston.format.timestamp({
         format: "YYYY-MM-DD HH:mm:ss",
@@ -34,8 +34,7 @@ function initLogger() {
     ),
     transports: [
       new winston.transports.Console(),
-      new winston.transports.File({ filename: config.logfile }),
-      new winston.transports.File({ filename: "error.log", level: "error" }),
+      new winston.transports.File({ filename: "feuer.log" }),
     ],
   })
 }
