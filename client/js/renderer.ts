@@ -93,7 +93,7 @@ export default class Renderer {
         (Rules.settings.map_size * 2 + 1) * Rules.settings.map_hex_width,
       worldHeight:
         (Rules.settings.map_size * 2 + 1) * Rules.settings.map_hex_height,
-      interaction: this.p_renderer.plugins.interaction, // the interaction module is important for wheel to work properly when renderer.view is placed or scaled
+      interaction: this.p_renderer.plugins.interaction, // the interaction module is important for wheel() to work properly when renderer.view is placed or scaled
     })
 
     // activate plugins
