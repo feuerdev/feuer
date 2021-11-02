@@ -8,7 +8,6 @@ import * as Http from "http"
 import Player from "./player"
 import Helper from "../helper"
 
-import * as db from "../util/db"
 import Log from "../util/log"
 import * as Rules from "../../../shared/rules.json"
 import { astar } from "../../../shared/pathfinding"
@@ -215,20 +214,6 @@ export default class GameServer {
         }
       }
     }
-  }
-
-  updateKillStatistic(killer: Player, killed: Player): any {
-    db.queryWithValues(
-      "INSERT INTO kills (killer, killed) VALUES (?, ?)",
-      [killer.uid, killed.uid],
-      function (error, results, fields) {
-        if (error) {
-          console.log(error)
-        } else {
-          console.log("updated kill db")
-        }
-      }
-    )
   }
 
   updateNet(delta) {
