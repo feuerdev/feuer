@@ -76,10 +76,28 @@ import GameServer from "./game/gameserver"
 import Log from "./util/log"
 import Mapgen from "./game/mapgen"
 import * as Rules from "../../shared/rules.json"
+import { getDb } from "./util/db"
 
-Log.info(`Configuration: ${JSON.stringify(Config)}`)
-
+Log.debug(`Configuration: ${JSON.stringify(Config)}`)
 Log.info("Starting Server")
+
+async function testdb() {
+  const db = await getDb()
+  await db.collection("debug").insertOne({
+    hallo: "welt",
+  })
+  console.log(await db.collection("debug").find().toArray())
+  // console.log(await db.admin().listDatabases())
+}
+testdb()
+
+// // https://stackoverflow.com/a/55424097/7068847
+// async function testdb2() {
+//   const db = await DB.getInstance()
+//   await db.collection("debug").insertOne({ debug: "1"})
+//   console.log(await db.collection("debug").find().toArray())
+// }
+// testdb2()
 
 const world = Mapgen.create(
   `${Math.random()}`,
