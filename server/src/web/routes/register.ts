@@ -1,7 +1,7 @@
 import * as express from "express"
-import * as db from "../../util/db"
 import * as auth from "../../util/auth"
 import path from "path"
+import { getDb } from "../../util/db"
 
 const directory_client = path.join(__dirname, "../../../../../client") //Gibt das Client-Root-Verzeichnis zurueck.;
 const router = express.Router()
@@ -11,27 +11,23 @@ router.get("/", function (req, res) {
   res.sendFile("register.html", { root: directory_client })
 })
 
-router.post("/", auth.deserializeAuth, function (req, res) {
+router.post("/", auth.deserializeAuth, async function (req, res) {
+  const db = await getDb()
+
   const username = req.body.username
-  console.log("Registration: Username=" + username)
-  let user = (req as any).user
-  if (user) {
-    db.queryWithValues(
-      "INSERT INTO users (username, email, uid) VALUES (?, ?, ?)",
-      [username, user.email, user.uid],
-      function (error, results, fields) {
-        if (error) {
-          console.log(error)
-          res.status(400).send(error)
-        } else {
-          console.log(results)
-          res.sendStatus(200)
-        }
-      }
-    )
-  } else {
+  const user = (req as any).user
+
+  if (!user) {
     res.send("Error: No session cookie set")
   }
+
+  await db.collection("users").insertOne({
+    uid: user.uid,
+    username: username,
+    email: user.email,
+  })
+
+  res.sendStatus(200)
 })
 
 export default router

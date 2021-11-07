@@ -12,7 +12,19 @@ services:
       - "traefik.http.routers.feuer_${ENVIRONMENT}.tls.certresolver=letsencrypt"
     networks:
       - jnet
+
+  mongodb:
+    image: mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$FEUER_DB_USER
+      - MONGO_INITDB_ROOT_PASSWORD=$FEUER_DB_PASSWORD
+    volumes:
+      - db:/data/db
+    networks:
+      - jnet
 networks:
   jnet:
-    external:
-      name: jnet
+    name: jnet
+
+volumes:
+  db:
