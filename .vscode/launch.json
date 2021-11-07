@@ -1,0 +1,19 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // docker run -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=admin  mongo mongod
+      "type": "node",
+      "request": "launch",
+      "name": "Debug TS",
+      "envFile": "${workspaceFolder}/.env",
+      "program": "${workspaceFolder}/server/src/main.ts",
+      "preLaunchTask": "npm: build:server",
+      "outFiles": ["${workspaceFolder}/build/**/*.js"],
+      "internalConsoleOptions": "openOnSessionStart"
+    }
+  ]
+}

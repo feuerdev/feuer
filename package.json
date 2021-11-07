@@ -6,7 +6,9 @@
   "license": "UNLICENSED",
   "scripts": {
     "start": "node -r dotenv/config build/server/src/main.js",
-    "build": "tsc && browserify build/client/js/main.js -o build/bundle.js --debug",
+    "build:server": "tsc",
+    "build:client": "browserify build/client/js/main.js -o build/bundle.js --debug",
+    "build": "npm run build:server && npm run build:client",
     "lint": "eslint --cache && npx prettier . -c --config .prettierrc.json",
     "lint:fix": "eslint --cache --fix && npx prettier . -c -w --config .prettierrc.json"
   },
