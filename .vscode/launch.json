@@ -13,7 +13,8 @@
       "program": "${workspaceFolder}/server/src/main.ts",
       "preLaunchTask": "npm: build:server",
       "outFiles": ["${workspaceFolder}/build/**/*.js"],
-      "internalConsoleOptions": "openOnSessionStart"
+      "internalConsoleOptions": "openOnSessionStart",
+      "outputCapture": "std"
     }
   ]
 }
