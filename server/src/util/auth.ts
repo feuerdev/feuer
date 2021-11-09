@@ -1,44 +1,39 @@
 import * as admin from "firebase-admin"
+import Log from "./log"
 
-export function isAuthenticated(req, res, next) {
-  if (req.cookies) {
-    const idToken = req.cookies.__session
-    if (idToken) {
-      admin
-        .auth()
-        .verifyIdToken(idToken)
-        .then((decodedToken) => {
-          req.user = decodedToken
-          next()
-        })
-        .catch((error) => {
-          //TODO: Fange hier nur den Token expired Error ab.
-          res.redirect("/relogin")
-        })
-    } else {
-      res.redirect("/login")
-    }
-  } else {
+export async function isAuthenticated(req, res, next) {
+  if (!req.cookies) {
+    Log.warn("No cookies found")
     res.redirect("/login")
+  }
+
+  const idToken = req.cookies.__session
+  if (!idToken) {
+    Log.warn("No idToken found")
+    res.redirect("/login")
+  }
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken)
+    req.user = decodedToken
+    next()
+  } catch (error) {
+    //TODO: Fange hier nur den Token expired Error ab.
+    res.redirect("/relogin")
   }
 }
 
-export function deserializeAuth(req, res, next) {
-  if (req.cookies) {
-    const idToken = req.cookies.__session
-    if (idToken) {
-      admin
-        .auth()
-        .verifyIdToken(idToken)
-        .then((decodedToken) => {
-          console.log(decodedToken)
-          console.log("IdToken is valid")
-          req.user = decodedToken
-          next()
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-    }
+export async function deserializeAuth(req, res, next) {
+  if (!req.cookies) {
+    Log.warn("No cookies found")
   }
+
+  const idToken = req.cookies.__session
+  if (!idToken) {
+    Log.warn("No idToken found")
+  }
+
+  const decodedToken = await admin.auth().verifyIdToken(idToken)
+  req.user = decodedToken
+  next()
 }
