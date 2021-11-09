@@ -49,7 +49,7 @@ pipeline {
             stage("Production") {
               when { branch 'master' }
               steps {
-                withCredentials([file(credentialsId: 'env-production-node-ts-boilerplate', variable: 'ENV_FILE')]) {
+                withCredentials([file(credentialsId: 'env-production-feuer', variable: 'ENV_FILE')]) {
                   writeFile file: '.env', text: readFile(ENV_FILE)
                 }
               }
@@ -57,7 +57,7 @@ pipeline {
             stage("Staging") {
               when { not { branch 'master' } }
               steps {
-                withCredentials([file(credentialsId: 'env-staging-node-ts-boilerplate', variable: 'ENV_FILE')]) {
+                withCredentials([file(credentialsId: 'env-staging-node-feuer', variable: 'ENV_FILE')]) {
                   writeFile file: '.env', text: readFile(ENV_FILE)
                 }
               }
