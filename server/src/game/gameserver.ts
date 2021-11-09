@@ -6,7 +6,6 @@ import { Server } from "socket.io"
 import * as Http from "http"
 
 import Player from "./player"
-import Helper from "../helper"
 
 import Log from "../util/log"
 import * as Rules from "../../../shared/rules.json"
@@ -21,6 +20,7 @@ import Building from "./objects/building"
 import PlayerRelation, { EnumRelationType } from "../../../shared/relation"
 import Battle from "./objects/battle"
 import { Config } from "../main"
+import { getDb } from "../util/db"
 
 export default class GameServer {
   private socketplayer: {} = {}
@@ -242,50 +242,45 @@ export default class GameServer {
       Log.info("Player Disconnected: " + player.name)
     }
   }
-  onPlayerInitialize(socket: Socket, uid: string) {
+
+  async onPlayerInitialize(socket: Socket, uid: string) {
     const self = this
     if (!this.uidsockets[uid]) {
-      Helper.getUsername(uid)
-        .then((name) => {
-          //Create new Player
-          const player: Player = new Player()
-          player.uid = uid
-          player.name = name
-          player.initialized = true
+      const db = await getDb()
+      const user = await db.collection("users").findOne({ uid: uid })
+      const username = user.username
 
-          //Give Player an initial Scout and Camp
-          let pos = self.getRandomHex()
-          let initialGroup = Group.createGroup(player.uid, "Scout", pos)
-          self.world.groups.push(initialGroup)
+      //Create new Player
+      const player: Player = new Player()
+      player.uid = uid
+      player.name = username
+      player.initialized = true
 
-          let initialCamp = Building.createBuilding(
-            player.uid,
-            "Town Hall",
-            pos
-          )
-          // Building.updateBuilding(initialCamp);
-          self.world.buildings.push(initialCamp)
+      //Give Player an initial Scout and Camp
+      let pos = self.getRandomHex()
+      let initialGroup = Group.createGroup(player.uid, "Scout", pos)
+      self.world.groups.push(initialGroup)
 
-          //Prepare Drawing of that group
-          self.world.tiles[initialGroup.pos.hash()].addSpot(
-            initialGroup.getTexture(),
-            initialGroup.id
-          )
-          self.world.tiles[initialCamp.pos.hash()].addSpot(
-            initialCamp.getTexture(),
-            initialCamp.id
-          )
+      let initialCamp = Building.createBuilding(player.uid, "Town Hall", pos)
+      // Building.updateBuilding(initialCamp);
+      self.world.buildings.push(initialCamp)
 
-          //Register player in Gamesever
-          self.players.push(player)
-          self.socketplayer[socket.id] = player
-          Log.info("New Player Connected: " + player.name)
+      //Prepare Drawing of that group
+      self.world.tiles[initialGroup.pos.hash()].addSpot(
+        initialGroup.getTexture(),
+        initialGroup.id
+      )
+      self.world.tiles[initialCamp.pos.hash()].addSpot(
+        initialCamp.getTexture(),
+        initialCamp.id
+      )
 
-          this.updatePlayerVisibilities(uid)
-        })
-        .catch((error) => {
-          Log.error(error)
-        })
+      //Register player in Gamesever
+      self.players.push(player)
+      self.socketplayer[socket.id] = player
+      Log.info("New Player Connected: " + player.name)
+
+      this.updatePlayerVisibilities(uid)
     } else {
       for (let i = 0; i < self.players.length; i++) {
         if (self.players[i].uid === uid) {
