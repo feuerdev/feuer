@@ -57,7 +57,7 @@ pipeline {
             stage("Staging") {
               when { not { branch 'master' } }
               steps {
-                withCredentials([file(credentialsId: 'env-staging-node-feuer', variable: 'ENV_FILE')]) {
+                withCredentials([file(credentialsId: 'env-staging-feuer', variable: 'ENV_FILE')]) {
                   writeFile file: '.env', text: readFile(ENV_FILE)
                 }
               }
