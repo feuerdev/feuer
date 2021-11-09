@@ -1,7 +1,7 @@
 FROM node:16-alpine3.11
 
 ENV NODE_ENV=production
-EXPOSE 5000
+EXPOSE 6000
 
 WORKDIR /app
 
