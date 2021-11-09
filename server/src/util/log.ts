@@ -1,7 +1,3 @@
-/**
- * Behandelt die Logfunktionen
- * Created by geller on 31.08.2016.
- */
 import * as winston from "winston"
 import { Config } from "../main"
 
@@ -19,22 +15,21 @@ function getLogger() {
   }
   return logger
 }
-/**
- * Initialisiert die Logger Instanz.
- * @returns {*}
- */
+
 function initLogger() {
-  return winston.createLogger({
-    level: Config.logLevel,
-    format: winston.format.combine(
-      winston.format.timestamp({
-        format: "YYYY-MM-DD HH:mm:ss",
-      }),
-      winston.format.simple()
-    ),
+  const logLevel = Config.logLevel
+  const logger = winston.createLogger({
     transports: [
-      new winston.transports.Console(),
-      new winston.transports.File({ filename: "feuer.log" }),
+      new winston.transports.Console({
+        level: logLevel,
+        format: winston.format.combine(
+          winston.format.timestamp(),
+          winston.format.colorize(),
+          winston.format.simple()
+        ),
+      }),
     ],
   })
+
+  return logger
 }
