@@ -81,24 +81,6 @@ import { getDb } from "./util/db"
 Log.debug(`Configuration: ${JSON.stringify(Config)}`)
 Log.info("Starting Server")
 
-async function testdb() {
-  const db = await getDb()
-  await db.collection("debug").insertOne({
-    hallo: "welt",
-  })
-  console.log(await db.collection("debug").find().toArray())
-  // console.log(await db.admin().listDatabases())
-}
-testdb()
-
-// // https://stackoverflow.com/a/55424097/7068847
-// async function testdb2() {
-//   const db = await DB.getInstance()
-//   await db.collection("debug").insertOne({ debug: "1"})
-//   console.log(await db.collection("debug").find().toArray())
-// }
-// testdb2()
-
 const world = Mapgen.create(
   `${Math.random()}`,
   Rules.settings.map_size,
