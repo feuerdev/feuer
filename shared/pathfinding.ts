@@ -1,5 +1,4 @@
 import Hex from "./hex"
-import Log from "../server/src/util/log"
 
 class QueueElement {
   public element: any
@@ -92,7 +91,6 @@ export function astar(tiles, start: Hex, goal: Hex) {
     result.push(x)
     x = came_from[x.hash()]
     if (result.length > 999) {
-      Log.error("Pathfinding error!")
       return []
     }
   }

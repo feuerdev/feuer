@@ -1,8 +1,8 @@
-import { Hashtable } from "../../../shared/util"
+import { Hashtable } from "../../shared/util"
 import Tile from "./tile"
 import Group from "./objects/group"
 import Building from "./objects/building"
-import PlayerRelation from "../../../shared/relation"
+import PlayerRelation from "../../shared/relation"
 import Battle from "./objects/battle"
 
 export default class World {

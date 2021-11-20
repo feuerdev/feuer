@@ -1,5 +1,5 @@
 import * as express from "express"
-import * as auth from "../../util/auth"
+import * as auth from "../auth"
 import path from "path"
 import { getDb } from "../../util/db"
 

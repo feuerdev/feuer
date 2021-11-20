@@ -1,4 +1,4 @@
-import Hex from "../../../shared/hex"
+import Hex from "../../shared/hex"
 
 export default class Player {
   public initialized: boolean = false

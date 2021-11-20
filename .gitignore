@@ -1,6 +1,12 @@
-build/*
 node_modules
-*.log
 .env
 .DS_Store
 .eslintcache
+
+# keep manual client js files
+!client/public/js/*.js
+
+# ignore compiled files 
+*.js
+*.js.map
+client/public/js/game.js

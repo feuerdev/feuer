@@ -1,6 +1,6 @@
 import GameObject from "./gameobject"
 import Group from "./group"
-import Hex from "../../../../shared/hex"
+import Hex from "../../../shared/hex"
 
 export default class Battle extends GameObject {
   public aAttacker: Group

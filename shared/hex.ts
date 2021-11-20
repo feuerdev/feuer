@@ -5,6 +5,7 @@ export default class Hex {
     if (Math.round(q + r + s) !== 0) throw "q+r+s must be 0"
   }
 
+  //TODO: make all methods static so they can be shared easier between server and client
   public add(hex: Hex) {
     return new Hex(this.q + hex.q, this.r + hex.r, this.s + hex.s)
   }
