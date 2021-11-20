@@ -5,6 +5,7 @@ services:
     image: "feuer_${ENVIRONMENT}"
     ports:
       - 5000
+    restart: always
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.feuer_${ENVIRONMENT}.rule=Host(${HOST})"
@@ -15,6 +16,7 @@ services:
 
   mongodb:
     image: mongo
+    restart: always
     environment:
       - MONGO_INITDB_ROOT_USERNAME=$FEUER_DB_USER
       - MONGO_INITDB_ROOT_PASSWORD=$FEUER_DB_PASSWORD
