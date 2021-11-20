@@ -4,7 +4,7 @@ services:
     build: .
     image: "feuer_${ENVIRONMENT}"
     ports:
-      - "5001:5001"
+      - 5000
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.feuer_${ENVIRONMENT}.rule=Host(${HOST})"
