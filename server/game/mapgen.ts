@@ -1,12 +1,12 @@
 import seedrandom from "seedrandom"
-import { Hashtable } from "../../../shared/util"
+import { Hashtable } from "../../shared/util"
 import Tile, { Spot } from "./tile"
-import FastSimplexNoise from "../../../shared/noise"
+import FastSimplexNoise from "../../shared/noise"
 import Log from "../util/log"
-import Vector2 from "../../../shared/vector2"
+import Vector2 from "../../shared/vector2"
 import World from "./world"
-import Hex from "../../../shared/hex"
-import * as Rules from "../../../shared/rules.json"
+import Hex from "../../shared/hex"
+import * as Rules from "../../shared/rules.json"
 
 export default class Mapgen {
   public static create(

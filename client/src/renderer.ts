@@ -130,7 +130,7 @@ export default class Renderer {
     this.listeners.forEach((l) => l.onRendererLoaded())
   }
 
-  updateScenegraph(tile: any) {
+  updateScenegraph(tile) {
     let hex: Hex = new Hex(tile.hex.q, tile.hex.r, tile.hex.s)
 
     let corners = this.layout.polygonCorners(hex)
@@ -141,8 +141,8 @@ export default class Renderer {
 
     let tint = tile.visible ? 0xdddddd : 0x555555
     if (
-      this.selection?.isHex() &&
-      Hex.equals(this.selection.selectedHex!, tile.hex)
+      this.selection.selectedHex &&
+      Hex.equals(this.selection?.selectedHex, tile.hex)
     ) {
       tile.visible ? (tint = 0xffffff) : (tint += 0x333333)
     }

@@ -1,0 +1,11 @@
+{
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/.env": true,
+    "**/.DS_Store": true,
+    "**/.eslintcache": true,
+    "server/**/*.js": true,
+    "client/src/**/*.js": true,
+    "**/*.js.map": true
+  }
+}

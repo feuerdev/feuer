@@ -1,6 +1,6 @@
 import GameObject, { Spotter, Drawable } from "./gameobject"
-import Hex from "../../../../shared/hex"
-import * as Rules from "../../../../shared/rules.json"
+import Hex from "../../../shared/hex"
+import * as Rules from "../../../shared/rules.json"
 
 export default class Building extends GameObject implements Spotter, Drawable {
   public getSpottingRange(): number {

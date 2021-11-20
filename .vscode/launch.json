@@ -10,7 +10,7 @@
       "request": "launch",
       "name": "Debug TS",
       "envFile": "${workspaceFolder}/.env",
-      "program": "${workspaceFolder}/server/src/main.ts",
+      "program": "${workspaceFolder}/server/main.ts",
       "preLaunchTask": "npm: build:server",
       "outFiles": ["${workspaceFolder}/build/**/*.js"],
       "internalConsoleOptions": "openOnSessionStart",

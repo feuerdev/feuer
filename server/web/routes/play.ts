@@ -6,6 +6,7 @@ const directory_client = path.join(__dirname, "../../../../../client") //Gibt da
 
 //Route: /play
 router.get("/", function (req, res) {
+  console.log("hallo")
   res.sendFile("play.html", { root: directory_client })
 })
 

@@ -1,7 +1,8 @@
+import { Request } from "express"
 import * as admin from "firebase-admin"
-import Log from "./log"
+import Log from "../util/log"
 
-export async function isAuthenticated(req, res, next) {
+export async function isAuthenticated(req: Request, res, next) {
   if (!req.cookies) {
     Log.warn("No cookies found")
     res.redirect("/login")
@@ -17,12 +18,15 @@ export async function isAuthenticated(req, res, next) {
 
   try {
     const decodedToken = await admin.auth().verifyIdToken(idToken)
-    req.user = decodedToken
+
+    const editedRequest: any = req
+    editedRequest.user = decodedToken
     next()
     return
   } catch (error) {
+    Log.error(error)
     //TODO: Fange hier nur den Token expired Error ab.
-    res.redirect("/relogin")
+    res.redirect("/relogin.html")
   }
 }
 

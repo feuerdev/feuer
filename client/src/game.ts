@@ -9,7 +9,6 @@ import ClientWorld from "./clientworld"
 import Renderer, { RendererListener } from "./renderer"
 import Hex from "../../shared/hex"
 import { Socket } from "socket.io-client"
-import { Config } from "../../server/src/main"
 
 /**
  * Client side game logic
@@ -17,7 +16,6 @@ import { Config } from "../../server/src/main"
 export default class Game
   implements ConnectionListener, HudListener, RendererListener
 {
-  private config: typeof Config
   private selection: Selection = new Selection()
   private hud: Hud = new Hud()
   private renderer: Renderer = new Renderer()
@@ -26,8 +24,7 @@ export default class Game
 
   private initialFocusSet = false
 
-  constructor(config: typeof Config) {
-    this.config = config
+  constructor() {
     this.renderer.selection = this.selection
     this.hud.world = this.cWorld
     this.hud.selection = this.selection
@@ -69,9 +66,7 @@ export default class Game
 
   onRendererLoaded(): void {
     //Only connect after renderer is loaded //TODO: why?
-    this.connection = new Connection(
-      `${window.location.hostname}:${this.config.port}`
-    )
+    this.connection = new Connection(`${window.location.hostname}:5000`)
     this.connection.addListener(this)
 
     this.renderer.viewport?.on("clicked", (click) => {

@@ -1,7 +1,7 @@
-import Hex from "../../../shared/hex"
-import Vector2 from "../../../shared/vector2"
+import Hex from "../../shared/hex"
+import Vector2 from "../../shared/vector2"
 import Mapgen from "./mapgen"
-import * as Rules from "../../../shared/rules.json"
+import * as Rules from "../../shared/rules.json"
 import Resources from "./objects/resources"
 import Unit from "./objects/unit"
 
