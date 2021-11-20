@@ -14,7 +14,7 @@ export const Config = yargs(process.argv.slice(2))
     alias: "p",
     description: "The port to expose the server",
     type: "number",
-    default: 6000,
+    default: 5001,
   })
   .option("updateRate", {
     alias: "u",
