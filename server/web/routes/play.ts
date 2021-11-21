@@ -5,8 +5,7 @@ const router = express.Router()
 const directory_client = path.join(__dirname, "../../../../../client") //Gibt das Client-Root-Verzeichnis zurueck.;
 
 //Route: /play
-router.get("/", function (req, res) {
-  console.log("hallo")
+router.get("/", function (_req, res) {
   res.sendFile("play.html", { root: directory_client })
 })
 

@@ -41,7 +41,6 @@ export default class Webserver {
     this.app.use(bodyParser.urlencoded({ extended: true }))
     this.app.use(bodyParser.json())
 
-    console.log(path.join(__dirname, "../../client/public"))
     this.app.use(
       express.static(publicFolder, { index: false, extensions: ["html"] })
     )
