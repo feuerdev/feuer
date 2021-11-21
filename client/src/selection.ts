@@ -6,15 +6,15 @@ export default class Selection {
   public selectedHex?: Hex = undefined
 
   isGroup(): boolean {
-    return this.selectedGroup !== null
+    return this.selectedGroup !== undefined
   }
 
   isBuilding(): boolean {
-    return this.selectedBuilding !== null
+    return this.selectedBuilding !== undefined
   }
 
   isHex(): boolean {
-    return this.selectedHex !== null
+    return this.selectedHex !== undefined
   }
 
   clearSelection(): void {

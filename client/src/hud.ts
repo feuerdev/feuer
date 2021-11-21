@@ -65,7 +65,7 @@ export default class Hud {
     }
 
     //Setup data objects
-    let group = this.world?.getGroup(this.selection!.selectedGroup!)
+    let group = this.world?.getGroup(this.selection.selectedGroup)
     let tile = this.world?.getTile(group.pos)
     let resources: any = []
     union(Object.keys(tile.resources), Object.keys(group.resources)).forEach(
@@ -247,11 +247,11 @@ export default class Hud {
   }
 
   update() {
-    if (this.selection!.isGroup()) {
+    if (this.selection.isGroup()) {
       this.setupGroupSelection()
-    } else if (this.selection!.isHex()) {
+    } else if (this.selection.isHex()) {
       this.setupTileSelection()
-    } else if (this.selection!.isBuilding()) {
+    } else if (this.selection.isBuilding()) {
       this.setupBuildingSelection()
     }
   }
