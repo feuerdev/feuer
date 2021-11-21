@@ -44,7 +44,7 @@ export default class GameServer {
       transports: ["websocket"],
     })
     socketServer.on("connection", (socket) => {
-      socket.on("initialize", (data) => this.onPlayerInitialize(socket, data))
+      socket.on("initialize", (uid) => this.onPlayerInitialize(socket, uid))
 
       const player = this.getPlayerBySocketId(socket.id)
 
@@ -243,57 +243,64 @@ export default class GameServer {
     }
   }
 
+  /*
+   * Check if if the uid is already known by the server.
+   * If not, create a new player instance and link the uid to the socket.
+   * If the uid is known, link the socket to the player instance.
+   */
   async onPlayerInitialize(socket: Socket, uid: string) {
-    const self = this
-    if (!this.uidsockets[uid]) {
+    let player = this.players.find((player) => player.uid === uid)
+
+    if (!player) {
+      //Create new Player
       const db = await getDb()
       const user = await db.collection("users").findOne({ uid: uid })
+      if (!user) {
+        //TODO: This would happen when a user has a session already, but the databse doesn't know about it. Handle this better?
+        Log.error("Supposedly existing uid not found in Database")
+        return
+      }
       const username = user.username
 
-      //Create new Player
-      const player: Player = new Player()
+      player = new Player()
       player.uid = uid
       player.name = username
       player.initialized = true
 
+      Log.info("New Player Connected: " + player.name)
+
       //Give Player an initial Scout and Camp
-      let pos = self.getRandomHex()
+      let pos = this.getRandomHex()
       let initialGroup = Group.createGroup(player.uid, "Scout", pos)
-      self.world.groups.push(initialGroup)
+      this.world.groups.push(initialGroup)
 
       let initialCamp = Building.createBuilding(player.uid, "Town Hall", pos)
       // Building.updateBuilding(initialCamp);
-      self.world.buildings.push(initialCamp)
+      this.world.buildings.push(initialCamp)
 
       //Prepare Drawing of that group
-      self.world.tiles[initialGroup.pos.hash()].addSpot(
+      this.world.tiles[initialGroup.pos.hash()].addSpot(
         initialGroup.getTexture(),
         initialGroup.id
       )
-      self.world.tiles[initialCamp.pos.hash()].addSpot(
+      this.world.tiles[initialCamp.pos.hash()].addSpot(
         initialCamp.getTexture(),
         initialCamp.id
       )
 
       //Register player in Gamesever
-      self.players.push(player)
-      self.socketplayer[socket.id] = player
-      Log.info("New Player Connected: " + player.name)
-
+      this.players.push(player)
       this.updatePlayerVisibilities(uid)
     } else {
-      for (let i = 0; i < self.players.length; i++) {
-        if (self.players[i].uid === uid) {
-          this.socketplayer[socket.id] = self.players[i]
-          Log.info("Old Player Connected: " + self.players[i].name)
-
-          socket.emit(
-            "gamestate discovered tiles",
-            this.getTiles(self.players[i].discoveredHexes)
-          )
-        }
-      }
+      Log.info(`Player reconnected: ${player.name}`)
+      socket.emit(
+        "gamestate discovered tiles",
+        this.getTiles(player.discoveredHexes)
+      )
     }
+
+    //Register player in Gamesever
+    this.socketplayer[socket.id] = player
     this.uidsockets[uid] = socket
   }
 
