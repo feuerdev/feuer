@@ -3,15 +3,47 @@
   "tasks": [
     {
       "type": "npm",
-      "script": "build:server",
-      "group": "build",
+      "script": "dev:database",
       "problemMatcher": [],
-      "label": "npm: build:server",
-      "detail": "tsc",
-      "presentation": {
-        "reveal": "silent",
-        "clear": true
-      }
+      "group": "build",
+      "runOptions": {
+        "instanceLimit": 1,
+        "runOn": "folderOpen"
+      },
+      "label": "npm: start:db",
+      "detail": "docker run -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=admin mongo mongod"
+    },
+    {
+      "type": "npm",
+      "script": "dev:server",
+      "problemMatcher": [],
+      "group": "build",
+      "runOptions": {
+        "instanceLimit": 1,
+        "runOn": "folderOpen"
+      },
+      "label": "npm: dev:server",
+      "detail": "tsc -w"
+    },
+    {
+      "type": "npm",
+      "script": "dev:client",
+      "problemMatcher": [],
+      "group": "build",
+      "runOptions": {
+        "instanceLimit": 1,
+        "runOn": "folderOpen"
+      },
+      "label": "npm: dev:client",
+      "detail": "watchify client/src/main.js -o client/public/js/game.js --debug"
+    },
+    {
+      "type": "npm",
+      "script": "lint:fix",
+      "problemMatcher": [],
+      "group": "test",
+      "label": "npm: lint:fix",
+      "detail": "eslint --cache --fix && npx prettier . -c -w --config .prettierrc.json"
     }
   ]
 }

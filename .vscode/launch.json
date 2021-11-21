@@ -5,14 +5,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      // docker run -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=admin  mongo mongod
       "type": "node",
       "request": "launch",
-      "name": "Debug TS",
+      "name": "Launch Server (Debug)",
       "envFile": "${workspaceFolder}/.env",
       "program": "${workspaceFolder}/server/main.ts",
-      "preLaunchTask": "npm: build:server",
-      "outFiles": ["${workspaceFolder}/build/**/*.js"],
       "internalConsoleOptions": "openOnSessionStart",
       "outputCapture": "std"
     }
