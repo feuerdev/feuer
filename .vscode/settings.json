@@ -6,6 +6,7 @@
     "**/.eslintcache": true,
     "server/**/*.js": true,
     "client/src/**/*.js": true,
+    "client/public/js/game.js": true,
     "**/*.js.map": true
   }
 }
