@@ -7,12 +7,12 @@
   "scripts": {
     "start": "node -r dotenv/config server/main.js",
     "build:server": "tsc",
-    "build:client": "browserify client/src/main.js -o client/public/js/game.js --debug",
+    "build:client": "browserify client/src/main.js -o client/public/js/bundle.js --debug",
     "build": "npm run build:server && npm run build:client",
     "lint": "eslint --cache && npx prettier . -c --config .prettierrc.json",
     "lint:fix": "eslint --cache --fix && npx prettier . -c -w --config .prettierrc.json",
     "dev:server": "tsc -w",
-    "dev:client": "watchify client/src/main.js -o client/public/js/game.js --debug",
+    "dev:client": "watchify client/src/main.js -o client/public/js/bundle.js --debug",
     "dev:database": "docker run -p 27017:27017 -v db:/data/db -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=admin mongo mongod"
   },
   "dependencies": {

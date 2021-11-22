@@ -35,7 +35,7 @@
         "runOn": "folderOpen"
       },
       "label": "npm: dev:client",
-      "detail": "watchify client/src/main.js -o client/public/js/game.js --debug"
+      "detail": "watchify client/src/main.js -o client/public/js/bundle.js --debug"
     },
     {
       "type": "npm",
