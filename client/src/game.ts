@@ -3,7 +3,6 @@ import * as Util from "../../shared/util"
 import PlayerRelation from "../../shared/relation"
 
 import Connection, { ConnectionListener } from "./connection"
-import Hud, { HudListener } from "./hud"
 import Selection from "./selection"
 import ClientWorld from "./clientworld"
 import Renderer, { RendererListener } from "./renderer"
@@ -13,11 +12,8 @@ import { Socket } from "socket.io-client"
 /**
  * Client side game logic
  */
-export default class Game
-  implements ConnectionListener, HudListener, RendererListener
-{
+export default class Game implements ConnectionListener, RendererListener {
   private selection: Selection = new Selection()
-  private hud: Hud = new Hud()
   private renderer: Renderer = new Renderer()
   private connection?: Connection
   private cWorld: ClientWorld = new ClientWorld()
@@ -26,9 +22,6 @@ export default class Game
 
   constructor() {
     this.renderer.selection = this.selection
-    this.hud.world = this.cWorld
-    this.hud.selection = this.selection
-    this.hud.addListener(this)
     this.renderer.addListener(this)
 
     window.addEventListener(
@@ -92,8 +85,6 @@ export default class Game
                   for (let group of this.cWorld.groups) {
                     if (s.name === group.id) {
                       this.selection.selectGroup(group.id)
-                      this.hud.update()
-                      this.hud.showGroupSelection()
                       this.renderer.updateScenegraph(
                         this.cWorld.getTile(this.getHex(v))
                       )
@@ -103,8 +94,6 @@ export default class Game
                   for (let building of this.cWorld.buildings) {
                     if (s.name === building.id) {
                       this.selection.selectBuilding(building.id)
-                      this.hud.update()
-                      this.hud.showBuildingSelection()
                       this.renderer.updateScenegraph(
                         this.cWorld.getTile(this.getHex(v))
                       )
@@ -118,10 +107,7 @@ export default class Game
           let hex = this.renderer.layout.pixelToHex(v).round()
           if (this.cWorld.tiles[hex.hash()]) {
             this.selection.selectHex(hex)
-            this.hud.update()
-            this.hud.showTileSelection()
             this.renderer.updateScenegraph(this.cWorld.tiles[hex.hash()])
-            // this.updateHudInfo();
           }
           break
         case 2: //Right
@@ -195,7 +181,6 @@ export default class Game
           this.renderer.updateScenegraph(this.cWorld.tiles[property])
         }
       }
-      this.hud.update()
     })
     socket.on("gamestate discovered tiles", (data) => {
       for (let property in data) {
@@ -221,11 +206,9 @@ export default class Game
           }
         }
       }
-      this.hud.update()
     })
     socket.on("gamestate battles", (data) => {
       this.cWorld.battles = data
-      this.hud.update()
     })
     socket.on("gamestate buildings", (data) => {
       this.cWorld.buildings = data
@@ -237,7 +220,6 @@ export default class Game
           this.renderer.center(ref.pos)
         }
       }
-      this.hud.update()
     })
     socket.on("gamestate relation", (data) => {
       let hash = PlayerRelation.getHash(data.id1, data.id2)
