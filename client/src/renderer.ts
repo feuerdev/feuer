@@ -22,7 +22,6 @@ export default class Renderer {
   static GLOWFILTER = new GlowFilter({ distance: 15, outerStrength: 2 })
 
   private canvas_map = <HTMLCanvasElement>document.querySelector("#canvas-map")
-  private div_debug = document.querySelector("#debug")
 
   constructor() {
     this.layout = new Layout(
@@ -112,19 +111,6 @@ export default class Renderer {
         this.p_renderer.render(this.viewport)
         this.viewport.dirty = false
       }
-
-      // //TODO: Performance - Dont update this every frame
-      // this.div_debug.innerHTML = "";
-      // this.div_debug.innerHTML += ("<em>General Information</em><br>");
-      // this.div_debug.innerHTML += ("UID   : " + currentUid + "<br>");
-      // this.div_debug.innerHTML += (`Screenheight : ${this.viewport.screenHeight} "<br>"`);
-      // this.div_debug.innerHTML += (`Screenwidth  : ${this.viewport.screenWidth} "<br>"`);
-      // this.div_debug.innerHTML += (`Worldheight : ${this.viewport.worldHeight} "<br>"`);
-      // this.div_debug.innerHTML += (`Worldwidth  : ${this.viewport.worldWidth} "<br>"`);
-      // this.div_debug.innerHTML += (`Zoom  : ${this.viewport.scale.x.toFixed(2)}/${this.viewport.scale.y.toFixed(2)} "<br>"`);
-      // this.div_debug.innerHTML += (`Left/Top: ${Math.round(this.viewport.left)}/${Math.round(this.viewport.top)} "<br>"`);
-      // this.div_debug.innerHTML += (`Center: ${Math.round(this.viewport.center.x)}/${Math.round(this.viewport.center.y)} "<br>"`);
-      // if (this.selection.isHex()) this.div_debug.innerHTML += ("Selected Hex   : " + this.selection.selectedHex.q + " " + this.selection.selectedHex.r + " " + this.selection.selectedHex.s + "<br>");
     })
 
     this.listeners.forEach((l) => l.onRendererLoaded())

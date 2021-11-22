@@ -76,7 +76,6 @@ import GameServer from "./game/gameserver"
 import Log from "./util/log"
 import Mapgen from "./game/mapgen"
 import * as Rules from "../shared/rules.json"
-import { getDb } from "./util/db"
 
 Log.debug(`Configuration: ${JSON.stringify(Config)}`)
 Log.info("Starting Server")
