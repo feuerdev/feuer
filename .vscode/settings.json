@@ -4,9 +4,7 @@
     "**/.env": true,
     "**/.DS_Store": true,
     "**/.eslintcache": true,
-    "server/**/*.js": true,
-    "client/src/**/*.js": true,
-    "client/public/js/game.js": true,
+    "**/*.js": true,
     "**/*.js.map": true
   }
 }
