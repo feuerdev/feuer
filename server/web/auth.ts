@@ -3,24 +3,17 @@ import * as admin from "firebase-admin"
 import Log from "../util/log"
 
 export async function isAuthenticated(req: Request, res, next) {
-  if (!req.cookies) {
-    Log.warn("No cookies found")
-    res.redirect("/login")
-    return
-  }
+  const idToken = req.cookies?.__session
 
-  const idToken = req.cookies.__session
   if (!idToken) {
-    Log.warn("No idToken found")
+    Log.warn("No cookies found")
     res.redirect("/login")
     return
   }
 
   try {
     const decodedToken = await admin.auth().verifyIdToken(idToken)
-
-    const editedRequest: any = req
-    editedRequest.user = decodedToken
+    req["user"] = decodedToken
     next()
     return
   } catch (error) {
