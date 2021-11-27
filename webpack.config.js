@@ -1,13 +1,12 @@
 const path = require('path');
 
 module.exports = {
-  mode: "development",
-  devtool: "source-map",
+  mode: "production",
   entry: {
-    bundle: "./client/src/main.tsx",
-    login: "./client/src/login.ts",
-    logout: "./client/src/logout.ts",
-    relogin: "./client/src/relogin.ts",
+    bundle:   "./client/src/main.tsx",
+    login:    "./client/src/login.ts",
+    logout:   "./client/src/logout.ts",
+    relogin:  "./client/src/relogin.ts",
     register: "./client/src/register.ts",
   },
   output: {
@@ -15,14 +14,13 @@ module.exports = {
     filename: "[name].js"
   },
   resolve: {
-    extensions: ['.ts', '.js'],
+    extensions: ['.ts', '.tsx', '.js'],
   },
   module: {
     rules: [
       {
         test: /\.tsx?/,
-        use: 'ts-loader',
-        exclude: /node_modules/,
+        use: 'ts-loader'
       }
     ]
   }
