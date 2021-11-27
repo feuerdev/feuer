@@ -1,0 +1,29 @@
+const path = require('path');
+
+module.exports = {
+  mode: "development",
+  devtool: "source-map",
+  entry: {
+    bundle: "./client/src/main.tsx",
+    login: "./client/src/login.ts",
+    logout: "./client/src/logout.ts",
+    relogin: "./client/src/relogin.ts",
+    register: "./client/src/register.ts",
+  },
+  output: {
+    path: path.resolve(__dirname, './client/public/js/'),
+    filename: "[name].js"
+  },
+  resolve: {
+    extensions: ['.ts', '.js'],
+  },
+  module: {
+    rules: [
+      {
+        test: /\.tsx?/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
+      }
+    ]
+  }
+};
