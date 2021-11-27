@@ -23,7 +23,7 @@
         "runOn": "folderOpen"
       },
       "label": "npm: dev:server",
-      "detail": "tsc -w"
+      "detail": "tsc -w -p server"
     },
     {
       "type": "npm",
@@ -35,7 +35,7 @@
         "runOn": "folderOpen"
       },
       "label": "npm: dev:client",
-      "detail": "watchify client/src/main.js -o client/public/js/bundle.js --debug"
+      "detail": "webpack -w"
     },
     {
       "type": "npm",
