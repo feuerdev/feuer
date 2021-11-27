@@ -218,5 +218,3 @@ export default class Renderer {
     }
   }
 }
-
-declare const currentUid: string
