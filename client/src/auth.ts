@@ -48,10 +48,17 @@ async function setCookie(idToken: string): Promise<void> {
 }
 
 /**
- * Removes a cokkie by setting its expiration to 0
+ * Removes a cookie by setting its expiration to 0
  */
 function invalidateCookie() {
   document.cookie = `${COOKIE_NAME}=;max-age=0`
+}
+
+/**
+ * Removes a cookie by setting its expiration to 0
+ */
+function invalidateUid() {
+  localStorage.removeItem("uid")
 }
 
 export function getUid(): string {
@@ -76,6 +83,7 @@ export async function refreshToken(): Promise<void> {
 export async function signOut(): Promise<void> {
   await getAuth(app).signOut()
   invalidateCookie()
+  invalidateUid()
 }
 
 /**
