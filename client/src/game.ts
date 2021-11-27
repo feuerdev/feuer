@@ -17,10 +17,12 @@ export default class Game implements ConnectionListener, RendererListener {
   private renderer: Renderer = new Renderer()
   private connection?: Connection
   private cWorld: ClientWorld = new ClientWorld()
+  private uid: string
 
   private initialFocusSet = false
 
-  constructor() {
+  constructor(uid: string) {
+    this.uid = uid
     this.renderer.selection = this.selection
     this.renderer.addListener(this)
 
@@ -59,7 +61,7 @@ export default class Game implements ConnectionListener, RendererListener {
 
   onRendererLoaded(): void {
     //Only connect after renderer is loaded //TODO: why?
-    this.connection = new Connection(`${window.location.host}`)
+    this.connection = new Connection(`${window.location.host}`, this.uid)
     this.connection.addListener(this)
 
     this.renderer.viewport?.on("clicked", (click) => {
@@ -193,15 +195,15 @@ export default class Game implements ConnectionListener, RendererListener {
     socket.on("gamestate groups", (data) => {
       this.cWorld.groups = data
       for (let group of this.cWorld.groups) {
-        if (group.owner !== currentUid) {
+        if (group.owner !== this.uid) {
           if (
             this.cWorld.playerRelations[
-              PlayerRelation.getHash(group.owner, currentUid)
+              PlayerRelation.getHash(group.owner, this.uid)
             ] === undefined
           ) {
             this.connection?.send("request relation", {
               id1: group.owner,
-              id2: currentUid,
+              id2: this.uid,
             })
           }
         }
@@ -239,5 +241,3 @@ export default class Game implements ConnectionListener, RendererListener {
     document.querySelector(".loading")?.classList.add("hidden")
   }
 }
-
-declare const currentUid: string

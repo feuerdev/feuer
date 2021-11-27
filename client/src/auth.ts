@@ -30,6 +30,10 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+function setUid(uid: string) {
+  localStorage.setItem("uid", uid)
+}
+
 /**
  * Sets token and waits until it is actually set
  * @param idToken auth token
@@ -48,6 +52,10 @@ async function setCookie(idToken: string): Promise<void> {
  */
 function invalidateCookie() {
   document.cookie = `${COOKIE_NAME}=;max-age=0`
+}
+
+export function getUid(): string {
+  return getAuth(app).currentUser.uid
 }
 
 export async function refreshToken(): Promise<void> {
@@ -83,6 +91,7 @@ export async function login(email: string, password: string): Promise<void> {
       password
     )
     const idToken = await credential.user.getIdToken()
+    setUid(credential.user.uid)
     await setCookie(idToken)
 
     console.log("Login successful")
@@ -111,6 +120,7 @@ export async function register(
       password
     )
     const idToken = await credentials.user.getIdToken()
+    setUid(credentials.user.uid)
     await setCookie(idToken)
 
     const result = await fetch("/register", {
@@ -139,6 +149,7 @@ export async function registerAnonymously(): Promise<void> {
     const credentials = await signInAnonymously(getAuth(app))
     const idToken = await credentials.user.getIdToken()
 
+    setUid(credentials.user.uid)
     await setCookie(idToken)
 
     const result = await fetch("/register", {

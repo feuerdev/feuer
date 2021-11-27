@@ -8,10 +8,11 @@ export interface ConnectionListener {
 
 export default class Connection {
   private readonly socket: Socket
-
+  private uid: string
   private listeners: ConnectionListener[] = []
 
-  constructor(ip: string) {
+  constructor(ip: string, uid: string) {
+    this.uid = uid
     this.socket = io(ip, { transports: ["websocket"] })
     this.socket.on("connect", () => this.onConnected())
     this.socket.on("disconnect", () => this.onDisconnected)
@@ -19,19 +20,11 @@ export default class Connection {
 
   private onConnected() {
     const self = this
-    function waitForUid() {
-      if (currentUid) {
-        for (let listener of self.listeners) {
-          listener.onSetup(self.socket)
-          listener.onConnected(self.socket)
-        }
-        self.socket.emit("initialize", currentUid)
-      } else {
-        console.log("uid not set yet. trying again...")
-        setTimeout(waitForUid, 300)
-      }
+    for (let listener of self.listeners) {
+      listener.onSetup(self.socket)
+      listener.onConnected(self.socket)
     }
-    waitForUid()
+    self.socket.emit("initialize", this.uid)
   }
 
   private onDisconnected() {
@@ -57,5 +50,3 @@ export default class Connection {
     }
   }
 }
-
-declare const currentUid: string
