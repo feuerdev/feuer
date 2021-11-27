@@ -4,7 +4,9 @@
     "**/.env": true,
     "**/.DS_Store": true,
     "**/.eslintcache": true,
-    "**/*.js": true,
+    "client/**/*.js": true,
+    "server/**/*.js": true,
+    "shared/**/*.js": true,
     "**/*.js.map": true
   }
 }
