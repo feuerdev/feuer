@@ -61,10 +61,6 @@ function invalidateUid() {
   localStorage.removeItem("uid")
 }
 
-export function getUid(): string {
-  return getAuth(app).currentUser.uid
-}
-
 export async function refreshToken(): Promise<void> {
   const user = getAuth(app).currentUser
   if (!user) {

@@ -1,7 +1,6 @@
 import Game from "./game"
 import * as React from "react"
 import ReactDOM from "react-dom"
-import { getUid } from "./auth"
 
 class Hud extends React.Component {
   render() {
@@ -11,9 +10,9 @@ class Hud extends React.Component {
 
 document.addEventListener("DOMContentLoaded", function () {
   const uid = localStorage.getItem("uid")
-  new Game(uid)
+  const game = new Game(uid)
+  game.startLoading() //TODO: Get rid of this
 
   const hudContainer = document.querySelector("#hud")
-
-  ReactDOM.render(<Hud />, hudContainer)
+  ReactDOM.render(<Hud/>, hudContainer)
 })
