@@ -32,9 +32,7 @@
     "seedrandom": "^3.0.5",
     "socket.io": "^4.2.0",
     "winston": "^3.3.3",
-    "yargs": "^17.2.1"
-  },
-  "devDependencies": {
+    "yargs": "^17.2.1",
     "@semantic-release/git": "^10.0.0",
     "@types/react": "^17.0.36",
     "@types/react-dom": "^17.0.11",
@@ -54,6 +52,7 @@
     "pixi-viewport": "4.11.1",
     "pixi.js": "5.2.4"
   },
+  "devDependencies": {},
   "husky": {
     "hooks": {
       "pre-commit": "npm run lint"
