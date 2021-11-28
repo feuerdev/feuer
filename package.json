@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node -r dotenv/config server/main.js",
     "build:server": "tsc -p server",
-    "build:client": "webpack",
+    "build:client": "webpack --mode development",
     "build": "npm run build:server && npm run build:client",
     "lint": "eslint --cache && npx prettier . -c --config .prettierrc.json",
     "lint:fix": "eslint --cache --fix && npx prettier . -c -w --config .prettierrc.json",
@@ -52,7 +52,6 @@
     "pixi-viewport": "4.11.1",
     "pixi.js": "5.2.4"
   },
-  "devDependencies": {},
   "husky": {
     "hooks": {
       "pre-commit": "npm run lint"

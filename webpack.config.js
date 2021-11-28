@@ -1,7 +1,8 @@
 const path = require('path');
 
 module.exports = {
-  mode: "production",
+  mode: "development",
+  devtool: "source-map",
   entry: {
     bundle:   "./client/src/main.tsx",
     login:    "./client/src/login.ts",
