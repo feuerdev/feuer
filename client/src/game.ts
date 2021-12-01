@@ -1,17 +1,17 @@
-import Vector2 from "../../shared/vector2"
-import * as Util from "../../shared/util"
-import PlayerRelation from "../../shared/relation"
+import { Socket } from "socket.io-client"
 
 import Connection, { ConnectionListener } from "./connection"
 import Selection from "./selection"
 import ClientWorld from "./clientworld"
 import Renderer, { RendererListener } from "./renderer"
-import Hex from "../../shared/hex"
-import { Socket } from "socket.io-client"
 
-/**
- * Client side game logic
- */
+import * as Vectors from "../../shared/vector2"
+import Vector2 from "../../shared/vector2"
+import * as Util from "../../shared/util"
+import * as Hexes from "../../shared/hex"
+import * as PlayerRelation from "../../shared/relation"
+import Hex from "../../shared/hex"
+
 export default class Game implements ConnectionListener, RendererListener {
   private selection: Selection = new Selection()
   private renderer: Renderer = new Renderer()
@@ -25,14 +25,6 @@ export default class Game implements ConnectionListener, RendererListener {
     this.uid = uid
     this.renderer.selection = this.selection
     this.renderer.addListener(this)
-
-    window.addEventListener(
-      "keydown",
-      (event) => {
-        //
-      },
-      false
-    )
 
     window.addEventListener(
       "keyup",
@@ -66,7 +58,7 @@ export default class Game implements ConnectionListener, RendererListener {
 
     this.renderer.viewport?.on("clicked", (click) => {
       let p = click.world
-      let v = new Vector2(p.x, p.y)
+      let v = Vectors.create(p.x, p.y)
       switch (click.event.data.button) {
         case 0: //Left
           this.selection.clearSelection()
@@ -106,14 +98,14 @@ export default class Game implements ConnectionListener, RendererListener {
               }
             }
           }
-          let hex = this.renderer.layout.pixelToHex(v).round()
-          if (this.cWorld.tiles[hex.hash()]) {
+          let hex = Hexes.round(this.renderer.layout.pixelToHex(v))
+          if (this.cWorld.tiles[Hexes.hash(hex)]) {
             this.selection.selectHex(hex)
-            this.renderer.updateScenegraph(this.cWorld.tiles[hex.hash()])
+            this.renderer.updateScenegraph(this.cWorld.tiles[Hexes.hash(hex)])
           }
           break
         case 2: //Right
-          let clickedHex = this.renderer.layout.pixelToHex(v).round()
+          let clickedHex = Hexes.round(this.renderer.layout.pixelToHex(v))
           if (clickedHex) {
             this.connection?.send("request movement", {
               selection: this.selection.selectedGroup,
@@ -198,7 +190,7 @@ export default class Game implements ConnectionListener, RendererListener {
         if (group.owner !== this.uid) {
           if (
             this.cWorld.playerRelations[
-              PlayerRelation.getHash(group.owner, this.uid)
+              PlayerRelation.hash(group.owner, this.uid)
             ] === undefined
           ) {
             this.connection?.send("request relation", {
@@ -224,13 +216,13 @@ export default class Game implements ConnectionListener, RendererListener {
       }
     })
     socket.on("gamestate relation", (data) => {
-      let hash = PlayerRelation.getHash(data.id1, data.id2)
+      let hash = PlayerRelation.hash(data.id1, data.id2)
       this.cWorld.playerRelations[hash] = data
     })
   }
 
   getHex(vector: Vector2): Hex {
-    return this.renderer.layout.pixelToHex(vector).round()
+    return Hexes.round(this.renderer.layout.pixelToHex(vector))
   }
 
   startLoading() {

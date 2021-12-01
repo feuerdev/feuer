@@ -1,4 +1,4 @@
-import Hex from "./hex"
+import Hex, { distance, hash, neighbors, equals } from "./hex"
 
 class QueueElement {
   public element: any
@@ -50,7 +50,7 @@ class PriorityQueue {
 
 export function astar(tiles, start: Hex, goal: Hex) {
   let heuristic = function (a: Hex, b: Hex) {
-    return a.distance(b)
+    return distance(a, b)
   }
 
   let frontier = new PriorityQueue()
@@ -58,8 +58,8 @@ export function astar(tiles, start: Hex, goal: Hex) {
 
   let came_from = {}
   let cost_so_far = {}
-  came_from[start.hash()] = null
-  cost_so_far[start.hash()] = 0
+  came_from[hash(start)] = null
+  cost_so_far[hash(start)] = 0
 
   while (!frontier.isEmpty()) {
     let current: Hex = frontier.dequeue()
@@ -68,18 +68,18 @@ export function astar(tiles, start: Hex, goal: Hex) {
     //   break;
     // }
 
-    for (let next of current.neighbors()) {
-      if (tiles[next.hash()]) {
+    for (let next of neighbors(current)) {
+      if (tiles[hash(next)]) {
         let new_cost =
-          cost_so_far[current.hash()] + 1 / tiles[current.hash()].movementFactor //TODO calculate correct movementcost
+          cost_so_far[hash(current)] + 1 / tiles[hash(current)].movementFactor //TODO calculate correct movementcost
         if (
-          cost_so_far[next.hash()] === undefined ||
-          new_cost < cost_so_far[next.hash()]
+          cost_so_far[hash(next)] === undefined ||
+          new_cost < cost_so_far[hash(next)]
         ) {
-          cost_so_far[next.hash()] = new_cost
+          cost_so_far[hash(next)] = new_cost
           let priority = new_cost + heuristic(goal, next)
           frontier.enqueue(next, priority)
-          came_from[next.hash()] = current
+          came_from[hash(next)] = current
         }
       }
     }
@@ -87,9 +87,9 @@ export function astar(tiles, start: Hex, goal: Hex) {
 
   let result: Hex[] = []
   let x: Hex = goal
-  while (!x.equals(start)) {
+  while (!equals(x, start)) {
     result.push(x)
-    x = came_from[x.hash()]
+    x = came_from[hash(x)]
     if (result.length > 999) {
       return []
     }

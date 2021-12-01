@@ -1,12 +1,13 @@
 import seedrandom from "seedrandom"
 import { Hashtable } from "../../shared/util"
-import Tile, { Spot } from "./tile"
+import Tile from "../tile"
 import FastSimplexNoise from "../../shared/noise"
 import Log from "../util/log"
 import Vector2 from "../../shared/vector2"
 import World from "./world"
-import Hex from "../../shared/hex"
+import * as Hex from "../../shared/hex"
 import * as Rules from "../../shared/rules.json"
+import * as Resources from "~shared/resources"
 
 export default class Mapgen {
   public static create(
@@ -82,20 +83,28 @@ export default class Mapgen {
       let r1: number = Math.max(-size, -q - size)
       let r2: number = Math.min(size, -q + size)
       for (let r: number = r1; r <= r2; r++) {
-        let tile = new Tile(q, r)
         let heightValue = heightGen.scaled2D(q, r)
         let treeValue = treeGen.scaled2D(q, r)
         let stoneValue = stoneGen.scaled2D(q, r)
         let ironValue = ironGen.scaled2D(q, r)
         let goldValue = goldGen.scaled2D(q, r)
 
+        let hex = Hex.create(q, r)
+        let tile: Tile = {
+          hex: hex,
+          height: heightValue,
+          forestation: treeValue,
+          rockyness: stoneValue,
+          ironOre: ironValue,
+          goldOre: goldValue,
+          resources: Resources.create(),
+        }
         tile.forestation = treeValue
         tile.rockyness = stoneValue
         tile.height = heightValue
         tile.ironOre = ironValue
         tile.goldOre = goldValue
-        let hex: Hex = new Hex(q, r, -q - r)
-        tiles[hex.hash()] = tile
+        tiles[Hex.hash(hex)] = tile
 
         //No rocks and trees in water obviously
         if (heightValue <= Rules.settings.map_level_water_shallow) {
@@ -121,36 +130,35 @@ export default class Mapgen {
           goldValue = Math.min(goldValue * 1.5, 1)
         }
 
-        while (treeValue > 0) {
-          let pos: Vector2 = Mapgen.generatePos()
-          treeValue -= 0.05
-          tile.environmentSpots.push(
-            new Spot(pos, Mapgen.generateTree(heightValue), -1)
-          )
-        }
+        //TODO: clientside
+        // while (treeValue > 0) {
+        //   let pos: Vector2 = Mapgen.generatePos()
+        //   treeValue -= 0.05
+        //   tile.environmentSpots.push(
+        //     new Spot(pos, Mapgen.generateTree(heightValue), -1)
+        //   )
+        // }
 
-        while (stoneValue > 0) {
-          let pos: Vector2 = Mapgen.generatePos()
-          stoneValue -= 0.15
-          tile.environmentSpots.push(new Spot(pos, Mapgen.generateStone(), -1))
-        }
-        while (ironValue > 0.7) {
-          let pos: Vector2 = Mapgen.generatePos()
-          ironValue -= 0.1
-          tile.environmentSpots.push(new Spot(pos, "iron", -1))
-        }
-        while (goldValue > 0.7) {
-          let pos: Vector2 = Mapgen.generatePos()
-          goldValue -= 0.1
-          tile.environmentSpots.push(new Spot(pos, "gold", -1))
-        }
+        // while (stoneValue > 0) {
+        //   let pos: Vector2 = Mapgen.generatePos()
+        //   stoneValue -= 0.15
+        //   tile.environmentSpots.push(new Spot(pos, Mapgen.generateStone(), -1))
+        // }
+        // while (ironValue > 0.7) {
+        //   let pos: Vector2 = Mapgen.generatePos()
+        //   ironValue -= 0.1
+        //   tile.environmentSpots.push(new Spot(pos, "iron", -1))
+        // }
+        // while (goldValue > 0.7) {
+        //   let pos: Vector2 = Mapgen.generatePos()
+        //   goldValue -= 0.1
+        //   tile.environmentSpots.push(new Spot(pos, "gold", -1))
+        // }
 
-        tile.updateMovementFactor()
-
-        //Sort environment spots by y-Value
-        tile.environmentSpots.sort(function (a, b) {
-          return a.pos.y - b.pos.y
-        })
+        // //Sort environment spots by y-Value
+        // tile.environmentSpots.sort(function (a, b) {
+        //   return a.pos.y - b.pos.y
+        // })
       }
     }
     Log.info("Map created")
@@ -164,7 +172,7 @@ export default class Mapgen {
     while (!result) {
       let x = Math.random() * 130 - 85
       let y = Math.random() * 90 - 70
-      result = new Vector2(x, y)
+      result = { x: x, y: y }
     }
     return result
   }
