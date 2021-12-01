@@ -1,6 +1,7 @@
-import Hex from "../hex"
-import * as Rules from "../rules.json"
-import { Building } from "../objects"
+import Hex from "../../shared/hex"
+import * as Rules from "../../shared/rules.json"
+import { Building } from "../../shared/objects"
+import Resources from "../../shared/resources"
 
 export function createBuilding(
   owner: string,
@@ -15,7 +16,7 @@ export function createBuilding(
     level: 0,
     spotting: template.spotting,
     hp: template.hp,
-    resourceGeneration: this.loadResourceObject(template.resource_generation),
+    resourceGeneration: loadResourceObject(template.resource_generation),
     id: 0,
   }
   return building
@@ -32,19 +33,17 @@ export function upgradeBuilding(building: Building): Building {
       level: building.level++,
       spotting: newTemplate.spotting,
       hp: newTemplate.hp,
-      resourceGeneration: this.loadResourceObject(
-        newTemplate.resource_generation
-      ),
+      resourceGeneration: loadResourceObject(newTemplate.resource_generation),
       id: building.id,
     }
   }
   return building
 }
 
-function loadResourceObject(template) {
+function loadResourceObject(template): Resources {
   let result = {}
   for (let res of Object.keys(template)) {
     result[res] = template[res]
   }
-  return result
+  return result as Resources
 }

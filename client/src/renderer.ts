@@ -6,6 +6,8 @@ import Hex, { Layout } from "../../shared/hex"
 import * as Vector2 from "../../shared/vector2"
 import * as Rules from "../../shared/rules.json"
 import * as Hexes from "../../shared/hex"
+import Tile from "../../shared/tile"
+import { ClientTile } from "./objects"
 
 export interface RendererListener {
   onRendererLoaded(): void
@@ -120,7 +122,7 @@ export default class Renderer {
     this.listeners.forEach((l) => l.onRendererLoaded())
   }
 
-  updateScenegraph(tile) {
+  updateScenegraph(tile: ClientTile) {
     let hex: Hex = Hexes.create(tile.hex.q, tile.hex.r, tile.hex.s)
 
     let corners = this.layout.polygonCorners(hex)
@@ -147,26 +149,27 @@ export default class Renderer {
 
     container.addChild(img)
 
-    for (let i = 0; i < tile.environmentSpots.length; i++) {
-      let spot = tile.environmentSpots[i]
-      let texture = spot.texture
-      let img = new PIXI.Sprite(this.loader.resources[texture]!.texture)
-      let pos = spot.pos
-      img.x = this.layout.hexToPixel(hex).x + pos.x
-      img.y = this.layout.hexToPixel(hex).y + pos.y
-      img.tint = tint
-      img.name = spot.id
-      if (
-        this.selection?.isBuilding() &&
-        this.selection.selectedBuilding === spot.id
-      ) {
-        img.filters = [Renderer.GLOWFILTER]
-      }
-      if (this.selection?.selectedGroup === spot.id) {
-        img.filters = [Renderer.GLOWFILTER]
-      }
-      container.addChild(img)
-    }
+    //TODO: Rewrite Client side
+    // for (let i = 0; i < tile.environmentSpots.length; i++) {
+    //   let spot = tile.environmentSpots[i]
+    //   let texture = spot.texture
+    //   let img = new PIXI.Sprite(this.loader.resources[texture]!.texture)
+    //   let pos = spot.pos
+    //   img.x = this.layout.hexToPixel(hex).x + pos.x
+    //   img.y = this.layout.hexToPixel(hex).y + pos.y
+    //   img.tint = tint
+    //   img.name = spot.id
+    //   if (
+    //     this.selection?.isBuilding() &&
+    //     this.selection.selectedBuilding === spot.id
+    //   ) {
+    //     img.filters = [Renderer.GLOWFILTER]
+    //   }
+    //   if (this.selection?.selectedGroup === spot.id) {
+    //     img.filters = [Renderer.GLOWFILTER]
+    //   }
+    //   container.addChild(img)
+    // }
 
     let old = this.viewport?.getChildByName(Hexes.hash(hex))
     if (old) {

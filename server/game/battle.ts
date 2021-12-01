@@ -1,5 +1,5 @@
-import Hex from "~shared/hex"
-import { Battle, Group } from "~shared/objects"
+import Hex from "../../shared/hex"
+import { Battle, Group } from "../../shared/objects"
 
 export function create(
   position: Hex,

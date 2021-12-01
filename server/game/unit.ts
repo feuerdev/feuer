@@ -1,4 +1,4 @@
-import Unit from "~shared/objects"
+import { Unit } from "../../shared/objects"
 
 export function generateUnit(owner: string): Unit {
   let unit: Unit = {
