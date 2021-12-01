@@ -1,6 +1,5 @@
 import { Hashtable } from "./util"
 import Hex from "./hex"
-import Tile from "./tile"
 import PlayerRelation from "./relation"
 import Resources from "./resources"
 
@@ -14,6 +13,19 @@ export interface World {
   buildings: Building[]
   playerRelations: Hashtable<PlayerRelation>
   battles: Battle[]
+}
+
+/**
+ * Tile-Class representing one hex with all its relevant fields
+ */
+export interface Tile {
+  hex: Hex
+  height: number
+  forestation: number
+  rockyness: number
+  ironOre: number
+  goldOre: number
+  resources: Resources
 }
 
 // Game Objects
@@ -50,7 +62,7 @@ export interface Group extends GameObject {
   resources: Resources
 }
 
-export default interface Unit extends GameObject {
+export interface Unit extends GameObject {
   owner: UserId
   name: string
 

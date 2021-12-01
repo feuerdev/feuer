@@ -1,9 +1,5 @@
 {
   "compilerOptions": {
-    "paths": {
-      "~shared/*": ["../shared/*"]
-    },
-    "rootDirs": [".", "../shared"],
     "target": "ES6",
     "module": "commonjs",
     "sourceMap": true,

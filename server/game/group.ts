@@ -1,6 +1,6 @@
-import { Group } from "~shared/objects"
-import Hex from "../hex"
-import * as Rules from "../rules.json"
+import { Group } from "../../shared/objects"
+import Hex from "../../shared/hex"
+import * as Rules from "../../shared/rules.json"
 import { generateUnit } from "./unit"
 
 export function createGroup(owner: string, name: string, pos: Hex): Group {

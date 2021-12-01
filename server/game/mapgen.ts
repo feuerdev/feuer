@@ -1,13 +1,14 @@
 import seedrandom from "seedrandom"
 import { Hashtable } from "../../shared/util"
-import Tile from "../tile"
+import Tile from "../../shared/tile"
 import FastSimplexNoise from "../../shared/noise"
 import Log from "../util/log"
 import Vector2 from "../../shared/vector2"
-import World from "./world"
+import { World } from "../../shared/objects"
+import * as Worlds from "./world"
 import * as Hex from "../../shared/hex"
 import * as Rules from "../../shared/rules.json"
-import * as Resources from "~shared/resources"
+import * as Resources from "../../shared/resources"
 
 export default class Mapgen {
   public static create(
@@ -163,7 +164,7 @@ export default class Mapgen {
     }
     Log.info("Map created")
 
-    const world = new World(tiles, [], [], {}, [])
+    const world = Worlds.create(tiles)
     return world
   }
 

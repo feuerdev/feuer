@@ -2,7 +2,6 @@ import { Socket } from "socket.io-client"
 
 import Connection, { ConnectionListener } from "./connection"
 import Selection from "./selection"
-import ClientWorld from "./clientworld"
 import Renderer, { RendererListener } from "./renderer"
 
 import * as Vectors from "../../shared/vector2"
@@ -11,12 +10,21 @@ import * as Util from "../../shared/util"
 import * as Hexes from "../../shared/hex"
 import * as PlayerRelation from "../../shared/relation"
 import Hex from "../../shared/hex"
+import { World } from "../../shared/objects"
+import { ClientTile } from "./objects"
 
 export default class Game implements ConnectionListener, RendererListener {
   private selection: Selection = new Selection()
   private renderer: Renderer = new Renderer()
   private connection?: Connection
-  private cWorld: ClientWorld = new ClientWorld()
+  private world?: World = {
+    tiles: {},
+    groups: [],
+    units: [],
+    buildings: [],
+    playerRelations: {},
+    battles: [],
+  }
   private uid: string
 
   private initialFocusSet = false
@@ -76,20 +84,20 @@ export default class Game implements ConnectionListener, RendererListener {
                     (<PIXI.Sprite>s).height
                   )
                 ) {
-                  for (let group of this.cWorld.groups) {
-                    if (s.name === group.id) {
+                  for (let group of this.world.groups) {
+                    if (s.name === String(group.id)) {
                       this.selection.selectGroup(group.id)
                       this.renderer.updateScenegraph(
-                        this.cWorld.getTile(this.getHex(v))
+                        this.getTile(this.getHex(v))
                       )
                       return
                     }
                   }
-                  for (let building of this.cWorld.buildings) {
-                    if (s.name === building.id) {
+                  for (let building of this.world.buildings) {
+                    if (s.name === String(building.id)) {
                       this.selection.selectBuilding(building.id)
                       this.renderer.updateScenegraph(
-                        this.cWorld.getTile(this.getHex(v))
+                        this.getTile(this.getHex(v))
                       )
                       return
                     }
@@ -99,9 +107,11 @@ export default class Game implements ConnectionListener, RendererListener {
             }
           }
           let hex = Hexes.round(this.renderer.layout.pixelToHex(v))
-          if (this.cWorld.tiles[Hexes.hash(hex)]) {
+          if (this.world.tiles[Hexes.hash(hex)]) {
             this.selection.selectHex(hex)
-            this.renderer.updateScenegraph(this.cWorld.tiles[Hexes.hash(hex)])
+            this.renderer.updateScenegraph(
+              this.world.tiles[Hexes.hash(hex)] as ClientTile
+            )
           }
           break
         case 2: //Right
@@ -162,34 +172,41 @@ export default class Game implements ConnectionListener, RendererListener {
   onSetup(socket: Socket) {
     //Hier alle Gamelevel Events implementieren
     socket.on("gamestate tiles", (data) => {
-      for (let property in this.cWorld.tiles) {
-        if (this.cWorld.tiles.hasOwnProperty(property)) {
-          this.cWorld.tiles[property].visible = false
-          this.renderer.updateScenegraph(this.cWorld.tiles[property]) //TODO: Performance - Only update Tint here instead of whole tile
+      for (let property in this.world.tiles) {
+        if (this.world.tiles.hasOwnProperty(property)) {
+          const tile = this.world.tiles[property] as ClientTile
+          tile.visible = false
+          this.renderer.updateScenegraph(
+            this.world.tiles[property] as ClientTile
+          ) //TODO: Performance - Only update Tint here instead of whole tile
         }
       }
       for (let property in data) {
         if (data.hasOwnProperty(property)) {
           data[property].visible = true
-          this.cWorld.tiles[property] = data[property]
-          this.renderer.updateScenegraph(this.cWorld.tiles[property])
+          this.world.tiles[property] = data[property]
+          this.renderer.updateScenegraph(
+            this.world.tiles[property] as ClientTile
+          )
         }
       }
     })
     socket.on("gamestate discovered tiles", (data) => {
       for (let property in data) {
         if (data.hasOwnProperty(property)) {
-          this.cWorld.tiles[property] = data[property]
-          this.renderer.updateScenegraph(this.cWorld.tiles[property])
+          this.world.tiles[property] = data[property]
+          this.renderer.updateScenegraph(
+            this.world.tiles[property] as ClientTile
+          )
         }
       }
     })
     socket.on("gamestate groups", (data) => {
-      this.cWorld.groups = data
-      for (let group of this.cWorld.groups) {
+      this.world.groups = data
+      for (let group of this.world.groups) {
         if (group.owner !== this.uid) {
           if (
-            this.cWorld.playerRelations[
+            this.world.playerRelations[
               PlayerRelation.hash(group.owner, this.uid)
             ] === undefined
           ) {
@@ -202,27 +219,31 @@ export default class Game implements ConnectionListener, RendererListener {
       }
     })
     socket.on("gamestate battles", (data) => {
-      this.cWorld.battles = data
+      this.world.battles = data
     })
     socket.on("gamestate buildings", (data) => {
-      this.cWorld.buildings = data
+      this.world.buildings = data
       if (!this.initialFocusSet) {
         this.initialFocusSet = true
         this.stopLoading()
-        let ref = this.cWorld.buildings[0]
+        let ref = this.world.buildings[0]
         if (ref) {
-          this.renderer.center(ref.pos)
+          this.renderer.center(ref.position)
         }
       }
     })
     socket.on("gamestate relation", (data) => {
       let hash = PlayerRelation.hash(data.id1, data.id2)
-      this.cWorld.playerRelations[hash] = data
+      this.world.playerRelations[hash] = data
     })
   }
 
   getHex(vector: Vector2): Hex {
     return Hexes.round(this.renderer.layout.pixelToHex(vector))
+  }
+
+  getTile(hex: Hex): ClientTile {
+    return this.world[Hexes.hash(hex)]
   }
 
   startLoading() {
