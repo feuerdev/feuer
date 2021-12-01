@@ -1,10 +1,11 @@
 import { Viewport } from "pixi-viewport"
-import Hex, { Layout } from "../../shared/hex"
-import Selection from "./selection"
-import * as Rules from "../../shared/rules.json"
 import { GlowFilter } from "pixi-filters"
 import * as PIXI from "pixi.js"
-import Vector2 from "../../shared/vector2"
+import Selection from "./selection"
+import Hex, { Layout } from "../../shared/hex"
+import * as Vector2 from "../../shared/vector2"
+import * as Rules from "../../shared/rules.json"
+import * as Hexes from "../../shared/hex"
 
 export interface RendererListener {
   onRendererLoaded(): void
@@ -26,8 +27,11 @@ export default class Renderer {
   constructor() {
     this.layout = new Layout(
       Layout.pointy,
-      new Vector2(Rules.settings.map_hex_width, Rules.settings.map_hex_height),
-      new Vector2(0, 0)
+      Vector2.create(
+        Rules.settings.map_hex_width,
+        Rules.settings.map_hex_height
+      ),
+      Vector2.create(0, 0)
     )
     this.p_renderer = new PIXI.Renderer({
       view: this.canvas_map,
@@ -117,18 +121,18 @@ export default class Renderer {
   }
 
   updateScenegraph(tile) {
-    let hex: Hex = new Hex(tile.hex.q, tile.hex.r, tile.hex.s)
+    let hex: Hex = Hexes.create(tile.hex.q, tile.hex.r, tile.hex.s)
 
     let corners = this.layout.polygonCorners(hex)
     let padding = 10
 
     let container = new PIXI.Container()
-    container.name = hex.hash()
+    container.name = Hexes.hash(hex)
 
     let tint = tile.visible ? 0xdddddd : 0x555555
     if (
       this.selection.selectedHex &&
-      Hex.equals(this.selection?.selectedHex, tile.hex)
+      Hexes.equals(this.selection?.selectedHex, tile.hex)
     ) {
       tile.visible ? (tint = 0xffffff) : (tint += 0x333333)
     }
@@ -164,7 +168,7 @@ export default class Renderer {
       container.addChild(img)
     }
 
-    let old = this.viewport?.getChildByName(hex.hash())
+    let old = this.viewport?.getChildByName(Hexes.hash(hex))
     if (old) {
       this.viewport?.removeChild(old)
     }

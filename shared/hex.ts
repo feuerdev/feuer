@@ -1,155 +1,154 @@
 import Vector2 from "./vector2"
 
-export default class Hex {
-  constructor(public q: number, public r: number, public s: number) {
-    if (Math.round(q + r + s) !== 0) throw "q+r+s must be 0"
+export default interface Hex {
+  q: number
+  r: number
+  s: number
+}
+export function create(q: number, r: number, s: number = -q - r): Hex {
+  return { q: q, r: r, s: s }
+}
+
+export function add(a: Hex, b: Hex): Hex {
+  return { q: a.q + b.q, r: a.r + b.r, s: a.s + b.s }
+}
+
+export function subtract(a: Hex, b: Hex) {
+  return { q: a.q - b.q, r: a.r - b.r, s: a.s - b.s }
+}
+
+export function scale(hex: Hex, value: number) {
+  return { q: hex.q * value, r: hex.r * value, s: hex.s * value }
+}
+
+export function rotateLeft(hex: Hex) {
+  return { q: -hex.s, r: -hex.q, s: -hex.r }
+}
+
+export function rotateRight(hex: Hex) {
+  return { q: -hex.r, r: -hex.s, s: -hex.q }
+}
+
+export const directions: Hex[] = [
+  { q: 1, r: 0, s: -1 },
+  { q: 1, r: -1, s: 0 },
+  { q: 0, r: -1, s: 1 },
+  { q: -1, r: 0, s: 1 },
+  { q: -1, r: 1, s: 0 },
+  { q: 0, r: 1, s: -1 },
+]
+
+export function direction(direction: number): Hex {
+  return directions[direction]
+}
+
+export function neighbor(hex: Hex, dir: number): Hex {
+  return add(hex, direction(dir))
+}
+
+export function neighbors(hex: Hex): Hex[] {
+  let result: Hex[] = []
+  for (let direction of directions) {
+    result.push(add(hex, direction))
   }
+  return result
+}
 
-  //TODO: make all methods static so they can be shared easier between server and client
-  public add(hex: Hex) {
-    return new Hex(this.q + hex.q, this.r + hex.r, this.s + hex.s)
+export function neighborsRange(hex: Hex, radius: number): Hex[] {
+  let result: Hex[] = [hex]
+  for (let i = 1; i <= radius; i++) {
+    result.push(...ring(hex, i))
   }
+  return result
+}
 
-  public subtract(hex: Hex) {
-    return new Hex(this.q - hex.q, this.r - hex.r, this.s - hex.s)
-  }
+export function ring(hex: Hex, radius: number) {
+  let results = []
+  let pointer = scale(subtract(add(hex, neighbor(hex, 4)), hex), radius) //TODO: Check this
 
-  public scale(value: number) {
-    return new Hex(this.q * value, this.r * value, this.s * value)
-  }
-
-  public rotateLeft() {
-    return new Hex(-this.s, -this.q, -this.r)
-  }
-
-  public rotateRight() {
-    return new Hex(-this.r, -this.s, -this.q)
-  }
-
-  public static directions: Hex[] = [
-    new Hex(1, 0, -1),
-    new Hex(1, -1, 0),
-    new Hex(0, -1, 1),
-    new Hex(-1, 0, 1),
-    new Hex(-1, 1, 0),
-    new Hex(0, 1, -1),
-  ]
-
-  public static direction(direction: number): Hex {
-    return Hex.directions[direction]
-  }
-
-  public neighbor(direction: number): Hex {
-    return this.add(Hex.direction(direction))
-  }
-
-  public neighbors(): Hex[] {
-    let result: Hex[] = []
-    for (let direction of Hex.directions) {
-      result.push(this.add(direction))
+  for (let i = 0; i < 6; i++) {
+    for (let j = 0; j < radius; j++) {
+      results.push(pointer)
+      pointer = neighbor(pointer, i)
     }
-    return result
   }
+  return results
+}
 
-  public neighborsRange(radius): Hex[] {
-    let result: Hex[] = [this]
-    for (let i = 1; i <= radius; i++) {
-      result.push(...this.ring(i))
-    }
-    return result
-  }
+export const diagonals: Hex[] = [
+  { q: 2, r: -1, s: -1 },
+  { q: 1, r: -2, s: 1 },
+  { q: -1, r: -1, s: 2 },
+  { q: -2, r: 1, s: 1 },
+  { q: -1, r: 2, s: -1 },
+  { q: 1, r: 1, s: -2 },
+]
 
-  public ring(radius) {
-    let results = []
-    let pointer = this.add(this.neighbor(4).subtract(this).scale(radius))
-    for (let i = 0; i < 6; i++) {
-      for (let j = 0; j < radius; j++) {
-        results.push(pointer)
-        pointer = pointer.neighbor(i)
-      }
-    }
-    return results
-  }
+export function diagonalNeighbor(hex: Hex, direction: number): Hex {
+  return add(hex, diagonals[direction])
+}
 
-  public static diagonals: Hex[] = [
-    new Hex(2, -1, -1),
-    new Hex(1, -2, 1),
-    new Hex(-1, -1, 2),
-    new Hex(-2, 1, 1),
-    new Hex(-1, 2, -1),
-    new Hex(1, 1, -2),
-  ]
+export function length(hex: Hex): number {
+  return (Math.abs(hex.q) + Math.abs(hex.r) + Math.abs(hex.s)) / 2
+}
 
-  public diagonalNeighbor(direction: number): Hex {
-    return this.add(Hex.diagonals[direction])
-  }
+export function distance(a: Hex, b: Hex): number {
+  return length(subtract(a, b))
+}
 
-  public length(): number {
-    return (Math.abs(this.q) + Math.abs(this.r) + Math.abs(this.s)) / 2
-  }
-
-  public distance(b: Hex): number {
-    return this.subtract(b).length()
-  }
-
-  public round(): Hex {
-    var qi: number = Math.round(this.q)
-    var ri: number = Math.round(this.r)
-    var si: number = Math.round(this.s)
-    var q_diff: number = Math.abs(qi - this.q)
-    var r_diff: number = Math.abs(ri - this.r)
-    var s_diff: number = Math.abs(si - this.s)
-    if (q_diff > r_diff && q_diff > s_diff) {
-      qi = -ri - si
+export function round(hex: Hex): Hex {
+  var qi: number = Math.round(hex.q)
+  var ri: number = Math.round(hex.r)
+  var si: number = Math.round(hex.s)
+  var q_diff: number = Math.abs(qi - hex.q)
+  var r_diff: number = Math.abs(ri - hex.r)
+  var s_diff: number = Math.abs(si - hex.s)
+  if (q_diff > r_diff && q_diff > s_diff) {
+    qi = -ri - si
+  } else {
+    if (r_diff > s_diff) {
+      ri = -qi - si
     } else {
-      if (r_diff > s_diff) {
-        ri = -qi - si
-      } else {
-        si = -qi - ri
-      }
+      si = -qi - ri
     }
-    return new Hex(qi, ri, si)
   }
+  return { q: qi, r: ri, s: si }
+}
 
-  public lerp(b: Hex, t: number): Hex {
-    return new Hex(
-      this.q * (1.0 - t) + b.q * t,
-      this.r * (1.0 - t) + b.r * t,
-      this.s * (1.0 - t) + b.s * t
-    )
+export function lerp(a: Hex, b: Hex, t: number): Hex {
+  return {
+    q: a.q * (1.0 - t) + b.q * t,
+    r: a.r * (1.0 - t) + b.r * t,
+    s: a.s * (1.0 - t) + b.s * t,
   }
+}
 
-  public hexesTo(b: Hex): Hex[] {
-    const N: number = this.distance(b)
-    const a_nudge: Hex = new Hex(
-      this.q + 0.000001,
-      this.r + 0.000001,
-      this.s - 0.000002
-    )
-    const b_nudge: Hex = new Hex(b.q + 0.000001, b.r + 0.000001, b.s - 0.000002)
-    const results: Hex[] = []
-    const step: number = 1.0 / Math.max(N, 1)
-    for (var i = 0; i <= N; i++) {
-      results.push(a_nudge.lerp(b_nudge, step * i).round())
-    }
-    return results
+export function hexesTo(a: Hex, b: Hex): Hex[] {
+  const N: number = distance(a, b)
+  const a_nudge: Hex = {
+    q: a.q + 0.000001,
+    r: a.r + 0.000001,
+    s: a.s - 0.000002,
   }
+  const b_nudge: Hex = {
+    q: b.q + 0.000001,
+    r: b.r + 0.000001,
+    s: b.s - 0.000002,
+  }
+  const results: Hex[] = []
+  const step: number = 1.0 / Math.max(N, 1)
+  for (var i = 0; i <= N; i++) {
+    results.push(round(lerp(a_nudge, b_nudge, step * i)))
+  }
+  return results
+}
 
-  public equals(hex: Hex) {
-    return this.q === hex.q && this.r === hex.r && this.s === hex.s
-  }
+export function hash(hex: Hex): string {
+  return hex.q + "-" + hex.r
+}
 
-  public hash() {
-    return this.q + "-" + this.r //TODO: make a better hash function
-  }
-
-  public static hash(hex): string {
-    return hex.q + "-" + hex.r
-  }
-
-  public static equals(a: Hex, b: Hex) {
-    return a.q === b.q && a.r === b.r && a.s === b.s
-  }
+export function equals(a: Hex, b: Hex): boolean {
+  return a.q === b.q && a.r === b.r && a.s === b.s
 }
 
 export class OffsetCoord {
@@ -167,7 +166,7 @@ export class OffsetCoord {
     var q: number = h.col
     var r: number = h.row - (h.col + offset * (h.col & 1)) / 2
     var s: number = -q - r
-    return new Hex(q, r, s)
+    return { q: q, r: r, s: s }
   }
 
   public static roffsetFromCube(offset: number, h: Hex): OffsetCoord {
@@ -180,7 +179,7 @@ export class OffsetCoord {
     var q: number = h.col - (h.row + offset * (h.row & 1)) / 2
     var r: number = h.row
     var s: number = -q - r
-    return new Hex(q, r, s)
+    return { q: q, r: r, s: s }
   }
 }
 
@@ -233,27 +232,27 @@ export class Layout {
     var origin: Vector2 = this.origin
     var x: number = (M.f0 * h.q + M.f1 * h.r) * size.x
     var y: number = (M.f2 * h.q + M.f3 * h.r) * size.y
-    return new Vector2(x + origin.x, y + origin.y)
+    return { x: x + origin.x, y: y + origin.y }
   }
 
   public pixelToHex(p: Vector2): Hex {
     var M: Orientation = this.orientation
     var size: Vector2 = this.size
     var origin: Vector2 = this.origin
-    var pt: Vector2 = new Vector2(
-      (p.x - origin.x) / size.x,
-      (p.y - origin.y) / size.y
-    )
+    var pt: Vector2 = {
+      x: (p.x - origin.x) / size.x,
+      y: (p.y - origin.y) / size.y,
+    }
     var q: number = M.b0 * pt.x + M.b1 * pt.y
     var r: number = M.b2 * pt.x + M.b3 * pt.y
-    return new Hex(q, r, -q - r)
+    return { q: q, r: r, s: -q - r }
   }
 
   public hexCornerOffset(corner: number): Vector2 {
     var M: Orientation = this.orientation
     var size: Vector2 = this.size
     var angle: number = (2.0 * Math.PI * (M.start_angle - corner)) / 6.0
-    return new Vector2(size.x * Math.cos(angle), size.y * Math.sin(angle))
+    return { x: size.x * Math.cos(angle), y: size.y * Math.sin(angle) }
   }
 
   public polygonCorners(h: Hex): Vector2[] {
@@ -261,7 +260,7 @@ export class Layout {
     var center: Vector2 = this.hexToPixel(h)
     for (var i = 0; i < 6; i++) {
       var offset: Vector2 = this.hexCornerOffset(i)
-      corners.push(new Vector2(center.x + offset.x, center.y + offset.y))
+      corners.push({ x: center.x + offset.x, y: center.y + offset.y })
     }
     return corners
   }

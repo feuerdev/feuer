@@ -14,5 +14,5 @@ document.addEventListener("DOMContentLoaded", function () {
   game.startLoading() //TODO: Get rid of this
 
   const hudContainer = document.querySelector("#hud")
-  ReactDOM.render(<Hud/>, hudContainer)
+  ReactDOM.render(<Hud />, hudContainer)
 })
