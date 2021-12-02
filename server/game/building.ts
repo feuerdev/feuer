@@ -2,6 +2,7 @@ import Hex from "../../shared/hex"
 import * as Rules from "../../shared/rules.json"
 import { Building } from "../../shared/objects"
 import Resources from "../../shared/resources"
+import GameServer from "./gameserver"
 
 export function createBuilding(
   owner: string,
@@ -17,7 +18,7 @@ export function createBuilding(
     spotting: template.spotting,
     hp: template.hp,
     resourceGeneration: loadResourceObject(template.resource_generation),
-    id: 0,
+    id: GameServer.idCounter++,
   }
   return building
 }

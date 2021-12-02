@@ -7,7 +7,7 @@ const directory_client = path.join(__dirname, "../../../../../client") //Gibt da
 const router = express.Router()
 
 //Route: /register/
-router.get("/", function (req, res) {
+router.get("/", function (_req, res) {
   res.sendFile("register.html", { root: directory_client })
 })
 

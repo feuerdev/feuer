@@ -25,6 +25,8 @@ import { createBuilding, upgradeBuilding } from "./building"
 import { EnumRelationType } from "../../shared/relation"
 
 export default class GameServer {
+  public static idCounter: number = 0
+
   private socketplayer: {} = {}
   private uidsockets: {} = {}
   private players: Player[] = []
@@ -126,7 +128,7 @@ export default class GameServer {
       const group: Group = this.world.groups[i]!
       if (group.targetHexes.length > 0) {
         const currentTile = this.world.tiles[Hexes.hash(group.pos)]
-        const nextHex = group.targetHexes.splice(0, 1)[0]
+        const nextHex = group.targetHexes[0]
 
         if (!nextHex || !currentTile) continue
 
@@ -632,7 +634,7 @@ function calculateMovementProgress(
   _nextTile: Tile
 ) {
   //TODO: calculate
-  return 0.5
+  return 20
 }
 // public updateMovementFactor() {
 //   //TODO calculate correct movementcost

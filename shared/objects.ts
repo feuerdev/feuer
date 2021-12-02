@@ -15,10 +15,15 @@ export interface World {
   battles: Battle[]
 }
 
+// Game Objects
+export interface GameObject {
+  id: number
+}
+
 /**
  * Tile-Class representing one hex with all its relevant fields
  */
-export interface Tile {
+export interface Tile extends GameObject {
   hex: Hex
   height: number
   forestation: number
@@ -26,11 +31,6 @@ export interface Tile {
   ironOre: number
   goldOre: number
   resources: Resources
-}
-
-// Game Objects
-export interface GameObject {
-  id: number
 }
 
 export interface Battle extends GameObject {

@@ -8,9 +8,6 @@ import * as auth from "./auth"
 import Log from "../util/log"
 
 import router_register from "./routes/register"
-import router_login from "./routes/login"
-import router_logout from "./routes/logout"
-import router_play from "./routes/play"
 import router_mapgen from "./routes/mapgen"
 import GameServer from "../game/gameserver"
 import { Config } from "../main"
@@ -45,8 +42,6 @@ export default class Webserver {
       express.static(publicFolder, { index: false, extensions: ["html"] })
     )
     this.app.use("/register", router_register)
-    // this.app.use("/login", router_login)
-    // this.app.use("/logout", router_logout)
     this.app.use("/mapgen", router_mapgen)
     this.app.get("/", auth.isAuthenticated, (_req, res) => {
       res.sendFile("play.html", { root: publicFolder })

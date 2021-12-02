@@ -1,7 +1,5 @@
 {
   "settings": {
-    "map_hex_width": 100,
-    "map_hex_height": 100,
     "map_size": 5,
     "map_frequency": 0.1,
     "map_amplitude": 1,
@@ -31,7 +29,7 @@
       "morale": 100,
       "attack": 5,
       "speed": 100,
-      "spottingDistance": 1,
+      "spotting": 10,
       "cost": {
         "food": 10,
         "gold": 10
@@ -44,7 +42,7 @@
       "morale": 30,
       "attack": 7,
       "speed": 100,
-      "spottingDistance": 30,
+      "spotting": 30,
       "cost": {
         "food": 15,
         "gold": 20
@@ -57,7 +55,7 @@
       "morale": 40,
       "attack": 4,
       "speed": 5,
-      "spottingDistance": 0,
+      "spotting": 0,
       "cost": {
         "food": 20,
         "gold": 25
@@ -75,7 +73,7 @@
           "cost": {
             "Wood": 100
           },
-          "spotting": 1,
+          "spotting": 20,
           "resource_generation": {
             "Berries": 1,
             "Wood": 1

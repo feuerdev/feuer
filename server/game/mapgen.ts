@@ -9,6 +9,7 @@ import * as Worlds from "./world"
 import * as Hex from "../../shared/hex"
 import * as Rules from "../../shared/rules.json"
 import * as Resources from "../../shared/resources"
+import GameServer from "./gameserver"
 
 export default class Mapgen {
   public static create(
@@ -92,6 +93,7 @@ export default class Mapgen {
 
         let hex = Hex.create(q, r)
         let tile: Tile = {
+          id: GameServer.idCounter++,
           hex: hex,
           height: heightValue,
           forestation: treeValue,
