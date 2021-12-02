@@ -12,12 +12,11 @@ import * as Rules from "../../shared/rules.json"
 import { astar } from "../../shared/pathfinding"
 import { Socket } from "socket.io"
 import { Hashtable } from "../../shared/util"
-import Tile from "../../shared/tile"
 import Hex from "../../shared/hex"
 import * as Hexes from "../../shared/hex"
 import { Config } from "../main"
 import { getDb } from "../util/db"
-import { Building, Group, World } from "../../shared/objects"
+import { Building, Group, World, Tile } from "../../shared/objects"
 import * as PlayerRelation from "../../shared/relation"
 import { Battle } from "../../shared/objects"
 import * as Battles from "./battle"
@@ -35,7 +34,6 @@ export default class GameServer {
   //#region Gameloop Variables
   private readonly updaterate = Math.round(1000 / Config.updateRate)
   private readonly defaultDelta = Math.round(1000 / Config.referenceRate)
-  private isRunning = false
   //#endregion
 
   constructor(world: World) {
@@ -48,8 +46,6 @@ export default class GameServer {
     })
     socketServer.on("connection", (socket) => {
       socket.on("initialize", (uid) => this.onPlayerInitialize(socket, uid))
-
-      const player = this.getPlayerBySocketId(socket.id)
 
       socket.on("disconnect", () => this.onPlayerDisconnected(socket))
 
@@ -87,8 +83,6 @@ export default class GameServer {
   private previousTick = Date.now()
   private actualTicks = 0
   run() {
-    this.isRunning = true
-
     let gameloop = () => {
       let timeSincelastFrame = Date.now() - this.previousTick
       this.previousTick = Date.now()
@@ -120,11 +114,6 @@ export default class GameServer {
     setInterval(gameloop, this.updaterate)
   }
 
-  pause() {
-    Log.info("Game paused")
-    this.isRunning = false
-  }
-
   resume() {
     Log.info("Game resumed")
     this.run()
@@ -136,9 +125,15 @@ export default class GameServer {
     for (let i = 0; i < this.world.groups.length; i++) {
       const group: Group = this.world.groups[i]!
       if (group.targetHexes.length > 0) {
-        let currentTile = this.world.tiles[Hexes.hash(group.pos)]
-        let nextHex = group.targetHexes.splice(0, 1)[0]
-        let nextTile = this.world.tiles[Hexes.hash(nextHex)]
+        const currentTile = this.world.tiles[Hexes.hash(group.pos)]
+        const nextHex = group.targetHexes.splice(0, 1)[0]
+
+        if (!nextHex || !currentTile) continue
+
+        const nextTile = this.world.tiles[Hexes.hash(nextHex)]
+
+        if (!nextTile) continue
+
         group.movementStatus +=
           calculateMovementProgress(group, currentTile, nextTile) * deltaFactor
         if (group.movementStatus > 100) {
@@ -225,7 +220,7 @@ export default class GameServer {
     }
   }
 
-  updateNet(delta) {
+  updateNet(_delta) {
     for (let i = 0; i < this.players.length; i++) {
       const player: Player = this.players[i]
       if (player.initialized) {
@@ -632,9 +627,9 @@ export default class GameServer {
 }
 
 function calculateMovementProgress(
-  group: Group,
-  currentTile: Tile,
-  nextTile: Tile
+  _group: Group,
+  _currentTile: Tile,
+  _nextTile: Tile
 ) {
   //TODO: calculate
   return 0.5
