@@ -8,16 +8,23 @@ import * as Rules from "../../shared/rules.json"
 import * as Hexes from "../../shared/hex"
 import Tile from "../../shared/tile"
 import { ClientTile } from "./objects"
+import { Group } from "../../shared/objects"
 
 export interface RendererListener {
   onRendererLoaded(): void
+  onObjectSelected(id: number): void
 }
+
+const HEX_SIZE = 40
 
 export default class Renderer {
   private readonly listeners: RendererListener[] = []
 
   private loader: PIXI.Loader
-  private p_renderer: PIXI.Renderer
+  /**
+   * The Pixi Renderer Object
+   */
+  private pixi: PIXI.Renderer
   public viewport?: Viewport
   public layout: Layout
   public selection?: Selection
@@ -29,13 +36,10 @@ export default class Renderer {
   constructor() {
     this.layout = new Layout(
       Layout.pointy,
-      Vector2.create(
-        Rules.settings.map_hex_width,
-        Rules.settings.map_hex_height
-      ),
+      Vector2.create(HEX_SIZE, HEX_SIZE),
       Vector2.create(0, 0)
     )
-    this.p_renderer = new PIXI.Renderer({
+    this.pixi = new PIXI.Renderer({
       view: this.canvas_map,
       width: window.innerWidth,
       height: window.innerHeight,
@@ -44,7 +48,7 @@ export default class Renderer {
     })
 
     window.addEventListener("resize", () => {
-      this.p_renderer.resize(window.innerWidth, window.innerHeight)
+      this.pixi.resize(window.innerWidth, window.innerHeight)
       if (this.viewport) {
         this.viewport.dirty = true
       }
@@ -94,11 +98,9 @@ export default class Renderer {
     this.viewport = new Viewport({
       screenWidth: window.innerWidth,
       screenHeight: window.innerHeight,
-      worldWidth:
-        (Rules.settings.map_size * 2 + 1) * Rules.settings.map_hex_width,
-      worldHeight:
-        (Rules.settings.map_size * 2 + 1) * Rules.settings.map_hex_height,
-      interaction: this.p_renderer.plugins.interaction, // the interaction module is important for wheel() to work properly when renderer.view is placed or scaled
+      worldWidth: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
+      worldHeight: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
+      interaction: this.pixi.plugins.interaction, // the interaction module is important for wheel() to work properly when renderer.view is placed or scaled
     })
 
     // activate plugins
@@ -111,10 +113,13 @@ export default class Renderer {
       .pinch()
       .wheel()
       .decelerate()
+      .on("clicked", (data) => {
+        console.log("clicked", data)
+      })
 
     PIXI.Ticker.shared.add(() => {
       if (this.viewport?.dirty) {
-        this.p_renderer.render(this.viewport)
+        this.pixi.render(this.viewport)
         this.viewport.dirty = false
       }
     })
@@ -122,14 +127,39 @@ export default class Renderer {
     this.listeners.forEach((l) => l.onRendererLoaded())
   }
 
-  updateScenegraph(tile: ClientTile) {
-    let hex: Hex = Hexes.create(tile.hex.q, tile.hex.r, tile.hex.s)
+  updateScenegraphGroup(group: Group) {
+    this.viewport.dirty = true
+    let object = this.viewport.getChildByName(String(group.id)) as PIXI.Sprite
+    if (!object) {
+      object = new PIXI.Sprite(this.getGroupSprite(group))
+      object.name = String(group.id)
+      this.viewport.addChild(object)
+    }
 
-    let corners = this.layout.polygonCorners(hex)
+    object.x = this.layout.hexToPixel(group.pos).x
+    object.y = this.layout.hexToPixel(group.pos).y
+    object.zIndex = 5
+    object.on("clicked", () => {
+      this.listeners.forEach((l) => l.onObjectSelected(group.id))
+    })
+  }
+
+  updateScenegraph(tile: ClientTile) {
+    this.viewport.dirty = true
+    let object = this.viewport.getChildByName(
+      String(Hexes.hash(tile.hex))
+    ) as PIXI.Sprite
+    if (!object) {
+      object = new PIXI.Sprite(this.getTerrainTexture(tile.height))
+      this.viewport.addChild(object)
+    }
+
+    let corners = this.layout.polygonCorners(tile.hex)
     let padding = 10
 
-    let container = new PIXI.Container()
-    container.name = Hexes.hash(hex)
+    // let container = new PIXI.Container()
+    object.zIndex = 2
+    object.name = Hexes.hash(tile.hex)
 
     let tint = tile.visible ? 0xdddddd : 0x555555
     if (
@@ -139,15 +169,14 @@ export default class Renderer {
       tile.visible ? (tint = 0xffffff) : (tint += 0x333333)
     }
 
-    let texture = this.getTerrainTexture(tile.height)
-    let img = new PIXI.Sprite(texture)
-    img.tint = tint
-    img.x = corners[3]!.x + padding //obere linke ecke
-    img.y = corners[3]!.y - this.layout.size.y / 2 + padding //obere linke ecke- halbe höhe
-    img.width = this.layout.size.x * Math.sqrt(3) - padding
-    img.height = this.layout.size.y * 2 - padding
-
-    container.addChild(img)
+    object.tint = tint
+    object.x = corners[3]!.x + padding //obere linke ecke
+    object.y = corners[3]!.y - this.layout.size.y / 2 + padding //obere linke ecke- halbe höhe
+    object.width = this.layout.size.x * Math.sqrt(3) - padding
+    object.height = this.layout.size.y * 2 - padding
+    object.on("click", () => {
+      this.listeners.forEach((l) => l.onObjectSelected(tile.id))
+    })
 
     //TODO: Rewrite Client side
     // for (let i = 0; i < tile.environmentSpots.length; i++) {
@@ -171,21 +200,21 @@ export default class Renderer {
     //   container.addChild(img)
     // }
 
-    let old = this.viewport?.getChildByName(Hexes.hash(hex))
-    if (old) {
-      this.viewport?.removeChild(old)
-    }
-    this.viewport?.addChild(container)
-    this.viewport!.dirty = true
+    // let old = this.viewport.getChildByName(Hexes.hash(tile.hex))
+    // if (old) {
+    //   this.viewport?.removeChild(old)
+    // }
+    // this.viewport?.addChild(container)
+    // this.viewport!.dirty = true
   }
 
-  center(pos: any) {
+  centerOn(pos: Hex) {
     let x = this.layout.hexToPixel(pos).x
     let y = this.layout.hexToPixel(pos).y
-    this.viewport!.center = new PIXI.Point(x, y)
+    this.viewport.center = new PIXI.Point(x, y)
   }
 
-  getTerrainTexture(height: number) {
+  getTerrainTexture(height: number): PIXI.Texture {
     if (height < Rules.settings.map_level_water_deep) {
       return this.loader.resources["terrain_water_deep"]!.texture
     } else if (height < Rules.settings.map_level_water_shallow) {
@@ -214,6 +243,11 @@ export default class Renderer {
       return this.loader.resources["terrain_ice"]!.texture
     } else return this.loader.resources["terrain_stone"]!.texture
   }
+
+  getGroupSprite(group: Group): PIXI.Texture {
+    return this.loader.resources["unit_scout_own"].texture
+  }
+
   addListener(listener: RendererListener) {
     this.listeners.push(listener)
   }

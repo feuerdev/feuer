@@ -23,7 +23,7 @@ export async function isAuthenticated(req: Request, res, next) {
   }
 }
 
-export async function deserializeAuth(req, res, next) {
+export async function deserializeAuth(req, _res, next) {
   if (!req.cookies) {
     Log.warn("No cookies found")
     //TODO: should we stop here?

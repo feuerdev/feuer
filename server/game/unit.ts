@@ -1,4 +1,5 @@
 import { Unit } from "../../shared/objects"
+import GameServer from "./gameserver"
 
 export function generateUnit(owner: string): Unit {
   let unit: Unit = {
@@ -19,7 +20,7 @@ export function generateUnit(owner: string): Unit {
     endurance: 0,
     experience_theory: 0,
     experience_combat: 0,
-    id: 0,
+    id: GameServer.idCounter++,
   }
   //TODO: Randomly generate stats here
   return unit

@@ -59,6 +59,10 @@ export default class Game implements ConnectionListener, RendererListener {
     console.info("Client ready")
   }
 
+  onObjectSelected(id: number): void {
+    console.log(id, "selected")
+  }
+
   onRendererLoaded(): void {
     //Only connect after renderer is loaded //TODO: why?
     this.connection = new Connection(`${window.location.host}`, this.uid)
@@ -178,7 +182,7 @@ export default class Game implements ConnectionListener, RendererListener {
           tile.visible = false
           this.renderer.updateScenegraph(
             this.world.tiles[property] as ClientTile
-          ) //TODO: Performance - Only update Tint here instead of whole tile
+          ) //PERF: Only update Tint here instead of whole tile
         }
       }
       for (let property in data) {
@@ -204,6 +208,7 @@ export default class Game implements ConnectionListener, RendererListener {
     socket.on("gamestate groups", (data) => {
       this.world.groups = data
       for (let group of this.world.groups) {
+        this.renderer.updateScenegraphGroup(group)
         if (group.owner !== this.uid) {
           if (
             this.world.playerRelations[
@@ -228,7 +233,7 @@ export default class Game implements ConnectionListener, RendererListener {
         this.stopLoading()
         let ref = this.world.buildings[0]
         if (ref) {
-          this.renderer.center(ref.position)
+          this.renderer.centerOn(ref.position)
         }
       }
     })
