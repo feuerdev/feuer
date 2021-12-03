@@ -112,9 +112,6 @@ export default class Renderer {
       .pinch()
       .wheel()
       .decelerate()
-      .on("clicked", (data) => {
-        console.log("clicked", data)
-      })
 
     PIXI.Ticker.shared.add(() => {
       if (this.viewport?.dirty) {
@@ -140,7 +137,7 @@ export default class Renderer {
     object.zIndex = 5
   }
 
-  updateScenegraph(tile: ClientTile) {
+  updateScenegraphTile(tile: ClientTile) {
     this.viewport.dirty = true
     let object = this.viewport.getChildByName(
       String(Hexes.hash(tile.hex))
