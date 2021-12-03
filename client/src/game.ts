@@ -10,7 +10,7 @@ import * as Util from "../../shared/util"
 import * as Hexes from "../../shared/hex"
 import * as PlayerRelation from "../../shared/relation"
 import Hex from "../../shared/hex"
-import { World } from "../../shared/objects"
+import { Group, World } from "../../shared/objects"
 import { ClientTile } from "./objects"
 
 export default class Game implements ConnectionListener, RendererListener {
@@ -59,63 +59,80 @@ export default class Game implements ConnectionListener, RendererListener {
     console.info("Client ready")
   }
 
+  select(point: Vector2) {
+    this.selection.clearSelection()
+    let foundHex: Hex
+    let foundObject = false
+    for (let child of this.renderer.viewport.children) {
+      if (!child.name) {
+        // Only select game objects
+        continue
+      }
+
+      if (
+        !Util.isPointInRectangle(
+          point.x,
+          point.y,
+          child.x,
+          child.y,
+          (<PIXI.Sprite>child).width,
+          (<PIXI.Sprite>child).height
+        )
+      ) {
+        // Didn't hit anything
+        continue
+      }
+
+      const group = this.getGroup(Number(child.name))
+
+      const tile = this.getGroup(Number(child.name))
+
+      for (let group of this.world.groups) {
+        if (child.name === String(group.id)) {
+          this.selection.selectGroup(group.id)
+          this.renderer.updateScenegraphGroup(group)
+          foundObject = true
+          console.log("clicked on group", group)
+          return
+        }
+      }
+
+      //TODO: activate once buildings are rendered again
+      // for (let building of this.world.buildings) {
+      //   if (child.name === String(building.id)) {
+      //     this.selection.selectBuilding(building.id)
+      //     this.renderer.updateScenegraphBuilding(building)
+      //     return
+      //   }
+      // }
+
+      let hex = Hexes.round(this.renderer.layout.pixelToHex(point))
+      if (this.world.tiles[Hexes.hash(hex)]) {
+        foundHex = hex
+      }
+    }
+
+    if (!foundObject && foundHex) {
+      this.selection.selectHex(foundHex)
+      this.renderer.updateScenegraphTile(
+        this.world.tiles[Hexes.hash(foundHex)] as ClientTile
+      )
+    }
+  }
+
   onRendererLoaded(): void {
     //Only connect after renderer is loaded //TODO: why?
     this.connection = new Connection(`${window.location.host}`, this.uid)
     this.connection.addListener(this)
 
     this.renderer.viewport?.on("clicked", (click) => {
-      let p = click.world
-      let v = Vectors.create(p.x, p.y)
+      let point = Vectors.create(click.world.x, click.world.y)
       switch (click.event.data.button) {
         case 0: //Left
-          this.selection.clearSelection()
-          for (let child of (<any>click.viewport).viewport.children) {
-            for (let s of (<PIXI.Container>child).children) {
-              if (s.name && parseInt(s.name) !== -1) {
-                //Dont click on environment
-                if (
-                  Util.isPointInRectangle(
-                    p.x,
-                    p.y,
-                    s.x,
-                    s.y,
-                    (<PIXI.Sprite>s).width,
-                    (<PIXI.Sprite>s).height
-                  )
-                ) {
-                  for (let group of this.world.groups) {
-                    if (s.name === String(group.id)) {
-                      this.selection.selectGroup(group.id)
-                      this.renderer.updateScenegraph(
-                        this.getTile(this.getHex(v))
-                      )
-                      return
-                    }
-                  }
-                  for (let building of this.world.buildings) {
-                    if (s.name === String(building.id)) {
-                      this.selection.selectBuilding(building.id)
-                      this.renderer.updateScenegraph(
-                        this.getTile(this.getHex(v))
-                      )
-                      return
-                    }
-                  }
-                }
-              }
-            }
-          }
-          let hex = Hexes.round(this.renderer.layout.pixelToHex(v))
-          if (this.world.tiles[Hexes.hash(hex)]) {
-            this.selection.selectHex(hex)
-            this.renderer.updateScenegraph(
-              this.world.tiles[Hexes.hash(hex)] as ClientTile
-            )
-          }
+          this.select(point)
           break
         case 2: //Right
-          let clickedHex = Hexes.round(this.renderer.layout.pixelToHex(v))
+          let clickedHex = Hexes.round(this.renderer.layout.pixelToHex(point))
           if (clickedHex) {
             this.connection?.send("request movement", {
               selection: this.selection.selectedGroup,
@@ -176,7 +193,7 @@ export default class Game implements ConnectionListener, RendererListener {
         if (this.world.tiles.hasOwnProperty(property)) {
           const tile = this.world.tiles[property] as ClientTile
           tile.visible = false
-          this.renderer.updateScenegraph(
+          this.renderer.updateScenegraphTile(
             this.world.tiles[property] as ClientTile
           ) //PERF: Only update Tint here instead of whole tile
         }
@@ -185,7 +202,7 @@ export default class Game implements ConnectionListener, RendererListener {
         if (data.hasOwnProperty(property)) {
           data[property].visible = true
           this.world.tiles[property] = data[property]
-          this.renderer.updateScenegraph(
+          this.renderer.updateScenegraphTile(
             this.world.tiles[property] as ClientTile
           )
         }
@@ -195,7 +212,7 @@ export default class Game implements ConnectionListener, RendererListener {
       for (let property in data) {
         if (data.hasOwnProperty(property)) {
           this.world.tiles[property] = data[property]
-          this.renderer.updateScenegraph(
+          this.renderer.updateScenegraphTile(
             this.world.tiles[property] as ClientTile
           )
         }
@@ -245,6 +262,12 @@ export default class Game implements ConnectionListener, RendererListener {
 
   getTile(hex: Hex): ClientTile {
     return this.world[Hexes.hash(hex)]
+  }
+
+  getGroup(id: number): Group | undefined {
+    return this.world.groups.find((group) => {
+      group.id === id
+    })
   }
 
   startLoading() {

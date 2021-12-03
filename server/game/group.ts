@@ -2,7 +2,6 @@ import { Group } from "../../shared/objects"
 import Hex from "../../shared/hex"
 import * as Rules from "../../shared/rules.json"
 import { generateUnit } from "./unit"
-import * as Hexes from "../../shared/hex"
 import GameServer from "./gameserver"
 
 export function createGroup(owner: string, name: string, pos: Hex): Group {
@@ -10,7 +9,7 @@ export function createGroup(owner: string, name: string, pos: Hex): Group {
   const group: Group = {
     owner: owner,
     spotting: 0,
-    targetHexes: [Hexes.add(pos, Hexes.create(1, 0))],
+    targetHexes: null,
     pos: pos,
     speed: 0,
     attack: 0,
