@@ -12,7 +12,6 @@ import { Group } from "../../shared/objects"
 
 export interface RendererListener {
   onRendererLoaded(): void
-  onObjectSelected(id: number): void
 }
 
 const HEX_SIZE = 40
@@ -139,9 +138,6 @@ export default class Renderer {
     object.x = this.layout.hexToPixel(group.pos).x
     object.y = this.layout.hexToPixel(group.pos).y
     object.zIndex = 5
-    object.on("clicked", () => {
-      this.listeners.forEach((l) => l.onObjectSelected(group.id))
-    })
   }
 
   updateScenegraph(tile: ClientTile) {
@@ -174,9 +170,6 @@ export default class Renderer {
     object.y = corners[3]!.y - this.layout.size.y / 2 + padding //obere linke ecke- halbe höhe
     object.width = this.layout.size.x * Math.sqrt(3) - padding
     object.height = this.layout.size.y * 2 - padding
-    object.on("click", () => {
-      this.listeners.forEach((l) => l.onObjectSelected(tile.id))
-    })
 
     //TODO: Rewrite Client side
     // for (let i = 0; i < tile.environmentSpots.length; i++) {

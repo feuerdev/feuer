@@ -59,10 +59,6 @@ export default class Game implements ConnectionListener, RendererListener {
     console.info("Client ready")
   }
 
-  onObjectSelected(id: number): void {
-    console.log(id, "selected")
-  }
-
   onRendererLoaded(): void {
     //Only connect after renderer is loaded //TODO: why?
     this.connection = new Connection(`${window.location.host}`, this.uid)
