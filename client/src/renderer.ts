@@ -113,6 +113,9 @@ export default class Renderer {
       .wheel()
       .decelerate()
 
+    //Make sure zIndex will be respected
+    this.viewport.sortableChildren = true
+    
     PIXI.Ticker.shared.add(() => {
       if (this.viewport?.dirty) {
         this.pixi.render(this.viewport)
