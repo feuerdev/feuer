@@ -9,7 +9,7 @@ export function createGroup(owner: string, name: string, pos: Hex): Group {
   const group: Group = {
     owner: owner,
     spotting: 0,
-    targetHexes: null,
+    targetHexes: [],
     pos: pos,
     speed: 0,
     attack: 0,
