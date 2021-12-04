@@ -29,7 +29,7 @@
       "morale": 100,
       "attack": 5,
       "speed": 100,
-      "spotting": 10,
+      "spotting": 4,
       "cost": {
         "food": 10,
         "gold": 10

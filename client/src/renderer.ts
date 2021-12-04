@@ -115,7 +115,7 @@ export default class Renderer {
 
     //Make sure zIndex will be respected
     this.viewport.sortableChildren = true
-    
+
     PIXI.Ticker.shared.add(() => {
       if (this.viewport?.dirty) {
         this.pixi.render(this.viewport)

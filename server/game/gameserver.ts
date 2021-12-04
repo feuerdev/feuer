@@ -276,13 +276,13 @@ export default class GameServer {
       Log.info("New Player Connected: " + player.name)
 
       //Give Player an initial Scout and Camp
-      let pos = this.getRandomHex()
+      let pos = Hexes.create(0, 0) //this.getRandomHex()
       let initialGroup = createGroup(player.uid, "Scout", pos)
       this.world.groups.push(initialGroup)
 
-      let initialCamp = createBuilding(player.uid, "Town Hall", pos)
+      // let initialCamp = createBuilding(player.uid, "Town Hall", pos)
       // Building.updateBuilding(initialCamp);
-      this.world.buildings.push(initialCamp)
+      // this.world.buildings.push(initialCamp)
 
       //Prepare Drawing of that group
       //TODO: Clientside
@@ -634,7 +634,7 @@ function calculateMovementProgress(
   _nextTile: Tile
 ) {
   //TODO: calculate
-  return 20
+  return 100
 }
 // public updateMovementFactor() {
 //   //TODO calculate correct movementcost
