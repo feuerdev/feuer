@@ -1,8 +1,8 @@
-import { Request } from "express"
+import { Request, Response } from "express"
 import * as admin from "firebase-admin"
 import Log from "../util/log"
 
-export async function isAuthenticated(req: Request, res, next) {
+export async function isAuthenticated(req: Request, res: Response, next) {
   const idToken = req.cookies?.__session
 
   if (!idToken) {
@@ -17,9 +17,13 @@ export async function isAuthenticated(req: Request, res, next) {
     next()
     return
   } catch (error) {
-    Log.error(error)
-    //TODO: Fange hier nur den Token expired Error ab.
-    res.redirect("/relogin.html")
+    if (error.code === "auth/id-token-expired") {
+      Log.debug("redirected on expired")
+      res.redirect("/relogin.html")
+    } else {
+      res.sendStatus(500)
+      Log.error(error)
+    }
   }
 }
 
