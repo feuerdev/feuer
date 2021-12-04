@@ -1,7 +1,7 @@
-import * as winston from "winston"
+import { createLogger, transports, format, Logger } from "winston"
 import { Config } from "../main"
 
-let logger = null
+let logger: Logger = null
 
 export default getLogger()
 
@@ -18,14 +18,14 @@ function getLogger() {
 
 function initLogger() {
   const logLevel = Config.logLevel
-  const logger = winston.createLogger({
+  const logger = createLogger({
     transports: [
-      new winston.transports.Console({
+      new transports.Console({
         level: logLevel,
-        format: winston.format.combine(
-          winston.format.timestamp(),
-          winston.format.colorize(),
-          winston.format.simple()
+        format: format.combine(
+          format.timestamp(),
+          format.colorize(),
+          format.simple()
         ),
       }),
     ],
