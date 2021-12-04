@@ -64,7 +64,7 @@ export function neighborsRange(hex: Hex, radius: number): Hex[] {
 
 export function ring(hex: Hex, radius: number) {
   let results = []
-  let pointer = scale(subtract(add(hex, neighbor(hex, 4)), hex), radius) //TODO: Check this
+  let pointer = add(hex, scale(subtract(neighbor(hex, 4), hex), radius)) //TODO: Check this
 
   for (let i = 0; i < 6; i++) {
     for (let j = 0; j < radius; j++) {
