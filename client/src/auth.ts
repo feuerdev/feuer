@@ -12,7 +12,7 @@ const COOKIE_MAXAGE = 60 * 60 * 24 * 7 * 4 //Vier Wochen
 /**
  * Loads up firebase instance
  */
-const app = initializeApp({
+export const app = initializeApp({
   apiKey: "AIzaSyBJFITLUMkRyVvG8CH3m9waEEyweGhTS84",
   authDomain: "feuer-io.firebaseapp.com",
   // databaseURL: "https://feuer-io.firebaseio.com",
@@ -38,7 +38,7 @@ function setUid(uid: string) {
  * Sets token and waits until it is actually set
  * @param idToken auth token
  */
-async function setCookie(idToken: string): Promise<void> {
+export async function setCookie(idToken: string): Promise<void> {
   document.cookie = `${COOKIE_NAME}=${idToken};max-age=${COOKIE_MAXAGE}`
 
   while (!document.cookie.includes(idToken)) {
@@ -50,27 +50,15 @@ async function setCookie(idToken: string): Promise<void> {
 /**
  * Removes a cookie by setting its expiration to 0
  */
-function invalidateCookie() {
+export function invalidateCookie() {
   document.cookie = `${COOKIE_NAME}=;max-age=0`
 }
 
 /**
- * Removes a cookie by setting its expiration to 0
+ * Removes the saved uid
  */
-function invalidateUid() {
+export function invalidateUid() {
   localStorage.removeItem("uid")
-}
-
-export async function refreshToken(): Promise<void> {
-  const user = getAuth(app).currentUser
-  if (!user) {
-    invalidateCookie()
-    window.location.replace("/login")
-    return
-  }
-  const token = await user.getIdToken()
-  await setCookie(token)
-  window.location.replace("/")
 }
 
 /**
