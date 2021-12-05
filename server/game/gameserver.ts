@@ -625,6 +625,7 @@ export default class GameServer {
 
   public setWorld(world: World) {
     this.world = world
+    this.updateNet(1)
   }
 }
 

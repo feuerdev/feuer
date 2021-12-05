@@ -232,9 +232,9 @@ export default class Renderer {
       return this.loader.resources["terrain_stone_dirty"]!.texture
     } else if (height < Rules.settings.map_level_stone) {
       return this.loader.resources["terrain_stone"]!.texture
-    } else if (height <= Rules.settings.map_level_ice) {
+    } else {
       return this.loader.resources["terrain_ice"]!.texture
-    } else return this.loader.resources["terrain_stone"]!.texture
+    }
   }
 
   getGroupSprite(group: Group): PIXI.Texture {

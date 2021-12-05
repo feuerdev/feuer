@@ -1,25 +1,25 @@
 {
   "settings": {
-    "map_size": 5,
-    "map_frequency": 0.1,
+    "map_size": 200,
+    "map_frequency": 0.023,
     "map_amplitude": 1,
-    "map_min": 0,
-    "map_max": 1,
-    "map_octaves": 1,
-    "map_persistence": 0.1,
-    "map_level_water_deep": 0.05,
-    "map_level_water_shallow": 0.1,
-    "map_level_sand": 0.15,
-    "map_level_sand_grassy": 0.2,
-    "map_level_grass_sandy": 0.25,
-    "map_level_grass": 0.6,
-    "map_level_grass_dirty": 0.65,
-    "map_level_dirt_grassy": 0.7,
-    "map_level_dirt": 0.7,
-    "map_level_dirt_stony": 0.75,
-    "map_level_stone_dirty": 0.8,
-    "map_level_stone": 0.9,
-    "map_level_ice": 1
+    "map_min": -0.3,
+    "map_max": 1.2,
+    "map_octaves": 4,
+    "map_persistence": 0.5,
+    "map_level_water_deep": 0.29,
+    "map_level_water_shallow": 0.34,
+    "map_level_sand": 0.38,
+    "map_level_sand_grassy": 0.39,
+    "map_level_grass_sandy": 0.41,
+    "map_level_grass": 0.66,
+    "map_level_grass_dirty": 0.69,
+    "map_level_dirt_grassy": 0.73,
+    "map_level_dirt": 0.76,
+    "map_level_dirt_stony": 0.78,
+    "map_level_stone_dirty": 0.86,
+    "map_level_stone": 0.95,
+    "map_level_ice": 0.99
   },
   "units": {
     "Scout": {
@@ -29,7 +29,7 @@
       "morale": 100,
       "attack": 5,
       "speed": 100,
-      "spotting": 4,
+      "spotting": 6,
       "cost": {
         "food": 10,
         "gold": 10
