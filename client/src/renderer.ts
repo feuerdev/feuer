@@ -148,14 +148,17 @@ export default class Renderer {
     if (!object) {
       object = new PIXI.Sprite(this.getTerrainTexture(tile.height))
       this.viewport.addChild(object)
+
+      let corners = this.layout.polygonCorners(tile.hex)
+      let padding = 10
+
+      object.zIndex = 2
+      object.name = Hexes.hash(tile.hex)
+      object.x = corners[3]!.x + padding //obere linke ecke
+      object.y = corners[3]!.y - this.layout.size.y / 2 + padding //obere linke ecke- halbe höhe
+      object.width = this.layout.size.x * Math.sqrt(3) - padding
+      object.height = this.layout.size.y * 2 - padding
     }
-
-    let corners = this.layout.polygonCorners(tile.hex)
-    let padding = 10
-
-    // let container = new PIXI.Container()
-    object.zIndex = 2
-    object.name = Hexes.hash(tile.hex)
 
     let tint = tile.visible ? 0xdddddd : 0x555555
     if (
@@ -166,10 +169,6 @@ export default class Renderer {
     }
 
     object.tint = tint
-    object.x = corners[3]!.x + padding //obere linke ecke
-    object.y = corners[3]!.y - this.layout.size.y / 2 + padding //obere linke ecke- halbe höhe
-    object.width = this.layout.size.x * Math.sqrt(3) - padding
-    object.height = this.layout.size.y * 2 - padding
 
     //TODO: Rewrite Client side
     // for (let i = 0; i < tile.environmentSpots.length; i++) {
