@@ -1,5 +1,4 @@
-import { World } from "../../shared/objects"
-import Tile from "../../shared/tile"
+import { Tile, World } from "../../shared/objects"
 import { Hashtable } from "../../shared/util"
 
 export function create(tiles: Hashtable<Tile>): World {
