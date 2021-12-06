@@ -146,7 +146,7 @@ export default class Renderer {
       String(Hexes.hash(tile.hex))
     ) as PIXI.Sprite
     if (!object) {
-      object = new PIXI.Sprite(this.getTerrainTexture(tile.height))
+      object = new PIXI.Sprite(this.getTerrainTexture(tile))
       this.viewport.addChild(object)
 
       let corners = this.layout.polygonCorners(tile.hex)
@@ -206,7 +206,12 @@ export default class Renderer {
     this.viewport.center = new PIXI.Point(x, y)
   }
 
-  getTerrainTexture(height: number): PIXI.Texture {
+  getTerrainTexture(tile: Tile): PIXI.Texture {
+    let height = tile.height
+    if (tile.temperature < Rules.settings.map_temperature_ice) {
+      return this.loader.resources["terrain_ice"]!.texture
+    }
+
     if (height < Rules.settings.map_level_water_deep) {
       return this.loader.resources["terrain_water_deep"]!.texture
     } else if (height < Rules.settings.map_level_water_shallow) {

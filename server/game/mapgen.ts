@@ -1,10 +1,9 @@
 import seedrandom from "seedrandom"
-import { Hashtable } from "../../shared/util"
-import Tile from "../../shared/tile"
+import { Hashtable, scale } from "../../shared/util"
 import FastSimplexNoise from "../../shared/noise"
 import Log from "../util/log"
 import Vector2 from "../../shared/vector2"
-import { World } from "../../shared/objects"
+import { Tile, World } from "../../shared/objects"
 import * as Worlds from "./world"
 import * as Hex from "../../shared/hex"
 import * as Rules from "../../shared/rules.json"
@@ -86,52 +85,55 @@ export default class Mapgen {
       let r2: number = Math.min(size, -q + size)
       for (let r: number = r1; r <= r2; r++) {
         let heightValue = heightGen.scaled2D(q, r)
-        let treeValue = treeGen.scaled2D(q, r)
-        let stoneValue = stoneGen.scaled2D(q, r)
-        let ironValue = ironGen.scaled2D(q, r)
-        let goldValue = goldGen.scaled2D(q, r)
+
+        //Temperature
+        let latitudeFactor = scale(
+          this.gauss(scale(r, -size, size, -2, 2)),
+          0,
+          0.4,
+          -12,
+          28
+        )
+        let heightFactor = heightValue > 0.29 ? 10 * heightValue : 0
+        let temperature = latitudeFactor - heightFactor
 
         let hex = Hex.create(q, r)
         let tile: Tile = {
           id: GameServer.idCounter++,
           hex: hex,
           height: heightValue,
-          forestation: treeValue,
-          rockyness: stoneValue,
-          ironOre: ironValue,
-          goldOre: goldValue,
+          temperature: temperature,
+          // forestation: treeValue,
+          // rockyness: stoneValue,
+          // ironOre: ironValue,
+          // goldOre: goldValue,
           resources: Resources.create(),
         }
-        tile.forestation = treeValue
-        tile.rockyness = stoneValue
-        tile.height = heightValue
-        tile.ironOre = ironValue
-        tile.goldOre = goldValue
         tiles[Hex.hash(hex)] = tile
 
         //No rocks and trees in water obviously
-        if (heightValue <= Rules.settings.map_level_water_shallow) {
-          treeValue = 0
-          stoneValue = 0
-          ironValue = 0
-          goldValue = 0
-        }
+        // if (heightValue <= Rules.settings.map_level_water_shallow) {
+        //   tile.treeValue = 0
+        //   stoneValue = 0
+        //   ironValue = 0
+        //   goldValue = 0
+        // }
 
-        //Less trees (cactii) but more stone in sand
-        if (heightValue <= Rules.settings.map_level_sand_grassy) {
-          treeValue /= 2
-          stoneValue = Math.min(stoneValue * 1.3, 1)
-          ironValue = 0
-          goldValue = 0
-        }
+        // //Less trees (cactii) but more stone in sand
+        // if (heightValue <= Rules.settings.map_level_sand_grassy) {
+        //   treeValue /= 2
+        //   stoneValue = Math.min(stoneValue * 1.3, 1)
+        //   ironValue = 0
+        //   goldValue = 0
+        // }
 
-        //Reduce trees above timberline and increase rockiness
-        if (heightValue >= Rules.settings.map_level_stone) {
-          treeValue /= 2
-          stoneValue = Math.min(stoneValue * 1.2, 1)
-          ironValue = Math.min(ironValue * 1.4, 1)
-          goldValue = Math.min(goldValue * 1.5, 1)
-        }
+        // //Reduce trees above timberline and increase rockiness
+        // if (heightValue >= Rules.settings.map_level_stone) {
+        //   treeValue /= 2
+        //   stoneValue = Math.min(stoneValue * 1.2, 1)
+        //   ironValue = Math.min(ironValue * 1.4, 1)
+        //   goldValue = Math.min(goldValue * 1.5, 1)
+        // }
 
         //TODO: clientside
         // while (treeValue > 0) {
@@ -168,6 +170,10 @@ export default class Mapgen {
 
     const world = Worlds.create(tiles)
     return world
+  }
+
+  static gauss(x: number) {
+    return Math.pow(Math.E, -Math.pow(x, 2) / 2) / Math.sqrt(2 * Math.PI)
   }
 
   static generatePos(): Vector2 {

@@ -26,11 +26,8 @@ export interface GameObject {
 export interface Tile extends GameObject {
   hex: Hex
   height: number
-  forestation: number
-  rockyness: number
-  ironOre: number
-  goldOre: number
   resources: Resources
+  temperature: number
 }
 
 export interface Battle extends GameObject {
