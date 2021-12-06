@@ -32,49 +32,49 @@ export default class Mapgen {
       persistence: Number(persistence),
     })
 
-    const rngTree = seedrandom(seed + 1)
-    const treeGen = new FastSimplexNoise({
-      random: rngTree,
-      frequency: Number(frequency),
-      amplitude: Number(amplitude),
-      min: Number(min),
-      max: Number(max),
-      octaves: Number(octaves),
-      persistence: Number(persistence),
-    })
+    // const rngTree = seedrandom(seed + 1)
+    // const treeGen = new FastSimplexNoise({
+    //   random: rngTree,
+    //   frequency: Number(frequency),
+    //   amplitude: Number(amplitude),
+    //   min: Number(min),
+    //   max: Number(max),
+    //   octaves: Number(octaves),
+    //   persistence: Number(persistence),
+    // })
 
-    const rngStone = seedrandom(seed + 2)
-    const stoneGen = new FastSimplexNoise({
-      random: rngStone,
-      frequency: Number(frequency),
-      amplitude: Number(amplitude),
-      min: Number(min),
-      max: Number(max),
-      octaves: Number(octaves),
-      persistence: Number(persistence),
-    })
+    // const rngStone = seedrandom(seed + 2)
+    // const stoneGen = new FastSimplexNoise({
+    //   random: rngStone,
+    //   frequency: Number(frequency),
+    //   amplitude: Number(amplitude),
+    //   min: Number(min),
+    //   max: Number(max),
+    //   octaves: Number(octaves),
+    //   persistence: Number(persistence),
+    // })
 
-    const rngIron = seedrandom(seed + 3)
-    const ironGen = new FastSimplexNoise({
-      random: rngIron,
-      frequency: Number(frequency),
-      amplitude: Number(amplitude),
-      min: Number(min),
-      max: Number(max),
-      octaves: Number(octaves),
-      persistence: Number(persistence),
-    })
+    // const rngIron = seedrandom(seed + 3)
+    // const ironGen = new FastSimplexNoise({
+    //   random: rngIron,
+    //   frequency: Number(frequency),
+    //   amplitude: Number(amplitude),
+    //   min: Number(min),
+    //   max: Number(max),
+    //   octaves: Number(octaves),
+    //   persistence: Number(persistence),
+    // })
 
-    const rngGold = seedrandom(seed + 4)
-    const goldGen = new FastSimplexNoise({
-      random: rngGold,
-      frequency: Number(frequency),
-      amplitude: Number(amplitude),
-      min: Number(min),
-      max: Number(max),
-      octaves: Number(octaves),
-      persistence: Number(persistence),
-    })
+    // const rngGold = seedrandom(seed + 4)
+    // const goldGen = new FastSimplexNoise({
+    //   random: rngGold,
+    //   frequency: Number(frequency),
+    //   amplitude: Number(amplitude),
+    //   min: Number(min),
+    //   max: Number(max),
+    //   octaves: Number(octaves),
+    //   persistence: Number(persistence),
+    // })
 
     let tiles: Hashtable<Tile> = {}
 
