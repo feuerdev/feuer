@@ -276,7 +276,7 @@ export default class GameServer {
       Log.info("New Player Connected: " + player.name)
 
       //Give Player an initial Scout and Camp
-      let pos = Hexes.create(0, 0) //this.getRandomHex()
+      let pos = this.getRandomHex()
       let initialGroup = createGroup(player.uid, "Scout", pos)
       this.world.groups.push(initialGroup)
 
