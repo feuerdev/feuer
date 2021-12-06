@@ -19,7 +19,8 @@
     "map_level_dirt_stony": 0.78,
     "map_level_stone_dirty": 0.86,
     "map_level_stone": 0.95,
-    "map_level_ice": 0.99
+    "map_level_ice": 0.99,
+    "map_temperature_ice": -5
   },
   "units": {
     "Scout": {
