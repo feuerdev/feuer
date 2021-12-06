@@ -6,7 +6,6 @@ import Hex, { Layout } from "../../shared/hex"
 import * as Vector2 from "../../shared/vector2"
 import * as Rules from "../../shared/rules.json"
 import * as Hexes from "../../shared/hex"
-import Tile from "../../shared/tile"
 import { ClientTile } from "./objects"
 import { Group } from "../../shared/objects"
 
@@ -206,7 +205,7 @@ export default class Renderer {
     this.viewport.center = new PIXI.Point(x, y)
   }
 
-  getTerrainTexture(tile: Tile): PIXI.Texture {
+  getTerrainTexture(tile: ClientTile): PIXI.Texture {
     let height = tile.height
     if (tile.temperature < Rules.settings.map_temperature_ice) {
       return this.loader.resources["terrain_ice"]!.texture
