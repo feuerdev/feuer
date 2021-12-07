@@ -220,6 +220,14 @@ export default class Game implements ConnectionListener, RendererListener {
     })
     socket.on("gamestate groups", (data) => {
       this.world.groups = data
+      if (!this.initialFocusSet) {
+        this.initialFocusSet = true
+        this.stopLoading()
+        let ref = this.world.groups[0]
+        if (ref) {
+          this.renderer.centerOn(ref.pos)
+        }
+      }
       for (let group of this.world.groups) {
         this.renderer.updateScenegraphGroup(group)
         if (group.owner !== this.uid) {
@@ -241,14 +249,6 @@ export default class Game implements ConnectionListener, RendererListener {
     })
     socket.on("gamestate buildings", (data) => {
       this.world.buildings = data
-      if (!this.initialFocusSet) {
-        this.initialFocusSet = true
-        this.stopLoading()
-        let ref = this.world.buildings[0]
-        if (ref) {
-          this.renderer.centerOn(ref.position)
-        }
-      }
     })
     socket.on("gamestate relation", (data) => {
       let hash = PlayerRelation.hash(data.id1, data.id2)
