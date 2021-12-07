@@ -5,10 +5,10 @@ module.exports = {
   devtool: "source-map",
   entry: {
     bundle:   "./client/src/main.tsx",
-    login:    "./client/src/login.ts",
-    logout:   "./client/src/logout.ts",
-    relogin:  "./client/src/relogin.ts",
-    register: "./client/src/register.ts",
+    login:    "./client/src/auth/login.ts",
+    logout:   "./client/src/auth/logout.ts",
+    relogin:  "./client/src/auth/relogin.ts",
+    register: "./client/src/auth/register.ts",
   },
   output: {
     path: path.resolve(__dirname, './client/public/js/'),
