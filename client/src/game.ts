@@ -195,14 +195,6 @@ export default class Game implements ConnectionListener {
     })
     socket.on("gamestate groups", (data) => {
       this.world.groups = data
-      if (!this.initialFocusSet) {
-        this.initialFocusSet = true
-        this.stopLoading()
-        let ref = this.world.groups[0]
-        if (ref) {
-          this.renderer.centerOn(ref.pos)
-        }
-      }
       for (let group of this.world.groups) {
         this.renderer.updateScenegraphGroup(group)
         if (group.owner !== this.uid) {
