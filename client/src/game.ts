@@ -1,7 +1,7 @@
 import { Socket } from "socket.io-client"
 
 import Connection, { ConnectionListener } from "./connection"
-import Selection from "./selection"
+import Selection, { SelectionType } from "./selection"
 import Renderer from "./renderer"
 
 import * as Vectors from "../../shared/vector2"
@@ -67,7 +67,7 @@ export default class Game implements ConnectionListener {
           break
         case 2: //Right
           let clickedHex = Hexes.round(this.renderer.layout.pixelToHex(point))
-          if (clickedHex && this.selection.isGroup) {
+          if (clickedHex && this.selection.type === SelectionType.Group) {
             this.connection?.send("request movement", {
               selection: this.selection.selectedId,
               target: clickedHex,
@@ -212,7 +212,7 @@ export default class Game implements ConnectionListener {
       }
 
       //Update the selection if a group is selected (it might have moved)
-      if (this.selection.isGroup) {
+      if (this.selection.type === SelectionType.Group) {
         this.renderer.select(this.selection)
       }
     })
