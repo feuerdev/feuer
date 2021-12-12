@@ -22,34 +22,42 @@ enum ZIndices {
 }
 
 export default class Renderer {
-  private readonly listeners: RendererListener[] = []
-
+  private canvas_map = <HTMLCanvasElement>document.querySelector("#canvas-map")
   private loader: PIXI.Loader
-  /**
-   * The Pixi Renderer Object
-   */
-  private pixi: PIXI.Renderer
-  public viewport?: Viewport
-  public layout: Layout
-  public selection?: Selection
+  private pixi: PIXI.Renderer = new PIXI.Renderer({
+    view: this.canvas_map,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    resolution: window.devicePixelRatio,
+    autoDensity: true,
+  })
+  public viewport: Viewport = new Viewport({
+    screenWidth: window.innerWidth,
+    screenHeight: window.innerHeight,
+    worldWidth: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
+    worldHeight: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
+    interaction: this.pixi.plugins.interaction, // the interaction module is important for wheel() to work properly when renderer.view is placed or scaled
+  })
+    .clampZoom({
+      maxScale: 2,
+      minScale: 0.2,
+    })
+    .drag()
+    .pinch()
+    .wheel()
+    .decelerate()
+  public layout: Layout = new Layout(
+    Layout.pointy,
+    Vector2.create(HEX_SIZE, HEX_SIZE),
+    Vector2.create(0, 0)
+  )
+
 
   static GLOWFILTER = new GlowFilter({ distance: 15, outerStrength: 2 })
 
-  private canvas_map = <HTMLCanvasElement>document.querySelector("#canvas-map")
-
   constructor() {
-    this.layout = new Layout(
-      Layout.pointy,
-      Vector2.create(HEX_SIZE, HEX_SIZE),
-      Vector2.create(0, 0)
-    )
-    this.pixi = new PIXI.Renderer({
-      view: this.canvas_map,
-      width: window.innerWidth,
-      height: window.innerHeight,
-      resolution: window.devicePixelRatio,
-      autoDensity: true,
-    })
+    //Make sure zIndex will be respected
+    this.viewport.sortableChildren = true
 
     window.addEventListener("resize", () => {
       this.pixi.resize(window.innerWidth, window.innerHeight)
@@ -57,43 +65,57 @@ export default class Renderer {
         this.viewport.dirty = true
       }
     })
+  }
 
-    this.loader = PIXI.Loader.shared
-      .add("terrain_water_deep", "../img/water_02.png")
-      .add("terrain_water_shallow", "../img/water_01.png")
-      .add("terrain_sand", "../img/sand_07.png")
-      .add("terrain_sand_grassy", "../img/sand_09.png")
-      .add("terrain_grass_sandy", "../img/grass_07.png")
-      .add("terrain_grass", "../img/grass_05.png")
-      .add("terrain_grass_dirty", "../img/grass_06.png")
-      .add("terrain_dirt_grassy", "../img/dirt_07.png")
-      .add("terrain_dirt", "../img/dirt_06.png")
-      .add("terrain_dirt_stony", "../img/dirt_10.png")
-      .add("terrain_stone_dirty", "../img/stone_09.png")
-      .add("terrain_stone", "../img/stone_07.png")
-      .add("terrain_ice", "../img/ice_01.png")
-      .add("treeSmall", "../img/tree_small.png")
-      .add("treeBig", "../img/tree_big.png")
-      .add("cactus1", "../img/cactus_01.png")
-      .add("cactus2", "../img/cactus_02.png")
-      .add("treeFirSmall", "../img/fir_small.png")
-      .add("treeFirBig", "../img/fir_big.png")
-      .add("treeFullFirSmall", "../img/fullfir_small.png")
-      .add("treeFullFirBig", "../img/fullfir_big.png")
-      .add("treeFirSnow", "../img/fir_snow.png")
-      .add("rock01", "../img/rock_01.png")
-      .add("rock02", "../img/rock_02.png")
-      .add("rock04", "../img/rock_04.png")
-      .add("rock05", "../img/rock_05.png")
-      .add("iron", "../img/iron.png")
-      .add("gold", "../img/gold.png")
-      .add("town_center", "../img/town_center.png")
-      .add("forester_hut", "../img/forester_hut.png")
-      .add("quarry_hut", "../img/mine.png")
-      .add("iron_hut", "../img/mine.png")
-      .add("gold_mine", "../img/mine.png")
-      .add("unit_scout_own", "../img/unit_scout_own.png")
-      .add("mine", "../img/mine.png") //This one shouldn't be here
+  load(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.loader = PIXI.Loader.shared
+        .add("terrain_water_deep", "../img/water_02.png")
+        .add("terrain_water_shallow", "../img/water_01.png")
+        .add("terrain_sand", "../img/sand_07.png")
+        .add("terrain_sand_grassy", "../img/sand_09.png")
+        .add("terrain_grass_sandy", "../img/grass_07.png")
+        .add("terrain_grass", "../img/grass_05.png")
+        .add("terrain_grass_dirty", "../img/grass_06.png")
+        .add("terrain_dirt_grassy", "../img/dirt_07.png")
+        .add("terrain_dirt", "../img/dirt_06.png")
+        .add("terrain_dirt_stony", "../img/dirt_10.png")
+        .add("terrain_stone_dirty", "../img/stone_09.png")
+        .add("terrain_stone", "../img/stone_07.png")
+        .add("terrain_ice", "../img/ice_01.png")
+        .add("treeSmall", "../img/tree_small.png")
+        .add("treeBig", "../img/tree_big.png")
+        .add("cactus1", "../img/cactus_01.png")
+        .add("cactus2", "../img/cactus_02.png")
+        .add("treeFirSmall", "../img/fir_small.png")
+        .add("treeFirBig", "../img/fir_big.png")
+        .add("treeFullFirSmall", "../img/fullfir_small.png")
+        .add("treeFullFirBig", "../img/fullfir_big.png")
+        .add("treeFirSnow", "../img/fir_snow.png")
+        .add("rock01", "../img/rock_01.png")
+        .add("rock02", "../img/rock_02.png")
+        .add("rock04", "../img/rock_04.png")
+        .add("rock05", "../img/rock_05.png")
+        .add("iron", "../img/iron.png")
+        .add("gold", "../img/gold.png")
+        .add("town_center", "../img/town_center.png")
+        .add("forester_hut", "../img/forester_hut.png")
+        .add("quarry_hut", "../img/mine.png")
+        .add("iron_hut", "../img/mine.png")
+        .add("gold_mine", "../img/mine.png")
+        .add("unit_scout_own", "../img/unit_scout_own.png")
+        .add("mine", "../img/mine.png") //This one shouldn't be here
+        .load(() => {
+          PIXI.Ticker.shared.add(() => {
+            if (this.viewport?.dirty) {
+              this.pixi.render(this.viewport)
+              this.viewport.dirty = false
+            }
+          })
+          resolve()
+        })
+    })
+  }
 
   select(selection: Selection) {
     const original = this.viewport.getChildByName(

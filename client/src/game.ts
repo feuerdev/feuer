@@ -2,7 +2,7 @@ import { Socket } from "socket.io-client"
 
 import Connection, { ConnectionListener } from "./connection"
 import Selection from "./selection"
-import Renderer, { RendererListener } from "./renderer"
+import Renderer from "./renderer"
 
 import * as Vectors from "../../shared/vector2"
 import Vector2 from "../../shared/vector2"
@@ -14,27 +14,27 @@ import { Group, World } from "../../shared/objects"
 import { ClientTile } from "./objects"
 import { getTileById } from "../../shared/objectutil"
 
-export default class Game implements ConnectionListener, RendererListener {
-  private selection: Selection = new Selection()
-  private renderer: Renderer = new Renderer()
-  private connection?: Connection
-  private world?: World = {
-    tiles: {},
-    groups: [],
-    units: [],
-    buildings: [],
-    playerRelations: {},
-    battles: [],
-  }
+export default class Game implements ConnectionListener {
+  private renderer: Renderer
+  private connection: Connection
+  private world: World
   private uid: string
+  private selection: Selection = new Selection()
 
-  private initialFocusSet = false
-
-  constructor(uid: string) {
+  constructor(
+    uid: string,
+    world: World,
+    renderer: Renderer,
+    connection: Connection
+  ) {
     this.uid = uid
-    this.renderer.selection = this.selection
-    this.renderer.addListener(this)
+    this.world = world
+    this.renderer = renderer
+    this.connection = connection
+  }
 
+  registerEventListeners() {
+    //Keyboard events
     window.addEventListener(
       "keyup",
       (event) => {
@@ -57,7 +57,25 @@ export default class Game implements ConnectionListener, RendererListener {
       },
       false
     )
-    console.info("Client ready")
+
+    //Mouse events
+    this.renderer.viewport.on("clicked", (click) => {
+      let point = Vectors.create(click.world.x, click.world.y)
+      switch (click.event.data.button) {
+        case 0: //Left
+          this.select(point)
+          break
+        case 2: //Right
+          let clickedHex = Hexes.round(this.renderer.layout.pixelToHex(point))
+          if (clickedHex && this.selection.isGroup) {
+            this.connection?.send("request movement", {
+              selection: this.selection.selectedId,
+              target: clickedHex,
+            })
+          }
+          break
+      }
+    })
   }
 
   select(point: Vector2) {
@@ -99,30 +117,6 @@ export default class Game implements ConnectionListener, RendererListener {
     }
 
     this.renderer.select(this.selection)
-  }
-
-  onRendererLoaded(): void {
-    //Only connect after renderer is loaded //TODO: why?
-    this.connection = new Connection(`${window.location.host}`, this.uid)
-    this.connection.addListener(this)
-
-    this.renderer.viewport?.on("clicked", (click) => {
-      let point = Vectors.create(click.world.x, click.world.y)
-      switch (click.event.data.button) {
-        case 0: //Left
-          this.select(point)
-          break
-        case 2: //Right
-          let clickedHex = Hexes.round(this.renderer.layout.pixelToHex(point))
-          if (clickedHex) {
-            this.connection?.send("request movement", {
-              selection: this.selection.selectedGroup,
-              target: clickedHex,
-            })
-          }
-          break
-      }
-    })
   }
 
   onConstructionRequested(pos: Hex, type: string) {
@@ -254,13 +248,5 @@ export default class Game implements ConnectionListener, RendererListener {
     return this.world.groups.find((group) => {
       group.id === id
     })
-  }
-
-  startLoading() {
-    document.querySelector(".loading")?.classList.remove("hidden")
-  }
-
-  stopLoading() {
-    document.querySelector(".loading")?.classList.add("hidden")
   }
 }
