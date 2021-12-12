@@ -52,6 +52,8 @@ export default class Renderer {
     Vector2.create(0, 0)
   )
 
+  // Zoom to the first group received
+  private initialFocusSet = false
 
   static GLOWFILTER = new GlowFilter({ distance: 15, outerStrength: 2 })
 
@@ -148,6 +150,10 @@ export default class Renderer {
   }
 
   updateScenegraphGroup(group: Group) {
+    if (!this.initialFocusSet) {
+      this.initialFocusSet = true
+      this.centerOn(group.pos)
+    }
     this.viewport.dirty = true
     let object = this.viewport.getChildByName(String(group.id)) as PIXI.Sprite
     if (!object) {
