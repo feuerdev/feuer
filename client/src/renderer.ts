@@ -1,19 +1,25 @@
 import { Viewport } from "pixi-viewport"
 import { GlowFilter } from "pixi-filters"
 import * as PIXI from "pixi.js"
-import Selection from "./selection"
 import Hex, { Layout } from "../../shared/hex"
 import * as Vector2 from "../../shared/vector2"
 import * as Rules from "../../shared/rules.json"
-import * as Hexes from "../../shared/hex"
 import { ClientTile } from "./objects"
 import { Group } from "../../shared/objects"
-
-export interface RendererListener {
-  onRendererLoaded(): void
-}
+import Selection from "./selection"
 
 const HEX_SIZE = 40
+
+enum ZIndices {
+  Background = 0,
+  Tiles = 1,
+  TileSelection = 2,
+  Nature = 3,
+  Buildings = 4,
+  BuildingsSelection = 5,
+  Units = 6,
+  UnitsSelection = 7,
+}
 
 export default class Renderer {
   private readonly listeners: RendererListener[] = []
@@ -88,41 +94,35 @@ export default class Renderer {
       .add("gold_mine", "../img/mine.png")
       .add("unit_scout_own", "../img/unit_scout_own.png")
       .add("mine", "../img/mine.png") //This one shouldn't be here
-      .load(() => this.loaded())
+
+  select(selection: Selection) {
+    const original = this.viewport.getChildByName(
+      String(selection.selectedId)
+    ) as PIXI.Sprite
+    if (!original) {
+      return
+    }
+
+    let sprite = this.viewport.getChildByName("selection") as PIXI.Sprite
+    if (!sprite) {
+      sprite = new PIXI.Sprite(original.texture)
+      sprite.name = "selection"
+      this.viewport.addChild(sprite)
+    }
+
+    sprite.position.set(original.position.x, original.position.y)
+    sprite.zIndex = getSelectionZIndex(selection)
+    sprite.width = original.width
+    sprite.height = original.height
+    sprite.filters = [Renderer.GLOWFILTER]
+
+    this.viewport.dirty = true
   }
 
-  loaded() {
-    // create viewport
-    this.viewport = new Viewport({
-      screenWidth: window.innerWidth,
-      screenHeight: window.innerHeight,
-      worldWidth: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
-      worldHeight: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
-      interaction: this.pixi.plugins.interaction, // the interaction module is important for wheel() to work properly when renderer.view is placed or scaled
-    })
-
-    // activate plugins
-    this.viewport
-      .clampZoom({
-        maxScale: 2,
-        minScale: 0.2,
-      })
-      .drag()
-      .pinch()
-      .wheel()
-      .decelerate()
-
-    //Make sure zIndex will be respected
-    this.viewport.sortableChildren = true
-
-    PIXI.Ticker.shared.add(() => {
-      if (this.viewport?.dirty) {
-        this.pixi.render(this.viewport)
-        this.viewport.dirty = false
-      }
-    })
-
-    this.listeners.forEach((l) => l.onRendererLoaded())
+  deselect() {
+    let sprite = this.viewport.getChildByName("selection") as PIXI.Graphics
+    this.viewport.removeChild(sprite)
+    this.viewport.dirty = true
   }
 
   updateScenegraphGroup(group: Group) {
@@ -136,14 +136,12 @@ export default class Renderer {
 
     object.x = this.layout.hexToPixel(group.pos).x
     object.y = this.layout.hexToPixel(group.pos).y
-    object.zIndex = 5
+    object.zIndex = ZIndices.Units
   }
 
   updateScenegraphTile(tile: ClientTile) {
     this.viewport.dirty = true
-    let object = this.viewport.getChildByName(
-      String(Hexes.hash(tile.hex))
-    ) as PIXI.Sprite
+    let object = this.viewport.getChildByName(String(tile.id)) as PIXI.Sprite
     if (!object) {
       object = new PIXI.Sprite(this.getTerrainTexture(tile))
       this.viewport.addChild(object)
@@ -151,8 +149,8 @@ export default class Renderer {
       let corners = this.layout.polygonCorners(tile.hex)
       let padding = 10
 
-      object.zIndex = 2
-      object.name = Hexes.hash(tile.hex)
+      object.zIndex = ZIndices.Tiles
+      object.name = String(tile.id)
       object.x = corners[3]!.x + padding //obere linke ecke
       object.y = corners[3]!.y - this.layout.size.y / 2 + padding //obere linke ecke- halbe höhe
       object.width = this.layout.size.x * Math.sqrt(3) - padding
@@ -160,12 +158,6 @@ export default class Renderer {
     }
 
     let tint = tile.visible ? 0xdddddd : 0x555555
-    if (
-      this.selection.selectedHex &&
-      Hexes.equals(this.selection?.selectedHex, tile.hex)
-    ) {
-      tile.visible ? (tint = 0xffffff) : (tint += 0x333333)
-    }
 
     object.tint = tint
 
@@ -243,15 +235,15 @@ export default class Renderer {
   getGroupSprite(group: Group): PIXI.Texture {
     return this.loader.resources["unit_scout_own"].texture
   }
-
-  addListener(listener: RendererListener) {
-    this.listeners.push(listener)
-  }
-
-  removeListener(listener: RendererListener) {
-    const index = this.listeners.indexOf(listener)
-    if (index > -1) {
-      this.listeners.splice(index, 1)
-    }
+}
+function getSelectionZIndex(selection: Selection): number {
+  if (selection.isGroup) {
+    return ZIndices.UnitsSelection
+  } else if (selection.isBuilding) {
+    return ZIndices.BuildingsSelection
+  } else if (selection.isTile) {
+    return ZIndices.TileSelection
+  } else {
+    throw new Error("Unknown selection type")
   }
 }
