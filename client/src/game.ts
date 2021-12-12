@@ -12,6 +12,7 @@ import * as PlayerRelation from "../../shared/relation"
 import Hex from "../../shared/hex"
 import { Group, World } from "../../shared/objects"
 import { ClientTile } from "./objects"
+import { getTileById } from "../../shared/objectutil"
 
 export default class Game implements ConnectionListener, RendererListener {
   private selection: Selection = new Selection()
@@ -60,64 +61,44 @@ export default class Game implements ConnectionListener, RendererListener {
   }
 
   select(point: Vector2) {
-    this.selection.clearSelection()
-    let foundHex: Hex
-    let foundObject = false
-    for (let child of this.renderer.viewport.children) {
-      if (!child.name) {
-        // Only select game objects
-        continue
-      }
+    this.selection.clear()
+    this.renderer.deselect()
 
-      if (
-        !Util.isPointInRectangle(
-          point.x,
-          point.y,
-          child.x,
-          child.y,
-          (<PIXI.Sprite>child).width,
-          (<PIXI.Sprite>child).height
-        )
-      ) {
-        // Didn't hit anything
-        continue
-      }
-
-      const group = this.getGroup(Number(child.name))
-
-      const tile = this.getGroup(Number(child.name))
-
-      for (let group of this.world.groups) {
-        if (child.name === String(group.id)) {
-          this.selection.selectGroup(group.id)
-          this.renderer.updateScenegraphGroup(group)
-          foundObject = true
-          console.log("clicked on group", group)
-          return
-        }
-      }
-
-      //TODO: activate once buildings are rendered again
-      // for (let building of this.world.buildings) {
-      //   if (child.name === String(building.id)) {
-      //     this.selection.selectBuilding(building.id)
-      //     this.renderer.updateScenegraphBuilding(building)
-      //     return
-      //   }
-      // }
-
-      let hex = Hexes.round(this.renderer.layout.pixelToHex(point))
-      if (this.world.tiles[Hexes.hash(hex)]) {
-        foundHex = hex
-      }
-    }
-
-    if (!foundObject && foundHex) {
-      this.selection.selectHex(foundHex)
-      this.renderer.updateScenegraphTile(
-        this.world.tiles[Hexes.hash(foundHex)] as ClientTile
+    const hit = this.renderer.viewport.children.filter((sprite) => {
+      return Util.isPointInRectangle(
+        point.x,
+        point.y,
+        sprite.x,
+        sprite.y,
+        (<PIXI.Sprite>sprite).width,
+        (<PIXI.Sprite>sprite).height
       )
+    })
+
+    for (let sprite of hit) {
+      const group = this.world.groups.find(
+        (group) => group.id === Number(sprite.name)
+      )
+      if (group) {
+        this.selection.selectGroup(group.id)
+        break
+      }
+
+      const building = this.world.buildings.find(
+        (building) => building.id === Number(sprite.name)
+      )
+      if (building) {
+        this.selection.selectBuilding(building.id)
+        break
+      }
+
+      const tile = getTileById(Number(sprite.name), this.world.tiles)
+      if (tile) {
+        this.selection.selectTile(tile.id)
+      }
     }
+
+    this.renderer.select(this.selection)
   }
 
   onRendererLoaded(): void {
@@ -242,6 +223,11 @@ export default class Game implements ConnectionListener, RendererListener {
             })
           }
         }
+      }
+
+      //Update the selection if a group is selected (it might have moved)
+      if (this.selection.isGroup) {
+        this.renderer.select(this.selection)
       }
     })
     socket.on("gamestate battles", (data) => {

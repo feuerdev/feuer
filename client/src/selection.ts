@@ -1,40 +1,32 @@
-import Hex from "../../shared/hex"
-
 export default class Selection {
-  public selectedGroup?: number = undefined
-  public selectedBuilding?: number = undefined
-  public selectedHex?: Hex = undefined
+  selectedId?: number
 
-  isGroup(): boolean {
-    return this.selectedGroup !== undefined
+  isGroup: boolean
+  isBuilding: boolean
+  isTile: boolean
+
+  clear(): void {
+    this.selectedId = undefined
+    this.isBuilding = false
+    this.isGroup = false
+    this.isTile = false
   }
 
-  isBuilding(): boolean {
-    return this.selectedBuilding !== undefined
+  selectGroup(id: number): void {
+    this.clear()
+    this.selectedId = id
+    this.isGroup = true
   }
 
-  isHex(): boolean {
-    return this.selectedHex !== undefined
+  selectBuilding(id: number): void {
+    this.clear()
+    this.selectedId = id
+    this.isBuilding = true
   }
 
-  clearSelection(): void {
-    this.selectedBuilding = undefined
-    this.selectedGroup = undefined
-    this.selectedHex = undefined
-  }
-
-  selectGroup(group: number): void {
-    this.clearSelection()
-    this.selectedGroup = group
-  }
-
-  selectBuilding(building: number): void {
-    this.clearSelection()
-    this.selectedBuilding = building
-  }
-
-  selectHex(hex: Hex): void {
-    this.clearSelection()
-    this.selectedHex = hex
+  selectTile(id: number): void {
+    this.clear()
+    this.selectedId = id
+    this.isTile = true
   }
 }
