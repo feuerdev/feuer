@@ -155,10 +155,10 @@ export default class Game implements ConnectionListener {
     this.connection?.send("request disband", { id: id })
   }
 
-  onConnected(socket: Socket) {
+  onConnected(_socket: Socket) {
     console.info("Connected")
   }
-  onDisconnected(socket: Socket) {
+  onDisconnected(_socket: Socket) {
     console.info("Disonnected")
   }
   onSetup(socket: Socket) {

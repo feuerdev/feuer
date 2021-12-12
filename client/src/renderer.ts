@@ -70,7 +70,7 @@ export default class Renderer {
   }
 
   load(): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
       this.loader = PIXI.Loader.shared
         .add("terrain_water_deep", "../img/water_02.png")
         .add("terrain_water_shallow", "../img/water_01.png")
@@ -260,7 +260,7 @@ export default class Renderer {
     }
   }
 
-  getGroupSprite(group: Group): PIXI.Texture {
+  getGroupSprite(_group: Group): PIXI.Texture {
     return this.loader.resources["unit_scout_own"].texture
   }
 }
