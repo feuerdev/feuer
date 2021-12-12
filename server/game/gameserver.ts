@@ -284,17 +284,6 @@ export default class GameServer {
       // Building.updateBuilding(initialCamp);
       // this.world.buildings.push(initialCamp)
 
-      //Prepare Drawing of that group
-      //TODO: Clientside
-      // this.world.tiles[Hexes.hash(initialGroup.pos)].addSpot(
-      //   initialGroup.getTexture(),
-      //   initialGroup.id
-      // )
-      // this.world.tiles[initialCamp.pos.hash()].addSpot(
-      //   initialCamp.getTexture(),
-      //   initialCamp.id
-      // )
-
       //Register player in Gamesever
       this.players.push(player)
       this.updatePlayerVisibilities(uid)

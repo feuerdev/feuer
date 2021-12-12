@@ -13,7 +13,7 @@
     "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */,
 
     "strict": false /* TODO: change to true. Enable all strict type-checking options. */,
-    "noUnusedLocals": true /* TODO: change to true. Report errors on unused locals. */,
-    "noUnusedParameters": true /* TODO: change to true. Report errors on unused parameters. */
+    "noUnusedLocals": true /* Report errors on unused locals. */,
+    "noUnusedParameters": true /* Report errors on unused parameters. */
   }
 }
