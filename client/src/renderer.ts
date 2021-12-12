@@ -6,7 +6,7 @@ import * as Vector2 from "../../shared/vector2"
 import * as Rules from "../../shared/rules.json"
 import { ClientTile } from "./objects"
 import { Group } from "../../shared/objects"
-import Selection from "./selection"
+import Selection, { SelectionType } from "./selection"
 
 const HEX_SIZE = 40
 
@@ -264,12 +264,13 @@ export default class Renderer {
     return this.loader.resources["unit_scout_own"].texture
   }
 }
+
 function getSelectionZIndex(selection: Selection): number {
-  if (selection.isGroup) {
+  if (selection.type === SelectionType.Group) {
     return ZIndices.UnitsSelection
-  } else if (selection.isBuilding) {
+  } else if (selection.type === SelectionType.Building) {
     return ZIndices.BuildingsSelection
-  } else if (selection.isTile) {
+  } else if (selection.type === SelectionType.Tile) {
     return ZIndices.TileSelection
   } else {
     throw new Error("Unknown selection type")

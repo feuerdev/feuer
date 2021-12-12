@@ -1,32 +1,34 @@
+export enum SelectionType {
+  None = 0,
+  Group = 1,
+  Tile = 2,
+  Building = 3,
+}
+
 export default class Selection {
   selectedId?: number
-
-  isGroup: boolean
-  isBuilding: boolean
-  isTile: boolean
+  type: SelectionType = SelectionType.None
 
   clear(): void {
     this.selectedId = undefined
-    this.isBuilding = false
-    this.isGroup = false
-    this.isTile = false
+    this.type = SelectionType.None
   }
 
   selectGroup(id: number): void {
     this.clear()
     this.selectedId = id
-    this.isGroup = true
+    this.type = SelectionType.Group
   }
 
   selectBuilding(id: number): void {
     this.clear()
     this.selectedId = id
-    this.isBuilding = true
+    this.type = SelectionType.Building
   }
 
   selectTile(id: number): void {
     this.clear()
     this.selectedId = id
-    this.isTile = true
+    this.type = SelectionType.Tile
   }
 }
