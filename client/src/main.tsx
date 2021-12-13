@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   const game = new Game(uid, world, renderer, connection)
   game.registerEventListeners()
-  connection.addListener(game)
+  connection.listener = game
   window["game"] = game
 
   const hudContainer = document.querySelector("#hud")

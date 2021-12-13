@@ -10,7 +10,7 @@ import * as Util from "../../shared/util"
 import * as Hexes from "../../shared/hex"
 import * as PlayerRelation from "../../shared/relation"
 import Hex from "../../shared/hex"
-import { Group, World } from "../../shared/objects"
+import { Battle, Building, Group, World } from "../../shared/objects"
 import { ClientTile } from "./objects"
 import { getTileById } from "../../shared/objectutil"
 
@@ -33,6 +33,113 @@ export default class Game implements ConnectionListener {
     this.connection = connection
   }
 
+  //#region Incoming Events
+  onConnected(_socket: Socket) {
+    console.info("Connected")
+  }
+
+  onDisconnected(_socket: Socket) {
+    console.info("Disonnected")
+  }
+
+  onTilesReceived(tiles: Util.Hashtable<ClientTile>): void {
+    for (let property in this.world.tiles) {
+      if (this.world.tiles.hasOwnProperty(property)) {
+        const tile = this.world.tiles[property] as ClientTile
+        tile.visible = false
+        this.renderer.updateScenegraphTile(
+          this.world.tiles[property] as ClientTile
+        ) //PERF: Only update Tint here instead of whole tile
+      }
+    }
+    for (let property in tiles) {
+      if (tiles.hasOwnProperty(property)) {
+        tiles[property].visible = true
+        this.world.tiles[property] = tiles[property]
+        this.renderer.updateScenegraphTile(
+          this.world.tiles[property] as ClientTile
+        )
+      }
+    }
+  }
+
+  onGroupsReceived(groups: Group[]): void {
+    this.world.groups = groups
+    for (let group of this.world.groups) {
+      this.renderer.updateScenegraphGroup(group)
+      if (group.owner !== this.uid) {
+        if (
+          this.world.playerRelations[
+            PlayerRelation.hash(group.owner, this.uid)
+          ] === undefined
+        ) {
+          this.connection?.send("request relation", {
+            id1: group.owner,
+            id2: this.uid,
+          })
+        }
+      }
+    }
+
+    //Update the selection if a group is selected (it might have moved)
+    if (this.selection.type === SelectionType.Group) {
+      this.renderer.select(this.selection)
+    }
+  }
+
+  onBattlesReceived(battles: Battle[]): void {
+    this.world.battles = battles
+  }
+
+  onBuildingsReceived(buildings: Building[]): void {
+    this.world.buildings = buildings
+  }
+
+  onRelationReceived(relation: PlayerRelation.default): void {
+    let hash = PlayerRelation.hash(relation.id1, relation.id2)
+    this.world.playerRelations[hash] = relation
+  }
+  //#endregion
+
+  //#region Outgoing Messages
+  onConstructionRequested(pos: Hex, type: string) {
+    this.connection?.send("request construction", { pos: pos, type: type })
+  }
+
+  onDemolishRequested(id: number): void {
+    this.connection?.send("request demolish", { buildingId: id })
+  }
+  onUpgradeRequested(id: number): void {
+    this.connection?.send("request upgrade", { buildingId: id })
+  }
+
+  onUnitAdd(groupId: number, unitId: number) {
+    this.connection?.send("request unit add", {
+      groupId: groupId,
+      unitId: unitId,
+    })
+  }
+  onUnitRemove(groupId: number, unitId: number) {
+    this.connection?.send("request unit remove", {
+      groupId: groupId,
+      unitId: unitId,
+    })
+  }
+
+  onResourceTransfer(id: number, resource: string, amount: number): void {
+    this.connection?.send("request transfer", {
+      id: id,
+      resource: resource,
+      amount: amount,
+    })
+  }
+
+  onDisbandRequested(id: number): void {
+    this.connection?.send("request disband", { id: id })
+  }
+  //#endregion
+
+  //#region Input Events
   registerEventListeners() {
     //Keyboard events
     window.addEventListener(
@@ -78,7 +185,13 @@ export default class Game implements ConnectionListener {
     })
   }
 
-  select(point: Vector2) {
+  /**
+   * 1. Deselect previous selection
+   * 2. Select new object based on given point
+   * 3. Update renderer to show selection
+   * @param point
+   */
+  private select(point: Vector2) {
     this.selection.clear()
     this.renderer.deselect()
 
@@ -118,127 +231,5 @@ export default class Game implements ConnectionListener {
 
     this.renderer.select(this.selection)
   }
-
-  onConstructionRequested(pos: Hex, type: string) {
-    this.connection?.send("request construction", { pos: pos, type: type })
-  }
-
-  onDemolishRequested(id: number): void {
-    this.connection?.send("request demolish", { buildingId: id })
-  }
-  onUpgradeRequested(id: number): void {
-    this.connection?.send("request upgrade", { buildingId: id })
-  }
-
-  onUnitAdd(groupId: number, unitId: number) {
-    this.connection?.send("request unit add", {
-      groupId: groupId,
-      unitId: unitId,
-    })
-  }
-  onUnitRemove(groupId: number, unitId: number) {
-    this.connection?.send("request unit remove", {
-      groupId: groupId,
-      unitId: unitId,
-    })
-  }
-
-  onResourceTransfer(id: number, resource: string, amount: number): void {
-    this.connection?.send("request transfer", {
-      id: id,
-      resource: resource,
-      amount: amount,
-    })
-  }
-
-  onDisbandRequested(id: number): void {
-    this.connection?.send("request disband", { id: id })
-  }
-
-  onConnected(_socket: Socket) {
-    console.info("Connected")
-  }
-  onDisconnected(_socket: Socket) {
-    console.info("Disonnected")
-  }
-  onSetup(socket: Socket) {
-    //Hier alle Gamelevel Events implementieren
-    socket.on("gamestate tiles", (data) => {
-      for (let property in this.world.tiles) {
-        if (this.world.tiles.hasOwnProperty(property)) {
-          const tile = this.world.tiles[property] as ClientTile
-          tile.visible = false
-          this.renderer.updateScenegraphTile(
-            this.world.tiles[property] as ClientTile
-          ) //PERF: Only update Tint here instead of whole tile
-        }
-      }
-      for (let property in data) {
-        if (data.hasOwnProperty(property)) {
-          data[property].visible = true
-          this.world.tiles[property] = data[property]
-          this.renderer.updateScenegraphTile(
-            this.world.tiles[property] as ClientTile
-          )
-        }
-      }
-    })
-    socket.on("gamestate discovered tiles", (data) => {
-      for (let property in data) {
-        if (data.hasOwnProperty(property)) {
-          this.world.tiles[property] = data[property]
-          this.renderer.updateScenegraphTile(
-            this.world.tiles[property] as ClientTile
-          )
-        }
-      }
-    })
-    socket.on("gamestate groups", (data) => {
-      this.world.groups = data
-      for (let group of this.world.groups) {
-        this.renderer.updateScenegraphGroup(group)
-        if (group.owner !== this.uid) {
-          if (
-            this.world.playerRelations[
-              PlayerRelation.hash(group.owner, this.uid)
-            ] === undefined
-          ) {
-            this.connection?.send("request relation", {
-              id1: group.owner,
-              id2: this.uid,
-            })
-          }
-        }
-      }
-
-      //Update the selection if a group is selected (it might have moved)
-      if (this.selection.type === SelectionType.Group) {
-        this.renderer.select(this.selection)
-      }
-    })
-    socket.on("gamestate battles", (data) => {
-      this.world.battles = data
-    })
-    socket.on("gamestate buildings", (data) => {
-      this.world.buildings = data
-    })
-    socket.on("gamestate relation", (data) => {
-      let hash = PlayerRelation.hash(data.id1, data.id2)
-      this.world.playerRelations[hash] = data
-    })
-  }
-
-  getHex(vector: Vector2): Hex {
-    return Hexes.round(this.renderer.layout.pixelToHex(vector))
-  }
-
-  getTile(hex: Hex): ClientTile {
-    return this.world[Hexes.hash(hex)]
-  }
-
-  getGroup(id: number): Group | undefined {
-    return this.world.groups.find((group) => {
-      group.id === id
-    })
-  }
 }
+//#endregion
