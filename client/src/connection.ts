@@ -7,7 +7,7 @@ export interface ConnectionListener {
   onDisconnected(socket: Socket): void
   onConnected(socket: Socket): void
   onTilesReceived(tiles: Hashtable<Tile>): void
-  onGroupsReceived(groups: Group[]): void
+  onGroupsReceived(groups: Hashtable<Group>): void
   onBattlesReceived(battles: Battle[]): void
   onBuildingsReceived(buildings: Building[]): void
   onRelationReceived(relation: PlayerRelation): void
@@ -30,7 +30,7 @@ export default class Connection {
     this.socket.on("gamestate tiles", (tiles: Hashtable<Tile>) => {
       this.listener.onTilesReceived(tiles)
     })
-    this.socket.on("gamestate groups", (groups: Group[]) => {
+    this.socket.on("gamestate groups", (groups: Hashtable<Group>) => {
       this.listener.onGroupsReceived(groups)
     })
     this.socket.on("gamestate battles", (battles: Battle[]) => {

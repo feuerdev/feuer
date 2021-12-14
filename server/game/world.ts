@@ -4,7 +4,7 @@ import { Hashtable } from "../../shared/util"
 export function create(tiles: Hashtable<Tile>): World {
   return {
     tiles: tiles,
-    groups: [],
+    groups: {},
     units: [],
     buildings: [],
     playerRelations: {},
