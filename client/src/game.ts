@@ -13,6 +13,7 @@ import Hex from "../../shared/hex"
 import { Battle, Building, Group, World } from "../../shared/objects"
 import { ClientTile } from "./objects"
 import { getTileById } from "../../shared/objectutil"
+import { Hashtable } from "../../shared/util"
 
 export default class Game implements ConnectionListener {
   private renderer: Renderer
@@ -43,42 +44,75 @@ export default class Game implements ConnectionListener {
   }
 
   onTilesReceived(tiles: Util.Hashtable<ClientTile>): void {
-    for (let property in this.world.tiles) {
-      if (this.world.tiles.hasOwnProperty(property)) {
-        const tile = this.world.tiles[property] as ClientTile
-        tile.visible = false
-        this.renderer.updateScenegraphTile(
-          this.world.tiles[property] as ClientTile
-        ) //PERF: Only update Tint here instead of whole tile
+    let visibleHexes: Hashtable<Hex> = {}
+    Object.values(this.world.groups).forEach((group) => {
+      Hexes.neighborsRange(group.pos, group.spotting).forEach((hex) => {
+        visibleHexes[Hexes.hash(hex)] = hex
+      })
+    })
+    Object.values(this.world.buildings).forEach((building) => {
+      Hexes.neighborsRange(building.position, building.spotting).forEach(
+        (hex) => {
+          visibleHexes[Hexes.hash(hex)] = hex
+        }
+      )
+    })
+
+    Object.entries(tiles).forEach(([id, tile]) => {
+      this.world.tiles[id] = tile
+    })
+
+    Object.values(this.world.tiles).forEach((tile: ClientTile) => {
+      const oldVisibility = tile.visible
+      tile.visible = visibleHexes[Hexes.hash(tile.hex)] !== undefined
+      if (oldVisibility !== tile.visible) {
+        this.renderer.updateScenegraphTile(tile)
       }
-    }
-    for (let property in tiles) {
-      if (tiles.hasOwnProperty(property)) {
-        tiles[property].visible = true
-        this.world.tiles[property] = tiles[property]
-        this.renderer.updateScenegraphTile(
-          this.world.tiles[property] as ClientTile
-        )
-      }
-    }
+    })
   }
 
-  onGroupsReceived(groups: Group[]): void {
-    this.world.groups = groups
-    for (let group of this.world.groups) {
-      this.renderer.updateScenegraphGroup(group)
-      if (group.owner !== this.uid) {
-        if (
-          this.world.playerRelations[
-            PlayerRelation.hash(group.owner, this.uid)
-          ] === undefined
-        ) {
-          this.connection?.send("request relation", {
-            id1: group.owner,
-            id2: this.uid,
-          })
-        }
+  onGroupsReceived(groups: Hashtable<Group>): void {
+    let newGroups = {}
+
+    let needsTileUpdate = false
+
+    // Merge groups
+    Object.entries(groups).forEach(([id, receivedGroup]) => {
+      const oldGroup = this.world.groups[id]
+
+      // Check if group is new, has moved or upgraded
+      // Redraw/request tiles accordingly
+      if (
+        !oldGroup ||
+        !Hexes.equals(oldGroup.pos, receivedGroup.pos) ||
+        oldGroup.spotting !== receivedGroup.spotting
+      ) {
+        this.renderer.updateScenegraphGroup(receivedGroup)
+        needsTileUpdate = true
       }
+
+      // If group is new and foreign, request relation
+      if (
+        !oldGroup &&
+        receivedGroup.owner !== this.uid &&
+        this.world.playerRelations[
+          PlayerRelation.hash(receivedGroup.owner, this.uid)
+        ] === undefined
+      ) {
+        this.connection.send("request relation", {
+          id1: receivedGroup.owner,
+          id2: this.uid,
+        })
+      }
+
+      newGroups[id] = receivedGroup
+    })
+
+    // Server is sending exhaustive list of groups, so client can clean his own list
+    this.world.groups = newGroups
+
+    if (needsTileUpdate) {
+      this.requestTiles()
     }
 
     //Update the selection if a group is selected (it might have moved)
@@ -102,32 +136,49 @@ export default class Game implements ConnectionListener {
   //#endregion
 
   //#region Outgoing Messages
+  requestTiles() {
+    let hexes = new Set<Hex>()
+    Object.values(this.world.groups).forEach((group) => {
+      Hexes.neighborsRange(group.pos, group.spotting).forEach((hex) => {
+        hexes.add(hex)
+      })
+    })
+    Object.values(this.world.buildings).forEach((building) => {
+      Hexes.neighborsRange(building.position, building.spotting).forEach(
+        (hex) => {
+          hexes.add(hex)
+        }
+      )
+    })
+    this.connection.send("request tiles", Array.from(hexes))
+  }
+
   onConstructionRequested(pos: Hex, type: string) {
-    this.connection?.send("request construction", { pos: pos, type: type })
+    this.connection.send("request construction", { pos: pos, type: type })
   }
 
   onDemolishRequested(id: number): void {
-    this.connection?.send("request demolish", { buildingId: id })
+    this.connection.send("request demolish", { buildingId: id })
   }
   onUpgradeRequested(id: number): void {
-    this.connection?.send("request upgrade", { buildingId: id })
+    this.connection.send("request upgrade", { buildingId: id })
   }
 
   onUnitAdd(groupId: number, unitId: number) {
-    this.connection?.send("request unit add", {
+    this.connection.send("request unit add", {
       groupId: groupId,
       unitId: unitId,
     })
   }
   onUnitRemove(groupId: number, unitId: number) {
-    this.connection?.send("request unit remove", {
+    this.connection.send("request unit remove", {
       groupId: groupId,
       unitId: unitId,
     })
   }
 
   onResourceTransfer(id: number, resource: string, amount: number): void {
-    this.connection?.send("request transfer", {
+    this.connection.send("request transfer", {
       id: id,
       resource: resource,
       amount: amount,
@@ -135,7 +186,7 @@ export default class Game implements ConnectionListener {
   }
 
   onDisbandRequested(id: number): void {
-    this.connection?.send("request disband", { id: id })
+    this.connection.send("request disband", { id: id })
   }
   //#endregion
 
@@ -175,7 +226,7 @@ export default class Game implements ConnectionListener {
         case 2: //Right
           let clickedHex = Hexes.round(this.renderer.layout.pixelToHex(point))
           if (clickedHex && this.selection.type === SelectionType.Group) {
-            this.connection?.send("request movement", {
+            this.connection.send("request movement", {
               selection: this.selection.selectedId,
               target: clickedHex,
             })
@@ -207,9 +258,7 @@ export default class Game implements ConnectionListener {
     })
 
     for (let sprite of hit) {
-      const group = this.world.groups.find(
-        (group) => group.id === Number(sprite.name)
-      )
+      const group = this.world.groups[sprite.name]
       if (group) {
         this.selection.selectGroup(group.id)
         break

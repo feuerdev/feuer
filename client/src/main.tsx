@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const connection = new Connection(`${window.location.host}`, uid)
   const world = {
     tiles: {},
-    groups: [],
+    groups: {},
     units: [],
     buildings: [],
     playerRelations: {},

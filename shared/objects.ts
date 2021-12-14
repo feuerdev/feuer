@@ -8,7 +8,7 @@ export type UserId = string
 // World
 export interface World {
   tiles: Hashtable<Tile>
-  groups: Group[]
+  groups: Hashtable<Group>
   units: Unit[]
   buildings: Building[]
   playerRelations: Hashtable<PlayerRelation>

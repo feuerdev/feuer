@@ -51,30 +51,42 @@ export default class GameServer {
 
       socket.on("disconnect", () => this.onPlayerDisconnected(socket))
 
+      socket.on("request tiles", (data: Hex[]) =>
+        this.onRequestTiles(socket, data)
+      )
+
       socket.on("request movement", (data) =>
         this.onRequestMovement(socket, data)
       )
+
       socket.on("request construction", (data) =>
         this.onRequestConstruction(socket, data)
       )
+
       socket.on("request relation", (data) =>
         this.onRequestRelation(socket, data)
       )
+
       socket.on("request disband", (data) =>
         this.onRequestDisband(socket, data)
       )
+
       socket.on("request transfer", (data) =>
         this.onRequestTransfer(socket, data)
       )
+
       socket.on("request unit add", (data) =>
         this.onRequestUnitAdd(socket, data)
       )
+
       socket.on("request unit remove", (data) =>
         this.onRequestUnitRemove(socket, data)
       )
+
       socket.on("request upgrade", (data) =>
         this.onRequestUpgrade(socket, data)
       )
+
       socket.on("request demolish", (data) =>
         this.onRequestDemolish(socket, data)
       )
@@ -124,17 +136,16 @@ export default class GameServer {
   //Loops
   update(deltaFactor: number) {
     //Group Movement
-    for (let i = 0; i < this.world.groups.length; i++) {
-      const group: Group = this.world.groups[i]!
+    Object.values(this.world.groups).forEach((group) => {
       if (group.targetHexes.length > 0) {
         const currentTile = this.world.tiles[Hexes.hash(group.pos)]
         const nextHex = group.targetHexes[0]
 
-        if (!nextHex || !currentTile) continue
+        if (!nextHex || !currentTile) return
 
         const nextTile = this.world.tiles[Hexes.hash(nextHex)]
 
-        if (!nextTile) continue
+        if (!nextTile) return
 
         group.movementStatus +=
           calculateMovementProgress(group, currentTile, nextTile) * deltaFactor
@@ -153,7 +164,7 @@ export default class GameServer {
           this.checkForBattle(group)
         }
       }
-    }
+    })
 
     //Resource Gathering
     for (let building of this.world.buildings) {
@@ -177,19 +188,13 @@ export default class GameServer {
         if (battle.attacker.hp <= 0) {
           //TODO: Clientside
           // this.world.tiles[Hexes.hash(battle.position)].removeSpot(battle.attacker.id)
-          this.world.groups.splice(
-            this.world.groups.indexOf(battle.attacker),
-            1
-          )
+          delete this.world.groups[battle.attacker.id]
           this.updatePlayerVisibilities(battle.attacker.owner)
         }
         if (battle.defender.hp <= 0) {
           //TODO: Clientside
           // this.world.tiles[Hexes.hash(battle.position)].removeSpot(battle.defender.id)
-          this.world.groups.splice(
-            this.world.groups.indexOf(battle.defender),
-            1
-          )
+          delete this.world.groups[battle.defender.id]
           this.updatePlayerVisibilities(battle.defender.owner)
         }
         this.world.battles.splice(i, 1)
@@ -205,21 +210,21 @@ export default class GameServer {
   }
 
   checkForBattle(group: Group) {
-    for (let other_group of this.world.groups) {
+    Object.values(this.world.groups).forEach((otherGroup) => {
       if (
-        Hexes.equals(group.pos, other_group.pos) &&
-        group.owner !== other_group.owner &&
-        group.id !== other_group.id
+        Hexes.equals(group.pos, otherGroup.pos) &&
+        group.owner !== otherGroup.owner &&
+        group.id !== otherGroup.id
       ) {
         if (
           this.world.playerRelations[
-            PlayerRelation.hash(group.owner, other_group.owner)
+            PlayerRelation.hash(group.owner, otherGroup.owner)
           ].relationType === PlayerRelation.EnumRelationType.hostile
         ) {
-          this.world.battles.push(Battles.create(group.pos, group, other_group))
+          this.world.battles.push(Battles.create(group.pos, group, otherGroup))
         }
       }
-    }
+    })
   }
 
   updateNet(_delta) {
@@ -229,11 +234,11 @@ export default class GameServer {
         const socket: Socket = this.uidsockets[player.uid]
         if (socket && socket.connected) {
           socket.emit("gamestate players", this.players)
-          let tiles = this.getTiles(player.visibleHexes)
+          // let tiles = this.getTiles(player.visibleHexes)
           let groups = this.getVisibleGroups(player.visibleHexes)
           let battles = this.getVisibleBattles(player.visibleHexes)
           let buildings = this.getVisibleBuildings(player.visibleHexes)
-          socket.emit("gamestate tiles", tiles)
+          // socket.emit("gamestate tiles", tiles)
           socket.emit("gamestate groups", groups)
           socket.emit("gamestate battles", battles)
           socket.emit("gamestate buildings", buildings)
@@ -278,7 +283,7 @@ export default class GameServer {
       //Give Player an initial Scout and Camp
       let pos = this.getRandomHex()
       let initialGroup = createGroup(player.uid, "Scout", pos)
-      this.world.groups.push(initialGroup)
+      this.world.groups[initialGroup.id] = initialGroup
 
       // let initialCamp = createBuilding(player.uid, "Town Hall", pos)
       // Building.updateBuilding(initialCamp);
@@ -289,10 +294,7 @@ export default class GameServer {
       this.updatePlayerVisibilities(uid)
     } else {
       Log.info(`Player reconnected: ${player.name}`)
-      socket.emit(
-        "gamestate discovered tiles",
-        this.getTiles(player.discoveredHexes)
-      )
+      socket.emit("gamestate tiles", this.getTiles(player.discoveredHexes))
     }
 
     //Register player in Gamesever
@@ -300,17 +302,24 @@ export default class GameServer {
     this.uidsockets[uid] = socket
   }
 
+  onRequestTiles(socket: Socket, data: Hex[]) {
+    const player: Player = this.socketplayer[socket.id]
+    if (player) {
+      //TODO: Check if player has permission to see these tiles
+      socket.emit("gamestate tiles", this.getTiles(data))
+    }
+  }
+
   onRequestMovement(socket: Socket, data: any) {
     let uid = this.getPlayerUid(socket.id)
     let selection: number = data.selection
     let target = Hexes.create(data.target.q, data.target.r, data.target.s)
-    for (let group of this.world.groups) {
-      if (uid === group.owner && selection === group.id) {
-        if (this.world.tiles[Hexes.hash(target)]) {
-          group.movementStatus = 0
-          group.targetHexes = astar(this.world.tiles, group.pos, target)
-          return
-        }
+    const group = this.world.groups[selection]
+    if (uid === group.owner) {
+      if (this.world.tiles[Hexes.hash(target)]) {
+        group.movementStatus = 0
+        group.targetHexes = astar(this.world.tiles, group.pos, target)
+        return
       }
     }
   }
@@ -345,9 +354,13 @@ export default class GameServer {
 
   onRequestUnitAdd(socket: Socket, data) {
     let uid = this.getPlayerUid(socket.id)
-    let group = this.world.groups.find((group) => {
-      return group.id === data.groupId && group.owner === uid
-    })
+    const group = this.world.groups[data.groupId]
+
+    if (group.owner !== uid) {
+      Log.warn(`Player '${uid}' tried to add unit to group he doesn't own`)
+      return
+    }
+
     let unit = this.world.units.find((unit) => {
       return unit.id === data.unitId
     })
@@ -357,9 +370,13 @@ export default class GameServer {
   }
   onRequestUnitRemove(socket: Socket, data) {
     let uid = this.getPlayerUid(socket.id)
-    let group = this.world.groups.find((group) => {
-      return group.id === data.groupId && group.owner === uid
-    })
+
+    const group = this.world.groups[data.groupId]
+    if (group.owner !== uid) {
+      Log.warn(`Player '${uid}' tried to remove unit to group he doesn't own`)
+      return
+    }
+
     if (group) {
       let unit = group.units.find((unit) => {
         return unit.id === data.unitId
@@ -371,9 +388,14 @@ export default class GameServer {
   }
   onRequestTransfer(socket: Socket, data) {
     let uid = this.getPlayerUid(socket.id)
-    let group = this.world.groups.find((group) => {
-      return group.id === data.id && group.owner === uid
-    })
+    const group = this.world.groups[data.groupId]
+    if (group.owner !== uid) {
+      Log.warn(
+        `Player '${uid}' tried to transfer resources to group he doesn't own`
+      )
+      return
+    }
+
     if (group) {
       let tile = this.world.tiles[Hexes.hash(group.pos)]
       let amount = data.amount
@@ -427,13 +449,16 @@ export default class GameServer {
 
   onRequestDisband(socket: Socket, data) {
     let uid = this.getPlayerUid(socket.id)
-    let groupToDisband = this.world.groups.find((group) => {
-      return group.id === data.id && group.owner === uid
-    })
+    const groupToDisband = this.world.groups[data.groupId]
+    if (groupToDisband.owner !== uid) {
+      Log.warn(`Player '${uid}' tried to disband unit to group he doesn't own`)
+      return
+    }
+
     if (groupToDisband) {
       //TODO: clientside
       // this.world.tiles[Hexes.hash(groupToDisband.pos)].removeSpot(groupToDisband.id)
-      this.world.groups.splice(this.world.groups.indexOf(groupToDisband), 1)
+      delete this.world.groups[groupToDisband.id]
       this.updatePlayerVisibilities(uid)
     }
   }
@@ -466,13 +491,13 @@ export default class GameServer {
     player.visibleHexes = []
 
     if (player) {
-      for (let group of this.world.groups) {
+      Object.values(this.world.groups).forEach((group) => {
         if (group.owner === uid) {
           let visible = Hexes.neighborsRange(group.pos, group.spotting)
           this.addUniqueHexes(player.visibleHexes, visible)
           this.addUniqueHexes(player.discoveredHexes, visible)
         }
-      }
+      })
       for (let building of this.world.buildings) {
         if (building.owner === uid) {
           let visible = Hexes.neighborsRange(
@@ -508,12 +533,12 @@ export default class GameServer {
     return result
   }
 
-  private getVisibleGroups(hexes: Hex[]): Group[] {
-    let result: Group[] = []
+  private getVisibleGroups(hexes: Hex[]): Hashtable<Group> {
+    let result: Hashtable<Group> = {}
     for (let hex of hexes) {
-      for (let group of this.world.groups) {
-        if (Hexes.equals(group.pos, hex)) result.push(group)
-      }
+      Object.values(this.world.groups).forEach((group) => {
+        if (Hexes.equals(group.pos, hex)) result[group.id] = group
+      })
     }
     return result
   }
@@ -558,12 +583,13 @@ export default class GameServer {
    * @param uid
    */
   private hasGroupAt(pos: Hex, uid: string): boolean {
-    for (let group of this.world.groups) {
+    let found = false
+    Object.values(this.world.groups).forEach((group) => {
       if (Hexes.equals(group.pos, pos) && group.owner === uid) {
-        return true
+        found = true
       }
-    }
-    return false
+    })
+    return found
   }
 
   /**
