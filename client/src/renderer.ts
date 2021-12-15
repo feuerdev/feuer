@@ -227,6 +227,11 @@ export default class Renderer {
 
   getTerrainTexture(tile: ClientTile): PIXI.Texture {
     let height = tile.height
+
+    if (tile.river) {
+      return this.loader.resources["terrain_water_shallow"]!.texture
+    }
+
     if (tile.temperature < Rules.settings.map_temperature_ice) {
       return this.loader.resources["terrain_ice"]!.texture
     }
