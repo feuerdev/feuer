@@ -1,5 +1,5 @@
 import seedrandom from "seedrandom"
-import { Hashtable, scale } from "../../shared/util"
+import { clamp, Hashtable, scale } from "../../shared/util"
 import FastSimplexNoise from "../../shared/noise"
 import Log from "../util/log"
 import Vector2 from "../../shared/vector2"
@@ -101,6 +101,7 @@ export default class Mapgen {
         let hex = Hexes.create(q, r)
         let tile: Tile = {
           id: GameServer.idCounter++,
+          precipitation: 0,
           hex: hex,
           river: false,
           height: heightValue,
@@ -170,7 +171,6 @@ export default class Mapgen {
     }
 
     // Generate rivers
-
     const riverRng = seedrandom(seed + 1)
     Object.values(tiles).forEach((tile) => {
       if (
@@ -242,7 +242,7 @@ export default class Mapgen {
             // Create small lake
             Hexes.neighbors(tile.hex).forEach((neighbour) => {
               let neighbourTile = tiles[Hexes.hash(neighbour)]
-              if (riverRng() > 0.5) {
+              if (neighbourTile && riverRng() > 0.5) {
                 neighbourTile.river = true
               }
             })
@@ -261,6 +261,47 @@ export default class Mapgen {
         lowestNeighbour.river = true
         tile = lowestNeighbour
       }
+
+      // Calculate Precipitation
+      Object.values(tiles).forEach((tile) => {
+        tile.precipitation = 0.5
+
+        if (
+          tile.river ||
+          tile.height < Rules.settings.map_level_water_shallow
+        ) {
+          tile.precipitation = 1
+          return
+        }
+
+        let region = Hexes.neighborsRange(tile.hex, 4)
+        for (let hex of region) {
+          let neighbour = tiles[Hexes.hash(hex)]
+          if (
+            neighbour &&
+            (neighbour.river ||
+              neighbour.height < Rules.settings.map_level_water_shallow)
+          ) {
+            tile.precipitation += 0.2
+          }
+        }
+
+        // Lower precipitation if latitude is at around 30°
+        let latitude = Math.abs(tile.hex.r) / (size / 2)
+
+        // sin^2(x*4) Peaks at around -0.3 and 0.3
+        let f = (x: number) => {
+          if (Math.abs(x) > 0.6) {
+            return 0
+          }
+          return Math.pow(Math.sin(x * 5) * 0.5, 2)
+        }
+
+        // Desert Belt, remove some precipitation
+        tile.precipitation -= f(latitude) //desertGen.scaled2D(tile.hex.r, tile.hex.q) * 30
+
+        tile.precipitation = clamp(tile.precipitation, 0, 1)
+      })
     })
 
     Log.info("Map created")

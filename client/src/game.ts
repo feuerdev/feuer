@@ -260,6 +260,7 @@ export default class Game implements ConnectionListener {
     for (let sprite of hit) {
       const group = this.world.groups[sprite.name]
       if (group) {
+        console.log(group)
         this.selection.selectGroup(group.id)
         break
       }
@@ -268,12 +269,14 @@ export default class Game implements ConnectionListener {
         (building) => building.id === Number(sprite.name)
       )
       if (building) {
+        console.log(building)
         this.selection.selectBuilding(building.id)
         break
       }
 
       const tile = getTileById(Number(sprite.name), this.world.tiles)
       if (tile) {
+        console.log(tile)
         this.selection.selectTile(tile.id)
       }
     }
