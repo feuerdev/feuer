@@ -5,10 +5,11 @@ import Log from "../util/log"
 import Vector2 from "../../shared/vector2"
 import { Tile, World } from "../../shared/objects"
 import * as Worlds from "./world"
-import * as Hex from "../../shared/hex"
+import Hex, * as Hexes from "../../shared/hex"
 import * as Rules from "../../shared/rules.json"
 import * as Resources from "../../shared/resources"
 import GameServer from "./gameserver"
+import { astar } from "../../shared/pathfinding"
 
 export default class Mapgen {
   public static create(
@@ -97,10 +98,11 @@ export default class Mapgen {
         let heightFactor = heightValue > 0.29 ? 10 * heightValue : 0
         let temperature = latitudeFactor - heightFactor
 
-        let hex = Hex.create(q, r)
+        let hex = Hexes.create(q, r)
         let tile: Tile = {
           id: GameServer.idCounter++,
           hex: hex,
+          river: false,
           height: heightValue,
           temperature: temperature,
           // forestation: treeValue,
@@ -109,7 +111,7 @@ export default class Mapgen {
           // goldOre: goldValue,
           resources: Resources.create(),
         }
-        tiles[Hex.hash(hex)] = tile
+        tiles[Hexes.hash(hex)] = tile
 
         //No rocks and trees in water obviously
         // if (heightValue <= Rules.settings.map_level_water_shallow) {
@@ -166,6 +168,101 @@ export default class Mapgen {
         // })
       }
     }
+
+    // Generate rivers
+
+    const riverRng = seedrandom(seed + 1)
+    Object.values(tiles).forEach((tile) => {
+      if (
+        !(
+          tile.height > Rules.settings.map_level_dirt &&
+          tile.height < Rules.settings.map_level_dirt_stony
+        )
+      ) {
+        // Not High/Low enough to be a river
+        return
+      }
+
+      if (tile.temperature < Rules.settings.map_temperature_ice) {
+        // No rivers in ice
+        return
+      }
+
+      if (riverRng() > Rules.settings.map_river_frequency) {
+        // Random chance generate a river
+        return
+      }
+
+      tile.river = true
+
+      while (true) {
+        let neighbours = Hexes.neighbors(tile.hex)
+
+        //find the neighbour with the lowest height
+        let lowestNeighbour: Tile | undefined = undefined
+        let lowestHeight = tile.height
+        neighbours.forEach((neighbour) => {
+          let neighbourTile = tiles[Hexes.hash(neighbour)]
+          if (neighbourTile && neighbourTile.height < lowestHeight) {
+            lowestNeighbour = neighbourTile
+            lowestHeight = neighbourTile.height
+          }
+        })
+
+        if (!lowestNeighbour || lowestNeighbour.height >= tile.height) {
+          // Lowest point found
+          // Look if a body of water is close (less than 5 tiles), if yes, connect
+          // If no, create small lake
+          let distance = 2
+          let target: Hex
+          while (true) {
+            Hexes.neighborsRange(tile.hex, distance).forEach((neighbour) => {
+              let neighbourTile = tiles[Hexes.hash(neighbour)]
+              if (
+                neighbourTile &&
+                neighbourTile.height < Rules.settings.map_level_water_shallow
+              ) {
+                target = neighbour
+                return
+              }
+            })
+            if (target || distance > 5) {
+              break
+            }
+            distance++
+          }
+
+          if (target) {
+            // Connect to body of water
+            let path = astar(tiles, tile.hex, target)
+            path.forEach((hex) => {
+              tiles[Hexes.hash(hex)].river = true
+            })
+          } else {
+            // Create small lake
+            Hexes.neighbors(tile.hex).forEach((neighbour) => {
+              let neighbourTile = tiles[Hexes.hash(neighbour)]
+              if (riverRng() > 0.5) {
+                neighbourTile.river = true
+              }
+            })
+          }
+          break
+        }
+
+        if (
+          lowestNeighbour.height < Rules.settings.map_level_water_shallow ||
+          lowestNeighbour.river
+        ) {
+          // Body of water found, stop
+          break
+        }
+
+        lowestNeighbour.river = true
+        tile = lowestNeighbour
+      }
+    })
+
     Log.info("Map created")
 
     const world = Worlds.create(tiles)

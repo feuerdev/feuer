@@ -1,4 +1,6 @@
 import Hex, { distance, hash, neighbors, equals } from "./hex"
+import { Tile } from "./objects"
+import { Hashtable } from "./util"
 
 class QueueElement {
   public element: any
@@ -48,7 +50,7 @@ class PriorityQueue {
   }
 }
 
-export function astar(tiles, start: Hex, goal: Hex) {
+export function astar(tiles: Hashtable<Tile>, start: Hex, goal: Hex) {
   let heuristic = function (a: Hex, b: Hex) {
     return distance(a, b)
   }
@@ -70,8 +72,8 @@ export function astar(tiles, start: Hex, goal: Hex) {
 
     for (let next of neighbors(current)) {
       if (tiles[hash(next)]) {
-        let new_cost =
-          cost_so_far[hash(current)] + 1 / tiles[hash(current)].movementFactor //TODO calculate correct movementcost
+        let new_cost = 1
+        // cost_so_far[hash(current)] + 1 / tiles[hash(current)].movementFactor //TODO calculate correct movementcost
         if (
           cost_so_far[hash(next)] === undefined ||
           new_cost < cost_so_far[hash(next)]
