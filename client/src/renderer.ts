@@ -228,8 +228,20 @@ export default class Renderer {
   getTerrainTexture(tile: ClientTile): PIXI.Texture {
     let height = tile.height
 
+    // Rivers
     if (tile.river) {
       return this.loader.resources["terrain_water_shallow"]!.texture
+    }
+
+    // Desert
+    if (tile.height < Rules.settings.map_level_stone_dirty) {
+      if (tile.precipitation < 0.3) {
+        return this.loader.resources["terrain_sand"]!.texture
+      }
+
+      if (tile.precipitation < 0.4) {
+        return this.loader.resources["terrain_sand_grassy"]!.texture
+      }
     }
 
     if (tile.temperature < Rules.settings.map_temperature_ice) {

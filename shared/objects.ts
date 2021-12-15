@@ -24,6 +24,7 @@ export interface GameObject {
  * Tile-Class representing one hex with all its relevant fields
  */
 export interface Tile extends GameObject {
+  precipitation: number
   river: boolean
   hex: Hex
   height: number
