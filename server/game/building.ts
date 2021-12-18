@@ -4,11 +4,7 @@ import { Building } from "../../shared/objects"
 import Resources from "../../shared/resources"
 import GameServer from "./gameserver"
 
-export function createBuilding(
-  owner: string,
-  name: string,
-  pos: Hex
-): Building {
+export function createBuilding(owner: string, name: string, pos: Hex): Building {
   const template = Rules.buildings[name].levels[0]
   const building: Building = {
     owner: owner,
