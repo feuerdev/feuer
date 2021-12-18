@@ -22,12 +22,7 @@ export default class Game implements ConnectionListener {
   private uid: string
   private selection: Selection = new Selection()
 
-  constructor(
-    uid: string,
-    world: World,
-    renderer: Renderer,
-    connection: Connection
-  ) {
+  constructor(uid: string, world: World, renderer: Renderer, connection: Connection) {
     this.uid = uid
     this.world = world
     this.renderer = renderer
@@ -51,11 +46,9 @@ export default class Game implements ConnectionListener {
       })
     })
     Object.values(this.world.buildings).forEach((building) => {
-      Hexes.neighborsRange(building.position, building.spotting).forEach(
-        (hex) => {
-          visibleHexes[Hexes.hash(hex)] = hex
-        }
-      )
+      Hexes.neighborsRange(building.position, building.spotting).forEach((hex) => {
+        visibleHexes[Hexes.hash(hex)] = hex
+      })
     })
 
     Object.entries(tiles).forEach(([id, tile]) => {
@@ -82,11 +75,7 @@ export default class Game implements ConnectionListener {
 
       // Check if group is new, has moved or upgraded
       // Redraw/request tiles accordingly
-      if (
-        !oldGroup ||
-        !Hexes.equals(oldGroup.pos, receivedGroup.pos) ||
-        oldGroup.spotting !== receivedGroup.spotting
-      ) {
+      if (!oldGroup || !Hexes.equals(oldGroup.pos, receivedGroup.pos) || oldGroup.spotting !== receivedGroup.spotting) {
         this.renderer.updateScenegraphGroup(receivedGroup)
         needsTileUpdate = true
       }
@@ -95,9 +84,7 @@ export default class Game implements ConnectionListener {
       if (
         !oldGroup &&
         receivedGroup.owner !== this.uid &&
-        this.world.playerRelations[
-          PlayerRelation.hash(receivedGroup.owner, this.uid)
-        ] === undefined
+        this.world.playerRelations[PlayerRelation.hash(receivedGroup.owner, this.uid)] === undefined
       ) {
         this.connection.send("request relation", {
           id1: receivedGroup.owner,
@@ -144,11 +131,9 @@ export default class Game implements ConnectionListener {
       })
     })
     Object.values(this.world.buildings).forEach((building) => {
-      Hexes.neighborsRange(building.position, building.spotting).forEach(
-        (hex) => {
-          hexes.add(hex)
-        }
-      )
+      Hexes.neighborsRange(building.position, building.spotting).forEach((hex) => {
+        hexes.add(hex)
+      })
     })
     this.connection.send("request tiles", Array.from(hexes))
   }
@@ -247,14 +232,7 @@ export default class Game implements ConnectionListener {
     this.renderer.deselect()
 
     const hit = this.renderer.viewport.children.filter((sprite) => {
-      return Util.isPointInRectangle(
-        point.x,
-        point.y,
-        sprite.x,
-        sprite.y,
-        (<PIXI.Sprite>sprite).width,
-        (<PIXI.Sprite>sprite).height
-      )
+      return Util.isPointInRectangle(point.x, point.y, sprite.x, sprite.y, (<PIXI.Sprite>sprite).width, (<PIXI.Sprite>sprite).height)
     })
 
     for (let sprite of hit) {
@@ -265,9 +243,7 @@ export default class Game implements ConnectionListener {
         break
       }
 
-      const building = this.world.buildings.find(
-        (building) => building.id === Number(sprite.name)
-      )
+      const building = this.world.buildings.find((building) => building.id === Number(sprite.name))
       if (building) {
         console.log(building)
         this.selection.selectBuilding(building.id)
@@ -276,7 +252,7 @@ export default class Game implements ConnectionListener {
 
       const tile = getTileById(Number(sprite.name), this.world.tiles)
       if (tile) {
-        console.log(tile)
+        console.log(tile.temperature)
         this.selection.selectTile(tile.id)
       }
     }

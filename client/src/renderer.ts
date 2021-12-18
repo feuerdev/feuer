@@ -46,11 +46,7 @@ export default class Renderer {
     .pinch()
     .wheel()
     .decelerate()
-  public layout: Layout = new Layout(
-    Layout.pointy,
-    Vector2.create(HEX_SIZE, HEX_SIZE),
-    Vector2.create(0, 0)
-  )
+  public layout: Layout = new Layout(Layout.pointy, Vector2.create(HEX_SIZE, HEX_SIZE), Vector2.create(0, 0))
 
   // Zoom to the first group received
   private initialFocusSet = false
@@ -120,9 +116,7 @@ export default class Renderer {
   }
 
   select(selection: Selection) {
-    const original = this.viewport.getChildByName(
-      String(selection.selectedId)
-    ) as PIXI.Sprite
+    const original = this.viewport.getChildByName(String(selection.selectedId)) as PIXI.Sprite
     if (!original) {
       return
     }

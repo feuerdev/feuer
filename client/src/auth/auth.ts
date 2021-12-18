@@ -1,10 +1,5 @@
 import { initializeApp } from "firebase/app"
-import {
-  getAuth,
-  signInAnonymously,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-} from "firebase/auth"
+import { getAuth, signInAnonymously, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth"
 
 const COOKIE_NAME = "__session"
 const COOKIE_MAXAGE = 60 * 60 * 24 * 7 * 4 //Vier Wochen
@@ -77,11 +72,7 @@ export async function signOut(): Promise<void> {
  */
 export async function login(email: string, password: string): Promise<void> {
   try {
-    const credential = await signInWithEmailAndPassword(
-      getAuth(app),
-      email,
-      password
-    )
+    const credential = await signInWithEmailAndPassword(getAuth(app), email, password)
     const idToken = await credential.user.getIdToken()
     setUid(credential.user.uid)
     await setCookie(idToken)
@@ -100,17 +91,9 @@ export async function login(email: string, password: string): Promise<void> {
  * @param password
  * @param username
  */
-export async function register(
-  email: string,
-  password: string,
-  username: string
-): Promise<void> {
+export async function register(email: string, password: string, username: string): Promise<void> {
   try {
-    const credentials = await createUserWithEmailAndPassword(
-      getAuth(app),
-      email,
-      password
-    )
+    const credentials = await createUserWithEmailAndPassword(getAuth(app), email, password)
     const idToken = await credentials.user.getIdToken()
     setUid(credentials.user.uid)
     await setCookie(idToken)

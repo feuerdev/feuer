@@ -22,11 +22,7 @@ function initLogger() {
     transports: [
       new transports.Console({
         level: logLevel,
-        format: format.combine(
-          format.timestamp(),
-          format.colorize(),
-          format.simple()
-        ),
+        format: format.combine(format.timestamp(), format.colorize(), format.simple()),
       }),
     ],
   })

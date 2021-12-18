@@ -8,13 +8,7 @@ export function union(list1: any[], list2: any[]): any[] {
   return result
 }
 
-export function scale(
-  value: number,
-  oldmin: number,
-  oldmax: number,
-  newmin: number,
-  newmax: number
-): number {
+export function scale(value: number, oldmin: number, oldmax: number, newmin: number, newmax: number): number {
   return ((newmax - newmin) * (value - oldmin)) / (oldmax - oldmin) + newmin
 }
 
@@ -33,14 +27,7 @@ export function radiansToDegrees(angle: number): number {
   return (angle * 180) / Math.PI
 }
 
-export function isPointInRectangle(
-  pointX,
-  pointY,
-  rectX,
-  rectY,
-  rectWidth,
-  rectHeight
-) {
+export function isPointInRectangle(pointX, pointY, rectX, rectY, rectWidth, rectHeight) {
   if (pointX > rectX && pointX < rectX + rectWidth) {
     if (pointY > rectY && pointY < rectY + rectHeight) {
       return true

@@ -18,8 +18,7 @@ export const Config = yargs(process.argv.slice(2))
   })
   .option("updateRate", {
     alias: "u",
-    description:
-      "How many times per second the server will send updates to all clients",
+    description: "How many times per second the server will send updates to all clients",
     type: "number",
     default: 1,
   })

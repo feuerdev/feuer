@@ -42,38 +42,19 @@
 
           <label>
             Amplitude
-            <input
-              type="range"
-              id="amplitude"
-              min="1"
-              max="30"
-              title="The base amplitude (default: 1.0)"
-            />
+            <input type="range" id="amplitude" min="1" max="30" title="The base amplitude (default: 1.0)" />
             <output name="amplitude"></output>
           </label>
 
           <label>
             Frequency
-            <input
-              type="range"
-              id="frequency"
-              min="0"
-              max="5"
-              step="0.1"
-              title="The base frequency (default: 1.0)"
-            />
+            <input type="range" id="frequency" min="0" max="5" step="0.1" title="The base frequency (default: 1.0)" />
             <output name="frequency"></output>
           </label>
 
           <label>
             Octaves
-            <input
-              type="range"
-              id="octaves"
-              min="1"
-              max="10"
-              title="The number of octaves to sum for noise generation (default: 1)"
-            />
+            <input type="range" id="octaves" min="1" max="10" title="The number of octaves to sum for noise generation (default: 1)" />
             <output name="octaves"></output>
           </label>
 
@@ -92,34 +73,17 @@
 
           <label>
             Min
-            <input
-              type="number"
-              id="min"
-              min="1"
-              max="10"
-              title="The minimum scaled value to return (effective default: -1.0)"
-            />
+            <input type="number" id="min" min="1" max="10" title="The minimum scaled value to return (effective default: -1.0)" />
           </label>
 
           <label>
             Max
-            <input
-              type="number"
-              id="max"
-              min="1"
-              max="10"
-              title="The maximum scaled value to return (effective default: 1.0)"
-            />
+            <input type="number" id="max" min="1" max="10" title="The maximum scaled value to return (effective default: 1.0)" />
           </label>
 
           <label>
             Autogenerate
-            <input
-              type="checkbox"
-              checked="checked"
-              name="autogenerate"
-              value="autogenerate"
-            />
+            <input type="checkbox" checked="checked" name="autogenerate" value="autogenerate" />
           </label>
 
           <input type="button" id="btnGenerate" value="Generate" />
@@ -129,12 +93,7 @@
       </div>
 
       <div class="content-right">
-        <canvas
-          id="canvas-map"
-          width="1280"
-          height="720"
-          oncontextmenu="return false"
-        ></canvas>
+        <canvas id="canvas-map" width="1280" height="720" oncontextmenu="return false"></canvas>
       </div>
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
