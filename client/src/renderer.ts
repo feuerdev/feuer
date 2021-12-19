@@ -5,8 +5,9 @@ import Hex, { Layout } from "../../shared/hex"
 import * as Vector2 from "../../shared/vector2"
 import * as Rules from "../../shared/rules.json"
 import { ClientTile } from "./objects"
-import { Group } from "../../shared/objects"
+import { Biome, Group } from "../../shared/objects"
 import Selection, { SelectionType } from "./selection"
+import Sprites from "./sprites.json"
 
 const HEX_SIZE = 40
 
@@ -68,50 +69,18 @@ export default class Renderer {
   load(): Promise<void> {
     return new Promise((resolve, _reject) => {
       this.loader = PIXI.Loader.shared
-        .add("terrain_water_deep", "../img/water_02.png")
-        .add("terrain_water_shallow", "../img/water_01.png")
-        .add("terrain_sand", "../img/sand_07.png")
-        .add("terrain_sand_grassy", "../img/sand_09.png")
-        .add("terrain_grass_sandy", "../img/grass_07.png")
-        .add("terrain_grass", "../img/grass_05.png")
-        .add("terrain_grass_dirty", "../img/grass_06.png")
-        .add("terrain_dirt_grassy", "../img/dirt_07.png")
-        .add("terrain_dirt", "../img/dirt_06.png")
-        .add("terrain_dirt_stony", "../img/dirt_10.png")
-        .add("terrain_stone_dirty", "../img/stone_09.png")
-        .add("terrain_stone", "../img/stone_07.png")
-        .add("terrain_ice", "../img/ice_01.png")
-        .add("treeSmall", "../img/tree_small.png")
-        .add("treeBig", "../img/tree_big.png")
-        .add("cactus1", "../img/cactus_01.png")
-        .add("cactus2", "../img/cactus_02.png")
-        .add("treeFirSmall", "../img/fir_small.png")
-        .add("treeFirBig", "../img/fir_big.png")
-        .add("treeFullFirSmall", "../img/fullfir_small.png")
-        .add("treeFullFirBig", "../img/fullfir_big.png")
-        .add("treeFirSnow", "../img/fir_snow.png")
-        .add("rock01", "../img/rock_01.png")
-        .add("rock02", "../img/rock_02.png")
-        .add("rock04", "../img/rock_04.png")
-        .add("rock05", "../img/rock_05.png")
-        .add("iron", "../img/iron.png")
-        .add("gold", "../img/gold.png")
-        .add("town_center", "../img/town_center.png")
-        .add("forester_hut", "../img/forester_hut.png")
-        .add("quarry_hut", "../img/mine.png")
-        .add("iron_hut", "../img/mine.png")
-        .add("gold_mine", "../img/mine.png")
-        .add("unit_scout_own", "../img/unit_scout_own.png")
-        .add("mine", "../img/mine.png") //This one shouldn't be here
-        .load(() => {
-          PIXI.Ticker.shared.add(() => {
-            if (this.viewport?.dirty) {
-              this.pixi.render(this.viewport)
-              this.viewport.dirty = false
-            }
-          })
-          resolve()
+      for (let key of Sprites) {
+        this.loader.add(key, `../img/${key}.png`)
+      }
+      this.loader.load(() => {
+        PIXI.Ticker.shared.add(() => {
+          if (this.viewport?.dirty) {
+            this.pixi.render(this.viewport)
+            this.viewport.dirty = false
+          }
         })
+        resolve()
+      })
     })
   }
 
@@ -153,11 +122,12 @@ export default class Renderer {
     if (!object) {
       object = new PIXI.Sprite(this.getGroupSprite(group))
       object.name = String(group.id)
+      object.scale = new PIXI.Point(0.5, 0.5)
       this.viewport.addChild(object)
     }
 
-    object.x = this.layout.hexToPixel(group.pos).x
-    object.y = this.layout.hexToPixel(group.pos).y
+    object.x = this.layout.hexToPixel(group.pos).x - HEX_SIZE / 3
+    object.y = this.layout.hexToPixel(group.pos).y + HEX_SIZE / 3
     object.zIndex = ZIndices.Units
   }
 
@@ -220,55 +190,56 @@ export default class Renderer {
   }
 
   getTerrainTexture(tile: ClientTile): PIXI.Texture {
-    let height = tile.height
-
-    // Rivers
-    if (tile.river) {
-      return this.loader.resources["terrain_water_shallow"]!.texture
+    switch (tile.biome) {
+      case Biome.Ice:
+        return this.getRandomTile(tile, "biome_ice", 1)
+      case Biome.Tundra:
+        return this.getRandomTile(tile, "biome_tundra", 8)
+      case Biome.Boreal:
+        return this.getRandomTile(tile, "biome_boreal_forest", 4)
+      case Biome.Temperate:
+        return this.getRandomTile(tile, "biome_temperate_forest", 4)
+      case Biome.Tropical:
+        return this.getRandomTile(tile, "biome_tropical_forest", 2)
+      case Biome.Grassland:
+        return this.getRandomTile(tile, "biome_grassland", 2)
+      case Biome.Desert:
+        return this.getRandomTile(tile, "biome_desert", 8)
+      case Biome.Ocean:
+        return this.getRandomTile(tile, "biome_ocean", 1)
+      case Biome.Shore:
+        return this.getRandomTile(tile, "biome_shore", 1)
+      case Biome.Treeline:
+        return this.getRandomTile(tile, "biome_tree_line", 3)
+      case Biome.Mountain:
+        return this.getRandomTile(tile, "biome_mountain", 4)
+      case Biome.Beach:
+        return this.getRandomTile(tile, "biome_beach", 1)
+      case Biome.Peaks:
+        return this.getRandomTile(tile, "biome_ice_peaks", 3)
+      case Biome.River:
+        return this.getRandomTile(tile, "biome_river", 1)
+      default:
+        return this.getRandomTile(tile, "biome_ice", 1)
     }
+  }
 
-    // Desert
-    if (tile.height < Rules.settings.map_level_stone_dirty) {
-      if (tile.precipitation < 0.3) {
-        return this.loader.resources["terrain_sand"]!.texture
-      }
-
-      if (tile.precipitation < 0.4) {
-        return this.loader.resources["terrain_sand_grassy"]!.texture
-      }
-    }
-
-    if (tile.temperature < Rules.settings.map_temperature_ice) {
-      return this.loader.resources["terrain_ice"]!.texture
-    }
-
-    if (height < Rules.settings.map_level_water_deep) {
-      return this.loader.resources["terrain_water_deep"]!.texture
-    } else if (height < Rules.settings.map_level_water_shallow) {
-      return this.loader.resources["terrain_water_shallow"]!.texture
-    } else if (height < Rules.settings.map_level_sand) {
-      return this.loader.resources["terrain_sand"]!.texture
-    } else if (height < Rules.settings.map_level_sand_grassy) {
-      return this.loader.resources["terrain_sand_grassy"]!.texture
-    } else if (height < Rules.settings.map_level_grass_sandy) {
-      return this.loader.resources["terrain_grass_sandy"]!.texture
-    } else if (height < Rules.settings.map_level_grass) {
-      return this.loader.resources["terrain_grass"]!.texture
-    } else if (height < Rules.settings.map_level_grass_dirty) {
-      return this.loader.resources["terrain_grass_dirty"]!.texture
-    } else if (height < Rules.settings.map_level_dirt_grassy) {
-      return this.loader.resources["terrain_dirt_grassy"]!.texture
-    } else if (height < Rules.settings.map_level_dirt) {
-      return this.loader.resources["terrain_dirt"]!.texture
-    } else if (height < Rules.settings.map_level_dirt_stony) {
-      return this.loader.resources["terrain_dirt_stony"]!.texture
-    } else if (height < Rules.settings.map_level_stone_dirty) {
-      return this.loader.resources["terrain_stone_dirty"]!.texture
-    } else if (height < Rules.settings.map_level_stone) {
-      return this.loader.resources["terrain_stone"]!.texture
+  getRandomTile(tile: ClientTile, name: string, max: number) {
+    //Hash a random number between 0 and max based on the tile id (1 indexed)
+    let texture: PIXI.Texture = null
+    if (max === 1) {
+      texture = this.loader.resources[name]!.texture
     } else {
-      return this.loader.resources["terrain_ice"]!.texture
+      let hash = (Math.abs(tile.id) % max) + 1
+      texture = this.loader.resources[`${name}_${hash}`]!.texture
     }
+
+    // Mirror the texture if id is even for more diversity
+    if (Math.abs(tile.hex.s) % 2 === 1) {
+      texture = new PIXI.Texture(texture.baseTexture, texture.frame, texture.orig, texture.trim, 12)
+    }
+
+    return texture
   }
 
   getGroupSprite(_group: Group): PIXI.Texture {
