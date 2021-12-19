@@ -252,7 +252,11 @@ export default class Game implements ConnectionListener {
 
       const tile = getTileById(Number(sprite.name), this.world.tiles)
       if (tile) {
-        console.log(tile.temperature)
+        console.log("Pos:", tile.hex)
+        console.log("Biome:", tile.biome)
+        console.log("Height:", tile.height)
+        console.log("Temp:", tile.temperature)
+        console.log("Precip:", tile.precipitation)
         this.selection.selectTile(tile.id)
       }
     }

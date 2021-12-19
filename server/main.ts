@@ -73,13 +73,13 @@ export const Config = yargs(process.argv.slice(2))
 import WebServer from "./web/webserver"
 import GameServer from "./game/gameserver"
 import Log from "./util/log"
-import Mapgen from "./game/mapgen"
 import * as Rules from "../shared/rules.json"
+import { generateWorld } from "./game/mapgen"
 
 Log.debug(`Configuration: ${JSON.stringify(Config)}`)
 Log.info("Starting Server")
 
-const world = Mapgen.create(
+const world = generateWorld(
   `${Math.random()}`,
   Rules.settings.map_size,
   Rules.settings.map_frequency,

@@ -6,11 +6,7 @@ export default interface PlayerRelation {
   relationType: EnumRelationType
 }
 
-export function create(
-  id1: UserId,
-  id2: UserId,
-  relationType = EnumRelationType.neutral
-): PlayerRelation {
+export function create(id1: UserId, id2: UserId, relationType = EnumRelationType.neutral): PlayerRelation {
   return {
     id1,
     id2,

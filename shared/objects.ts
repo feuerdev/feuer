@@ -20,12 +20,30 @@ export interface GameObject {
   id: number
 }
 
+export enum Biome {
+  None,
+  Ice,
+  Tundra,
+  Boreal,
+  Temperate,
+  Tropical,
+  Grassland,
+  Desert,
+  Ocean,
+  Shore,
+  Treeline,
+  Mountain,
+  Beach,
+  Peaks,
+  River,
+}
+
 /**
  * Tile-Class representing one hex with all its relevant fields
  */
 export interface Tile extends GameObject {
   precipitation: number
-  river: boolean
+  biome: Biome
   hex: Hex
   height: number
   resources: Resources
