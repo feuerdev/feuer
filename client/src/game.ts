@@ -250,7 +250,8 @@ export default class Game implements ConnectionListener {
         break
       }
 
-      const tile = getTileById(Number(sprite.name), this.world.tiles)
+      const hex = Hexes.round(this.renderer.layout.pixelToHex(point))
+      const tile = this.world.tiles[Hexes.hash(hex)]
       if (tile) {
         console.log("Pos:", tile.hex)
         console.log("Biome:", tile.biome)
