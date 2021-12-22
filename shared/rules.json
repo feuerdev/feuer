@@ -1,6 +1,6 @@
 {
   "settings": {
-    "map_size": 200,
+    "map_size": 50,
     "map_frequency": 0.023,
     "map_amplitude": 1,
     "map_min": -0.3,
@@ -33,7 +33,7 @@
       "morale": 100,
       "attack": 5,
       "speed": 100,
-      "spotting": 6,
+      "spotting": 3,
       "cost": {
         "food": 10,
         "gold": 10

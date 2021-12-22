@@ -139,14 +139,14 @@ export default class Renderer {
       this.viewport.addChild(object)
 
       let corners = this.layout.polygonCorners(tile.hex)
-      let padding = 10
+      let padding = 0 // "black" space between tiles
 
       object.zIndex = ZIndices.Tiles
       object.name = String(tile.id)
       object.x = corners[3]!.x + padding //obere linke ecke
       object.y = corners[3]!.y - this.layout.size.y / 2 + padding //obere linke ecke- halbe höhe
       object.width = this.layout.size.x * Math.sqrt(3) - padding
-      object.height = this.layout.size.y * 2 - padding
+      object.height = this.layout.size.y * 2 + 1 - padding
     }
 
     let tint = tile.visible ? 0xdddddd : 0x555555
