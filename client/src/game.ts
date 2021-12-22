@@ -12,7 +12,6 @@ import * as PlayerRelation from "../../shared/relation"
 import Hex from "../../shared/hex"
 import { Battle, Building, Group, World } from "../../shared/objects"
 import { ClientTile } from "./objects"
-import { getTileById } from "../../shared/objectutil"
 import { Hashtable } from "../../shared/util"
 
 export default class Game implements ConnectionListener {
