@@ -152,35 +152,6 @@ export default class Renderer {
     let tint = tile.visible ? 0xdddddd : 0x555555
 
     object.tint = tint
-
-    //TODO: Rewrite Client side
-    // for (let i = 0; i < tile.environmentSpots.length; i++) {
-    //   let spot = tile.environmentSpots[i]
-    //   let texture = spot.texture
-    //   let img = new PIXI.Sprite(this.loader.resources[texture]!.texture)
-    //   let pos = spot.pos
-    //   img.x = this.layout.hexToPixel(hex).x + pos.x
-    //   img.y = this.layout.hexToPixel(hex).y + pos.y
-    //   img.tint = tint
-    //   img.name = spot.id
-    //   if (
-    //     this.selection?.isBuilding() &&
-    //     this.selection.selectedBuilding === spot.id
-    //   ) {
-    //     img.filters = [Renderer.GLOWFILTER]
-    //   }
-    //   if (this.selection?.selectedGroup === spot.id) {
-    //     img.filters = [Renderer.GLOWFILTER]
-    //   }
-    //   container.addChild(img)
-    // }
-
-    // let old = this.viewport.getChildByName(Hexes.hash(tile.hex))
-    // if (old) {
-    //   this.viewport?.removeChild(old)
-    // }
-    // this.viewport?.addChild(container)
-    // this.viewport!.dirty = true
   }
 
   centerOn(pos: Hex) {

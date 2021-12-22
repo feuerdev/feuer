@@ -126,15 +126,7 @@ export default class GameServer {
 
         group.movementStatus += calculateMovementProgress(group, currentTile, nextTile) * deltaFactor
         if (group.movementStatus > 100) {
-          //Movement!
-          //TODO: clientside
-          // currentTile.removeSpot(group.id)
           group.pos = group.targetHexes.splice(0, 1)[0]!
-          //TODO: clientside
-          // this.world.tiles[Hexes.hash(group.pos)]!.addSpot(
-          //   group.getTexture(),
-          //   group.id
-          // )
           group.movementStatus = 0
           this.updatePlayerVisibilities(group.owner)
           this.checkForBattle(group)
@@ -160,25 +152,14 @@ export default class GameServer {
 
       if (battle.attacker.hp <= 0 || battle.defender.hp <= 0) {
         if (battle.attacker.hp <= 0) {
-          //TODO: Clientside
-          // this.world.tiles[Hexes.hash(battle.position)].removeSpot(battle.attacker.id)
           delete this.world.groups[battle.attacker.id]
           this.updatePlayerVisibilities(battle.attacker.owner)
         }
         if (battle.defender.hp <= 0) {
-          //TODO: Clientside
-          // this.world.tiles[Hexes.hash(battle.position)].removeSpot(battle.defender.id)
           delete this.world.groups[battle.defender.id]
           this.updatePlayerVisibilities(battle.defender.owner)
         }
         this.world.battles.splice(i, 1)
-      }
-    }
-
-    for (let i = 0; i < this.players.length; i++) {
-      const player: Player = this.players[i]
-      if (player.initialized) {
-        //TODO
       }
     }
   }
@@ -236,7 +217,6 @@ export default class GameServer {
       const db = await getDb()
       const user = await db.collection("users").findOne({ uid: uid })
       if (!user) {
-        //TODO: This would happen when a user has a session already, but the databse doesn't know about it. Handle this better?
         Log.error("Supposedly existing uid not found in Database")
         return
       }
@@ -301,8 +281,6 @@ export default class GameServer {
     if (this.isAllowedToBuild(tile, uid, data.type)) {
       let building = createBuilding(uid, data.type, pos)
       this.world.buildings.push(building)
-      // TODO: clientside
-      // tile.addSpot(building.texture, building.id)
       this.updatePlayerVisibilities(uid)
     }
   }
@@ -376,10 +354,6 @@ export default class GameServer {
       return building.id === data.buildingId && building.owner === uid
     })
     if (buildingToDemolish) {
-      //TODO: clientside
-      // this.world.tiles[Hexes.hash(buildingToDemolish.pos)].removeSpot(
-      //   buildingToDemolish.id
-      // )
       this.world.buildings.splice(this.world.buildings.indexOf(buildingToDemolish), 1)
       this.updatePlayerVisibilities(uid)
     }
@@ -393,13 +367,6 @@ export default class GameServer {
     if (buildingToUpgrade) {
       //TODO: Check if has enogh money here and reduct money
       upgradeBuilding(buildingToUpgrade)
-      // this.world.tiles[buildingToUpgrade.pos.hash()].removeSpot(
-      //   buildingToUpgrade.id
-      // )
-      // this.world.tiles[buildingToUpgrade.pos.hash()].addSpot(
-      //   buildingToUpgrade.texture,
-      //   buildingToUpgrade.id
-      // ) //TODO: CLient
       this.updatePlayerVisibilities(uid)
     }
   }
@@ -413,8 +380,6 @@ export default class GameServer {
     }
 
     if (groupToDisband) {
-      //TODO: clientside
-      // this.world.tiles[Hexes.hash(groupToDisband.pos)].removeSpot(groupToDisband.id)
       delete this.world.groups[groupToDisband.id]
       this.updatePlayerVisibilities(uid)
     }
