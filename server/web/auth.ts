@@ -17,13 +17,8 @@ export async function isAuthenticated(req: Request, res: Response, next) {
     next()
     return
   } catch (error) {
-    if (error.code === "auth/id-token-expired") {
-      Log.debug("redirected on expired")
-      res.redirect("/relogin.html")
-    } else {
-      res.sendStatus(500)
-      Log.error(error)
-    }
+    Log.warn("Token invalid")
+    res.redirect("/relogin.html")
   }
 }
 
