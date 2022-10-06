@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express"
 import * as admin from "firebase-admin"
 import Log from "../util/log"
 
-export async function isAuthenticated(req: Request, res: Response, next) {
+export async function isAuthenticated(req: Request, res: Response, next: NextFunction) {
   const idToken = req.cookies?.__session
 
   if (!idToken) {

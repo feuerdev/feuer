@@ -19,7 +19,7 @@ export default class Game implements ConnectionListener {
   private connection: Connection
   private world: World
   private uid: string
-  private selection: Selection = new Selection()
+  selection: Selection = new Selection()
 
   constructor(uid: string, world: World, renderer: Renderer, connection: Connection) {
     this.uid = uid
