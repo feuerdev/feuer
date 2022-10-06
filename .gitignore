@@ -4,5 +4,10 @@ node_modules
 .eslintcache
 
 # ignore compiled files 
-*.js
-*.js.map
+server/**/*.js
+server/**/*.js.map
+client/**/*.js
+client/**/*.js.map
+shared/**/*.js
+shared/**/*.js.map
+*.LICENSE.txt
