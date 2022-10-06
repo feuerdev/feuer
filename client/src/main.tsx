@@ -36,3 +36,9 @@ function startLoading() {
 function stopLoading() {
   document.querySelector(".loading")?.classList.add("hidden")
 }
+
+declare global {
+  interface Window {
+    game: Game
+  }
+}
