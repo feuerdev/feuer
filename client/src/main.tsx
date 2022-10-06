@@ -3,12 +3,7 @@ import * as React from "react"
 import ReactDOM from "react-dom"
 import Renderer from "./renderer"
 import Connection from "./connection"
-
-class Hud extends React.Component {
-  render() {
-    return <div>HUD</div>
-  }
-}
+import Hud from "./hud"
 
 document.addEventListener("DOMContentLoaded", async () => {
   startLoading()
