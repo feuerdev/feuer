@@ -9,3 +9,8 @@ export function getTileById(id: number, tiles: Hashtable<Tile>): Tile | null {
   }
   return null
 }
+
+export enum TransferDirection {
+  tile,
+  group,
+}

@@ -71,9 +71,6 @@ export interface Group extends GameObject {
   spotting: number
   targetHexes: Hex[]
   pos: Hex
-  speed: number
-  attack: number
-  hp: number
   movementStatus: number
   units: Unit[]
   resources: Resources

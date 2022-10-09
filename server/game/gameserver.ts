@@ -145,22 +145,20 @@ export default class GameServer {
     //Battles
     let i = this.world.battles.length
     while (i--) {
-      let battle = this.world.battles[i]!
-
-      battle.defender.hp -= battle.attacker.attack + Math.round(Math.random() * 10)
-      battle.attacker.hp -= battle.defender.attack + Math.round(Math.random() * 20)
-
-      if (battle.attacker.hp <= 0 || battle.defender.hp <= 0) {
-        if (battle.attacker.hp <= 0) {
-          delete this.world.groups[battle.attacker.id]
-          this.updatePlayerVisibilities(battle.attacker.owner)
-        }
-        if (battle.defender.hp <= 0) {
-          delete this.world.groups[battle.defender.id]
-          this.updatePlayerVisibilities(battle.defender.owner)
-        }
-        this.world.battles.splice(i, 1)
-      }
+      // let battle = this.world.battles[i]!
+      // battle.defender.hp -= battle.attacker.attack + Math.round(Math.random() * 10)
+      // battle.attacker.hp -= battle.defender.attack + Math.round(Math.random() * 20)
+      // if (battle.attacker.hp <= 0 || battle.defender.hp <= 0) {
+      //   if (battle.attacker.hp <= 0) {
+      //     delete this.world.groups[battle.attacker.id]
+      //     this.updatePlayerVisibilities(battle.attacker.owner)
+      //   }
+      //   if (battle.defender.hp <= 0) {
+      //     delete this.world.groups[battle.defender.id]
+      //     this.updatePlayerVisibilities(battle.defender.owner)
+      //   }
+      //   this.world.battles.splice(i, 1)
+      // }
     }
   }
 

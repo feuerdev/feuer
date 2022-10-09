@@ -26,7 +26,7 @@ export function create(): Resources {
   return {
     wood: 0,
     stone: 0,
-    fish: 0,
+    fish: 10,
     wheat: 0,
     meat: 0,
     berries: 0,
