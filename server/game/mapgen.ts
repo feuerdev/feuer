@@ -8,6 +8,7 @@ import Hex, * as Hexes from "../../shared/hex"
 import * as Rules from "../../shared/rules.json"
 import GameServer from "./gameserver"
 import { astar } from "../../shared/pathfinding"
+import { create } from "../../shared/resources"
 
 export function generateWorld(
   seed: string,
@@ -312,7 +313,7 @@ function firstIteration(size: number): Hashtable<Tile> {
         biome: Biome.None,
         hex: hex,
         height: 0,
-        resources: undefined,
+        resources: create(),
         temperature: 0,
         id: GameServer.idCounter++,
       }
