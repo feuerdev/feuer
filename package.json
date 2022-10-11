@@ -11,6 +11,7 @@
     "build": "npm run build:server && npm run build:client",
     "lint": "eslint --cache && npx prettier . -c --config .prettierrc.json",
     "lint:fix": "eslint --cache --fix && npx prettier . -c -w --config .prettierrc.json",
+    "dev": "npm run dev:server & npm run dev:client & npm run dev:database",
     "dev:server": "tsc -w -p server",
     "dev:client": "webpack -w",
     "dev:database": "docker run -p 27017:27017 -v db:/data/db -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=admin mongo mongod"
