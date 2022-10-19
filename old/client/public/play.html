@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>feuer.io</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,height=device-height,user-scalable=no" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/game.css" />
+    <link rel="icon" type="image/x-icon" href="img/favicon.png" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body>
+    <div class="center-container absolute loading">
+      <div class="center-content base-box">
+        <span class="loading">loading...</span>
+        <div class="image rotate">
+          <img src="img/login_title.png" alt="" />
+        </div>
+      </div>
+    </div>
+
+    <canvas id="canvas-map" oncontextmenu="return false"></canvas>
+
+    <div id="hud"></div>
+    <script type="application/javascript" src="js/bundle.js"></script>
+  </body>
+</html>

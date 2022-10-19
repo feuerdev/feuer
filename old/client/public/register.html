@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="css/base.css" />
+    <link rel="icon" type="image/x-icon" href="img/favicon.png" />
+    <title>feuer.io - Registration</title>
+  </head>
+
+  <body class="base-bg">
+    <div class="center-container">
+      <div class="center-content base-box">
+        <div class="image">
+          <img src="img/login_title.png" alt="" />
+        </div>
+        <h1>feuer.io</h1>
+        <form id="register" method="POST" action="/register">
+          <input class="base" id="username" type="text" name="username" placeholder="Username" autocomplete="username" />
+          <input class="base" id="email" type="text" name="email" placeholder="E-mail" autocomplete="email" />
+          <input class="base" id="password" type="password" name="password" placeholder="Password" autocomplete="new-password" />
+          <input
+            class="base"
+            id="passwordRepeat"
+            type="password"
+            name="passwordRepeat"
+            placeholder="Repeat Password"
+            autocomplete="new-password"
+          />
+          <input class="base" type="submit" value="Register!" />
+        </form>
+      </div>
+    </div>
+    <script type="module" type="application/javascript" src="js/register.js"></script>
+  </body>
+</html>
