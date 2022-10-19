@@ -1,0 +1,32 @@
+.container {
+  position: relative;
+}
+
+.content-left {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 400px;
+
+  background: pink;
+  padding: 20px;
+}
+
+.content-right {
+  position: absolute;
+  width: 0px;
+  height: 0px;
+  top: 0;
+  right: 0;
+
+  padding: 20px;
+  background: lightblue;
+}
+
+#canvas-map {
+  background: black;
+}
+
+label {
+  display: block;
+}

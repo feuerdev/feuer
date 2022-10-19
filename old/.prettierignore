@@ -1,0 +1,9 @@
+node_modules
+*.log
+.env
+.DS_Store
+.eslintcache
+
+# ignore compiled files 
+*.js
+*.js.map
