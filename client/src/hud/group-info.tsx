@@ -1,21 +1,18 @@
 import * as React from "react"
-import Hex, { hash } from "../../../shared/hex"
-import { Group } from "../../../shared/objects"
+import { Group, Tile } from "../../../shared/objects"
 import { TransferDirection } from "../../../shared/objectutil"
 import EventBus from "../eventbus"
 
-export default function GroupInformation(props) {
-  const removeUnit = (groupId: number, unitId: number) => {
+export default function GroupInformation(props: { group: Group; tile: Tile }) {
+  const requestRemoveUnit = (groupId: number, unitId: number) => {
     EventBus.shared().emitSocket("request unit remove", {
       groupId: groupId,
       unitId: unitId,
     })
   }
 
-  const getTileResource = (resourceKey: string, pos: Hex) => {
-    let has = hash(pos)
-    let tile = window.game.world.tiles[has]
-    return tile?.resources[resourceKey] || 0
+  const getTileResource = (resourceKey: string) => {
+    return props.tile.resources[resourceKey] || 0
   }
 
   const requestResourceTransfer = (group: Group, resource: string, direction: TransferDirection) => {
@@ -57,7 +54,7 @@ export default function GroupInformation(props) {
               <div>{unit.owner}</div>,
               <div>Leadership</div>,
               <div>{unit.leadership}</div>,
-              <button onClick={() => removeUnit(props.group.id, unit.id)}>Remove</button>,
+              <button onClick={() => requestRemoveUnit(props.group.id, unit.id)}>Remove</button>,
             ]
           })}
         </div>
@@ -67,7 +64,7 @@ export default function GroupInformation(props) {
           <h2 className="col-span-3 text-xl text-right">Tile</h2>
           {Object.keys(props.group.resources)
             .filter((resourceKey) => {
-              return props.group.resources[resourceKey] > 0
+              return props.group.resources[resourceKey] > 0 || props.tile.resources[resourceKey] > 0
             })
             .map((resourceKey) => {
               return [
@@ -75,7 +72,7 @@ export default function GroupInformation(props) {
                 <div>{props.group.resources[resourceKey]}</div>,
                 <button onClick={() => requestResourceTransfer(props.group, resourceKey, TransferDirection.group)}>&lt;</button>,
                 <button onClick={() => requestResourceTransfer(props.group, resourceKey, TransferDirection.tile)}>&gt;</button>,
-                <div>{getTileResource(resourceKey, props.group.pos)}</div>,
+                <div>{getTileResource(resourceKey)}</div>,
               ]
             })}
         </div>
