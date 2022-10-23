@@ -2,9 +2,8 @@ import Hex from "../../shared/hex"
 import * as Rules from "../../shared/rules.json"
 import { Building } from "../../shared/objects"
 import Resources from "../../shared/resources"
-import GameServer from "./gameserver"
 
-export function createBuilding(owner: string, name: string, pos: Hex): Building {
+export function createBuilding(id: number, owner: string, name: string, pos: Hex): Building {
   const template = Rules.buildings[name].levels[0]
   const building: Building = {
     owner: owner,
@@ -14,7 +13,7 @@ export function createBuilding(owner: string, name: string, pos: Hex): Building 
     spotting: template.spotting,
     hp: template.hp,
     resourceGeneration: loadResourceObject(template.resource_generation),
-    id: GameServer.idCounter++,
+    id: id,
   }
   return building
 }

@@ -2,11 +2,14 @@ import { Hashtable } from "./util"
 import Hex from "./hex"
 import PlayerRelation from "./relation"
 import Resources from "./resources"
+import Player from "./player"
 
 export type UserId = string
 
 // World
 export interface World {
+  idCounter: number
+  players: Hashtable<Player>
   tiles: Hashtable<Tile>
   groups: Hashtable<Group>
   units: Unit[]
