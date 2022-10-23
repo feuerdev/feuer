@@ -1,4 +1,4 @@
-import Player from "./player"
+import Player from "../../shared/player"
 
 import Log from "./util/log"
 import * as Rules from "../../shared/rules.json"
@@ -17,11 +17,8 @@ import { createBuilding, upgradeBuilding } from "./building"
 import { EnumRelationType } from "../../shared/relation"
 
 export default class GameServer {
-  public static idCounter: number = 0
-
   private socketplayer: {} = {}
   private uidsockets: {} = {}
-  private players: Player[] = []
 
   private world: World
 
@@ -33,37 +30,6 @@ export default class GameServer {
   constructor(world: World) {
     this.world = world
   }
-
-  // listen(httpServer: Http.Server) {
-  //   const socketServer = new Server(httpServer, {
-  //     transports: ["websocket"],
-  //   })
-  //   socketServer.on("connection", (socket) => {
-  //     socket.on("initialize", (uid) => this.onPlayerInitialize(socket, uid))
-
-  //     socket.on("disconnect", () => this.onPlayerDisconnected(socket))
-
-  //     socket.on("request tiles", (data: Hex[]) => this.onRequestTiles(socket, data))
-
-  //     socket.on("request movement", (data) => this.onRequestMovement(socket, data))
-
-  //     socket.on("request construction", (data) => this.onRequestConstruction(socket, data))
-
-  //     socket.on("request relation", (data) => this.onRequestRelation(socket, data))
-
-  //     socket.on("request disband", (data) => this.onRequestDisband(socket, data))
-
-  //     socket.on("request transfer", (data) => this.onRequestTransfer(socket, data))
-
-  //     socket.on("request unit add", (data) => this.onRequestUnitAdd(socket, data))
-
-  //     socket.on("request unit remove", (data) => this.onRequestUnitRemove(socket, data))
-
-  //     socket.on("request upgrade", (data) => this.onRequestUpgrade(socket, data))
-
-  //     socket.on("request demolish", (data) => this.onRequestDemolish(socket, data))
-  //   })
-  // }
 
   //Gameloop
   private previousTick = Date.now()
@@ -161,24 +127,20 @@ export default class GameServer {
           this.world.playerRelations[PlayerRelation.hash(group.owner, otherGroup.owner)].relationType ===
           PlayerRelation.EnumRelationType.hostile
         ) {
-          this.world.battles.push(Battles.create(group.pos, group, otherGroup))
+          this.world.battles.push(Battles.create(++this.world.idCounter,group.pos, group, otherGroup))
         }
       }
     })
   }
 
   updateNet(_delta) {
-    for (let i = 0; i < this.players.length; i++) {
-      const player: Player = this.players[i]
+    for (let player of Object.values(this.world.players)) {
       if (player.initialized) {
         const socket: Socket = this.uidsockets[player.uid]
         if (socket && socket.connected) {
-          socket.emit("gamestate players", this.players)
-          // let tiles = this.getTiles(player.visibleHexes)
           let groups = this.getVisibleGroups(player.visibleHexes)
           let battles = this.getVisibleBattles(player.visibleHexes)
           let buildings = this.getVisibleBuildings(player.visibleHexes)
-          // socket.emit("gamestate tiles", tiles)
           socket.emit("gamestate groups", groups)
           socket.emit("gamestate battles", battles)
           socket.emit("gamestate buildings", buildings)
@@ -200,16 +162,8 @@ export default class GameServer {
    * If the uid is known, link the socket to the player instance.
    */
   async onPlayerInitialize(socket: Socket, uid: string) {
-    let player = this.players.find((player) => player.uid === uid)
-
+    let player = this.world.players[uid]
     if (!player) {
-      //Create new Player
-      // const user = await db.collection("users").findOne({ uid: uid })
-      // if (!user) {
-        Log.error("Supposedly existing uid not found in Database")
-        return
-      // }
-
       player = new Player()
       player.uid = uid
       player.initialized = true
@@ -218,7 +172,7 @@ export default class GameServer {
 
       //Give Player an initial Scout and Camp
       let pos = this.getRandomHex()
-      let initialGroup = createGroup(player.uid, "Scout", pos)
+      let initialGroup = createGroup(++this.world.idCounter, player.uid, "Scout", pos)
       this.world.groups[initialGroup.id] = initialGroup
 
       // let initialCamp = createBuilding(player.uid, "Town Hall", pos)
@@ -226,7 +180,7 @@ export default class GameServer {
       // this.world.buildings.push(initialCamp)
 
       //Register player in Gamesever
-      this.players.push(player)
+      this.world.players[uid] = player
       this.updatePlayerVisibilities(uid)
     } else {
       Log.info(`Player reconnected: ${player.uid}`)
@@ -270,7 +224,7 @@ export default class GameServer {
     let tile = this.world.tiles[Hexes.hash(pos)]
 
     if (this.isAllowedToBuild(tile, uid, data.type)) {
-      let building = createBuilding(uid, data.type, pos)
+      let building = createBuilding(++this.world.idCounter,uid, data.type, pos)
       this.world.buildings.push(building)
       this.updatePlayerVisibilities(uid)
     }
@@ -395,10 +349,7 @@ export default class GameServer {
   }
 
   private getPlayerByUid(uid: string): Player | null {
-    for (let player of this.players) {
-      if (player.uid === uid) return player
-    }
-    return null
+    return this.world.players[uid]
   }
 
   /**
