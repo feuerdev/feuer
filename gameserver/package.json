@@ -2,7 +2,7 @@
   "name": "feuer-server",
   "version": "1.0.0",
   "description": "Gameserver for feuer.io",
-  "main": "src/index.ts",
+  "main": "src/main.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -20,9 +20,19 @@
   },
   "homepage": "https://github.com/feuerdev/feuer#readme",
   "dependencies": {
+    "@prisma/client": "^4.5.0",
     "dotenv": "^16.0.3",
     "firebase-admin": "^11.2.0",
+    "pubsub-js": "^1.9.4",
+    "seedrandom": "^3.0.5",
     "socket.io": "^4.5.3",
+    "winston": "^3.8.2",
     "yargs": "^17.6.0"
+  },
+  "devDependencies": {
+    "prisma": "^4.5.0"
+  },
+  "prisma": {
+    "schema": "../shared/schema.prisma"
   }
 }
