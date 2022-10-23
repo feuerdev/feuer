@@ -1,5 +1,5 @@
 import * as dotenv from 'dotenv'
-import yargs from "yargs/yargs"
+import yargs from "yargs"
 
 // Load .env file into environment
 dotenv.config()
