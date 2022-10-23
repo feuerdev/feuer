@@ -17,10 +17,16 @@ io.on("connection", async (socket) => {
     console.error("invalid id token provided")
   }
 
+  socket.on('disconnect', function() {
+    console.log("Someone disconnected", decodedToken?.uid)
+  })
+
   console.log("Someone connected", decodedToken?.uid)
   socket.send("hello from server")
   socket.onAny((event, ...args) => {
     console.log("Received message:", event)
   })
+
 });
+
 console.log("Server running")
