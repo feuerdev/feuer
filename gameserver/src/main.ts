@@ -36,11 +36,14 @@ io.on("connection", async (socket) => {
   const token = socket.handshake.auth.token as string | undefined;
   if (!token) {
     console.error("no token received");
+    socket.disconnect();
+    return
   }
   const [authenticated, decodedToken] = await isAuthenticated(token as string);
   if (!authenticated) {
     console.error("invalid id token provided");
     socket.disconnect();
+    return
   }
 
   socket.on("disconnect", function () {

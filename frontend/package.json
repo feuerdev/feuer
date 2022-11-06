@@ -18,6 +18,10 @@
     "@trpc/server": "10.0.0-proxy-beta.17",
     "firebase": "^9.12.1",
     "next": "12.3.1",
+    "pixi-filters": "^5.0.0",
+    "pixi-viewport": "^4.37.0",
+    "pixi.js": "^6.5.8",
+    "pubsub-js": "^1.9.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-firebase-hooks": "^5.0.3",
@@ -27,6 +31,7 @@
   },
   "devDependencies": {
     "@types/node": "18.0.0",
+    "@types/pubsub-js": "^1.8.3",
     "@types/react": "18.0.14",
     "@types/react-dom": "18.0.5",
     "@typescript-eslint/eslint-plugin": "^5.33.0",
