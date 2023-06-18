@@ -26,9 +26,9 @@ export default class GameClass {
 
     EventBus.shared().on("gamestate tiles", (detail) => {
       console.log("hi")
-      let tiles: Util.Hashtable<ClientTile> =
+      const tiles: Util.Hashtable<ClientTile> =
         detail as unknown as Util.Hashtable<ClientTile>
-      let visibleHexes: Hashtable<Hex> = {}
+      const visibleHexes: Hashtable<Hex> = {}
       Object.values(this.world.groups).forEach((group) => {
         Hexes.neighborsRange(group.pos, group.spotting).forEach((hex) => {
           visibleHexes[Hexes.hash(hex)] = hex
@@ -57,8 +57,8 @@ export default class GameClass {
     })
 
     EventBus.shared().on("gamestate groups", (data) => {
-      let groups: Hashtable<Group> = data as unknown as Hashtable<Group>
-      let newGroups: any = {}
+      const groups: Hashtable<Group> = data as unknown as Hashtable<Group>
+      const newGroups: any = {}
 
       let needsTileUpdate = false
 
@@ -112,26 +112,26 @@ export default class GameClass {
     })
 
     EventBus.shared().on("gamestate battles", (detail) => {
-      let battles: Battle[] = detail as unknown as Battle[]
+      const battles: Battle[] = detail as unknown as Battle[]
       this.world.battles = battles
     })
 
     EventBus.shared().on("gamestate buildings", (detail) => {
-      let buildings: Building[] = detail as unknown as Building[]
+      const buildings: Building[] = detail as unknown as Building[]
       this.world.buildings = buildings
     })
 
     EventBus.shared().on("gamestate relation", (detail) => {
-      let relation: PlayerRelation.default =
+      const relation: PlayerRelation.default =
         detail as unknown as PlayerRelation.default
-      let hash = PlayerRelation.hash(relation.id1, relation.id2)
+      const hash = PlayerRelation.hash(relation.id1, relation.id2)
       this.world.playerRelations[hash] = relation
     })
   }
 
   //#region Outgoing Messages
   requestTiles() {
-    let hexes = new Set<Hex>()
+    const hexes = new Set<Hex>()
     Object.values(this.world.groups).forEach((group) => {
       Hexes.neighborsRange(group.pos, group.spotting).forEach((hex) => {
         hexes.add(hex)
@@ -210,13 +210,13 @@ export default class GameClass {
 
     //Mouse events
     this.renderer.viewport.on("clicked", (click) => {
-      let point = Vectors.create(click.world.x, click.world.y)
+      const point = Vectors.create(click.world.x, click.world.y)
       switch (click.event.data.button) {
         case 0: //Left
           this.trySelect(point)
           break
         case 2: //Right
-          let clickedHex = Hexes.round(this.renderer.layout.pixelToHex(point))
+          const clickedHex = Hexes.round(this.renderer.layout.pixelToHex(point))
           if (clickedHex && this.selection.type === SelectionType.Group) {
             EventBus.shared().emitSocket("request movement", {
               selection: this.selection.selectedId,
@@ -250,7 +250,7 @@ export default class GameClass {
       )
     })
 
-    for (let sprite of hit) {
+    for (const sprite of hit) {
       const group = this.world.groups[sprite.name]
       if (group) {
         console.log(group)

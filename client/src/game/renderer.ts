@@ -74,7 +74,7 @@ export default class Renderer {
     })
 
     EventBus.shared().on("deselection", (_) => {
-      let sprite = this.viewport.getChildByName("selection") as PIXI.Graphics
+      const sprite = this.viewport.getChildByName("selection") as PIXI.Graphics
       this.viewport.removeChild(sprite)
       this.viewport.dirty = true
     })
@@ -140,8 +140,8 @@ export default class Renderer {
       object = new PIXI.Sprite(this.getTerrainTexture(tile))
       this.viewport.addChild(object)
 
-      let corners = this.layout.polygonCorners(tile.hex)
-      let padding = 2 // "black" space between tiles
+      const corners = this.layout.polygonCorners(tile.hex)
+      const padding = 2 // "black" space between tiles
 
       object.zIndex = ZIndices.Tiles
       object.name = String(tile.id)
@@ -151,14 +151,14 @@ export default class Renderer {
       object.height = this.layout.size.y * 2 + 1 - padding
     }
 
-    let tint = tile.visible ? 0xdddddd : 0x555555
+    const tint = tile.visible ? 0xdddddd : 0x555555
 
     object.tint = tint
   }
 
   centerOn(pos: Hex) {
-    let x = this.layout.hexToPixel(pos).x
-    let y = this.layout.hexToPixel(pos).y
+    const x = this.layout.hexToPixel(pos).x
+    const y = this.layout.hexToPixel(pos).y
     this.viewport.center = new PIXI.Point(x, y)
   }
 
@@ -203,7 +203,7 @@ export default class Renderer {
     if (max === 1) {
       texture = Loader.shared.resources[name]!.texture!
     } else {
-      let hash = (Math.abs(tile.id) % max) + 1
+      const hash = (Math.abs(tile.id) % max) + 1
       texture = Loader.shared.resources[`${name}_${hash}`]!.texture!
     }
 
