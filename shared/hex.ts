@@ -198,7 +198,11 @@ export class Orientation {
 }
 
 export class Layout {
-  constructor(public orientation: Orientation, public size: Vector2, public origin: Vector2) {}
+  constructor(
+    public orientation: Orientation,
+    public size: Vector2,
+    public origin: Vector2
+  ) {}
   public static pointy: Orientation = new Orientation(
     Math.sqrt(3.0),
     Math.sqrt(3.0) / 2.0,

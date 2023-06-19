@@ -86,47 +86,63 @@ export default class FastSimplexNoise {
 
   constructor(options: Options = {}) {
     if (options.hasOwnProperty("amplitude")) {
-      if (typeof options.amplitude !== "number") throw new Error("options.amplitude must be a number")
+      if (typeof options.amplitude !== "number")
+        throw new Error("options.amplitude must be a number")
       this.amplitude = options.amplitude
     } else this.amplitude = 1.0
 
     if (options.hasOwnProperty("frequency")) {
-      if (typeof options.frequency !== "number") throw new Error("options.frequency must be a number")
+      if (typeof options.frequency !== "number")
+        throw new Error("options.frequency must be a number")
       this.frequency = options.frequency
     } else this.frequency = 1.0
 
     if (options.hasOwnProperty("octaves")) {
-      if (typeof options.octaves !== "number" || !isFinite(options.octaves) || Math.floor(options.octaves) !== options.octaves) {
+      if (
+        typeof options.octaves !== "number" ||
+        !isFinite(options.octaves) ||
+        Math.floor(options.octaves) !== options.octaves
+      ) {
         throw new Error("options.octaves must be an integer")
       }
       this.octaves = options.octaves
     } else this.octaves = 1
 
     if (options.hasOwnProperty("persistence")) {
-      if (typeof options.persistence !== "number") throw new Error("options.persistence must be a number")
+      if (typeof options.persistence !== "number")
+        throw new Error("options.persistence must be a number")
       this.persistence = options.persistence
     } else this.persistence = 0.5
 
     if (options.hasOwnProperty("random")) {
-      if (typeof options.random !== "function") throw new Error("options.random must be a function")
+      if (typeof options.random !== "function")
+        throw new Error("options.random must be a function")
       this.random = options.random
     } else this.random = Math.random
 
     let min: number
     if (options.hasOwnProperty("min")) {
-      if (typeof options.min !== "number") throw new Error("options.min must be a number")
+      if (typeof options.min !== "number")
+        throw new Error("options.min must be a number")
       min = options.min
     } else min = -1
 
     let max: number
     if (options.hasOwnProperty("max")) {
-      if (typeof options.max !== "number") throw new Error("options.max must be a number")
+      if (typeof options.max !== "number")
+        throw new Error("options.max must be a number")
       max = options.max
     } else max = 1
 
-    if (min >= max) throw new Error(`options.min (${min}) must be less than options.max (${max})`)
+    if (min >= max)
+      throw new Error(
+        `options.min (${min}) must be less than options.max (${max})`
+      )
 
-    this.scale = min === -1 && max === 1 ? (value) => value : (value) => min + ((value + 1) / 2) * (max - min)
+    this.scale =
+      min === -1 && max === 1
+        ? (value) => value
+        : (value) => min + ((value + 1) / 2) * (max - min)
 
     const p = new Uint8Array(256)
     for (let i = 0; i < 256; i++) p[i] = i
@@ -153,7 +169,12 @@ export default class FastSimplexNoise {
       case 2:
         return this.cylindrical2D(circumference, coords[0], coords[1])
       case 3:
-        return this.cylindrical3D(circumference, coords[0], coords[1], coords[2])
+        return this.cylindrical3D(
+          circumference,
+          coords[0],
+          coords[1],
+          coords[2]
+        )
       default:
         return null
     }
@@ -180,7 +201,9 @@ export default class FastSimplexNoise {
   }
 
   dot(gs: number[], coords: number[]): number {
-    return gs.slice(0, Math.min(gs.length, coords.length)).reduce((total, g, i) => total + g * coords[i], 0)
+    return gs
+      .slice(0, Math.min(gs.length, coords.length))
+      .reduce((total, g, i) => total + g * coords[i], 0)
   }
 
   raw(coords: number[]): number {
@@ -226,11 +249,20 @@ export default class FastSimplexNoise {
 
     // Calculate the contribution from the three corners
     const t0 = 0.5 - x0 * x0 - y0 * y0
-    const n0 = t0 < 0 ? 0.0 : Math.pow(t0, 4) * this.dot(FastSimplexNoise.GRAD3D[gi0], [x0, y0])
+    const n0 =
+      t0 < 0
+        ? 0.0
+        : Math.pow(t0, 4) * this.dot(FastSimplexNoise.GRAD3D[gi0], [x0, y0])
     const t1 = 0.5 - x1 * x1 - y1 * y1
-    const n1 = t1 < 0 ? 0.0 : Math.pow(t1, 4) * this.dot(FastSimplexNoise.GRAD3D[gi1], [x1, y1])
+    const n1 =
+      t1 < 0
+        ? 0.0
+        : Math.pow(t1, 4) * this.dot(FastSimplexNoise.GRAD3D[gi1], [x1, y1])
     const t2 = 0.5 - x2 * x2 - y2 * y2
-    const n2 = t2 < 0 ? 0.0 : Math.pow(t2, 4) * this.dot(FastSimplexNoise.GRAD3D[gi2], [x2, y2])
+    const n2 =
+      t2 < 0
+        ? 0.0
+        : Math.pow(t2, 4) * this.dot(FastSimplexNoise.GRAD3D[gi2], [x2, y2])
 
     // Add contributions from each corner to get the final noise value.
     // The result is scaled to return values in the interval [-1, 1]
@@ -293,19 +325,33 @@ export default class FastSimplexNoise {
     const jj = j & 255
     const kk = k & 255
     const gi0 = this.permMod12[ii + this.perm[jj + this.perm[kk]]]
-    const gi1 = this.permMod12[ii + i1 + this.perm[jj + j1 + this.perm[kk + k1]]]
-    const gi2 = this.permMod12[ii + i2 + this.perm[jj + j2 + this.perm[kk + k2]]]
+    const gi1 =
+      this.permMod12[ii + i1 + this.perm[jj + j1 + this.perm[kk + k1]]]
+    const gi2 =
+      this.permMod12[ii + i2 + this.perm[jj + j2 + this.perm[kk + k2]]]
     const gi3 = this.permMod12[ii + 1 + this.perm[jj + 1 + this.perm[kk + 1]]]
 
     // Calculate the contribution from the four corners
     const t0 = 0.5 - x0 * x0 - y0 * y0 - z0 * z0
-    const n0 = t0 < 0 ? 0.0 : Math.pow(t0, 4) * this.dot(FastSimplexNoise.GRAD3D[gi0], [x0, y0, z0])
+    const n0 =
+      t0 < 0
+        ? 0.0
+        : Math.pow(t0, 4) * this.dot(FastSimplexNoise.GRAD3D[gi0], [x0, y0, z0])
     const t1 = 0.5 - x1 * x1 - y1 * y1 - z1 * z1
-    const n1 = t1 < 0 ? 0.0 : Math.pow(t1, 4) * this.dot(FastSimplexNoise.GRAD3D[gi1], [x1, y1, z1])
+    const n1 =
+      t1 < 0
+        ? 0.0
+        : Math.pow(t1, 4) * this.dot(FastSimplexNoise.GRAD3D[gi1], [x1, y1, z1])
     const t2 = 0.5 - x2 * x2 - y2 * y2 - z2 * z2
-    const n2 = t2 < 0 ? 0.0 : Math.pow(t2, 4) * this.dot(FastSimplexNoise.GRAD3D[gi2], [x2, y2, z2])
+    const n2 =
+      t2 < 0
+        ? 0.0
+        : Math.pow(t2, 4) * this.dot(FastSimplexNoise.GRAD3D[gi2], [x2, y2, z2])
     const t3 = 0.5 - x3 * x3 - y3 * y3 - z3 * z3
-    const n3 = t3 < 0 ? 0.0 : Math.pow(t3, 4) * this.dot(FastSimplexNoise.GRAD3D[gi3], [x3, y3, z3])
+    const n3 =
+      t3 < 0
+        ? 0.0
+        : Math.pow(t3, 4) * this.dot(FastSimplexNoise.GRAD3D[gi3], [x3, y3, z3])
 
     // Add contributions from each corner to get the final noise value.
     // The result is scaled to stay just inside [-1,1]
@@ -392,23 +438,56 @@ export default class FastSimplexNoise {
     const jj = j & 255
     const kk = k & 255
     const ll = l & 255
-    const gi0 = this.perm[ii + this.perm[jj + this.perm[kk + this.perm[ll]]]] % 32
-    const gi1 = this.perm[ii + i1 + this.perm[jj + j1 + this.perm[kk + k1 + this.perm[ll + l1]]]] % 32
-    const gi2 = this.perm[ii + i2 + this.perm[jj + j2 + this.perm[kk + k2 + this.perm[ll + l2]]]] % 32
-    const gi3 = this.perm[ii + i3 + this.perm[jj + j3 + this.perm[kk + k3 + this.perm[ll + l3]]]] % 32
-    const gi4 = this.perm[ii + 1 + this.perm[jj + 1 + this.perm[kk + 1 + this.perm[ll + 1]]]] % 32
+    const gi0 =
+      this.perm[ii + this.perm[jj + this.perm[kk + this.perm[ll]]]] % 32
+    const gi1 =
+      this.perm[
+        ii + i1 + this.perm[jj + j1 + this.perm[kk + k1 + this.perm[ll + l1]]]
+      ] % 32
+    const gi2 =
+      this.perm[
+        ii + i2 + this.perm[jj + j2 + this.perm[kk + k2 + this.perm[ll + l2]]]
+      ] % 32
+    const gi3 =
+      this.perm[
+        ii + i3 + this.perm[jj + j3 + this.perm[kk + k3 + this.perm[ll + l3]]]
+      ] % 32
+    const gi4 =
+      this.perm[
+        ii + 1 + this.perm[jj + 1 + this.perm[kk + 1 + this.perm[ll + 1]]]
+      ] % 32
 
     // Calculate the contribution from the five corners
     const t0 = 0.5 - x0 * x0 - y0 * y0 - z0 * z0 - w0 * w0
-    const n0 = t0 < 0 ? 0.0 : Math.pow(t0, 4) * this.dot(FastSimplexNoise.GRAD4D[gi0], [x0, y0, z0, w0])
+    const n0 =
+      t0 < 0
+        ? 0.0
+        : Math.pow(t0, 4) *
+          this.dot(FastSimplexNoise.GRAD4D[gi0], [x0, y0, z0, w0])
     const t1 = 0.5 - x1 * x1 - y1 * y1 - z1 * z1 - w1 * w1
-    const n1 = t1 < 0 ? 0.0 : Math.pow(t1, 4) * this.dot(FastSimplexNoise.GRAD4D[gi1], [x1, y1, z1, w1])
+    const n1 =
+      t1 < 0
+        ? 0.0
+        : Math.pow(t1, 4) *
+          this.dot(FastSimplexNoise.GRAD4D[gi1], [x1, y1, z1, w1])
     const t2 = 0.5 - x2 * x2 - y2 * y2 - z2 * z2 - w2 * w2
-    const n2 = t2 < 0 ? 0.0 : Math.pow(t2, 4) * this.dot(FastSimplexNoise.GRAD4D[gi2], [x2, y2, z2, w2])
+    const n2 =
+      t2 < 0
+        ? 0.0
+        : Math.pow(t2, 4) *
+          this.dot(FastSimplexNoise.GRAD4D[gi2], [x2, y2, z2, w2])
     const t3 = 0.5 - x3 * x3 - y3 * y3 - z3 * z3 - w3 * w3
-    const n3 = t3 < 0 ? 0.0 : Math.pow(t3, 4) * this.dot(FastSimplexNoise.GRAD4D[gi3], [x3, y3, z3, w3])
+    const n3 =
+      t3 < 0
+        ? 0.0
+        : Math.pow(t3, 4) *
+          this.dot(FastSimplexNoise.GRAD4D[gi3], [x3, y3, z3, w3])
     const t4 = 0.5 - x4 * x4 - y4 * y4 - z4 * z4 - w4 * w4
-    const n4 = t4 < 0 ? 0.0 : Math.pow(t4, 4) * this.dot(FastSimplexNoise.GRAD4D[gi4], [x4, y4, z4, w4])
+    const n4 =
+      t4 < 0
+        ? 0.0
+        : Math.pow(t4, 4) *
+          this.dot(FastSimplexNoise.GRAD4D[gi4], [x4, y4, z4, w4])
 
     // Sum up and scale the result to cover the range [-1,1]
     return 72.37855765153665 * (n0 + n1 + n2 + n3 + n4)
@@ -450,7 +529,8 @@ export default class FastSimplexNoise {
     let noise = 0
 
     for (let i = 0; i < this.octaves; i++) {
-      noise += this.raw3D(x * frequency, y * frequency, z * frequency) * amplitude
+      noise +=
+        this.raw3D(x * frequency, y * frequency, z * frequency) * amplitude
       maxAmplitude += amplitude
       amplitude *= this.persistence
       frequency *= 2
@@ -466,7 +546,9 @@ export default class FastSimplexNoise {
     let noise = 0
 
     for (let i = 0; i < this.octaves; i++) {
-      noise += this.raw4D(x * frequency, y * frequency, z * frequency, w * frequency) * amplitude
+      noise +=
+        this.raw4D(x * frequency, y * frequency, z * frequency, w * frequency) *
+        amplitude
       maxAmplitude += amplitude
       amplitude *= this.persistence
       frequency *= 2
