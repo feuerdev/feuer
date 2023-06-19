@@ -1,12 +1,10 @@
 import Selection, { SelectionType } from "./selection"
 import Renderer from "./renderer"
 
-import * as Vectors from "../../../shared/vector2"
-import Vector2 from "../../../shared/vector2"
+import Vector2, { create } from "../../../shared/vector2"
 import * as Util from "../../../shared/util"
-import * as Hexes from "../../../shared/hex"
 import * as PlayerRelation from "../../../shared/relation"
-import Hex from "../../../shared/hex"
+import Hex, { equals, hash, neighborsRange, round } from "../../../shared/hex"
 import { Battle, Building, Group, Tile, World } from "../../../shared/objects"
 import { ClientTile } from "./objects"
 import { Hashtable } from "../../../shared/util"
@@ -30,14 +28,14 @@ export default class GameClass {
         detail as unknown as Util.Hashtable<ClientTile>
       const visibleHexes: Hashtable<Hex> = {}
       Object.values(this.world.groups).forEach((group) => {
-        Hexes.neighborsRange(group.pos, group.spotting).forEach((hex) => {
-          visibleHexes[Hexes.hash(hex)] = hex
+        neighborsRange(group.pos, group.spotting).forEach((hex) => {
+          visibleHexes[hash(hex)] = hex
         })
       })
       Object.values(this.world.buildings).forEach((building) => {
-        Hexes.neighborsRange(building.position, building.spotting).forEach(
+        neighborsRange(building.position, building.spotting).forEach(
           (hex) => {
-            visibleHexes[Hexes.hash(hex)] = hex
+            visibleHexes[hash(hex)] = hex
           }
         )
       })
@@ -49,7 +47,7 @@ export default class GameClass {
       Object.values(this.world.tiles).forEach((tile: Tile) => {
         const cTile = tile as ClientTile
         const oldVisibility = cTile.visible
-        cTile.visible = visibleHexes[Hexes.hash(tile.hex)] !== undefined
+        cTile.visible = visibleHexes[hash(tile.hex)] !== undefined
         if (oldVisibility !== cTile.visible) {
           this.renderer.updateScenegraphTile(cTile)
         }
@@ -70,7 +68,7 @@ export default class GameClass {
         // Redraw/request tiles accordingly
         if (
           !oldGroup ||
-          !Hexes.equals(oldGroup.pos, receivedGroup.pos) ||
+          !equals(oldGroup.pos, receivedGroup.pos) ||
           oldGroup.spotting !== receivedGroup.spotting
         ) {
           this.renderer.updateScenegraphGroup(receivedGroup)
@@ -133,12 +131,12 @@ export default class GameClass {
   requestTiles() {
     const hexes = new Set<Hex>()
     Object.values(this.world.groups).forEach((group) => {
-      Hexes.neighborsRange(group.pos, group.spotting).forEach((hex) => {
+      neighborsRange(group.pos, group.spotting).forEach((hex) => {
         hexes.add(hex)
       })
     })
     Object.values(this.world.buildings).forEach((building) => {
-      Hexes.neighborsRange(building.position, building.spotting).forEach(
+      neighborsRange(building.position, building.spotting).forEach(
         (hex) => {
           hexes.add(hex)
         }
@@ -210,13 +208,13 @@ export default class GameClass {
 
     //Mouse events
     this.renderer.viewport.on("clicked", (click) => {
-      const point = Vectors.create(click.world.x, click.world.y)
+      const point = create(click.world.x, click.world.y)
       switch (click.event.data.button) {
         case 0: //Left
           this.trySelect(point)
           break
         case 2: //Right
-          const clickedHex = Hexes.round(this.renderer.layout.pixelToHex(point))
+          const clickedHex = round(this.renderer.layout.pixelToHex(point))
           if (clickedHex && this.selection.type === SelectionType.Group) {
             EventBus.shared().emitSocket("request movement", {
               selection: this.selection.selectedId,
@@ -267,8 +265,8 @@ export default class GameClass {
         break
       }
 
-      const hex = Hexes.round(this.renderer.layout.pixelToHex(point))
-      const tile = this.world.tiles[Hexes.hash(hex)]
+      const hex = round(this.renderer.layout.pixelToHex(point))
+      const tile = this.world.tiles[hash(hex)]
       if (tile) {
         console.log("Pos:", tile.hex)
         console.log("Biome:", tile.biome)

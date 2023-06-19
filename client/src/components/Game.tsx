@@ -34,7 +34,7 @@ const Game = () => {
 
   // Launch game when sprites are loaded and socket is connected
   useEffect(() => {
-    if (!socket || loading) return
+    if (!socket || !user || loading) return
 
     const world = {
       tiles: {},
@@ -48,7 +48,7 @@ const Game = () => {
     }
     const renderer = new Renderer()
     renderer.start()
-    const game = new GameClass(user!.uid, world, renderer)
+    const game = new GameClass(user.uid, world, renderer)
     game.registerEventListeners()
     window["game"] = game
 

@@ -4,9 +4,9 @@
 import PubSub from "pubsub-js"
 
 export default class EventBus<DetailType = any> {
-  constructor(description = "") {}
+
   on(type: string, listener: (data: CustomEvent<DetailType>) => void) {
-    PubSub.subscribe(type, (a, b) => {
+    PubSub.subscribe(type, (_a, b) => {
       listener(b)
     })
   }
@@ -25,8 +25,6 @@ export default class EventBus<DetailType = any> {
       },
     })
   }
-
-  reset() {}
 
   /**
    * Singleton
