@@ -74,7 +74,10 @@ export function astar(tiles: Hashtable<Tile>, start: Hex, goal: Hex) {
       if (tiles[hash(next)]) {
         let new_cost = 1
         // cost_so_far[hash(current)] + 1 / tiles[hash(current)].movementFactor //TODO calculate correct movementcost
-        if (cost_so_far[hash(next)] === undefined || new_cost < cost_so_far[hash(next)]) {
+        if (
+          cost_so_far[hash(next)] === undefined ||
+          new_cost < cost_so_far[hash(next)]
+        ) {
           cost_so_far[hash(next)] = new_cost
           let priority = new_cost + heuristic(goal, next)
           frontier.enqueue(next, priority)
