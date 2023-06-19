@@ -70,18 +70,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return <Loading />
   }
 
-  const props = useMemo(
-    () => ({
-      user,
-      idToken,
-      loading: loading || authing,
-      signInAsGuest,
-      signInWithGoogle,
-      logout,
-    }),
-    [user, idToken, loading, authing]
-  )
-  return <AuthContext.Provider value={props}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{
+    user,
+    idToken,
+    loading: loading || authing,
+    signInAsGuest,
+    signInWithGoogle,
+    logout,
+  }}>{children}</AuthContext.Provider>
 }
 
 export const useAuthContext = () => {
