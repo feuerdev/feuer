@@ -3,7 +3,12 @@ import * as Rules from "../../shared/rules.json"
 import { Building } from "../../shared/objects"
 import Resources from "../../shared/resources"
 
-export function createBuilding(id: number, owner: string, name: string, pos: Hex): Building {
+export function createBuilding(
+  id: number,
+  owner: string,
+  name: string,
+  pos: Hex
+): Building {
   const template = Rules.buildings[name].levels[0]
   const building: Building = {
     owner: owner,

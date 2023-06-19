@@ -49,7 +49,13 @@ export function generateWorld(
       let heightValue = heightGen.scaled2D(tile.hex.q, tile.hex.r)
 
       //Temperature
-      let latitudeFactor = scale(gauss(scale(tile.hex.r, -size, size, -2, 2)), 0, 0.4, -12, 28)
+      let latitudeFactor = scale(
+        gauss(scale(tile.hex.r, -size, size, -2, 2)),
+        0,
+        0.4,
+        -12,
+        28
+      )
       let heightFactor = heightValue > 0.29 ? 10 * heightValue : 0
       let temperature = latitudeFactor - heightFactor
 
@@ -75,7 +81,12 @@ export function generateWorld(
   function thirdIteration() {
     const riverRng = seedrandom(seed + 1)
     Object.values(tiles).forEach((tile) => {
-      if (!(tile.height > Rules.settings.map_height_river_min && tile.height < Rules.settings.map_height_river_max)) {
+      if (
+        !(
+          tile.height > Rules.settings.map_height_river_min &&
+          tile.height < Rules.settings.map_height_river_max
+        )
+      ) {
         // Not High/Low enough to be a river
         return
       }
@@ -115,7 +126,10 @@ export function generateWorld(
           while (true) {
             Hexes.neighborsRange(tile.hex, distance).forEach((neighbour) => {
               let neighbourTile = tiles[Hexes.hash(neighbour)]
-              if (neighbourTile && neighbourTile.height < Rules.settings.map_height_shore) {
+              if (
+                neighbourTile &&
+                neighbourTile.height < Rules.settings.map_height_shore
+              ) {
                 target = neighbour
                 return
               }
@@ -144,7 +158,10 @@ export function generateWorld(
           break
         }
 
-        if (lowestNeighbour.height < Rules.settings.map_height_shore || lowestNeighbour.biome === Biome.River) {
+        if (
+          lowestNeighbour.height < Rules.settings.map_height_shore ||
+          lowestNeighbour.biome === Biome.River
+        ) {
           // Body of water found, stop
           break
         }
@@ -180,7 +197,10 @@ export function generateWorld(
     Object.values(tiles).forEach((tile) => {
       tile.precipitation = precipGen.scaled2D(tile.hex.q, tile.hex.r)
 
-      if (tile.biome === Biome.River || tile.height < Rules.settings.map_height_shore) {
+      if (
+        tile.biome === Biome.River ||
+        tile.height < Rules.settings.map_height_shore
+      ) {
         tile.precipitation = 1
         return
       }
@@ -188,7 +208,11 @@ export function generateWorld(
       let region = Hexes.neighborsRange(tile.hex, 10)
       for (let hex of region) {
         let neighbour = tiles[Hexes.hash(hex)]
-        if (neighbour && (neighbour.biome === Biome.River || neighbour.height < Rules.settings.map_height_shore)) {
+        if (
+          neighbour &&
+          (neighbour.biome === Biome.River ||
+            neighbour.height < Rules.settings.map_height_shore)
+        ) {
           let distance = Hexes.distance(tile.hex, neighbour.hex)
           tile.precipitation += 0.02 / (distance * 2)
         }
@@ -233,7 +257,10 @@ export function generateWorld(
       }
 
       //Peaks
-      if (tile.height > Rules.settings.map_height_peaks && tile.temperature < 10) {
+      if (
+        tile.height > Rules.settings.map_height_peaks &&
+        tile.temperature < 10
+      ) {
         tile.biome = Biome.Peaks
         return
       }
@@ -251,25 +278,37 @@ export function generateWorld(
       }
 
       //Desert
-      if (tile.temperature > Rules.settings.map_temperature_desert && tile.precipitation < Rules.settings.map_precipitation_desert) {
+      if (
+        tile.temperature > Rules.settings.map_temperature_desert &&
+        tile.precipitation < Rules.settings.map_precipitation_desert
+      ) {
         tile.biome = Biome.Desert
         return
       }
 
       //Tropical Forest
-      if (tile.temperature > Rules.settings.map_temperature_tropical && tile.precipitation > Rules.settings.map_precipitation_tropical) {
+      if (
+        tile.temperature > Rules.settings.map_temperature_tropical &&
+        tile.precipitation > Rules.settings.map_precipitation_tropical
+      ) {
         tile.biome = Biome.Tropical
         return
       }
 
       //Tundra
-      if (tile.temperature < Rules.settings.map_temperature_tundra && tile.precipitation < Rules.settings.map_precipitation_tundra) {
+      if (
+        tile.temperature < Rules.settings.map_temperature_tundra &&
+        tile.precipitation < Rules.settings.map_precipitation_tundra
+      ) {
         tile.biome = Biome.Tundra
         return
       }
 
       //Boreal Forest
-      if (tile.temperature < Rules.settings.map_temperature_boreal && tile.precipitation > Rules.settings.map_precipitation_forest) {
+      if (
+        tile.temperature < Rules.settings.map_temperature_boreal &&
+        tile.precipitation > Rules.settings.map_precipitation_forest
+      ) {
         tile.biome = Biome.Boreal
         return
       }
@@ -284,7 +323,6 @@ export function generateWorld(
       tile.biome = Biome.Grassland
     })
   }
-
 
   const world = Worlds.create(tiles)
   return world
