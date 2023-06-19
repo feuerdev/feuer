@@ -99,7 +99,7 @@ export default class Renderer {
       sprite.zIndex = getSelectionZIndex(selection)
       sprite.width = original.width
       sprite.height = original.height
-      sprite.filters = [Renderer.GLOWFILTER as Filter]
+      sprite.filters = [Renderer.GLOWFILTER]
 
       this.viewport.dirty = true
     })
