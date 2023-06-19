@@ -4,7 +4,12 @@ import * as Rules from "../../shared/rules.json"
 import { generateUnit } from "./unit"
 import { create } from "../../shared/resources"
 
-export function createGroup(id: number, owner: string, name: string, pos: Hex): Group {
+export function createGroup(
+  id: number,
+  owner: string,
+  name: string,
+  pos: Hex
+): Group {
   const template = Rules.units[name]
   const group: Group = {
     owner: owner,

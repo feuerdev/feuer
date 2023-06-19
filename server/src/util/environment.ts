@@ -1,4 +1,4 @@
-import * as dotenv from 'dotenv'
+import * as dotenv from "dotenv"
 import yargs from "yargs"
 
 // Load .env file into environment
@@ -22,7 +22,8 @@ const Config = yargs(process.argv.slice(2))
   })
   .option("updateRate", {
     alias: "u",
-    description: "How many times per second the server will send updates to all clients",
+    description:
+      "How many times per second the server will send updates to all clients",
     type: "number",
     default: 1,
   })
@@ -73,6 +74,5 @@ const Config = yargs(process.argv.slice(2))
     default: "firebase-adminsdk-pnpe7@feuer-io.iam.gserviceaccount.com",
   })
   .parseSync()
-
 
 export default Config
