@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from "react"
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react"
 import {
   getAuth,
   GoogleAuthProvider,
@@ -35,7 +41,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return
     }
 
-    (async () => {
+    ;(async () => {
       const token = await user.getIdToken()
       setIdToken(token)
     })()
@@ -64,20 +70,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return <Loading />
   }
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        idToken,
-        loading: loading || authing,
-        signInAsGuest,
-        signInWithGoogle,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const props = useMemo(
+    () => ({
+      user,
+      idToken,
+      loading: loading || authing,
+      signInAsGuest,
+      signInWithGoogle,
+      logout,
+    }),
+    [user, idToken, loading, authing]
   )
+  return <AuthContext.Provider value={props}>{children}</AuthContext.Provider>
 }
 
 export const useAuthContext = () => {

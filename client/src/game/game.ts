@@ -33,11 +33,9 @@ export default class GameClass {
         })
       })
       Object.values(this.world.buildings).forEach((building) => {
-        neighborsRange(building.position, building.spotting).forEach(
-          (hex) => {
-            visibleHexes[hash(hex)] = hex
-          }
-        )
+        neighborsRange(building.position, building.spotting).forEach((hex) => {
+          visibleHexes[hash(hex)] = hex
+        })
       })
 
       Object.entries(tiles).forEach(([id, tile]) => {
@@ -136,11 +134,9 @@ export default class GameClass {
       })
     })
     Object.values(this.world.buildings).forEach((building) => {
-      neighborsRange(building.position, building.spotting).forEach(
-        (hex) => {
-          hexes.add(hex)
-        }
-      )
+      neighborsRange(building.position, building.spotting).forEach((hex) => {
+        hexes.add(hex)
+      })
     })
     EventBus.shared().emitSocket("request tiles", Array.from(hexes))
   }
