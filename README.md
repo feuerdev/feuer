@@ -19,7 +19,7 @@ Features:
 Languages, Frameworks:
 - Typescript
 - Node.js
-- Next.js
+- vite
 - React.js
 - Socket.io
 - TailwindCSS
