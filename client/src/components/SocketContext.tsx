@@ -24,7 +24,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       return
     }
 
-    const socket = io("localhost:3001", {
+    const socket = io("feuer.onrender.com:3000", {
       auth: { token: idToken },
       reconnection: true,
       reconnectionDelay: 2000,

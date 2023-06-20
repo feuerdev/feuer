@@ -26,7 +26,7 @@ const game = new GameServer(world)
 game.run()
 
 // Listen to connections
-const io = new Server(3001, {
+const io = new Server(3000, {
   cors: {
     origin: "*", //TODO: set sensible value
   },
