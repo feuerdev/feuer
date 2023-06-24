@@ -18,7 +18,7 @@ const Config = yargs(process.argv.slice(2))
     alias: "p",
     description: "The port to expose the server",
     type: "number",
-    default: 5000,
+    default: 3000,
   })
   .option("updateRate", {
     alias: "u",
@@ -32,29 +32,6 @@ const Config = yargs(process.argv.slice(2))
     description: "How fast the game will run",
     type: "number",
     default: 1,
-  })
-  .option("dbHost", {
-    alias: "DB_HOST",
-    description: "Database url",
-    type: "string",
-    default: "database",
-  })
-  .option("dbName", {
-    alias: "DB_NAME",
-    description: "Database name",
-    type: "string",
-    default: "feuer",
-  })
-  .option("dbUser", {
-    alias: "DB_USER",
-    description: "Database username",
-    type: "string",
-    default: "feuer",
-  })
-  .option("dbPassword", {
-    alias: "DB_PASSWORD",
-    description: "Database password",
-    type: "string",
   })
   .option("firebaseProjectId", {
     alias: "FB_project_id",

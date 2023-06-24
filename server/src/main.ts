@@ -4,8 +4,8 @@ import { isAuthenticated } from "./util/firebase"
 import * as Rules from "../../shared/rules.json"
 import GameServer from "./gameserver"
 import Hex from "../../shared/hex"
+import Config from "./util/environment"
 
-// TODO: get saved world and id counter from db
 let idCounter = -1
 export const getNextId = () => {
   return ++idCounter
@@ -26,7 +26,8 @@ const game = new GameServer(world)
 game.run()
 
 // Listen to connections
-const io = new Server(3000, {
+const port: number = Config.port
+const io = new Server(port, {
   cors: {
     origin: "*", //TODO: set sensible value
   },
@@ -69,4 +70,4 @@ io.on("connection", async (socket) => {
   socket.on("request demolish", (data) => game.onRequestDemolish(socket, data))
 })
 
-console.log("Server running")
+console.log("Server running on port:", Config.port)

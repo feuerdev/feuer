@@ -24,7 +24,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       return
     }
 
-    const socket = io("feuer.onrender.com", {
+    const socket = io(import.meta.env.VITE_SERVER_URL, {
       auth: { token: idToken },
       reconnection: true,
       reconnectionDelay: 2000,
