@@ -6,10 +6,13 @@ import GameServer from "./gameserver"
 import Hex from "../../shared/hex"
 import Config from "./util/environment"
 
+// Initialize ID counter
 let idCounter = -1
 export const getNextId = () => {
   return ++idCounter
 }
+
+// Generate world
 const world = generateWorld(
   `${Math.random()}`,
   Rules.settings.map_size,

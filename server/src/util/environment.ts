@@ -1,5 +1,6 @@
 import * as dotenv from "dotenv"
 import yargs from "yargs"
+import * as Rules from "../../../shared/rules.json"
 
 // Load .env file into environment
 dotenv.config()
@@ -7,6 +8,8 @@ dotenv.config()
 // Load Config object from environment via yargs
 const Config = yargs(process.argv.slice(2))
   .env("FEUER")
+  // TODO: Make it so that rules can be loaded from the environment
+  .config(Rules)
   .option("logLevel", {
     alias: "l",
     description: "Log level for winston logger",
@@ -51,5 +54,7 @@ const Config = yargs(process.argv.slice(2))
     default: "firebase-adminsdk-pnpe7@feuer-io.iam.gserviceaccount.com",
   })
   .parseSync()
+
+console.debug("Config loaded:", Config)
 
 export default Config

@@ -5,7 +5,8 @@
   "main": "src/main.ts",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/server/src/main.js"
+    "start": "node dist/server/src/main.js",
+    "dev": "npx ts-node-dev src/main"
   },
   "repository": {
     "type": "git",
@@ -31,6 +32,8 @@
     "yargs": "^17.6.0"
   },
   "devDependencies": {
-    "prettier": "^2.8.8"
+    "@types/yargs": "^17.0.24",
+    "prettier": "^2.8.8",
+    "ts-node-dev": "^2.0.0"
   }
 }
