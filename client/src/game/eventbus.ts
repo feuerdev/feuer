@@ -4,7 +4,7 @@
 import PubSub from "pubsub-js"
 
 export default class EventBus<DetailType = any> {
-  on(type: string, listener: (data: CustomEvent<DetailType>) => void) {
+  on(type: string, listener: (data: DetailType) => void) {
     PubSub.subscribe(type, (_a, b) => {
       listener(b)
     })

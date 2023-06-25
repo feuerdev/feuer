@@ -23,7 +23,6 @@ export default class GameClass {
     this.renderer = renderer
 
     EventBus.shared().on("gamestate tiles", (detail) => {
-      console.log("hi")
       const tiles: Util.Hashtable<ClientTile> =
         detail as unknown as Util.Hashtable<ClientTile>
       const visibleHexes: Hashtable<Hex> = {}

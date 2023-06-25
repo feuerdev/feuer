@@ -79,8 +79,7 @@ export default class Renderer {
       this.viewport.dirty = true
     })
 
-    EventBus.shared().on("selection", ({ detail }) => {
-      const selection: Selection = detail
+    EventBus.shared().on("selection", (selection: Selection) => {
       const original = this.viewport.getChildByName(
         String(selection.selectedId)
       ) as PIXI.Sprite
