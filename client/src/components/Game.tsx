@@ -59,7 +59,7 @@ const Game = () => {
     })
 
     const token = PubSub.subscribe("game request", (_, data) => {
-      socket.emit(data.type, data.data)
+      socket.emit(data.detail.type, data.detail.data)
     })
 
     return () => {

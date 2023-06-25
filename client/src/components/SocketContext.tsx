@@ -35,8 +35,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       setConnecting(false)
       setSocket(socket)
     })
-    socket.on("disconnect", () => {
-      console.log("socket connection disconnected")
+    socket.on("disconnect", (reason) => {
+      console.log("DEBUG: socket got disconnected:", reason)
       setSocket(undefined)
       setConnecting(false)
     })
@@ -78,7 +78,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SocketContext.Provider
-      value={{ socket, connecting: connecting, send: send, disconnect }}
+      value={{ socket, connecting: connecting, send: send, disconnect: disconnect }}
     >
       {children}
     </SocketContext.Provider>
