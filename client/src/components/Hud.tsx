@@ -7,7 +7,7 @@ const Hud = () => {
 
   return (
     <div
-      className="[&>*]:pointer-events-auto pointer-events-none absolute inset-0 h-screen w-screen"
+      className="[&>*]:pointer-events-auto pointer-events-none absolute inset-0 h-screen w-screen text-white"
       id="hud"
     >
       <div>Hello {user?.displayName}! You're in game!</div>
