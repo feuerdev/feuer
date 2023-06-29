@@ -10,7 +10,7 @@ const Hud = () => {
       className="[&>*]:pointer-events-auto pointer-events-none absolute inset-0 h-screen w-screen text-white"
       id="hud"
     >
-      <div>Hello {user?.displayName}! You're in game!</div>
+      <div>Hello {user?.displayName}! You're in game! This is the dev branch btw</div>
       <button
         onClick={() => {
           logout()
