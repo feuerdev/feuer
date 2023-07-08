@@ -7,7 +7,6 @@ import Rules from "../../../shared/rules.json"
 import { ClientTile } from "./objects"
 import { Biome, Group } from "../../../shared/objects"
 import Selection, { SelectionType } from "./selection"
-import EventBus from "./eventbus"
 import { Filter, Loader } from "pixi.js"
 
 const HEX_SIZE = 40
@@ -72,36 +71,6 @@ export default class Renderer {
         this.viewport.dirty = true
       }
     })
-
-    EventBus.shared().on("deselection", (_) => {
-      const sprite = this.viewport.getChildByName("selection") as PIXI.Graphics
-      this.viewport.removeChild(sprite)
-      this.viewport.dirty = true
-    })
-
-    EventBus.shared().on("selection", (selection: Selection) => {
-      const original = this.viewport.getChildByName(
-        String(selection.selectedId)
-      ) as PIXI.Sprite
-      if (!original) {
-        return
-      }
-
-      let sprite = this.viewport.getChildByName("selection") as PIXI.Sprite
-      if (!sprite) {
-        sprite = new PIXI.Sprite(original.texture)
-        sprite.name = "selection"
-        this.viewport.addChild(sprite)
-      }
-
-      sprite.position.set(original.position.x, original.position.y)
-      sprite.zIndex = getSelectionZIndex(selection)
-      sprite.width = original.width
-      sprite.height = original.height
-      sprite.filters = [Renderer.GLOWFILTER]
-
-      this.viewport.dirty = true
-    })
   }
 
   start(): void {
@@ -111,6 +80,35 @@ export default class Renderer {
         this.viewport.dirty = false
       }
     })
+  }
+
+  updateSelection(selection: Selection) {
+    const oldSprite = this.viewport.getChildByName("selection") as PIXI.Graphics
+    this.viewport.removeChild(oldSprite)
+    this.viewport.dirty = true
+
+    if(selection.id === undefined) {
+      return
+    }
+
+    const original = this.viewport.getChildByName(
+      String(selection.id)
+    ) as PIXI.Sprite
+    if (!original) {
+      return
+    }
+
+    const sprite = new PIXI.Sprite(original.texture)
+    sprite.name = "selection"
+    this.viewport.addChild(sprite)
+
+    sprite.position.set(original.position.x, original.position.y)
+    sprite.zIndex = getSelectionZIndex(selection)
+    sprite.width = original.width
+    sprite.height = original.height
+    sprite.filters = [Renderer.GLOWFILTER]
+
+    this.viewport.dirty = true  
   }
 
   updateScenegraphGroup(group: Group) {

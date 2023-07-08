@@ -7,7 +7,6 @@ import Loading from "./Loading"
 import { useSocketContext } from "./SocketContext"
 import Renderer from "../game/renderer"
 import GameClass from "../game/game"
-import EventBus from "../game/eventbus"
 import PubSub from "pubsub-js"
 
 const Game = () => {
@@ -36,6 +35,10 @@ const Game = () => {
   useEffect(() => {
     if (!socket || !user || loading) return
 
+    const token = PubSub.subscribe("game request", (_, data) => {
+      socket.emit(data.detail.type, data.detail.data)
+    })
+
     const world = {
       tiles: {},
       groups: {},
@@ -51,16 +54,6 @@ const Game = () => {
     const game = new GameClass(user.uid, world, renderer)
     game.registerEventListeners()
     window["game"] = game
-
-    // Propagate any events
-    socket.onAny((eventName: string, data: any) => {
-      EventBus.shared().emit(eventName, data)
-      console.log("mesage received", eventName, data)
-    })
-
-    const token = PubSub.subscribe("game request", (_, data) => {
-      socket.emit(data.detail.type, data.detail.data)
-    })
 
     return () => {
       socket.offAny()

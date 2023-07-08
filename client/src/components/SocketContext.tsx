@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { io, Socket } from "socket.io-client"
 import { useAuthContext } from "./AuthContext"
+import EventBus from "../game/eventbus"
 
 const SocketContext = createContext<
   | {
@@ -29,6 +30,13 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       reconnection: true,
       reconnectionDelay: 2000,
       reconnectionAttempts: 5,
+      autoConnect: false,
+    })
+
+    // Propagate any events
+    socket.onAny((eventName: string, data: any) => {
+      EventBus.shared().emit(eventName, data)
+      // console.log("mesage received", eventName, data)
     })
     socket.on("connect", () => {
       console.log("socket connection established")
@@ -46,6 +54,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       setConnecting(false)
     })
 
+    socket.connect()
+    
     return () => {
       socket.disconnect()
     }

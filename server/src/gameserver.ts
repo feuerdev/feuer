@@ -200,7 +200,10 @@ export default class GameServer {
       this.updatePlayerVisibilities(uid)
     } else {
       Log.info(`Player reconnected: ${player.uid}`)
-      socket.emit("gamestate tiles", this.getTiles(player.discoveredHexes))
+      // TODO: Fix this hack, this is a workaround for the client not receiving the tiles (socket is not ready yet?)
+      setTimeout(() => {
+        socket.emit("gamestate tiles", this.getTiles(player.discoveredHexes))
+      }, 3000)
     }
 
     //Register player in Gamesever

@@ -10,6 +10,8 @@ import { ClientTile } from "./objects"
 import { Hashtable } from "../../../shared/util"
 import EventBus from "./eventbus"
 import { Point, Sprite } from "pixi.js"
+import { store } from "../store/store"
+import { select } from "../store/selection"
 
 export default class GameClass {
   private renderer: Renderer
@@ -102,7 +104,7 @@ export default class GameClass {
 
       //Update the selection if a group is selected (it might have moved)
       if (this.selection.type === SelectionType.Group) {
-        EventBus.shared().emit("selection", this.selection)
+        this.renderer.updateSelection(this.selection)
       }
     })
 
@@ -212,7 +214,7 @@ export default class GameClass {
           const clickedHex = round(this.renderer.layout.pixelToHex(point))
           if (clickedHex && this.selection.type === SelectionType.Group) {
             EventBus.shared().emitSocket("request movement", {
-              selection: this.selection.selectedId,
+              selection: this.selection.id,
               target: clickedHex,
             })
           }
@@ -229,8 +231,6 @@ export default class GameClass {
    */
   private trySelect(point: Vector2) {
     this.selection.clear()
-
-    EventBus.shared().emit("deselection", this.selection)
 
     const hit = this.renderer.viewport.children.filter((sprite) => {
       return Util.isPointInRectangle(
@@ -271,8 +271,10 @@ export default class GameClass {
         this.selection.selectTile(tile.id)
       }
     }
-
-    EventBus.shared().emit("selection", this.selection)
+    // Update Canvas
+    this.renderer.updateSelection(this.selection)
+    // Update HUD
+    store.dispatch(select(this.selection))
   }
 }
 //#endregion
