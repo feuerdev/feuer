@@ -1,12 +1,14 @@
-import { useAuthContext } from "./AuthContext"
 import { useSocketContext } from "./SocketContext"
-import { useAppSelector } from "../store/hooks"
+import { useAppDispatch, useAppSelector } from "../store/hooks"
+import { selectUser } from "../store/auth"
 
 const Hud = () => {
-  const { user, logout } = useAuthContext()
   const { disconnect } = useSocketContext()
 
   const selection = useAppSelector(state => state.selection.id)
+  const user = useAppSelector(selectUser)
+
+  const dispatch = useAppDispatch()
 
   return (
     <div
@@ -17,7 +19,9 @@ const Hud = () => {
       <div>Selection: {selection}</div>
       <button
         onClick={() => {
-          logout()
+          dispatch({
+            type: "LOGOUT"
+          })
           disconnect()
         }}
       >

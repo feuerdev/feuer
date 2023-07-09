@@ -1,7 +1,11 @@
-import { useAuthContext } from "./AuthContext"
+import { useSelector } from "react-redux"
+import { selectLoading } from "../store/auth"
+import { useAppDispatch } from "../store/hooks"
 
 const Login = () => {
-  const { loading, signInAsGuest, signInWithGoogle } = useAuthContext()
+
+  const loading = useSelector(selectLoading)
+  const dispatch = useAppDispatch()
 
   return (
     <main className="font-monospace h-screen w-screen bg-black bg-login-cover bg-no-repeat bg-cover bg-center">
@@ -15,14 +19,18 @@ const Login = () => {
           <div className="p-2" />
           <button
             className="p-1 w-full bg-white text-black"
-            onClick={signInWithGoogle}
+            onClick={() => dispatch({
+              type: "SIGN_IN_WITH_GOOGLE",
+            })}
           >
             Sign In
           </button>
           <div className="p-2" />
           <button
             className="p-1 w-full bg-white text-black"
-            onClick={signInAsGuest}
+            onClick={() => dispatch({
+              type: "SIGN_IN_AS_GUEST",
+            })}
           >
             Play as guest
           </button>
