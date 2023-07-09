@@ -58,7 +58,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     })
 
     socket.connect()
-    
+
     return () => {
       socket.disconnect()
     }
@@ -80,7 +80,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         <button
           onClick={() => {
             dispatch({
-              type: "LOGOUT"
+              type: "LOGOUT",
             })
             disconnect()
           }}
@@ -93,7 +93,12 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <SocketContext.Provider
-      value={{ socket, connecting: connecting, send: send, disconnect: disconnect }}
+      value={{
+        socket,
+        connecting: connecting,
+        send: send,
+        disconnect: disconnect,
+      }}
     >
       {children}
     </SocketContext.Provider>

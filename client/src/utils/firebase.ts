@@ -11,7 +11,7 @@ const firebaseConfig = {
   appId: "1:45127508791:web:93f89eb58e282999b8f0b2",
 }
 
-let firebaseApp: FirebaseApp | undefined = undefined 
+let firebaseApp: FirebaseApp | undefined = undefined
 const initFirebase = () => {
   if (firebaseApp) {
     return firebaseApp
@@ -25,16 +25,14 @@ export const getFirebaseAuth = () => {
 }
 
 export const isLoggedIn = async () => {
-    return await new Promise<User>((resolve, reject) =>
-      getAuth(initFirebase()).onAuthStateChanged(user => {
-          if (user) {
-            // User is signed in.
-            resolve(user)
-          } else {
-            // No user is signed in.
-            reject('no user logged in')
-          }
-        }
-      )
-    )
+  return await new Promise<User>((resolve, reject) =>
+    getAuth(initFirebase()).onAuthStateChanged((user) => {
+      if (user) {
+        resolve(user)
+      } else {
+        // No user is signed in.
+        reject()
+      }
+    })
+  )
 }

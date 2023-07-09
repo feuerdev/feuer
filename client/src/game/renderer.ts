@@ -87,7 +87,7 @@ export default class Renderer {
     this.viewport.removeChild(oldSprite)
     this.viewport.dirty = true
 
-    if(selection.id === undefined) {
+    if (selection.id === undefined) {
       return
     }
 
@@ -108,7 +108,7 @@ export default class Renderer {
     sprite.height = original.height
     sprite.filters = [Renderer.GLOWFILTER]
 
-    this.viewport.dirty = true  
+    this.viewport.dirty = true
   }
 
   updateScenegraphGroup(group: Group) {
