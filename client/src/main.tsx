@@ -11,17 +11,16 @@ import Loading from "./components/Loading"
 import { useAppDispatch } from "./store/hooks"
 
 const App = () => {
-
   const user = useSelector(selectUser)
-  const loading = useSelector(selectLoading) 
+  const loading = useSelector(selectLoading)
   const dispatch = useAppDispatch()
 
   useEffect(() => {
-    dispatch({type: "CHECK_AUTHENTICATION"})
+    dispatch({ type: "CHECK_AUTHENTICATION" })
   }, [])
 
   if (loading) {
-    return <Loading/>
+    return <Loading />
   }
 
   if (!user) {
@@ -38,8 +37,7 @@ const App = () => {
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <Provider store={store}>
-        <App />
+      <App />
     </Provider>
   </React.StrictMode>
 )
-

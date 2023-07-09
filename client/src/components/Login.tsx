@@ -3,7 +3,6 @@ import { selectLoading } from "../store/auth"
 import { useAppDispatch } from "../store/hooks"
 
 const Login = () => {
-
   const loading = useSelector(selectLoading)
   const dispatch = useAppDispatch()
 
@@ -19,18 +18,22 @@ const Login = () => {
           <div className="p-2" />
           <button
             className="p-1 w-full bg-white text-black"
-            onClick={() => dispatch({
-              type: "SIGN_IN_WITH_GOOGLE",
-            })}
+            onClick={() =>
+              dispatch({
+                type: "SIGN_IN_WITH_GOOGLE",
+              })
+            }
           >
             Sign In
           </button>
           <div className="p-2" />
           <button
             className="p-1 w-full bg-white text-black"
-            onClick={() => dispatch({
-              type: "SIGN_IN_AS_GUEST",
-            })}
+            onClick={() =>
+              dispatch({
+                type: "SIGN_IN_AS_GUEST",
+              })
+            }
           >
             Play as guest
           </button>
