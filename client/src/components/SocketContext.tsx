@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { io, Socket } from "socket.io-client"
-import { useAuthContext } from "./AuthContext"
 import EventBus from "../game/eventbus"
+import { useAppDispatch, useAppSelector } from "../store/hooks"
+import { selectIdToken } from "../store/auth"
 
 const SocketContext = createContext<
   | {
@@ -14,7 +15,9 @@ const SocketContext = createContext<
 >(undefined)
 
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
-  const { idToken, logout } = useAuthContext()
+  const idToken = useAppSelector(selectIdToken)
+
+  const dispatch = useAppDispatch()
 
   const [connecting, setConnecting] = useState(true)
   const [socket, setSocket] = useState<Socket | undefined>(undefined)
@@ -76,7 +79,9 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         <br />
         <button
           onClick={() => {
-            logout()
+            dispatch({
+              type: "LOGOUT"
+            })
             disconnect()
           }}
         >

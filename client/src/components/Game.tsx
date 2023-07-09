@@ -1,6 +1,5 @@
 import { Loader, utils } from "pixi.js"
 import { useEffect, useState } from "react"
-import { useAuthContext } from "./AuthContext"
 import Hud from "./Hud"
 import Sprites from "../game/sprites.json"
 import Loading from "./Loading"
@@ -8,11 +7,14 @@ import { useSocketContext } from "./SocketContext"
 import Renderer from "../game/renderer"
 import GameClass from "../game/game"
 import PubSub from "pubsub-js"
+import { useAppSelector } from "../store/hooks"
+import { selectUser } from "../store/auth"
 
 const Game = () => {
-  const { user } = useAuthContext()
   const [loading, setLoading] = useState(false)
   const { socket, connecting } = useSocketContext()
+
+  const user = useAppSelector(selectUser)
 
   // Load all sprites on mount
   useEffect(() => {
