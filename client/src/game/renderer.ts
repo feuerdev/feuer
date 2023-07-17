@@ -128,6 +128,33 @@ export default class Renderer {
     object.x = this.layout.hexToPixel(group.pos).x - HEX_SIZE / 3
     object.y = this.layout.hexToPixel(group.pos).y + HEX_SIZE / 3
     object.zIndex = ZIndices.Units
+
+    // Update movement indicator
+    const oldSprite = this.viewport.getChildByName(
+      "MovementIndicator"
+    ) as PIXI.Graphics
+    this.viewport.removeChild(oldSprite)
+
+    if (group.owner === window.game.uid) {
+      const movementIndicatorContainer = new PIXI.Container()
+      movementIndicatorContainer.name = "MovementIndicator"
+      movementIndicatorContainer.zIndex = ZIndices.Units
+
+      this.viewport.addChild(movementIndicatorContainer)
+
+      for (const hex of group.targetHexes) {
+        const indicator = new PIXI.Graphics()
+        indicator.beginFill(0x0000ff)
+        indicator.drawCircle(5, 5, 5)
+        indicator.endFill()
+        indicator.x = this.layout.hexToPixel(hex).x - HEX_SIZE / 3
+        indicator.y = this.layout.hexToPixel(hex).y + HEX_SIZE / 3
+        indicator.alpha = 0.7
+
+        movementIndicatorContainer.addChild(indicator)
+      }
+      movementIndicatorContainer.calculateBounds()
+    }
   }
 
   updateScenegraphTile(tile: ClientTile) {

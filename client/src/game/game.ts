@@ -16,7 +16,7 @@ import { select } from "../store/selection"
 export default class GameClass {
   private renderer: Renderer
   world: World
-  private uid: string
+  uid: string
   selection: Selection = new Selection()
 
   constructor(uid: string, world: World, renderer: Renderer) {
