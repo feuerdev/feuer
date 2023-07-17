@@ -15,6 +15,7 @@ import * as Battles from "./battle"
 import { createGroup } from "./group"
 import { createBuilding, upgradeBuilding } from "./building"
 import { EnumRelationType } from "../../shared/relation"
+import { isNavigable } from "../../shared/objectutil"
 
 export default class GameServer {
   private socketplayer: {} = {}
@@ -225,7 +226,8 @@ export default class GameServer {
     let target = Hexes.create(data.target.q, data.target.r, data.target.s)
     const group = this.world.groups[selection]
     if (uid === group.owner) {
-      if (this.world.tiles[Hexes.hash(target)]) {
+      let targetTile = this.world.tiles[Hexes.hash(target)]
+      if (targetTile && isNavigable(targetTile)) {
         group.movementStatus = 0
         group.targetHexes = astar(this.world.tiles, group.pos, target)
         return

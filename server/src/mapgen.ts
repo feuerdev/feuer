@@ -142,7 +142,7 @@ export function generateWorld(
 
           if (target) {
             // Connect to body of water
-            let path = astar(tiles, tile.hex, target)
+            let path = astar(tiles, tile.hex, target, false)
             path.forEach((hex) => {
               tiles[Hexes.hash(hex)].biome = Biome.River
             })
