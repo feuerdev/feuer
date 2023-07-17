@@ -246,7 +246,6 @@ export default class GameClass {
     for (const sprite of hit) {
       const group = this.world.groups[sprite.name]
       if (group) {
-        console.log(group)
         this.selection.selectGroup(group.id)
         break
       }
@@ -255,7 +254,6 @@ export default class GameClass {
         (building) => building.id === Number(sprite.name)
       )
       if (building) {
-        console.log(building)
         this.selection.selectBuilding(building.id)
         break
       }
@@ -263,11 +261,6 @@ export default class GameClass {
       const hex = round(this.renderer.layout.pixelToHex(point))
       const tile = this.world.tiles[hash(hex)]
       if (tile) {
-        console.log("Pos:", tile.hex)
-        console.log("Biome:", tile.biome)
-        console.log("Height:", tile.height)
-        console.log("Temp:", tile.temperature)
-        console.log("Precip:", tile.precipitation)
         this.selection.selectTile(tile.id)
       }
     }
