@@ -8,7 +8,7 @@ import { Hashtable } from "../../shared/util"
 import Hex from "../../shared/hex"
 import * as Hexes from "../../shared/hex"
 import Config from "./util/environment"
-import { Building, Group, World, Tile } from "../../shared/objects"
+import { Building, Group, World, Tile, Biome } from "../../shared/objects"
 import * as PlayerRelation from "../../shared/relation"
 import { Battle } from "../../shared/objects"
 import * as Battles from "./battle"
@@ -182,7 +182,7 @@ export default class GameServer {
       Log.info("New Player Connected: " + player.uid)
 
       //Give Player an initial Scout and Camp
-      let pos = this.getRandomHex()
+      let pos = this.getRandomSpawnHex()
       let initialGroup = createGroup(
         ++this.world.idCounter,
         player.uid,
@@ -536,10 +536,24 @@ export default class GameServer {
     return true
   }
 
-  private getRandomHex(): Hex {
+  /**
+   * @returns a random hex that is not in a water or other extreme biome
+   */
+  private getRandomSpawnHex(): Hex {
     let hashes = Object.keys(this.world.tiles)
     let index = Math.round(Math.random() * hashes.length)
-    return this.world.tiles[hashes[index]].hex
+    let tile = this.world.tiles[hashes[index]]
+    switch (tile.biome) {
+      case Biome.Ocean:
+      case Biome.River:
+      case Biome.Shore:
+      case Biome.Beach:
+      case Biome.Desert:
+      case Biome.Ice:
+      case Biome.Mountain:
+        return this.getRandomSpawnHex()
+    }
+    return tile.hex
   }
 
   public setWorld(world: World) {
