@@ -1,6 +1,10 @@
 const GroupInfo = ({ selection }: { selection: number }) => {
   const group = window.game.world.groups[selection]
 
+  if (!group) {
+    return <div>No group selected</div>
+  }
+  
   return (
     <div>
       <div>Selection: {selection}</div>

@@ -3,6 +3,10 @@ import { getTileById } from "../../../shared/objectutil"
 const TileInfo = ({ selection }: { selection: number }) => {
   const tile = getTileById(selection, window.game.world.tiles)
 
+  if (!tile) {
+    return <div>No tile selected</div>
+  }
+
   return (
     <div>
       <div>Selection: {selection}</div>
