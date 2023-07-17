@@ -1,11 +1,15 @@
 import { useSocketContext } from "./SocketContext"
 import { useAppDispatch, useAppSelector } from "../store/hooks"
 import { selectUser } from "../store/auth"
+import { SelectionType } from "../game/selection"
+import GroupInfo from "./GroupInfo"
+import TileInfo from "./TileInfo"
 
 const Hud = () => {
   const { disconnect } = useSocketContext()
 
   const selection = useAppSelector((state) => state.selection.id)
+  const selectionType = useAppSelector((state) => state.selection.type)
   const user = useAppSelector(selectUser)
 
   const dispatch = useAppDispatch()
@@ -18,7 +22,6 @@ const Hud = () => {
       <div>
         Hello {user?.displayName}! You're in game! This is the dev branch btw
       </div>
-      <div>Selection: {selection}</div>
       <button
         onClick={() => {
           dispatch({ type: "LOGOUT" })
@@ -27,6 +30,12 @@ const Hud = () => {
       >
         Logout
       </button>
+      {selectionType == SelectionType.Group && (
+        <GroupInfo selection={selection} />
+      )}
+      {selectionType == SelectionType.Tile && (
+        <TileInfo selection={selection} />
+      )}
     </div>
   )
 }
