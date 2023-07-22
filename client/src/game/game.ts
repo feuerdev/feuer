@@ -130,11 +130,13 @@ export default class GameClass {
   requestTiles() {
     const hexes = new Set<Hex>()
     Object.values(this.world.groups).forEach((group) => {
+      if (group.owner !== this.uid) return // Only request tiles for own groups
       neighborsRange(group.pos, group.spotting).forEach((hex) => {
         hexes.add(hex)
       })
     })
     Object.values(this.world.buildings).forEach((building) => {
+      if (building.owner !== this.uid) return // Only request tiles for own buildings
       neighborsRange(building.position, building.spotting).forEach((hex) => {
         hexes.add(hex)
       })
