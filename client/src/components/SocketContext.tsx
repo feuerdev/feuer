@@ -32,7 +32,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       auth: { token: idToken },
       reconnection: true,
       reconnectionDelay: 2000,
-      reconnectionAttempts: 5,
       autoConnect: false,
     })
 
