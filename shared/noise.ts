@@ -10,7 +10,7 @@
  * attribution is appreciated.
  */
 
-export interface Options {
+export type Options = {
   amplitude?: number
   frequency?: number
   max?: number

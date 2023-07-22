@@ -1,10 +1,12 @@
 import { UserId } from "./objects"
 
-export default interface PlayerRelation {
+export type PlayerRelation = {
   id1: UserId
   id2: UserId
   relationType: EnumRelationType
 }
+
+export default PlayerRelation
 
 export function create(
   id1: UserId,
