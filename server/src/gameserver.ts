@@ -8,14 +8,14 @@ import { Hashtable } from "../../shared/util"
 import Hex from "../../shared/hex"
 import * as Hexes from "../../shared/hex"
 import Config from "./util/environment"
-import { Building, Group, World, Tile, Biome } from "../../shared/objects"
+import { Building, Group, World, Tile, Biome, FightingUnit } from "../../shared/objects"
 import * as PlayerRelation from "../../shared/relation"
 import { Battle } from "../../shared/objects"
 import * as Battles from "./battle"
 import { createGroup } from "./group"
 import { createBuilding, upgradeBuilding } from "./building"
 import { EnumRelationType } from "../../shared/relation"
-import { isNavigable } from "../../shared/objectutil"
+import { applyAttackResult, calculateAttack, calculateInitiative, calculateMorale, hasFled, isDead, isNavigable } from "../../shared/objectutil"
 
 export default class GameServer {
   private socketplayer: {} = {}
@@ -49,7 +49,7 @@ export default class GameServer {
         this.actualTicks > 5 &&
         Math.abs(timeSincelastFrame - this.updaterate) > 30
       ) {
-        Log.error("Warning something is fucky with the gameloop")
+        Log.warn("Warning something is fucky with the gameloop")
       }
       Log.silly(
         "Update took:" +
@@ -108,21 +108,68 @@ export default class GameServer {
     //Battles
     let i = this.world.battles.length
     while (i--) {
-      // let battle = this.world.battles[i]!
-      // battle.defender.hp -= battle.attacker.attack + Math.round(Math.random() * 10)
-      // battle.attacker.hp -= battle.defender.attack + Math.round(Math.random() * 20)
-      // if (battle.attacker.hp <= 0 || battle.defender.hp <= 0) {
-      //   if (battle.attacker.hp <= 0) {
-      //     delete this.world.groups[battle.attacker.id]
-      //     this.updatePlayerVisibilities(battle.attacker.owner)
-      //   }
-      //   if (battle.defender.hp <= 0) {
-      //     delete this.world.groups[battle.defender.id]
-      //     this.updatePlayerVisibilities(battle.defender.owner)
-      //   }
-      //   this.world.battles.splice(i, 1)
-      // }
+      let battle = this.world.battles[i]
+
+      // Populate duels
+      for (const unit of battle.attacker.units) {
+        // find random opponent
+        if ((unit as FightingUnit).inDuel) continue
+        if (isDead(unit as FightingUnit)) continue
+        if (hasFled(unit as FightingUnit)) continue
+
+        const opponent = battle.defender.units.find((opponent) => {
+          const unitInDuel = (opponent as FightingUnit).inDuel
+          const unitIsDead = isDead(opponent as FightingUnit)
+          const unitHasFled = hasFled(opponent as FightingUnit)
+          return !unitInDuel && !unitIsDead && !unitHasFled
+        })
+
+        battle.duels.push({
+          attacker: unit,
+          defender: opponent,
+          over: false,
+        });
+
+        (unit as FightingUnit).inDuel = true;
+        (opponent as FightingUnit).inDuel = true;        
+      }
+
+      // Calculate duels
+      for (const duel of battle.duels) {
+        const attacker = duel.attacker as FightingUnit
+        const defender = duel.defender as FightingUnit
+
+        if(calculateInitiative(attacker) > calculateInitiative(defender)) {
+          const attackResult = calculateAttack(attacker, defender)
+          duel.defender = applyAttackResult(defender, attackResult)
+        } else {
+          const attackResult = calculateAttack(defender, attacker)
+          duel.attacker = applyAttackResult(attacker, attackResult)
+        }
+
+        if (isDead(duel.attacker) || hasFled(duel.attacker) || isDead(duel.defender) || hasFled(duel.defender)) {
+          duel.over = true
+          duel.attacker.inDuel = false
+          duel.defender.inDuel = false
+        }
+      }
+    
+      if (calculateMorale(battle.attacker) <= 0) {
+        delete this.world.groups[battle.attacker.id]
+        this.finishBattle(battle)
+      } else if (calculateMorale(battle.defender) <= 0) {
+        delete this.world.groups[battle.defender.id]
+        this.finishBattle(battle)
+      }
     }
+  }
+
+  
+
+  finishBattle(battle: Battle) {
+    this.updatePlayerVisibilities(battle.attacker.owner)
+    this.updatePlayerVisibilities(battle.defender.owner)
+    this.world.battles.splice(this.world.battles.indexOf(battle), 1)
   }
 
   checkForBattle(group: Group) {
@@ -132,11 +179,10 @@ export default class GameServer {
         group.owner !== otherGroup.owner &&
         group.id !== otherGroup.id
       ) {
-        if (
-          this.world.playerRelations[
-            PlayerRelation.hash(group.owner, otherGroup.owner)
-          ].relationType === PlayerRelation.EnumRelationType.hostile
-        ) {
+        const relation = this.world.playerRelations[
+          PlayerRelation.hash(group.owner, otherGroup.owner)
+        ]
+        if (!relation || relation.relationType === PlayerRelation.EnumRelationType.hostile) {
           this.world.battles.push(
             Battles.create(++this.world.idCounter, group.pos, group, otherGroup)
           )
@@ -225,7 +271,7 @@ export default class GameServer {
     let selection: number = data.selection
     let target = Hexes.create(data.target.q, data.target.r, data.target.s)
     const group = this.world.groups[selection]
-    if (uid === group.owner) {
+    if (uid === group?.owner) {
       let targetTile = this.world.tiles[Hexes.hash(target)]
       if (targetTile && isNavigable(targetTile)) {
         group.movementStatus = 0

@@ -7,7 +7,7 @@ import Player from "./player"
 export type UserId = string
 
 // World
-export interface World {
+export type World = {
   idCounter: number
   players: Hashtable<Player>
   tiles: Hashtable<Tile>
@@ -19,7 +19,7 @@ export interface World {
 }
 
 // Game Objects
-export interface GameObject {
+export type GameObject = {
   id: number
 }
 
@@ -44,23 +44,33 @@ export enum Biome {
 /**
  * Tile-Class representing one hex with all its relevant fields
  */
-export interface Tile extends GameObject {
+export type Tile = GameObject & {
   precipitation: number
   biome: Biome
   hex: Hex
   height: number
-  resources: Resources
+  resources: Partial<Resources>
   temperature: number
 }
 
-export interface Battle extends GameObject {
+export type Ownable = {
+  owner: UserId
+}
+
+export type Battle = GameObject & {
   attacker: Group
   defender: Group
   position: Hex
+  duels: Duel[]
 }
 
-export interface Building extends GameObject {
-  owner: UserId
+export type Duel = {
+  attacker: FightingUnit
+  defender: FightingUnit
+  over: boolean
+}
+
+export type Building = GameObject & Ownable & {
   position: Hex
   type: string
   level: number
@@ -69,19 +79,22 @@ export interface Building extends GameObject {
   resourceGeneration: Resources
 }
 
-export interface Group extends GameObject {
-  owner: string
+export type Group = GameObject & Ownable & {
   spotting: number
   targetHexes: Hex[]
   pos: Hex
   movementStatus: number
   units: Unit[]
-  resources: Resources
+  resources: Partial<Resources>
 }
 
-export interface Unit extends GameObject {
-  owner: UserId
+export type Unit = GameObject & Ownable & {
   name: string
+
+  //Status
+  morale: number
+  injuries: Injury[]
+  dead: boolean
 
   //Character Traits (Can only slightly be altered):
   //Leadership:
@@ -111,4 +124,34 @@ export interface Unit extends GameObject {
   //Experience:
   experience_theory: number
   experience_combat: number
+}
+
+export type Injury = {
+  bodyPart: BodyPart
+  severity: InjurySeverity
+}
+
+export enum BodyPart {
+  Head,
+  Torso,
+  LeftArm,
+  RightArm,
+  LeftLeg,
+  RightLeg,
+  LeftHand,
+  RightHand,
+  LeftFoot,
+  RightFoot,
+  LeftEye,
+  RightEye,
+}
+
+export enum InjurySeverity {
+  Light,
+  Medium,
+  Extreme,
+}
+
+export type FightingUnit = Unit & {
+  inDuel?: boolean
 }

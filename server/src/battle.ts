@@ -11,6 +11,7 @@ export function create(
     attacker: attacker,
     defender: defender,
     position: position,
+    duels: [],
     id: id,
   }
 }

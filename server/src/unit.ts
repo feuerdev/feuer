@@ -5,6 +5,9 @@ export function generateUnit(owner: string): Unit {
   let unit: Unit = {
     owner: owner,
     name: "",
+    morale: 100,
+    injuries: [],
+    dead: false,
     leadership: 0,
     courage: 0,
     tactics: 0,

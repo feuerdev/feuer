@@ -1,4 +1,4 @@
-export default interface Resources {
+export type Resources = {
   //building materials
   wood: number
   stone: number
@@ -22,7 +22,10 @@ export default interface Resources {
   horse: number
   ox: number
 }
-export function create(): Resources {
+
+export default Resources
+
+export function create(): Partial<Resources> {
   return {
     wood: 0,
     stone: 0,
