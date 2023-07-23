@@ -164,12 +164,10 @@ export default class GameServer {
     }
   }
 
-  
-
   finishBattle(battle: Battle) {
+    this.world.battles.splice(this.world.battles.indexOf(battle), 1)
     this.updatePlayerVisibilities(battle.attacker.owner)
     this.updatePlayerVisibilities(battle.defender.owner)
-    this.world.battles.splice(this.world.battles.indexOf(battle), 1)
   }
 
   checkForBattle(group: Group) {

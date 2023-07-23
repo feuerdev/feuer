@@ -110,10 +110,12 @@ export default class Renderer {
 
     this.viewport.dirty = true
   }
+
   removeItem(id: number) {
     const oldSprite = this.viewport.getChildByName(String(id)) as PIXI.Sprite
     this.viewport.removeChild(oldSprite)
     this.viewport.dirty = true
+  }
 
   updateScenegraphGroup(group: Group) {
     if (!this.initialFocusSet) {
@@ -173,8 +175,8 @@ export default class Renderer {
 
       object.zIndex = ZIndices.Tiles
       object.name = String(tile.id)
-      object.x = corners[3]!.x + padding //obere linke ecke
-      object.y = corners[3]!.y - this.layout.size.y / 2 + padding //obere linke ecke- halbe höhe
+      object.x = corners[3].x + padding //obere linke ecke
+      object.y = corners[3].y - this.layout.size.y / 2 + padding //obere linke ecke- halbe höhe
       object.width = this.layout.size.x * Math.sqrt(3) - padding
       object.height = this.layout.size.y * 2 + 1 - padding
     }
@@ -229,10 +231,10 @@ export default class Renderer {
     //Hash a random number between 0 and max based on the tile id (1 indexed)
     let texture: PIXI.Texture | null = null
     if (max === 1) {
-      texture = Loader.shared.resources[name]!.texture!
+      texture = Loader.shared.resources[name].texture
     } else {
       const hash = (Math.abs(tile.id) % max) + 1
-      texture = Loader.shared.resources[`${name}_${hash}`]!.texture!
+      texture = Loader.shared.resources[`${name}_${hash}`].texture
     }
 
     // Mirror the texture if id is even for more diversity
@@ -243,8 +245,12 @@ export default class Renderer {
     return texture
   }
 
-  getGroupSprite(_group: Group): PIXI.Texture {
-    return Loader.shared.resources["unit_scout_own"]!.texture!
+  getGroupSprite(group: Group): PIXI.Texture {
+    if(group.owner === window.game.uid) {
+      return Loader.shared.resources["unit_scout_own"].texture
+    } else {
+      return Loader.shared.resources["unit_scout_enemy"].texture
+    }
   }
 }
 
