@@ -110,6 +110,10 @@ export default class Renderer {
 
     this.viewport.dirty = true
   }
+  removeItem(id: number) {
+    const oldSprite = this.viewport.getChildByName(String(id)) as PIXI.Sprite
+    this.viewport.removeChild(oldSprite)
+    this.viewport.dirty = true
 
   updateScenegraphGroup(group: Group) {
     if (!this.initialFocusSet) {

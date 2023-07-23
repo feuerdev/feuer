@@ -56,13 +56,14 @@ export default class GameClass {
     EventBus.shared().on("gamestate groups", (data) => {
       const groups: Hashtable<Group> = data as unknown as Hashtable<Group>
       const newGroups: any = {}
+      const visitedOldGroups: Hashtable<boolean> = {}
 
       let needsTileUpdate = false
 
       // Merge groups
       Object.entries(groups).forEach(([id, receivedGroup]) => {
         const oldGroup = this.world.groups[id]
-
+        visitedOldGroups[id] = true
         // Check if group is new, has moved or upgraded
         // Redraw/request tiles accordingly
         if (
@@ -93,6 +94,14 @@ export default class GameClass {
         }
 
         newGroups[id] = receivedGroup
+      })
+
+      // Remove groups that are not in the new list
+      Object.entries(this.world.groups).forEach(([id, oldGroup]) => {
+        if (!visitedOldGroups[id]) {
+          this.renderer.removeItem(oldGroup.id)
+          needsTileUpdate = true
+        }
       })
 
       // Server is sending exhaustive list of groups, so client can clean his own list
