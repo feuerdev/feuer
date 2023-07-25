@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit"
-import selectionReducer from "./selection"
+import selectionReducer, { selectionSaga } from "./selection"
 import createSagaMiddleware from "redux-saga"
 import { all } from "redux-saga/effects"
 import { authSaga, authSlice } from "./auth"
@@ -21,5 +21,5 @@ export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch
 
 export function* rootSaga() {
-  yield all([authSaga()])
+  yield all([authSaga(), selectionSaga()])
 }

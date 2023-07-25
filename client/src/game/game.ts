@@ -115,6 +115,7 @@ export default class GameClass {
       if (this.selection.type === SelectionType.Group) {
         this.renderer.updateSelection(this.selection)
       }
+      store.dispatch({type:"REFRESH_SELECTION"})
     })
 
     EventBus.shared().on("gamestate battles", (detail) => {

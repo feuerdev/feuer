@@ -12,6 +12,9 @@ const Hud = () => {
   const selectionType = useAppSelector((state) => state.selection.type)
   const user = useAppSelector(selectUser)
 
+  // This is to force a re-render from outside events
+  useAppSelector((state) => state.selection.refresher)
+
   const dispatch = useAppDispatch()
 
   return (
@@ -30,12 +33,14 @@ const Hud = () => {
       >
         Logout
       </button>
-      {selectionType == SelectionType.Group && (
-        <GroupInfo selection={selection} />
-      )}
-      {selectionType == SelectionType.Tile && (
-        <TileInfo selection={selection} />
-      )}
+      <div id="bottom-bar" className="w-full h-1/5 bg-slate-900 fixed bottom-0">
+        {selectionType == SelectionType.Group && (
+          <GroupInfo selection={selection} />
+        )}
+        {selectionType == SelectionType.Tile && (
+          <TileInfo selection={selection} />
+        )}
+      </div>
     </div>
   )
 }
