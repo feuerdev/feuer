@@ -134,6 +134,7 @@ export default class GameClass {
       const hash = PlayerRelation.hash(relation.id1, relation.id2)
       this.world.playerRelations[hash] = relation
     })
+    this.registerEventListeners()
   }
 
   //#region Outgoing Messages

@@ -54,7 +54,6 @@ const Game = () => {
     const renderer = new Renderer()
     renderer.start()
     const game = new GameClass(user.uid, world, renderer)
-    game.registerEventListeners()
     window["game"] = game
 
     return () => {
