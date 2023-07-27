@@ -1,15 +1,12 @@
-import { getTileById } from "../../../shared/objectutil"
+import { Tile } from "../../../shared/objects"
 
-const TileInfo = ({ selection }: { selection: number }) => {
-  const tile = getTileById(selection, window.game.world.tiles)
-
+const TileInfo = ({ tile }: { tile: Tile }) => {
   if (!tile) {
     return <div>No tile selected</div>
   }
 
   return (
     <div>
-      <div>Selection: {selection}</div>
       <div>
         Position: {tile.hex.q}, {tile.hex.r}
       </div>

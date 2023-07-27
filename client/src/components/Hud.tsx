@@ -3,6 +3,7 @@ import { selectUser } from "../store/auth"
 import { SelectionType } from "../game/selection"
 import GroupInfo from "./GroupInfo"
 import TileInfo from "./TileInfo"
+import { getTileById } from "../../../shared/objectutil"
 
 const Hud = () => {
   const selection = useAppSelector((state) => state.selection.id)
@@ -31,10 +32,10 @@ const Hud = () => {
       </button>
       <div id="bottom-bar" className="w-full h-1/5 bg-slate-900 fixed bottom-0">
         {selectionType == SelectionType.Group && (
-          <GroupInfo selection={selection} />
+          <GroupInfo group={window.game.world.groups[selection]} />
         )}
         {selectionType == SelectionType.Tile && (
-          <TileInfo selection={selection} />
+          <TileInfo tile={getTileById(selection, window.game.world.tiles)} />
         )}
       </div>
     </div>

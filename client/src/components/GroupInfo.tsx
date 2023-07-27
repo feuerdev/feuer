@@ -2,7 +2,7 @@ import { Group } from "../../../shared/objects"
 import { TransferDirection, getTileByPos } from "../../../shared/objectutil"
 import EventBus from "../game/eventbus"
 
-const GroupInfo = ({ selection }: { selection: number }) => {
+const GroupInfo = ({ group }: { group: Group }) => {
 
   const requestRemoveUnit = (groupId: number, unitId: number) => {
     EventBus.shared().emitSocket("request unit remove", {
@@ -11,22 +11,24 @@ const GroupInfo = ({ selection }: { selection: number }) => {
     })
   }
 
-  const requestResourceTransfer = (group: Group, resource: string, direction: TransferDirection) => {
+  const requestResourceTransfer = (group: Group, resource: string, direction: TransferDirection, amount: number = 5) => {
     EventBus.shared().emitSocket("request transfer", {
       groupId: group.id,
       resource: resource,
-      amount: direction == TransferDirection.group ? -5 : 5,
+      amount: direction == TransferDirection.group ? -amount : amount,
     })
     EventBus.shared().emitSocket("request tiles", [group.pos])
   }
 
-  const group = window.game.world.groups[selection]
-
   if (!group) {
     return <div>No group selected</div>
   }
-  
-  const tile = getTileByPos(group?.pos, window.game.world.tiles)
+
+  const tile = getTileByPos(group.pos, window.game.world.tiles)
+
+  if(!tile) {
+    return <div>Group is not on a tile?</div>
+  }
   
   return (
       <div>
@@ -37,7 +39,7 @@ const GroupInfo = ({ selection }: { selection: number }) => {
             <div>Owner</div>
             <div>{group.owner == window.game.uid ? "You" : "Other Player"}</div>
             <div>Position</div>
-            <div>{JSON.stringify(group.pos)}</div>
+            <div>{group.pos.q}:{group.pos.r}</div>
             <div>Status</div>
             <div>{group.targetHexes?.length > 0 ? `Moving (${group.movementStatus.toFixed()} %)` : "Waiting"}</div>
             <div>Spotting</div>
@@ -64,7 +66,7 @@ const GroupInfo = ({ selection }: { selection: number }) => {
             <h2 className="col-span-3 text-xl text-right">Tile</h2>
             {Object.keys(group.resources)
               .filter((resourceKey) => {
-                return group.resources[resourceKey] > 0 || tile?.resources[resourceKey] > 0
+                return group.resources[resourceKey] > 0 || tile.resources[resourceKey] > 0
               })
               .map((resourceKey) => {
                 return [
