@@ -59,6 +59,7 @@ function* signInWithGoogleSaga() {
 }
 
 function* logoutSaga() {
+  yield put({type:"DISCONNECT"})
   const auth = getFirebaseAuth()
   yield put(setLoading(true))
   yield signOut(auth)

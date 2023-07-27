@@ -8,6 +8,7 @@ import { ClientTile } from "./objects"
 import { Biome, Group } from "../../../shared/objects"
 import Selection, { SelectionType } from "./selection"
 import { Filter, Loader } from "pixi.js"
+import Sprites from "../game/sprites.json"
 
 const HEX_SIZE = 40
 
@@ -20,6 +21,24 @@ enum ZIndices {
   BuildingsSelection = 5,
   Units = 6,
   UnitsSelection = 7,
+}
+
+export const loadTextures = () => {
+  let promise = new Promise<void>((resolve) => {
+    PIXI.utils.clearTextureCache()
+    Loader.shared.reset()
+    for (const sprite of Sprites) {
+      Loader.shared.add(sprite, `../img/${sprite}.png`)
+    }
+  
+    function onDone() {
+      resolve()
+    }
+  
+    Loader.shared.load(onDone)
+  })
+  
+  return promise
 }
 
 export default class Renderer {

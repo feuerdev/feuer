@@ -21,11 +21,12 @@ const GroupInfo = ({ selection }: { selection: number }) => {
   }
 
   const group = window.game.world.groups[selection]
-  const tile = getTileByPos(group.pos, window.game.world.tiles)
 
   if (!group) {
     return <div>No group selected</div>
   }
+  
+  const tile = getTileByPos(group?.pos, window.game.world.tiles)
   
   return (
       <div>
@@ -63,7 +64,7 @@ const GroupInfo = ({ selection }: { selection: number }) => {
             <h2 className="col-span-3 text-xl text-right">Tile</h2>
             {Object.keys(group.resources)
               .filter((resourceKey) => {
-                return group.resources[resourceKey] > 0 || tile.resources[resourceKey] > 0
+                return group.resources[resourceKey] > 0 || tile?.resources[resourceKey] > 0
               })
               .map((resourceKey) => {
                 return [
@@ -77,21 +78,6 @@ const GroupInfo = ({ selection }: { selection: number }) => {
           </div>
         </div>
       </div>
-    
-
-  //   <div>
-  //     <div>Selection: {selection}</div>
-  //     <div>Owner: {group.owner}</div>
-  //     <div>Spotting: {group.spotting}</div>
-  //     <div>Target Hexes: {group.targetHexes.length}</div>
-  //     <div>
-  //       Position: {group.pos.q}, {group.pos.r}
-  //     </div>
-  //     <div>Movement Status: {group.movementStatus}</div>
-  //     <div>Units: {group.units.length}</div>
-  //     <div>Resources: {JSON.stringify(group.resources)}</div>
-  //   </div>
-  // )
   )
 }
 
