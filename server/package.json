@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server/src/main.js",
-    "dev": "npx ts-node-dev src/main"
+    "dev": "npx ts-node-dev src/main",
+    "prettier": "prettier -w ."
   },
   "repository": {
     "type": "git",

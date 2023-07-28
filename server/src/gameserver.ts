@@ -8,14 +8,29 @@ import { Hashtable } from "../../shared/util"
 import Hex from "../../shared/hex"
 import * as Hexes from "../../shared/hex"
 import Config from "./util/environment"
-import { Building, Group, World, Tile, Biome, FightingUnit } from "../../shared/objects"
+import {
+  Building,
+  Group,
+  World,
+  Tile,
+  Biome,
+  FightingUnit,
+} from "../../shared/objects"
 import * as PlayerRelation from "../../shared/relation"
 import { Battle } from "../../shared/objects"
 import * as Battles from "./battle"
 import { createGroup } from "./group"
 import { createBuilding, upgradeBuilding } from "./building"
 import { EnumRelationType } from "../../shared/relation"
-import { applyAttackResult, calculateAttack, calculateInitiative, calculateMorale, hasFled, isDead, isNavigable } from "../../shared/objectutil"
+import {
+  applyAttackResult,
+  calculateAttack,
+  calculateInitiative,
+  calculateMorale,
+  hasFled,
+  isDead,
+  isNavigable,
+} from "../../shared/objectutil"
 
 export default class GameServer {
   private socketplayer: {} = {}
@@ -128,10 +143,10 @@ export default class GameServer {
           attacker: unit,
           defender: opponent,
           over: false,
-        });
+        })
 
-        (unit as FightingUnit).inDuel = true;
-        (opponent as FightingUnit).inDuel = true;        
+        ;(unit as FightingUnit).inDuel = true
+        ;(opponent as FightingUnit).inDuel = true
       }
 
       // Calculate duels
@@ -139,7 +154,7 @@ export default class GameServer {
         const attacker = duel.attacker as FightingUnit
         const defender = duel.defender as FightingUnit
 
-        if(calculateInitiative(attacker) > calculateInitiative(defender)) {
+        if (calculateInitiative(attacker) > calculateInitiative(defender)) {
           const attackResult = calculateAttack(attacker, defender)
           duel.defender = applyAttackResult(defender, attackResult)
         } else {
@@ -147,13 +162,18 @@ export default class GameServer {
           duel.attacker = applyAttackResult(attacker, attackResult)
         }
 
-        if (isDead(duel.attacker) || hasFled(duel.attacker) || isDead(duel.defender) || hasFled(duel.defender)) {
+        if (
+          isDead(duel.attacker) ||
+          hasFled(duel.attacker) ||
+          isDead(duel.defender) ||
+          hasFled(duel.defender)
+        ) {
           duel.over = true
           duel.attacker.inDuel = false
           duel.defender.inDuel = false
         }
       }
-    
+
       if (calculateMorale(battle.attacker) <= 0) {
         delete this.world.groups[battle.attacker.id]
         this.finishBattle(battle)
@@ -177,10 +197,14 @@ export default class GameServer {
         group.owner !== otherGroup.owner &&
         group.id !== otherGroup.id
       ) {
-        const relation = this.world.playerRelations[
-          PlayerRelation.hash(group.owner, otherGroup.owner)
-        ]
-        if (!relation || relation.relationType === PlayerRelation.EnumRelationType.hostile) {
+        const relation =
+          this.world.playerRelations[
+            PlayerRelation.hash(group.owner, otherGroup.owner)
+          ]
+        if (
+          !relation ||
+          relation.relationType === PlayerRelation.EnumRelationType.hostile
+        ) {
           this.world.battles.push(
             Battles.create(++this.world.idCounter, group.pos, group, otherGroup)
           )
