@@ -1,0 +1,79 @@
+{
+  "campsite": {
+    "key": "campsite",
+    "name": "Campsite",
+    "texture": "town_center",
+    "hp": 100,
+    "cost": {
+      "Wood": 100
+    },
+    "spotting": 20,
+    "production": {
+      "Berries": 1,
+      "Wood": 1
+    }
+  },
+  "towncenter": {
+    "key": "towncenter",
+    "name": "Town Center",
+    "texture": "town_center",
+    "hp": 500,
+    "spotting": 2,
+    "cost": {
+      "Wood": 300
+    },
+    "production": {
+      "Berries": 10,
+      "Wood": 10
+    }
+  },
+  "wood": {
+    "key": "wood",
+    "name": "Forester Hut",
+    "texture": "forester_hut",
+    "hp": 100,
+    "cost": {
+      "Wood": 100
+    },
+    "production": {
+      "Wood": 100
+    }
+  },
+  "stone": {
+    "key": "stone",
+    "name": "Quarry Hut",
+    "texture": "mine",
+    "hp": 100,
+    "cost": {
+      "Wood": 100,
+      "Gold": 100
+    },
+    "production": {
+      "Stone": 100
+    }
+  },
+  "iron": {
+    "key": "iron",
+    "name": "Iron Hut",
+    "texture": "mine",
+    "hp": 100,
+    "cost": {
+      "Wood": 100
+    },
+    "production": {
+      "Iron": 100
+    }
+  },
+  "gold": {
+    "key": "gold",
+    "name": "Gold Hut",
+    "texture": "mine",
+    "hp": 100,
+    "cost": {
+      "Wood": 100
+    },
+    "production": {
+      "Gold": 100
+    }
+  }
+}

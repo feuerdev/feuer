@@ -1,7 +1,7 @@
 import Player from "../../shared/player"
 
 import Log from "./util/log"
-import * as Rules from "../../shared/rules.json"
+import Buildings from "../../shared/templates/buildings.json"
 import { astar } from "../../shared/pathfinding"
 import { Socket } from "socket.io"
 import { Hashtable } from "../../shared/util"
@@ -15,12 +15,13 @@ import {
   Tile,
   Biome,
   FightingUnit,
+  TBuildingTemplate,
 } from "../../shared/objects"
 import * as PlayerRelation from "../../shared/relation"
 import { Battle } from "../../shared/objects"
 import * as Battles from "./battle"
 import { createGroup } from "./group"
-import { createBuilding, upgradeBuilding } from "./building"
+import { createBuilding } from "./building"
 import { EnumRelationType } from "../../shared/relation"
 import {
   applyAttackResult,
@@ -31,6 +32,7 @@ import {
   isDead,
   isNavigable,
 } from "../../shared/objectutil"
+import Resources from "../../shared/resources"
 
 export default class GameServer {
   private socketplayer: {} = {}
@@ -115,8 +117,8 @@ export default class GameServer {
     //Resource Gathering
     for (let building of this.world.buildings) {
       let tile = this.world.tiles[Hexes.hash(building.position)]
-      for (let res of Object.keys(building.resourceGeneration)) {
-        tile.resources[res] += building.resourceGeneration[res] * deltaFactor
+      for (let res of Object.keys(building.production)) {
+        tile.resources[res] += building.production[res] * deltaFactor
       }
     }
 
@@ -407,20 +409,20 @@ export default class GameServer {
     }
   }
 
-  onRequestUpgrade(socket: Socket, data) {
-    const uid = this.getPlayerUid(socket.id)
-    if (!uid) {
-      return
-    }
-    let buildingToUpgrade = this.world.buildings.find((building) => {
-      return building.id === data.buildingId && building.owner === uid
-    })
-    if (buildingToUpgrade) {
-      //TODO: Check if has enogh money here and reduct money
-      upgradeBuilding(buildingToUpgrade)
-      this.updatePlayerVisibilities(uid)
-    }
-  }
+  // onRequestUpgrade(socket: Socket, data) {
+  //   const uid = this.getPlayerUid(socket.id)
+  //   if (!uid) {
+  //     return
+  //   }
+  //   let buildingToUpgrade = this.world.buildings.find((building) => {
+  //     return building.id === data.buildingId && building.owner === uid
+  //   })
+  //   if (buildingToUpgrade) {
+  //     //TODO: Check if has enogh money here and reduct money
+  //     upgradeBuilding(buildingToUpgrade)
+  //     this.updatePlayerVisibilities(uid)
+  //   }
+  // }
 
   onRequestDisband(socket: Socket, data) {
     let uid = this.getPlayerUid(socket.id)
@@ -542,11 +544,14 @@ export default class GameServer {
    * @param name of building
    */
   private isAllowedToBuild(tile: Tile, uid: string, type: string): boolean {
-    let object = Rules.buildings[type]
+    let object = Buildings[type] as TBuildingTemplate
+    if (!object) {
+      Log.warn(`Building '${type}' not found`)
+      return false
+    }
 
     return (
-      this.hasResources(tile, object.levels[0].cost) &&
-      this.hasPresence(tile.hex, uid)
+      this.hasResources(tile, object.cost) && this.hasPresence(tile.hex, uid)
     )
   }
 
@@ -593,7 +598,7 @@ export default class GameServer {
    * @param tile
    * @param object
    */
-  private hasResources(tile: Tile, cost: any): boolean {
+  private hasResources(tile: Tile, cost: Partial<Resources>): boolean {
     for (let resource of Object.keys(cost)) {
       if (
         !tile.resources[resource] ||

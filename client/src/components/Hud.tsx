@@ -30,7 +30,10 @@ const Hud = () => {
       >
         Logout
       </button>
-      <div id="bottom-bar" className="w-full h-1/5 bg-slate-900 fixed bottom-0">
+      <div
+        id="bottom-bar"
+        className="w-full h-1/5 bg-slate-900 fixed bottom-0 overflow-y-scroll "
+      >
         {selectionType == SelectionType.Group && (
           <GroupInfo group={window.game.world.groups[selection]} />
         )}

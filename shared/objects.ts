@@ -70,61 +70,64 @@ export type Duel = {
   over: boolean
 }
 
-export type Building = GameObject & Ownable & {
-  position: Hex
-  type: string
-  level: number
-  spotting: number
-  hp: number
-  resourceGeneration: Resources
-}
+export type Building = GameObject &
+  Ownable & {
+    position: Hex
+    key: string
+    level: number
+    spotting: number
+    hp: number
+    production: Resources
+  }
 
-export type Group = GameObject & Ownable & {
-  spotting: number
-  targetHexes: Hex[]
-  pos: Hex
-  movementStatus: number
-  units: Unit[]
-  resources: Partial<Resources>
-}
+export type Group = GameObject &
+  Ownable & {
+    spotting: number
+    targetHexes: Hex[]
+    pos: Hex
+    movementStatus: number
+    units: Unit[]
+    resources: Partial<Resources>
+  }
 
-export type Unit = GameObject & Ownable & {
-  name: string
+export type Unit = GameObject &
+  Ownable & {
+    name: string
 
-  //Status
-  morale: number
-  injuries: Injury[]
-  dead: boolean
+    //Status
+    morale: number
+    injuries: Injury[]
+    dead: boolean
 
-  //Character Traits (Can only slightly be altered):
-  //Leadership:
-  leadership: number
-  courage: number
-  tactics: number
-  teacher: number
+    //Character Traits (Can only slightly be altered):
+    //Leadership:
+    leadership: number
+    courage: number
+    tactics: number
+    teacher: number
 
-  //Personal:
-  agressiveness: number
+    //Personal:
+    agressiveness: number
 
-  //Physical:
-  height: number
-  weight: number
+    //Physical:
+    height: number
+    weight: number
 
-  //Character Skills (Can be trained):
-  //Combat:
-  sword: number
-  spear: number
-  bow: number
-  dodging: number
+    //Character Skills (Can be trained):
+    //Combat:
+    sword: number
+    spear: number
+    bow: number
+    dodging: number
 
-  //Physical:
-  strength: number
-  endurance: number
+    //Physical:
+    strength: number
+    endurance: number
 
-  //Experience:
-  experience_theory: number
-  experience_combat: number
-}
+    //Experience:
+    experience_theory: number
+    experience_combat: number
+  }
 
 export type Injury = {
   bodyPart: BodyPart
@@ -154,4 +157,13 @@ export enum InjurySeverity {
 
 export type FightingUnit = Unit & {
   inDuel?: boolean
+}
+
+export type TBuildingTemplate = {
+  key: string
+  name: string
+  texture: string
+  cost: Partial<Resources>
+  spotting: number
+  production: Partial<Resources>
 }

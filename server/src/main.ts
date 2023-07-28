@@ -69,7 +69,7 @@ io.on("connection", async (socket) => {
   socket.on("request unit remove", (data) =>
     game.onRequestUnitRemove(socket, data)
   )
-  socket.on("request upgrade", (data) => game.onRequestUpgrade(socket, data))
+  // socket.on("request upgrade", (data) => game.onRequestUpgrade(socket, data))
   socket.on("request demolish", (data) => game.onRequestDemolish(socket, data))
 })
 

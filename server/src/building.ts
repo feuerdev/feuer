@@ -1,45 +1,46 @@
 import Hex from "../../shared/hex"
-import * as Rules from "../../shared/rules.json"
 import { Building } from "../../shared/objects"
 import Resources from "../../shared/resources"
+import Buildings from "../../shared/templates/buildings.json"
 
 export function createBuilding(
   id: number,
   owner: string,
-  name: string,
+  key: string,
   pos: Hex
 ): Building {
-  const template = Rules.buildings[name].levels[0]
+  const template = Buildings[key]
   const building: Building = {
     owner: owner,
     position: pos,
-    type: name,
+    key: key,
     level: 0,
     spotting: template.spotting,
     hp: template.hp,
-    resourceGeneration: loadResourceObject(template.resource_generation),
+    production: loadResourceObject(template.production),
     id: id,
   }
   return building
 }
+
 //TODO: handle can't upgrade
-export function upgradeBuilding(building: Building): Building {
-  let template = Rules.buildings[building.type]
-  if (template.levels.length >= building.level + 1) {
-    let newTemplate = Rules.buildings[building.type].levels[building.level]
-    return {
-      owner: building.owner,
-      position: building.position,
-      type: building.type,
-      level: building.level++,
-      spotting: newTemplate.spotting,
-      hp: newTemplate.hp,
-      resourceGeneration: loadResourceObject(newTemplate.resource_generation),
-      id: building.id,
-    }
-  }
-  return building
-}
+// export function upgradeBuilding(building: Building): Building {
+//   let template = Buildings[building.type]
+//   if (template.levels.length >= building.level + 1) {
+//     let newTemplate = Buildings[building.type].levels[building.level]
+//     return {
+//       owner: building.owner,
+//       position: building.position,
+//       type: building.type,
+//       level: building.level++,
+//       spotting: newTemplate.spotting,
+//       hp: newTemplate.hp,
+//       production: loadResourceObject(newTemplate.production),
+//       id: building.id,
+//     }
+//   }
+//   return building
+// }
 
 function loadResourceObject(template): Resources {
   let result = {}
