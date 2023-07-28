@@ -8,9 +8,9 @@ export const connect = (idToken: string) => {
   disconnect()
 
   socket = io(import.meta.env.VITE_SERVER_URL, {
-      auth: { token: idToken },
-      autoConnect: false,
-    })
+    auth: { token: idToken },
+    autoConnect: false,
+  })
 
   // Propagate any events
   socket.onAny((eventName: string, data: any) => {
@@ -19,17 +19,17 @@ export const connect = (idToken: string) => {
   })
   socket.on("connect", () => {
     console.log("socket connection established")
-    store.dispatch({type: "SOCKET_CONNECTION_ESTABLISHED"})
+    store.dispatch({ type: "SOCKET_CONNECTION_ESTABLISHED" })
   })
   socket.on("disconnect", (reason) => {
     console.log("DEBUG: socket got disconnected:", reason)
-    store.dispatch({type: "SOCKET_CONNECTION_DISCONNECTED"})
+    store.dispatch({ type: "SOCKET_CONNECTION_DISCONNECTED" })
   })
-  
+
   socket.connect()
 }
 
 export const disconnect = () => {
   socket?.offAny()
-  socket?.disconnect()  
+  socket?.disconnect()
 }

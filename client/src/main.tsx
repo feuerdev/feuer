@@ -24,7 +24,7 @@ const App = () => {
     dispatch({ type: "LOAD_TEXTURES" })
   }, [])
 
-  if (loadingAuth  || !texturesLoaded || (user && !socketConnected)) {
+  if (loadingAuth || !texturesLoaded || (user && !socketConnected)) {
     return <Loading />
   }
 

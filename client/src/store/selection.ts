@@ -1,6 +1,6 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit"
 import { SelectionType } from "../game/selection"
-import { put, takeEvery } from "redux-saga/effects";
+import { put, takeEvery } from "redux-saga/effects"
 
 export const selectionSlice = createSlice({
   name: "selection",
@@ -23,7 +23,7 @@ export const selectionSlice = createSlice({
     },
     refresh: (state) => {
       state.refresher += 1
-    }
+    },
   },
 })
 

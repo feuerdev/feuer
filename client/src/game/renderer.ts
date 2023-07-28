@@ -30,14 +30,14 @@ export const loadTextures = () => {
     for (const sprite of Sprites) {
       Loader.shared.add(sprite, `../img/${sprite}.png`)
     }
-  
+
     function onDone() {
       resolve()
     }
-  
+
     Loader.shared.load(onDone)
   })
-  
+
   return promise
 }
 
@@ -265,7 +265,7 @@ export default class Renderer {
   }
 
   getGroupSprite(group: Group): PIXI.Texture {
-    if(group.owner === window.game.uid) {
+    if (group.owner === window.game.uid) {
       return Loader.shared.resources["unit_scout_own"].texture
     } else {
       return Loader.shared.resources["unit_scout_enemy"].texture

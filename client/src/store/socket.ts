@@ -1,9 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit"
-import { put, takeEvery } from "redux-saga/effects";
-import { RootState } from "./store";
-import { setIdToken } from "./auth";
-import { appSelect } from "./hooks";
-import { connect, disconnect } from "../game/socket";
+import { put, takeEvery } from "redux-saga/effects"
+import { RootState } from "./store"
+import { setIdToken } from "./auth"
+import { appSelect } from "./hooks"
+import { connect, disconnect } from "../game/socket"
 
 export const socketSlice = createSlice({
   name: "socket",
@@ -11,8 +11,12 @@ export const socketSlice = createSlice({
     connected: false,
   },
   reducers: {
-    setConnected: (state) => { state.connected = true},
-    setDisconnected: (state) => { state.connected = false},
+    setConnected: (state) => {
+      state.connected = true
+    },
+    setDisconnected: (state) => {
+      state.connected = false
+    },
   },
 })
 
@@ -22,22 +26,22 @@ export const selectConnected = (state: RootState) => state.socket.connected
 export default socketSlice.reducer
 
 function* connectSocket() {
-    const idToken = yield appSelect(state => state.auth.idToken)
-    if(idToken) {
-        connect(idToken)
-    }
+  const idToken = yield appSelect((state) => state.auth.idToken)
+  if (idToken) {
+    connect(idToken)
+  }
 }
 
 function* disconnectSocket() {
-    yield disconnect()
+  yield disconnect()
 }
 
 function* setConnectedSaga() {
-    yield put(setConnected())
+  yield put(setConnected())
 }
 
 function* setDisconnectedSaga() {
-    yield put(setDisconnected())
+  yield put(setDisconnected())
 }
 
 export function* socketSaga() {

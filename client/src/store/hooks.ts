@@ -6,4 +6,8 @@ type DispatchFunc = () => AppDispatch
 
 export const useAppDispatch: DispatchFunc = useDispatch
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector
-export function* appSelect<TSelected>( selector: (state: RootState) => TSelected, ): Generator<any, TSelected, TSelected> { return yield select(selector); }
+export function* appSelect<TSelected>(
+  selector: (state: RootState) => TSelected
+): Generator<any, TSelected, TSelected> {
+  return yield select(selector)
+}

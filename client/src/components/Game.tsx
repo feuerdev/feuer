@@ -9,7 +9,7 @@ import { socket } from "../game/socket"
 
 const Game = () => {
   const user = useAppSelector(selectUser)
-  
+
   // Launch game
   useEffect(() => {
     const token = PubSub.subscribe("game request", (_, data) => {
@@ -35,7 +35,6 @@ const Game = () => {
       PubSub.unsubscribe(token)
       PubSub.clearAllSubscriptions()
     }
-
   }, [])
 
   return (

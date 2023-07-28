@@ -13,7 +13,7 @@ export const store = configureStore({
     selection: selectionReducer,
     auth: authSlice.reducer,
     socket: socketSlice.reducer,
-    game: gameSlice.reducer
+    game: gameSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }).concat(middleware),
