@@ -144,7 +144,6 @@ export default class GameServer {
           defender: opponent,
           over: false,
         })
-
         ;(unit as FightingUnit).inDuel = true
         ;(opponent as FightingUnit).inDuel = true
       }
