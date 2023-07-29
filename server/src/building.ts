@@ -14,9 +14,7 @@ export function createBuilding(
     owner: owner,
     position: pos,
     key: key,
-    level: 0,
     spotting: template.spotting,
-    hp: template.hp,
     production: loadResourceObject(template.production),
     id: id,
   }

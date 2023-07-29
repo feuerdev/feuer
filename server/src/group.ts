@@ -2,13 +2,14 @@ import { Group } from "../../shared/objects"
 import Hex from "../../shared/hex"
 import * as Rules from "../../shared/rules.json"
 import { generateUnit } from "./unit"
-import { create } from "../../shared/resources"
+import Resources from "../../shared/resources"
 
 export function createGroup(
   id: number,
   owner: string,
   name: string,
-  pos: Hex
+  pos: Hex,
+  resources: Partial<Resources> = {}
 ): Group {
   const template = Rules.units[name]
   const group: Group = {
@@ -18,7 +19,7 @@ export function createGroup(
     pos: pos,
     movementStatus: 0,
     units: [],
-    resources: create(),
+    resources: resources,
     id: id,
   }
   group.pos = pos

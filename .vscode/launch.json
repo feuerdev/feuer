@@ -10,7 +10,7 @@
     {
       "type": "chrome",
       "request": "launch",
-      "name": "Debug client",
+      "name": "Debug Client",
       "url": "http://localhost:5173",
       "webRoot": "${workspaceFolder}/client",
       "preLaunchTask": "npm: dev - client"

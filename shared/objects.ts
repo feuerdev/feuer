@@ -13,7 +13,7 @@ export type World = {
   tiles: Hashtable<Tile>
   groups: Hashtable<Group>
   units: Unit[]
-  buildings: Building[]
+  buildings: Hashtable<Building>
   playerRelations: Hashtable<PlayerRelation>
   battles: Battle[]
 }
@@ -74,9 +74,7 @@ export type Building = GameObject &
   Ownable & {
     position: Hex
     key: string
-    level: number
     spotting: number
-    hp: number
     production: Resources
   }
 

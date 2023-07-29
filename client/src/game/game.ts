@@ -51,6 +51,8 @@ export default class GameClass {
           this.renderer.updateScenegraphTile(cTile)
         }
       })
+
+      store.dispatch({ type: "REFRESH_SELECTION" })
     })
 
     EventBus.shared().on("gamestate groups", (data) => {
@@ -61,9 +63,9 @@ export default class GameClass {
       let needsTileUpdate = false
 
       // Merge groups
-      Object.entries(groups).forEach(([id, receivedGroup]) => {
-        const oldGroup = this.world.groups[id]
-        visitedOldGroups[id] = true
+      Object.values(groups).forEach((receivedGroup) => {
+        const oldGroup = this.world.groups[receivedGroup.id]
+        visitedOldGroups[receivedGroup.id] = true
         // Check if group is new, has moved or upgraded
         // Redraw/request tiles accordingly
         if (
@@ -93,7 +95,7 @@ export default class GameClass {
           )
         }
 
-        newGroups[id] = receivedGroup
+        newGroups[receivedGroup.id] = receivedGroup
       })
 
       // Remove groups that are not in the new list
@@ -124,8 +126,68 @@ export default class GameClass {
     })
 
     EventBus.shared().on("gamestate buildings", (detail) => {
-      const buildings: Building[] = detail as unknown as Building[]
-      this.world.buildings = buildings
+      const buildings: Hashtable<Building> =
+        detail as unknown as Hashtable<Building>
+      const newBuildings: Hashtable<Building> = {}
+      const visitedOldBuildings: Hashtable<boolean> = {}
+
+      let needsTileUpdate = false
+
+      // Merge buildings
+      Object.values(buildings).forEach((receivedBuilding) => {
+        const oldBuilding = this.world.buildings[receivedBuilding.id]
+        visitedOldBuildings[receivedBuilding.id] = true
+        // Check if Building is new or upgraded
+        // Redraw/request tiles accordingly
+        if (
+          !oldBuilding ||
+          oldBuilding.spotting !== receivedBuilding.spotting
+        ) {
+          this.renderer.updateScenegraphBuilding(receivedBuilding)
+          needsTileUpdate = true
+        }
+
+        // If building is new and foreign, request relation
+        if (
+          !oldBuilding &&
+          receivedBuilding.owner !== this.uid &&
+          this.world.playerRelations[
+            PlayerRelation.hash(receivedBuilding.owner, this.uid)
+          ] === undefined
+        ) {
+          window.dispatchEvent(
+            new CustomEvent("request relation", {
+              detail: {
+                id1: receivedBuilding.owner,
+                id2: this.uid,
+              },
+            })
+          )
+        }
+
+        newBuildings[receivedBuilding.id] = receivedBuilding
+      })
+
+      // Remove buildings that are not in the new list
+      Object.entries(this.world.buildings).forEach(([id, oldBuilding]) => {
+        if (!visitedOldBuildings[id]) {
+          this.renderer.removeItem(oldBuilding.id)
+          needsTileUpdate = true
+        }
+      })
+
+      // Server is sending exhaustive list of buildings, so client can clean his own list
+      this.world.buildings = newBuildings
+
+      if (needsTileUpdate) {
+        this.requestTiles()
+      }
+
+      //Update the selection if a building is selected (it might have updated)
+      if (this.selection.type === SelectionType.Building) {
+        this.renderer.updateSelection(this.selection)
+      }
+      store.dispatch({ type: "REFRESH_SELECTION" })
     })
 
     EventBus.shared().on("gamestate relation", (detail) => {
@@ -263,9 +325,7 @@ export default class GameClass {
         break
       }
 
-      const building = this.world.buildings.find(
-        (building) => building.id === Number(sprite.name)
-      )
+      const building = this.world.buildings[sprite.name]
       if (building) {
         this.selection.selectBuilding(building.id)
         break

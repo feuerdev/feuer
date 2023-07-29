@@ -5,10 +5,11 @@ import Hex, { Layout } from "../../../shared/hex"
 import * as Vector2 from "../../../shared/vector2"
 import Rules from "../../../shared/rules.json"
 import { ClientTile } from "./objects"
-import { Biome, Group } from "../../../shared/objects"
+import { Biome, Building, Group } from "../../../shared/objects"
 import Selection, { SelectionType } from "./selection"
 import { Filter, Loader } from "pixi.js"
 import Sprites from "../game/sprites.json"
+import Buildings from "../../../shared/templates/buildings.json"
 
 const HEX_SIZE = 40
 
@@ -182,6 +183,23 @@ export default class Renderer {
     }
   }
 
+  updateScenegraphBuilding(building: Building) {
+    this.viewport.dirty = true
+    let object = this.viewport.getChildByName(
+      String(building.id)
+    ) as PIXI.Sprite
+    if (!object) {
+      object = new PIXI.Sprite(this.getBuildingSprite(building))
+      object.name = String(building.id)
+      object.scale = new PIXI.Point(0.5, 0.5)
+      this.viewport.addChild(object)
+    }
+
+    object.x = this.layout.hexToPixel(building.position).x - HEX_SIZE / 3 + 5
+    object.y = this.layout.hexToPixel(building.position).y + HEX_SIZE / 3 - 5
+    object.zIndex = ZIndices.Buildings
+  }
+
   updateScenegraphTile(tile: ClientTile) {
     this.viewport.dirty = true
     let object = this.viewport.getChildByName(String(tile.id)) as PIXI.Sprite
@@ -257,10 +275,25 @@ export default class Renderer {
     }
 
     // Mirror the texture if id is even for more diversity
-    // if (Math.abs(tile.hex.s) % 2 === 1) {
-    //   texture = new PIXI.Texture(texture.baseTexture, texture.frame, texture.orig, texture.trim, 12)
-    // }
+    if (Math.abs(tile.hex.s) % 2 === 1) {
+      texture = new PIXI.Texture(
+        texture.baseTexture,
+        texture.frame,
+        texture.orig,
+        texture.trim,
+        12
+      )
+    }
 
+    return texture
+  }
+
+  getBuildingSprite(building: Building): PIXI.Texture {
+    const texture =
+      Loader.shared.resources[Buildings[building.key].texture]?.texture
+    if (!texture) {
+      console.warn("No texture found for building", building.key)
+    }
     return texture
   }
 

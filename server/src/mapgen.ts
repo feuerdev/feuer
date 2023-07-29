@@ -6,7 +6,6 @@ import * as Worlds from "./world"
 import Hex, * as Hexes from "../../shared/hex"
 import * as Rules from "../../shared/rules.json"
 import { astar } from "../../shared/pathfinding"
-import { create } from "../../shared/resources"
 import { getNextId } from "./main"
 
 export function generateWorld(
@@ -349,7 +348,7 @@ function firstIteration(size: number): Hashtable<Tile> {
         biome: Biome.None,
         hex: hex,
         height: 0,
-        resources: create(),
+        resources: {},
         temperature: 0,
         id: getNextId(),
       }

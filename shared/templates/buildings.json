@@ -5,12 +5,12 @@
     "texture": "town_center",
     "hp": 100,
     "cost": {
-      "Wood": 100
+      "wood": 100
     },
     "spotting": 20,
     "production": {
       "Berries": 1,
-      "Wood": 1
+      "wood": 1
     }
   },
   "towncenter": {
@@ -20,11 +20,11 @@
     "hp": 500,
     "spotting": 2,
     "cost": {
-      "Wood": 300
+      "wood": 300
     },
     "production": {
       "Berries": 10,
-      "Wood": 10
+      "wood": 10
     }
   },
   "wood": {
@@ -33,10 +33,10 @@
     "texture": "forester_hut",
     "hp": 100,
     "cost": {
-      "Wood": 100
+      "wood": 100
     },
     "production": {
-      "Wood": 100
+      "wood": 100
     }
   },
   "stone": {
@@ -45,11 +45,11 @@
     "texture": "mine",
     "hp": 100,
     "cost": {
-      "Wood": 100,
-      "Gold": 100
+      "wood": 100,
+      "gold": 100
     },
     "production": {
-      "Stone": 100
+      "stone": 100
     }
   },
   "iron": {
@@ -58,10 +58,10 @@
     "texture": "mine",
     "hp": 100,
     "cost": {
-      "Wood": 100
+      "wood": 100
     },
     "production": {
-      "Iron": 100
+      "iron": 100
     }
   },
   "gold": {
@@ -70,10 +70,10 @@
     "texture": "mine",
     "hp": 100,
     "cost": {
-      "Wood": 100
+      "wood": 100
     },
     "production": {
-      "Gold": 100
+      "gold": 100
     }
   }
 }

@@ -8,7 +8,7 @@ export function create(tiles: Hashtable<Tile>): World {
     tiles: tiles,
     groups: {},
     units: [],
-    buildings: [],
+    buildings: {},
     playerRelations: {},
     battles: [],
   }

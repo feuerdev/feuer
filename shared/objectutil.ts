@@ -1,6 +1,15 @@
 import { Hashtable } from "./util"
-import { Biome, BodyPart, FightingUnit, Group, Injury, InjurySeverity, Tile } from "./objects"
+import {
+  Biome,
+  BodyPart,
+  FightingUnit,
+  Group,
+  Injury,
+  InjurySeverity,
+  Tile,
+} from "./objects"
 import Hex, { hash } from "./hex"
+import Resources from "./resources"
 
 export function getTileByPos(pos: Hex, tiles: Hashtable<Tile>) {
   return tiles[hash(pos)]
@@ -21,9 +30,9 @@ export function isNavigable(tile: Tile): boolean {
     case Biome.Ocean:
     case Biome.Shore:
     case Biome.River:
-    return false
+      return false
     default:
-    return true
+      return true
   }
 }
 
@@ -40,7 +49,10 @@ export function hasFled(unit: FightingUnit): boolean {
   return unit.morale <= 0
 }
 
-export function applyAttackResult(unit: FightingUnit, result: AttackResult): FightingUnit {
+export function applyAttackResult(
+  unit: FightingUnit,
+  result: AttackResult
+): FightingUnit {
   for (const injury of result.injuries) {
     unit.injuries.push(injury)
     unit.morale -= result.morale
@@ -48,8 +60,11 @@ export function applyAttackResult(unit: FightingUnit, result: AttackResult): Fig
   return unit
 }
 
-export function calculateAttack(_attacker: FightingUnit, _defender: FightingUnit): AttackResult {
-  if(Math.random() < 0.5) {
+export function calculateAttack(
+  _attacker: FightingUnit,
+  _defender: FightingUnit
+): AttackResult {
+  if (Math.random() < 0.5) {
     return {
       injuries: [],
       morale: 0,
@@ -57,16 +72,22 @@ export function calculateAttack(_attacker: FightingUnit, _defender: FightingUnit
   }
 
   // get a random bodypart
-  const bodypart = BodyPart[Math.floor(Math.random() * Object.keys(BodyPart).length / 2)]
+  const bodypart =
+    BodyPart[Math.floor((Math.random() * Object.keys(BodyPart).length) / 2)]
 
   // get a random severity
-  const severity = InjurySeverity[Math.floor(Math.random() * Object.keys(InjurySeverity).length / 2)]
+  const severity =
+    InjurySeverity[
+      Math.floor((Math.random() * Object.keys(InjurySeverity).length) / 2)
+    ]
 
   return {
-    injuries: [{
-      bodyPart: BodyPart[bodypart],
-      severity: InjurySeverity[severity],
-    }],
+    injuries: [
+      {
+        bodyPart: BodyPart[bodypart],
+        severity: InjurySeverity[severity],
+      },
+    ],
     morale: 50,
   }
 }
@@ -89,8 +110,14 @@ export function canFight(group: Group): boolean {
   group.units.filter((unit) => {
     return unit.dead === false
   })
-    
+
   return morale > 0
+}
+
+export function subtractResources(tile: Tile, resources: Partial<Resources>) {
+  for (const res of Object.keys(resources)) {
+    tile.resources[res] -= resources[res]
+  }
 }
 
 export enum TransferDirection {

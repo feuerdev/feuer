@@ -31,6 +31,7 @@ import {
   hasFled,
   isDead,
   isNavigable,
+  subtractResources,
 } from "../../shared/objectutil"
 import Resources from "../../shared/resources"
 
@@ -115,12 +116,12 @@ export default class GameServer {
     })
 
     //Resource Gathering
-    for (let building of this.world.buildings) {
+    Object.values(this.world.buildings).forEach((building) => {
       let tile = this.world.tiles[Hexes.hash(building.position)]
       for (let res of Object.keys(building.production)) {
         tile.resources[res] += building.production[res] * deltaFactor
       }
-    }
+    })
 
     //Battles
     let i = this.world.battles.length
@@ -257,7 +258,8 @@ export default class GameServer {
         ++this.world.idCounter,
         player.uid,
         "Scout",
-        pos
+        pos,
+        { wood: 100 }
       )
       this.world.groups[initialGroup.id] = initialGroup
 
@@ -315,7 +317,8 @@ export default class GameServer {
 
     if (this.isAllowedToBuild(tile, uid, data.type)) {
       let building = createBuilding(++this.world.idCounter, uid, data.type, pos)
-      this.world.buildings.push(building)
+      subtractResources(tile, Buildings[data.type].cost)
+      this.world.buildings[building.id] = building
       this.updatePlayerVisibilities(uid)
     }
   }
@@ -382,6 +385,15 @@ export default class GameServer {
       let tile = this.world.tiles[Hexes.hash(group.pos)]
       let amount = data.amount
       let resource = data.resource
+
+      if (!tile.resources[resource]) {
+        tile.resources[resource] = 0
+      }
+
+      if (!group.resources[resource]) {
+        group.resources[resource] = 0
+      }
+
       if (
         tile.resources[resource] + amount >= 0 &&
         group.resources[resource] - amount >= 0
@@ -397,14 +409,9 @@ export default class GameServer {
     if (!uid) {
       return
     }
-    let buildingToDemolish = this.world.buildings.find((building) => {
-      return building.id === data.buildingId && building.owner === uid
-    })
-    if (buildingToDemolish) {
-      this.world.buildings.splice(
-        this.world.buildings.indexOf(buildingToDemolish),
-        1
-      )
+    let buildingToDemolish = this.world.buildings[data.buildingId]
+    if (buildingToDemolish && buildingToDemolish.owner === uid) {
+      delete this.world.buildings[buildingToDemolish.id]
       this.updatePlayerVisibilities(uid)
     }
   }
@@ -473,7 +480,7 @@ export default class GameServer {
           this.addUniqueHexes(player.discoveredHexes, visible)
         }
       })
-      for (let building of this.world.buildings) {
+      Object.values(this.world.buildings).forEach((building) => {
         if (building.owner === uid) {
           let visible = Hexes.neighborsRange(
             building.position,
@@ -482,7 +489,7 @@ export default class GameServer {
           this.addUniqueHexes(player.visibleHexes, visible)
           this.addUniqueHexes(player.discoveredHexes, visible)
         }
-      }
+      })
     }
   }
 
@@ -530,9 +537,9 @@ export default class GameServer {
   private getVisibleBuildings(hexes: Hex[]): Building[] {
     let result: Building[] = []
     for (let hex of hexes) {
-      for (let building of this.world.buildings) {
+      Object.values(this.world.buildings).forEach((building) => {
         if (Hexes.equals(building.position, hex)) result.push(building)
-      }
+      })
     }
     return result
   }
@@ -576,12 +583,13 @@ export default class GameServer {
    * @param uid
    */
   private hasBuildingAt(pos: Hex, uid: string): boolean {
-    for (let building of this.world.buildings) {
+    let found = false
+    Object.values(this.world.buildings).forEach((building) => {
       if (Hexes.equals(building.position, pos) && building.owner === uid) {
-        return true
+        found = true
       }
-    }
-    return false
+    })
+    return found
   }
 
   /**
