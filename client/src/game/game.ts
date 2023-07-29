@@ -57,7 +57,7 @@ export default class GameClass {
 
     EventBus.shared().on("gamestate groups", (data) => {
       const groups: Hashtable<Group> = data as unknown as Hashtable<Group>
-      const newGroups: any = {}
+      const newGroups: Hashtable<Group> = {}
       const visitedOldGroups: Hashtable<boolean> = {}
 
       let needsTileUpdate = false

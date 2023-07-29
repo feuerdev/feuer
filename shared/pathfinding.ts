@@ -36,7 +36,7 @@ class PriorityQueue {
 
   public dequeue() {
     if (!this.isEmpty()) {
-      return this.items.shift().element
+      return this.items.shift()?.element
     } else return null
   }
 
