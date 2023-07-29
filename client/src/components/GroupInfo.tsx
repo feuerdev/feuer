@@ -1,6 +1,8 @@
+import { Resource } from "pixi.js"
 import { Group } from "../../../shared/objects"
 import { TransferDirection, getTileByPos } from "../../../shared/objectutil"
 import EventBus from "../game/eventbus"
+import ResourceInfo from "./ResourceInfo"
 
 const GroupInfo = ({ group }: { group: Group }) => {
   const requestRemoveUnit = (groupId: number, unitId: number) => {
@@ -8,21 +10,6 @@ const GroupInfo = ({ group }: { group: Group }) => {
       groupId: groupId,
       unitId: unitId,
     })
-  }
-
-  const requestResourceTransfer = (
-    group: Group,
-    resource: string,
-    direction: TransferDirection,
-    amount: number = 5
-  ) => {
-    EventBus.shared().emitSocket("request transfer", {
-      groupId: group.id,
-      resource: resource,
-      amount: direction == TransferDirection.group ? -amount : amount,
-    })
-    EventBus.shared().emitSocket("request tiles", [group.pos])
-    EventBus.shared().emitSocket("request group", group.id)
   }
 
   if (!group) {
@@ -74,46 +61,7 @@ const GroupInfo = ({ group }: { group: Group }) => {
           })}
         </div>
         {/* Resources Info */}
-        <div className="grid grid-cols-5 gap-1 border p-2">
-          <h2 className="col-span-2 text-xl">Resources</h2>
-          <h2 className="col-span-3 text-xl text-right">Tile</h2>
-          {Object.keys(group.resources)
-            .filter((resourceKey) => {
-              return (
-                group.resources[resourceKey] > 0 ||
-                tile.resources[resourceKey] > 0
-              )
-            })
-            .map((resourceKey) => {
-              return [
-                <div className="capitalized">{resourceKey}</div>,
-                <div>{group.resources[resourceKey] || 0}</div>,
-                <button
-                  onClick={() =>
-                    requestResourceTransfer(
-                      group,
-                      resourceKey,
-                      TransferDirection.group
-                    )
-                  }
-                >
-                  &lt;
-                </button>,
-                <button
-                  onClick={() =>
-                    requestResourceTransfer(
-                      group,
-                      resourceKey,
-                      TransferDirection.tile
-                    )
-                  }
-                >
-                  &gt;
-                </button>,
-                <div>{tile.resources[resourceKey] || 0}</div>,
-              ]
-            })}
-        </div>
+        <ResourceInfo group={group} tile={tile} />
       </div>
     </div>
   )
