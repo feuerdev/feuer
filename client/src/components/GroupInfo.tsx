@@ -22,6 +22,7 @@ const GroupInfo = ({ group }: { group: Group }) => {
       amount: direction == TransferDirection.group ? -amount : amount,
     })
     EventBus.shared().emitSocket("request tiles", [group.pos])
+    EventBus.shared().emitSocket("request group", group.id)
   }
 
   if (!group) {

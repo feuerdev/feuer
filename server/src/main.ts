@@ -58,6 +58,7 @@ io.on("connection", async (socket) => {
   game.onPlayerInitialize(socket, decodedToken?.uid)
   socket.on("disconnect", () => game.onPlayerDisconnected(socket))
   socket.on("request tiles", (data: Hex[]) => game.onRequestTiles(socket, data))
+  socket.on("request group", (id: number) => game.onRequestGroup(socket, id))
   socket.on("request movement", (data) => game.onRequestMovement(socket, data))
   socket.on("request construction", (data) =>
     game.onRequestConstruction(socket, data)

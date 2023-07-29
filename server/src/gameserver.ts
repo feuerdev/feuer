@@ -291,6 +291,17 @@ export default class GameServer {
     }
   }
 
+  /**
+   * Currently only used to request an update for your own group
+   */
+  onRequestGroup(socket: Socket, data: number) {
+    const player: Player = this.socketplayer[socket.id]
+    const group = this.world.groups[data]
+    if (player && group && player.uid === group.owner) {
+      socket.emit("gamestate group", group)
+    }
+  }
+
   onRequestMovement(socket: Socket, data: any) {
     let uid = this.getPlayerUid(socket.id)
     let selection: number = data.selection

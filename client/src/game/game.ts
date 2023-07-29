@@ -55,6 +55,11 @@ export default class GameClass {
       store.dispatch({ type: "REFRESH_SELECTION" })
     })
 
+    EventBus.shared().on("gamestate group", (group: Group) => {
+      this.world.groups[group.id] = group
+      store.dispatch({ type: "REFRESH_SELECTION" })
+    })
+
     EventBus.shared().on("gamestate groups", (data) => {
       const groups: Hashtable<Group> = data as unknown as Hashtable<Group>
       const newGroups: Hashtable<Group> = {}
