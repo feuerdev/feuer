@@ -6,6 +6,7 @@ import PubSub from "pubsub-js"
 import { useAppSelector } from "../store/hooks"
 import { selectUser } from "../store/auth"
 import { socket } from "../game/socket"
+import { World } from "../../../shared/objects"
 
 const Game = () => {
   const user = useAppSelector(selectUser)
@@ -16,11 +17,11 @@ const Game = () => {
       socket.emit(data.detail.type, data.detail.data)
     })
 
-    const world = {
+    const world: World = {
       tiles: {},
       groups: {},
       units: [],
-      buildings: [],
+      buildings: {},
       playerRelations: {},
       battles: [],
       idCounter: 0,
