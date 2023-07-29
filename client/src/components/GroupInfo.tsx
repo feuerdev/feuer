@@ -86,7 +86,7 @@ const GroupInfo = ({ group }: { group: Group }) => {
             .map((resourceKey) => {
               return [
                 <div className="capitalized">{resourceKey}</div>,
-                <div>{group.resources[resourceKey]}</div>,
+                <div>{group.resources[resourceKey] || 0}</div>,
                 <button
                   onClick={() =>
                     requestResourceTransfer(
@@ -109,7 +109,7 @@ const GroupInfo = ({ group }: { group: Group }) => {
                 >
                   &gt;
                 </button>,
-                <div>{tile.resources[resourceKey]}</div>,
+                <div>{tile.resources[resourceKey] || 0}</div>,
               ]
             })}
         </div>
