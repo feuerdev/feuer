@@ -1,6 +1,5 @@
-import { Resource } from "pixi.js"
 import { Group } from "../../../shared/objects"
-import { TransferDirection, getTileByPos } from "../../../shared/objectutil"
+import { getTileByPos } from "../../../shared/objectutil"
 import EventBus from "../game/eventbus"
 import ResourceInfo from "./ResourceInfo"
 
