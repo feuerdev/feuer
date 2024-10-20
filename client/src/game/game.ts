@@ -324,13 +324,15 @@ export default class GameClass {
     })
 
     for (const sprite of hit) {
-      const group = this.world.groups[sprite.name]
+      const group =
+        this.world.groups[Util.convertSpriteNameToObjectId(sprite.name, "g")]
       if (group) {
         this.selection.selectGroup(group.id)
         break
       }
 
-      const building = this.world.buildings[sprite.name]
+      const building =
+        this.world.buildings[Util.convertSpriteNameToObjectId(sprite.name, "b")]
       if (building) {
         this.selection.selectBuilding(building.id)
         break

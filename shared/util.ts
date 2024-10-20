@@ -48,3 +48,14 @@ export function isPointInRectangle(
   }
   return false
 }
+
+export function convertToSpriteName(id: number, prefix: string): string {
+  return `${prefix}${id}`
+}
+
+export function convertSpriteNameToObjectId(
+  name: string,
+  prefix: string
+): string {
+  return name.replace(prefix, "")
+}

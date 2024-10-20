@@ -10,6 +10,7 @@ import Selection, { SelectionType } from "./selection"
 import { Filter, Loader } from "pixi.js"
 import Sprites from "../game/sprites.json"
 import Buildings from "../../../shared/templates/buildings.json"
+import { convertToSpriteName } from "../../../shared/util"
 
 const HEX_SIZE = 40
 
@@ -77,8 +78,9 @@ export default class Renderer {
   private initialFocusSet = false
 
   static GLOWFILTER: Filter = new GlowFilter({
-    distance: 15,
+    distance: 30,
     outerStrength: 2,
+    color: 0x000000,
   }) as unknown as Filter
 
   constructor() {
@@ -111,9 +113,21 @@ export default class Renderer {
       return
     }
 
-    const original = this.viewport.getChildByName(
-      String(selection.id)
-    ) as PIXI.Sprite
+    let prefix = ""
+    switch (selection.type) {
+      case SelectionType.Group:
+        prefix = "g"
+        break
+      case SelectionType.Building:
+        prefix = "b"
+        break
+      case SelectionType.Tile:
+        prefix = "t"
+        break
+    }
+
+    const spriteName = convertToSpriteName(selection.id, prefix)
+    const original = this.viewport.getChildByName(spriteName) as PIXI.Sprite
     if (!original) {
       return
     }
@@ -126,6 +140,7 @@ export default class Renderer {
     sprite.zIndex = getSelectionZIndex(selection)
     sprite.width = original.width
     sprite.height = original.height
+
     sprite.filters = [Renderer.GLOWFILTER]
 
     this.viewport.dirty = true
@@ -143,12 +158,11 @@ export default class Renderer {
       this.centerOn(group.pos)
     }
     this.viewport.dirty = true
-    let object = this.viewport.getChildByName(
-      `g${String(group.id)}`
-    ) as PIXI.Sprite
+    const spriteName = convertToSpriteName(group.id, "g")
+    let object = this.viewport.getChildByName(spriteName) as PIXI.Sprite
     if (!object) {
       object = new PIXI.Sprite(this.getGroupSprite(group))
-      object.name = `g${String(group.id)}`
+      object.name = spriteName
       object.scale = new PIXI.Point(0.5, 0.5)
       this.viewport.addChild(object)
     }
@@ -187,12 +201,12 @@ export default class Renderer {
 
   updateScenegraphBuilding(building: Building) {
     this.viewport.dirty = true
-    let object = this.viewport.getChildByName(
-      `b${String(building.id)}`
-    ) as PIXI.Sprite
+
+    const spriteName = convertToSpriteName(building.id, "b")
+    let object = this.viewport.getChildByName(spriteName) as PIXI.Sprite
     if (!object) {
       object = new PIXI.Sprite(this.getBuildingSprite(building))
-      object.name = `b${String(building.id)}`
+      object.name = spriteName
       object.scale = new PIXI.Point(0.5, 0.5)
       this.viewport.addChild(object)
     }
@@ -204,9 +218,9 @@ export default class Renderer {
 
   updateScenegraphTile(tile: ClientTile) {
     this.viewport.dirty = true
-    let object = this.viewport.getChildByName(
-      `t${String(tile.id)}`
-    ) as PIXI.Sprite
+
+    const spriteName = convertToSpriteName(tile.id, "t")
+    let object = this.viewport.getChildByName(spriteName) as PIXI.Sprite
     if (!object) {
       object = new PIXI.Sprite(this.getTerrainTexture(tile))
       this.viewport.addChild(object)
@@ -215,7 +229,7 @@ export default class Renderer {
       const padding = 2 // "black" space between tiles
 
       object.zIndex = ZIndices.Tiles
-      object.name = `t${String(tile.id)}`
+      object.name = spriteName
       object.x = corners[3].x + padding //obere linke ecke
       object.y = corners[3].y - this.layout.size.y / 2 + padding //obere linke ecke- halbe höhe
       object.width = this.layout.size.x * Math.sqrt(3) - padding
