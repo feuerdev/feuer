@@ -25,7 +25,7 @@ enum ZIndices {
 }
 
 export const loadTextures = () => {
-  let promise = new Promise<void>((resolve) => {
+  const promise = new Promise<void>((resolve) => {
     PIXI.utils.clearTextureCache()
     Loader.shared.reset()
     for (const sprite of Sprites) {
@@ -143,10 +143,12 @@ export default class Renderer {
       this.centerOn(group.pos)
     }
     this.viewport.dirty = true
-    let object = this.viewport.getChildByName(String(group.id)) as PIXI.Sprite
+    let object = this.viewport.getChildByName(
+      `g${String(group.id)}`
+    ) as PIXI.Sprite
     if (!object) {
       object = new PIXI.Sprite(this.getGroupSprite(group))
-      object.name = String(group.id)
+      object.name = `g${String(group.id)}`
       object.scale = new PIXI.Point(0.5, 0.5)
       this.viewport.addChild(object)
     }
@@ -186,11 +188,11 @@ export default class Renderer {
   updateScenegraphBuilding(building: Building) {
     this.viewport.dirty = true
     let object = this.viewport.getChildByName(
-      String(building.id)
+      `b${String(building.id)}`
     ) as PIXI.Sprite
     if (!object) {
       object = new PIXI.Sprite(this.getBuildingSprite(building))
-      object.name = String(building.id)
+      object.name = `b${String(building.id)}`
       object.scale = new PIXI.Point(0.5, 0.5)
       this.viewport.addChild(object)
     }
@@ -202,7 +204,9 @@ export default class Renderer {
 
   updateScenegraphTile(tile: ClientTile) {
     this.viewport.dirty = true
-    let object = this.viewport.getChildByName(String(tile.id)) as PIXI.Sprite
+    let object = this.viewport.getChildByName(
+      `t${String(tile.id)}`
+    ) as PIXI.Sprite
     if (!object) {
       object = new PIXI.Sprite(this.getTerrainTexture(tile))
       this.viewport.addChild(object)
@@ -211,7 +215,7 @@ export default class Renderer {
       const padding = 2 // "black" space between tiles
 
       object.zIndex = ZIndices.Tiles
-      object.name = String(tile.id)
+      object.name = `t${String(tile.id)}`
       object.x = corners[3].x + padding //obere linke ecke
       object.y = corners[3].y - this.layout.size.y / 2 + padding //obere linke ecke- halbe höhe
       object.width = this.layout.size.x * Math.sqrt(3) - padding

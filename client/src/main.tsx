@@ -22,7 +22,7 @@ const App = () => {
   useEffect(() => {
     dispatch({ type: "CHECK_AUTHENTICATION" })
     dispatch({ type: "LOAD_TEXTURES" })
-  }, [])
+  }, [dispatch])
 
   if (loadingAuth || !texturesLoaded || (user && !socketConnected)) {
     return <Loading />
