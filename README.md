@@ -17,6 +17,7 @@ Features:
 - Automated deployment using Jenkins, Docker, managed services
 
 Languages, Frameworks:
+- Next.js
 - Typescript
 - Node.js
 - vite
