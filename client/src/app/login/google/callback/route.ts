@@ -1,11 +1,10 @@
-import { generateSessionToken, createSession } from "@/lib/sessions";
+import { generateSessionToken, createSession, setSessionTokenCookie } from "@/lib/sessions";
 import { google } from "@/lib/oauth";
 import { cookies } from "next/headers";
 import { decodeIdToken } from "arctic";
-import { getUserFromGoogleId, createUser } from "@/lib/db";
+import { createUser, getUserByGoogleId } from "@/lib/db";
 
 import type { OAuth2Tokens } from "arctic";
-import { setSessionTokenCookie } from "@/lib/cookies";
 
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
@@ -45,7 +44,7 @@ export async function GET(request: Request): Promise<Response> {
   const googleUserId = claims.sub;
   const username = claims.name;
 
-  const existingUser = await getUserFromGoogleId(googleUserId);
+  const existingUser = await getUserByGoogleId(googleUserId);
 
   if (existingUser !== null) {
     const sessionToken = generateSessionToken();

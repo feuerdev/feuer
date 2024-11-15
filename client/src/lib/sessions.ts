@@ -2,11 +2,12 @@ import {
   encodeBase32LowerCaseNoPadding,
   encodeHexLowerCase,
 } from "@oslojs/encoding";
-import { type User, type Session, db, sessionTable, userTable } from "./db";
 import { sha256 } from "@oslojs/crypto/sha2";
 import { eq } from "drizzle-orm";
 import { cache } from "react";
 import { cookies } from "next/headers";
+import { Session, sessionTable, User, userTable } from "./schema";
+import { db } from "./db";
 
 export function generateSessionToken(): string {
   const bytes = new Uint8Array(20);
@@ -62,15 +63,39 @@ export async function invalidateSession(sessionId: string): Promise<void> {
   await db.delete(sessionTable).where(eq(sessionTable.id, sessionId));
 }
 
-export const getCurrentSession = cache(async (): Promise<SessionValidationResult> => {
-	const cookieStore = cookies();
-	const token = cookieStore.get("session")?.value ?? null;
-	if (token === null) {
-		return { session: null, user: null };
-	}
-	const result = await validateSessionToken(token);
-	return result;
-});
+export const getCurrentSession = cache(
+  async (): Promise<SessionValidationResult> => {
+    const cookieStore = cookies();
+    const token = cookieStore.get("session")?.value ?? null;
+    if (token === null) {
+      return { session: null, user: null };
+    }
+    const result = await validateSessionToken(token);
+    return result;
+  }
+);
+
+export function setSessionTokenCookie(token: string, expiresAt: Date): void {
+  const cookieStore = cookies();
+  cookieStore.set("session", token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    expires: expiresAt,
+    path: "/",
+  });
+}
+
+export function deleteSessionTokenCookie(): void {
+  const cookieStore = cookies();
+  cookieStore.set("session", "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 0,
+    path: "/",
+  });
+}
 
 export type SessionValidationResult =
   | { session: Session; user: User }

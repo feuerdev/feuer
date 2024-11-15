@@ -1,37 +1,23 @@
-import pg from "pg";
-import { pgTable, serial, text, integer, timestamp } from "drizzle-orm/pg-core";
-import { drizzle } from "drizzle-orm/node-postgres";
+import { User, userTable } from "./schema";
+import path from "node:path";
+import * as schema from "@/lib/schema";
+import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
+import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator";
+import { Client } from "pg";
 import { eq } from "drizzle-orm";
 
-import type { InferSelectModel } from "drizzle-orm";
-
-const pool = new pg.Pool({
+const client = new Client({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+});
+await client.connect();
+
+export const db = drizzlePg(client, { schema });
+
+await migratePg(db, {
+  migrationsFolder: path.join(process.cwd(), "migrations"),
 });
 
-export const db = drizzle(pool);
-
-export const userTable = pgTable("user", {
-  id: serial("id").primaryKey(),
-  googleId: text("google_id").unique(),
-  name: text("name"),
-});
-
-export const sessionTable = pgTable("session", {
-  id: text("id").primaryKey(),
-  userId: integer("user_id")
-    .notNull()
-    .references(() => userTable.id),
-  expiresAt: timestamp("expires_at", {
-    withTimezone: true,
-    mode: "date",
-  }).notNull(),
-});
-
-export async function getUserFromGoogleId(
+export async function getUserByGoogleId(
   googleId: string
 ): Promise<User | null> {
   const result = await db
@@ -57,6 +43,3 @@ export async function createUser(
 
   return result[0];
 }
-
-export type User = InferSelectModel<typeof userTable>;
-export type Session = InferSelectModel<typeof sessionTable>;
