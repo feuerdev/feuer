@@ -14,11 +14,8 @@ export default async function Login() {
         />
         <h1 className="text-3xl font-bold text-orange-400">feuer.io</h1>
         <div className="flex w-full flex-col space-y-4">
-          <Button className="w-full bg-gray-600 hover:bg-gray-700">
-            Login with Google
-          </Button>
-          <Button className="w-full bg-gray-600 hover:bg-gray-700">
-            Login as Guest
+          <Button asChild className="w-full bg-gray-600 hover:bg-gray-700">
+            <a href="/login/google">Sign in with Google</a>
           </Button>
         </div>
       </div>
