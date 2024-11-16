@@ -4,6 +4,8 @@ import * as Rules from "../../shared/rules.json"
 import GameServer from "./gameserver"
 // import Hex from "../../shared/hex"
 import Config from "./util/environment"
+import log from "./util/log"
+import { validateSessionToken } from "@shared/auth/session"
 
 // Initialize ID counter
 let idCounter = -1
@@ -31,7 +33,7 @@ game.run()
 const port: number = Config.port
 const io = new Server(port, {
   cors: {
-    origin: "http://localhost:3000", //TODO: set sensible value
+    origin: Config.clientUrl,
     credentials: true,
   },
 })
@@ -43,18 +45,30 @@ io.on("connection", async (socket) => {
   //   socket.disconnect()
   //   return
   // }
+
+  // get the session cookie
   const cookies = socket.request.headers.cookie
-  console.log(`Received Cookies: ${cookies}`)
+  const sessionCookie = cookies
+    ?.split(";")
+    .find((cookie) => cookie.trim().startsWith("session="))
+    ?.split("=")[1]
 
   // TODO validate session
   if (!cookies) {
-    console.error("invalid id token provided")
+    log.warn("No session cookie received")
+    socket.disconnect()
+    return
+  }
+
+  const { user } = await validateSessionToken(sessionCookie)
+  if (!user) {
+    log.warn(`Invalid session cookie received: ${sessionCookie}`)
     socket.disconnect()
     return
   }
 
   socket.on("disconnect", function () {
-    console.log("Someone disconnected", cookies)
+    console.log(`User "${user.name}" disconnected`)
   })
 
   // console.log("Someone connected", decodedToken?.uid)

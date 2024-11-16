@@ -36,22 +36,10 @@ const Config = yargs(process.argv.slice(2))
     type: "number",
     default: 1,
   })
-  .option("firebaseProjectId", {
-    alias: "FB_project_id",
-    description: "Firebase Project Id",
+  .option("clientUrl", {
+    alias: "c",
+    description: "The URL of the client",
     type: "string",
-    default: "feuer-io",
-  })
-  .option("fbKey", {
-    alias: "FB_KEY",
-    description: "Firebase Private Key",
-    type: "string",
-  })
-  .option("firebaseClientEmail", {
-    alias: "FB_client_email",
-    description: "Firebase Client Email",
-    type: "string",
-    default: "firebase-adminsdk-pnpe7@feuer-io.iam.gserviceaccount.com",
   })
   .parseSync()
 
