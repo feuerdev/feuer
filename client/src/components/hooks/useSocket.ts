@@ -1,16 +1,18 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import socket from "@/lib/socket";
 
 export function useSocket() {
-  useEffect(() => {
-    socket.connect();
+  const [connected, setConnected] = useState(socket.connected);
 
-    // TODO: authenticate socket
+  useEffect(() => {
+    socket.on("connect", () => setConnected(true));
+    socket.on("disconnect", () => setConnected(false));
+    socket.connect();
 
     return () => {
       socket.disconnect();
     };
   }, []);
 
-  return socket;
+  return { connected, socket };
 }
