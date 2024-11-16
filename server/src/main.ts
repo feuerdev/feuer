@@ -67,6 +67,8 @@ io.on("connection", async (socket) => {
     return
   }
 
+  console.log(`User "${user.name}" connected`)
+
   socket.on("disconnect", function () {
     console.log(`User "${user.name}" disconnected`)
   })
