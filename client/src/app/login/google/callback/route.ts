@@ -1,8 +1,9 @@
-import { generateSessionToken, createSession, setSessionTokenCookie } from "@/lib/sessions";
+import { setSessionTokenCookie } from "@/lib/sessions";
 import { google } from "@/lib/oauth";
 import { cookies } from "next/headers";
 import { decodeIdToken } from "arctic";
-import { createUser, getUserByGoogleId } from "@shared/database/db"
+import { createUser, getUserByGoogleId } from "@shared/database/db";
+import { generateSessionToken, createSession } from "@shared/auth/session";
 
 import type { OAuth2Tokens } from "arctic";
 

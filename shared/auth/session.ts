@@ -3,7 +3,7 @@ import {
   encodeHexLowerCase,
 } from "@oslojs/encoding"
 import { sha256 } from "@oslojs/crypto/sha2"
-import { db } from "../database/db"
+import { DB } from "../database/db"
 import { Session, sessionTable, User, userTable } from "../database/schema"
 import { eq } from "drizzle-orm"
 
@@ -24,6 +24,7 @@ export async function createSession(
     userId,
     expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
   }
+  const db = await DB()
   await db.insert(sessionTable).values(session)
   return session
 }
@@ -32,6 +33,7 @@ export async function validateSessionToken(
   token: string
 ): Promise<SessionValidationResult> {
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)))
+  const db = await DB()
   const result = await db
     .select({ user: userTable, session: sessionTable })
     .from(sessionTable)
@@ -58,6 +60,7 @@ export async function validateSessionToken(
 }
 
 export async function invalidateSession(sessionId: string): Promise<void> {
+  const db = await DB()
   await db.delete(sessionTable).where(eq(sessionTable.id, sessionId))
 }
 
