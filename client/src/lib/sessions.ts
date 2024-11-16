@@ -6,8 +6,13 @@ import { sha256 } from "@oslojs/crypto/sha2";
 import { eq } from "drizzle-orm";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import { Session, sessionTable, User, userTable } from "./schema";
-import { db } from "./db";
+import {
+  Session,
+  sessionTable,
+  User,
+  userTable,
+} from "@shared/database/schema";
+import { db } from "@shared/database/db";
 
 export function generateSessionToken(): string {
   const bytes = new Uint8Array(20);

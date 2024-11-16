@@ -1,0 +1,14 @@
+{
+  "name": "shared",
+  "version": "1.0.0",
+  "description": "shared code between client and server",
+  "author": "feuerdev",
+  "license": "ISC",
+  "dependencies": {
+    "drizzle-orm": "^0.36.2",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.10"
+  }
+}
