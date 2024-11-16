@@ -2,22 +2,11 @@
   "name": "feuer",
   "version": "1.0.0",
   "description": "A multiplayer game MMORTS game",
-  "scripts": {
-  },
   "author": "feuerdev",
   "license": "ISC",
   "workspaces": [
     "client",
     "server",
     "shared"
-  ],
-  "dependencies": {
-    "drizzle-orm": "^0.36.2",
-    "pg": "^8.13.1"
-  },
-  "devDependencies": {
-    "@types/pg": "^8.11.10",
-    "dotenv-cli": "^7.4.2",
-    "typescript": "^5.6.3"
-  }
+  ]
 }
