@@ -13,6 +13,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
         maxAge: 60 * 60 * 24 * 30,
         sameSite: "lax",
         httpOnly: true,
+        domain: process.env.NODE_ENV === "production" ? process.env.COOKIE_DOMAIN : undefined,
         secure: process.env.NODE_ENV === "production",
       });
     }
