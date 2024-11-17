@@ -1,5 +1,5 @@
 import Log from "./util/log.js"
-import Buildings from "../../shared/templates/buildings.json"
+import Buildings from "../../shared/templates/buildings.json" with { type: "json" };
 import { astar } from "../../shared/pathfinding.js"
 import { Socket } from "socket.io"
 import { Hashtable } from "../../shared/util.js"

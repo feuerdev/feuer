@@ -1,6 +1,6 @@
 import { Server } from "socket.io"
 import { generateWorld } from "./mapgen.js"
-import Rules from "../../shared/rules.json"
+import Rules from "../../shared/rules.json" with { type: "json" };
 import GameServer from "./gameserver.js"
 import Config from "./util/environment.js"
 import log from "./util/log.js"

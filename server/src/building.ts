@@ -1,7 +1,7 @@
 import { Hex } from "../../shared/hex.js"
 import { Building } from "../../shared/objects.js"
 import { Resources } from "../../shared/resources.js"
-import Buildings from "../../shared/templates/buildings.json"
+import Buildings from "../../shared/templates/buildings.json" with { type: "json" }
 
 export function createBuilding(
   id: number,

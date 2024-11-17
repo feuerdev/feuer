@@ -3,7 +3,7 @@ import { clamp, Hashtable, scale } from "../../shared/util.js"
 import { createNoise } from "../../shared/noise.js"
 import { Biome, Tile, World } from "../../shared/objects.js"
 import * as Worlds from "./world.js"
-import Rules from "../../shared/rules.json"
+import Rules from "../../shared/rules.json" with { type: "json" };
 import { astar } from "../../shared/pathfinding.js"
 import { getNextId } from "./main.js"
 import {

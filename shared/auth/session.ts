@@ -3,8 +3,8 @@ import {
   encodeHexLowerCase,
 } from "@oslojs/encoding"
 import { sha256 } from "@oslojs/crypto/sha2"
-import { DB } from "../database/db"
-import { Session, sessionTable, User, userTable } from "../database/schema"
+import { DB } from "../database/db.js"
+import { Session, sessionTable, User, userTable } from "../database/schema.js"
 import { eq } from "drizzle-orm"
 
 export function generateSessionToken(): string {

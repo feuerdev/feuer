@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv"
 import yargs from "yargs"
-import * as Rules from "../../../shared/rules.json"
+import * as Rules from "../../../shared/rules.json" with { type: "json" };
 
 // Load .env file into environment
 dotenv.config()

@@ -1,5 +1,5 @@
 import { Group } from "../../shared/objects.js"
-import Rules from "../../shared/rules.json"
+import Rules from "../../shared/rules.json" with { type: "json" };
 import { generateUnit } from "./unit.js"
 import { Hex } from "../../shared/hex.js"
 import { Resources } from "../../shared/resources.js"

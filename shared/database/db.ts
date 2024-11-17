@@ -1,6 +1,6 @@
-import { User, userTable } from "./schema"
+import { User, userTable } from "./schema.js"
 import path from "node:path"
-import * as schema from "./schema"
+import * as schema from "./schema.js"
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres"
 import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator"
 import pkg from "pg"
