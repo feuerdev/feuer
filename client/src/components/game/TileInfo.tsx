@@ -1,18 +1,21 @@
-import { equals } from "../../../shared/hex"
-import { Tile } from "../../../shared/objects"
-import buildings from "../../../shared/templates/buildings.json"
-import BuildingTemplate from "./BuildingTemplate"
-import ResourceInfo from "./ResourceInfo"
+"use client";
+
+import { equals } from "@shared/hex";
+import { TBuildingTemplate, Tile } from "@shared/objects";
+import Buildings from "@shared/templates/buildings.json";
+import BuildingTemplate from "./BuildingTemplate";
+import ResourceInfo from "./ResourceInfo";
+import { world } from "@/lib/game/game";
 
 const TileInfo = ({ tile }: { tile: Tile }) => {
   if (!tile) {
-    return <div>No tile selected</div>
+    return <div>No tile selected</div>;
   }
 
   // TODO: What to do if there are multiple groups on the same tile?
-  const group = Object.values(window.game.world.groups).find((group) => {
-    return equals(group.pos, tile.hex)
-  })
+  const group = Object.values(world.groups).find((group) => {
+    return equals(group.pos, tile.hex);
+  });
 
   return (
     <div className="flex">
@@ -27,22 +30,22 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
         {/* <div>Resources: {JSON.stringify(tile.resources)}</div> */}
       </div>
       <div className="w-full">
-        {Object.keys(buildings).map((buildingKey) => {
+        {Object.keys(Buildings).map((buildingKey) => {
           return (
             <BuildingTemplate
               key={buildingKey}
               tile={tile}
-              building={buildings[buildingKey]}
+              building={Buildings[buildingKey as keyof typeof Buildings] as TBuildingTemplate}
             />
-          )
+          );
         })}
       </div>
 
       <div className="w-full">
-      {group && <ResourceInfo group={group} tile={tile} />}
+        {group && <ResourceInfo group={group} tile={tile} />}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default TileInfo
+export default TileInfo;

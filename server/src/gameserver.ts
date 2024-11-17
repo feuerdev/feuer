@@ -27,10 +27,10 @@ import {
   isNavigable,
   subtractResources,
 } from "../../shared/objectutil.js"
-import { Player } from "../../shared/player.js"
 import { create, equals, hash, Hex, neighborsRange } from "../../shared/hex.js"
 import { Resources } from "../../shared/resources.js"
 import Config from "./environment.js";
+import { Player } from "../../shared/player.js";
 
 export default class GameServer {
   private socketplayer: {} = {}
@@ -243,7 +243,7 @@ export default class GameServer {
   async onPlayerInitialize(socket: Socket, uid: string) {
     let player = this.world.players[uid]
     if (!player) {
-      player = new Player()
+      player = {uid: uid, initialized: false, visibleHexes: [], discoveredHexes: []}
       player.uid = uid
       player.initialized = true
 

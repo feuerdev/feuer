@@ -2,9 +2,12 @@
 
 import { Loader2 } from "lucide-react";
 import { useSocket } from "../hooks/useSocket";
+import Hud from "./Hud";
 
 export default function Game() {
   const { connected } = useSocket();
+
+  // TODO: load textures during loading screen
 
   if (!connected) {
     return (
@@ -13,10 +16,16 @@ export default function Game() {
       </div>
     );
   }
-  return <div>Game</div>;
 
-  //   return (
-  //     <Hud></Hud>
-  //     <Canvas></Canvas>
-  //   )
+  return (
+    <>
+      <Hud />
+      <canvas
+        className="h-screen w-screen"
+        onContextMenu={(e) => {
+          e.preventDefault();
+        }}
+      />
+    </>
+  );
 }

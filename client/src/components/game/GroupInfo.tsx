@@ -1,24 +1,20 @@
-import { Group } from "../../../shared/objects"
-import { getTileByPos } from "../../../shared/objectutil"
-import EventBus from "../game/eventbus"
-import ResourceInfo from "./ResourceInfo"
+"use client";
+
+import { Group } from "@shared/objects";
+import { getTileByPos } from "@shared/objectutil";
+import ResourceInfo from "./ResourceInfo";
+import socket from "@/lib/socket";
+import { uid, world } from "@/lib/game/game";
 
 const GroupInfo = ({ group }: { group: Group }) => {
-  const requestRemoveUnit = (groupId: number, unitId: number) => {
-    EventBus.shared().emitSocket("request unit remove", {
-      groupId: groupId,
-      unitId: unitId,
-    })
-  }
-
   if (!group) {
-    return <div>No group selected</div>
+    return <div>No group selected</div>;
   }
 
-  const tile = getTileByPos(group.pos, window.game.world.tiles)
+  const tile = getTileByPos(group.pos, world.tiles);
 
   if (!tile) {
-    return <div>Group is not on a tile?</div>
+    return <div>Group is not on a tile?</div>;
   }
 
   return (
@@ -28,7 +24,7 @@ const GroupInfo = ({ group }: { group: Group }) => {
           {/* General Info */}
           <h2 className="col-span-2 text-xl">Group</h2>
           <div>Owner</div>
-          <div>{group.owner == window.game.uid ? "You" : "Other Player"}</div>
+          <div>{group.owner == uid ? "You" : "Other Player"}</div>
           <div>Position</div>
           <div>
             {group.pos.q}:{group.pos.r}
@@ -49,21 +45,28 @@ const GroupInfo = ({ group }: { group: Group }) => {
           <h2 className="col-span-2 text-xl">Units</h2>
           {group.units.map((unit) => {
             return [
-              <div>Owner</div>,
-              <div>{unit.owner}</div>,
-              <div>Leadership</div>,
-              <div>{unit.leadership}</div>,
-              <button onClick={() => requestRemoveUnit(group.id, unit.id)}>
-                Remove
-              </button>,
-            ]
+              <div key={unit.id}>
+                <div>Owner</div>,<div>{unit.owner}</div>,<div>Leadership</div>,
+                <div>{unit.leadership}</div>,
+                <button
+                  onClick={() =>
+                    socket.emit("request unit remove", {
+                      groupId: group.id,
+                      unitId: unit.id,
+                    })
+                  }
+                >
+                  Remove
+                </button>
+              </div>,
+            ];
           })}
         </div>
         {/* Resources Info */}
         <ResourceInfo group={group} tile={tile} />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default GroupInfo
+export default GroupInfo;

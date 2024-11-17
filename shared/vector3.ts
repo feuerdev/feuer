@@ -1,32 +1,35 @@
-export default interface Vector3 {
+export type Vector3 = {
   x: number
   y: number
   z: number
 }
 
-export function length(): number {
+export function length(vector: Vector3): number {
   return Math.sqrt(
-    Math.pow(this.x, 2) + Math.pow(this.y, 2) + Math.pow(this.z, 2)
+    Math.pow(vector.x, 2) + Math.pow(vector.y, 2) + Math.pow(vector.z, 2)
   )
 }
 
-export function normalize(): void {
-  const length = this.length()
-  if (length != 0) {
-    this.x /= length
-    this.y /= length
-    this.z /= length
+export function normalize(vector: Vector3): Vector3 {
+  const l = length(vector)
+  if (l === 0) {
+    throw new Error("Cannot normalize a zero-length vector")
+  }
+  return {
+    x: vector.x / l,
+    y: vector.y / l,
+    z: vector.z / l,
   }
 }
 
 export function add(vector: Vector3): Vector3 {
   return {
-    x: this.x + vector.x,
-    y: this.y + vector.y,
-    z: this.z + vector.z,
+    x: vector.x + vector.x,
+    y: vector.y + vector.y,
+    z: vector.z + vector.z,
   }
 }
 
-export function multiply(factor: number): Vector3 {
-  return { x: this.x * factor, y: this.y * factor, z: this.z * factor }
+export function multiply(vector: Vector3, factor: number): Vector3 {
+  return { x: vector.x * factor, y: vector.y * factor, z: vector.z * factor }
 }

@@ -1,20 +1,15 @@
-import { TBuildingTemplate, Tile } from "../../../shared/objects"
-import EventBus from "../game/eventbus"
+"use client";
+
+import socket from "@/lib/socket";
+import { TBuildingTemplate, Tile } from "@shared/objects";
 
 const BuildingTemplate = ({
   building,
   tile,
 }: {
-  building: TBuildingTemplate
-  tile: Tile
+  building: TBuildingTemplate;
+  tile: Tile;
 }) => {
-  function requestConstruction(): void {
-    EventBus.shared().emitSocket("request construction", {
-      pos: tile.hex,
-      type: building.key,
-    })
-  }
-
   return (
     <div className="flex gap-4">
       <img
@@ -28,9 +23,18 @@ const BuildingTemplate = ({
         <p>Cost: {JSON.stringify(building.cost)}</p>
         <p>Production: {JSON.stringify(building.production)}</p>
       </div>
-      <button onClick={() => requestConstruction()}>Construct</button>
+      <button
+        onClick={() =>
+          socket.emit("request construction", {
+            pos: tile.hex,
+            type: building.key,
+          })
+        }
+      >
+        Construct
+      </button>
     </div>
-  )
-}
+  );
+};
 
-export default BuildingTemplate
+export default BuildingTemplate;

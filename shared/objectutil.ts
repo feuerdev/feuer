@@ -72,20 +72,20 @@ export function calculateAttack(
   }
 
   // get a random bodypart
-  const bodypart =
-    BodyPart[Math.floor((Math.random() * Object.keys(BodyPart).length) / 2)]
+  const bodyPart = BodyPart[
+    Math.floor((Math.random() * Object.keys(BodyPart).length) / 2)
+  ] as unknown as BodyPart
 
   // get a random severity
-  const severity =
-    InjurySeverity[
-      Math.floor((Math.random() * Object.keys(InjurySeverity).length) / 2)
-    ]
+  const severity = InjurySeverity[
+    Math.floor((Math.random() * Object.keys(InjurySeverity).length) / 2)
+  ] as unknown as InjurySeverity
 
   return {
     injuries: [
       {
-        bodyPart: BodyPart[bodypart],
-        severity: InjurySeverity[severity],
+        bodyPart,
+        severity,
       },
     ],
     morale: 50,
@@ -105,7 +105,7 @@ export function calculateInitiative(unit: FightingUnit): number {
 }
 
 export function canFight(group: Group): boolean {
-  const morale = this.calculateMorale(group)
+  const morale = calculateMorale(group)
   // check if group has at least one unit that is not dead
   group.units.filter((unit) => {
     return unit.dead === false
@@ -115,8 +115,8 @@ export function canFight(group: Group): boolean {
 }
 
 export function subtractResources(tile: Tile, resources: Partial<Resources>) {
-  for (const res of Object.keys(resources)) {
-    tile.resources[res] -= resources[res]
+  for (const res of Object.keys(resources) as Array<keyof Resources>) {
+    tile.resources[res]! -= resources[res]!
   }
 }
 
