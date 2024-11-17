@@ -1,9 +1,7 @@
-import Log from "./util/log.js"
 import Buildings from "../../shared/templates/buildings.json" with { type: "json" };
 import { astar } from "../../shared/pathfinding.js"
 import { Socket } from "socket.io"
 import { Hashtable } from "../../shared/util.js"
-import Config from "./util/environment.js"
 import {
   Building,
   Group,
@@ -32,6 +30,7 @@ import {
 import { Player } from "../../shared/player.js"
 import { create, equals, hash, Hex, neighborsRange } from "../../shared/hex.js"
 import { Resources } from "../../shared/resources.js"
+import Config from "./environment.js";
 
 export default class GameServer {
   private socketplayer: {} = {}
@@ -65,9 +64,9 @@ export default class GameServer {
         this.actualTicks > 5 &&
         Math.abs(timeSincelastFrame - this.updaterate) > 30
       ) {
-        Log.warn("Warning something is fucky with the gameloop")
+        console.warn("Warning something is fucky with the gameloop")
       }
-      Log.silly(
+      console.debug(
         "Update took:" +
           (dbgAfterUpdate - dbgStart) +
           " Sending Data to clients took:" +
@@ -84,7 +83,7 @@ export default class GameServer {
   }
 
   resume() {
-    Log.info("Game resumed")
+    console.info("Game resumed")
     this.run()
   }
 
@@ -232,7 +231,7 @@ export default class GameServer {
   onPlayerDisconnected(socket: Socket) {
     const player: Player = this.socketplayer[socket.id]
     if (player) {
-      Log.info("Player Disconnected: " + player.uid)
+      console.info("Player Disconnected: " + player.uid)
     }
   }
 
@@ -248,7 +247,7 @@ export default class GameServer {
       player.uid = uid
       player.initialized = true
 
-      Log.info("New Player Connected: " + player.uid)
+      console.info("New Player Connected: " + player.uid)
 
       //Give Player an initial Scout and Camp
       let pos = this.getRandomSpawnHex()
@@ -269,7 +268,7 @@ export default class GameServer {
       this.world.players[uid] = player
       this.updatePlayerVisibilities(uid)
     } else {
-      Log.info(`Player reconnected: ${player.uid}`)
+      console.info(`Player reconnected: ${player.uid}`)
       // TODO: Fix this hack, this is a workaround for the client not receiving the tiles (socket is not ready yet?)
       setTimeout(() => {
         socket.emit("gamestate tiles", this.getTiles(player.discoveredHexes))
@@ -351,7 +350,7 @@ export default class GameServer {
     const group = this.world.groups[data.groupId]
 
     if (group.owner !== uid) {
-      Log.warn(`Player '${uid}' tried to add unit to group he doesn't own`)
+      console.warn(`Player '${uid}' tried to add unit to group he doesn't own`)
       return
     }
 
@@ -367,7 +366,7 @@ export default class GameServer {
 
     const group = this.world.groups[data.groupId]
     if (group.owner !== uid) {
-      Log.warn(`Player '${uid}' tried to remove unit to group he doesn't own`)
+      console.warn(`Player '${uid}' tried to remove unit to group he doesn't own`)
       return
     }
 
@@ -384,7 +383,7 @@ export default class GameServer {
     let uid = this.getPlayerUid(socket.id)
     const group = this.world.groups[data.groupId]
     if (group.owner !== uid) {
-      Log.warn(
+      console.warn(
         `Player '${uid}' tried to transfer resources to group he doesn't own`
       )
       return
@@ -444,7 +443,7 @@ export default class GameServer {
     let uid = this.getPlayerUid(socket.id)
     const groupToDisband = this.world.groups[data.groupId]
     if (groupToDisband.owner !== uid) {
-      Log.warn(`Player '${uid}' tried to disband unit to group he doesn't own`)
+      console.warn(`Player '${uid}' tried to disband unit to group he doesn't own`)
       return
     }
 
@@ -559,7 +558,7 @@ export default class GameServer {
   private isAllowedToBuild(tile: Tile, uid: string, type: string): boolean {
     let object = Buildings[type] as TBuildingTemplate
     if (!object) {
-      Log.warn(`Building '${type}' not found`)
+      console.warn(`Building '${type}' not found`)
       return false
     }
 

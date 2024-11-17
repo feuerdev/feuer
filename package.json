@@ -2,7 +2,11 @@
   "name": "feuer",
   "version": "1.0.0",
   "description": "A multiplayer game MMORTS game",
-  "author": "feuerdev",
+  "author": {
+    "email": "jannik@feuer.dev",
+    "name": "Jannik Feuerhahn",
+    "url": "https://feuer.dev"
+  },
   "license": "ISC",
   "workspaces": [
     "client",

@@ -2,8 +2,7 @@ import { Server } from "socket.io"
 import { generateWorld } from "./mapgen.js"
 import Rules from "../../shared/rules.json" with { type: "json" };
 import GameServer from "./gameserver.js"
-import Config from "./util/environment.js"
-import log from "./util/log.js"
+import Config from "./environment.js"
 import { validateSessionToken } from "../../shared/auth/session.js"
 
 // Initialize ID counter
@@ -54,14 +53,14 @@ io.on("connection", async (socket) => {
 
   // TODO validate session
   if (!cookies) {
-    log.warn("No session cookie received")
+    console.warn("No session cookie received")
     socket.disconnect()
     return
   }
 
   const { user } = await validateSessionToken(sessionCookie)
   if (!user) {
-    log.warn(`Invalid session cookie received: ${sessionCookie}`)
+    console.warn(`Invalid session cookie received: ${sessionCookie}`)
     socket.disconnect()
     return
   }

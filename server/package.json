@@ -1,28 +1,13 @@
 {
-  "name": "feuer-server",
+  "name": "@feuer/server",
   "version": "1.0.0",
-  "description": "Gameserver for feuer.io",
+  "description": "Game server implementation for feuer.io",
   "type": "module",
-  "main": "src/main.ts",
   "scripts": {
     "build": "tsc",
     "start": "node dist/server/src/main.js",
-    "dev": "npx tsx ./src/main.ts",
-    "prettier": "prettier -w ."
+    "dev": "npx tsx watch ./src/main.ts"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/feuerdev/feuer.git"
-  },
-  "keywords": [
-    "feuer.io"
-  ],
-  "author": "jannik@feuer.io",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/feuerdev/feuer/issues"
-  },
-  "homepage": "https://github.com/feuerdev/feuer#readme",
   "dependencies": {
     "dotenv": "^16.0.3",
     "drizzle-orm": "^0.36.2",
@@ -31,13 +16,11 @@
     "seedrandom": "^3.0.5",
     "socket.io": "^4.5.3",
     "typescript": "^5",
-    "winston": "^3.8.2",
     "yargs": "^17.6.0",
     "tsx": "^4.19.2"
   },
   "devDependencies": {
     "@types/yargs": "^17.0.24",
-    "prettier": "^2.8.8",
     "@types/pg": "^8.11.10"
   }
 }
