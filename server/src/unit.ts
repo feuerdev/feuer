@@ -1,5 +1,5 @@
-import { Unit } from "../../shared/objects"
-import { getNextId } from "./main"
+import { Unit } from "../../shared/objects.js"
+import { getNextId } from "./main.js"
 
 export function generateUnit(owner: string): Unit {
   let unit: Unit = {

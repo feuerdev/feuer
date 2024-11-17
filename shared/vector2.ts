@@ -1,4 +1,4 @@
-import Vector3 from "./vector3"
+import Vector3 from "./vector3.js"
 
 export default interface Vector2 {
   x: number

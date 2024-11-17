@@ -1,7 +1,7 @@
-import Hex, { distance, hash, neighbors, equals } from "./hex"
-import { Tile } from "./objects"
-import { Hashtable } from "./util"
-import { isNavigable } from "./objectutil"
+import { distance, hash, neighbors, equals, Hex } from "./hex.js"
+import { Tile } from "./objects.js"
+import { Hashtable } from "./util.js"
+import { isNavigable } from "./objectutil.js"
 
 class QueueElement {
   public element: any

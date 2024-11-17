@@ -1,8 +1,8 @@
-import { Hashtable } from "./util"
-import Hex from "./hex"
-import PlayerRelation from "./relation"
-import Resources from "./resources"
-import Player from "./player"
+import { Hashtable } from "./util.js"
+import PlayerRelation from "./relation.js"
+import { Player } from "./player.js"
+import { Hex } from "./hex.js"
+import { Resources } from "./resources.js"
 
 export type UserId = string
 

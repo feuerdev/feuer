@@ -1,12 +1,19 @@
 import seedrandom from "seedrandom"
-import { clamp, Hashtable, scale } from "../../shared/util"
-import FastSimplexNoise from "../../shared/noise"
-import { Biome, Tile, World } from "../../shared/objects"
-import * as Worlds from "./world"
-import Hex, * as Hexes from "../../shared/hex"
-import * as Rules from "../../shared/rules.json"
-import { astar } from "../../shared/pathfinding"
-import { getNextId } from "./main"
+import { clamp, Hashtable, scale } from "../../shared/util.js"
+import { createNoise } from "../../shared/noise.js"
+import { Biome, Tile, World } from "../../shared/objects.js"
+import * as Worlds from "./world.js"
+import Rules from "../../shared/rules.json"
+import { astar } from "../../shared/pathfinding.js"
+import { getNextId } from "./main.js"
+import {
+  create,
+  distance,
+  hash,
+  Hex,
+  neighbors,
+  neighborsRange,
+} from "../../shared/hex.js"
 
 export function generateWorld(
   seed: string,
@@ -34,7 +41,7 @@ export function generateWorld(
    */
   function secondIteration() {
     const rngHeight = seedrandom(seed)
-    const heightGen = new FastSimplexNoise({
+    const heightGen = createNoise({
       random: rngHeight,
       frequency: Number(frequency),
       amplitude: Number(amplitude),
@@ -103,13 +110,13 @@ export function generateWorld(
       tile.biome = Biome.River
 
       while (true) {
-        let neighbours = Hexes.neighbors(tile.hex)
+        let neighbours = neighbors(tile.hex)
 
         //find the neighbour with the lowest height
         let lowestNeighbour: Tile | undefined = undefined
         let lowestHeight = tile.height
         neighbours.forEach((neighbour) => {
-          let neighbourTile = tiles[Hexes.hash(neighbour)]
+          let neighbourTile = tiles[hash(neighbour)]
           if (neighbourTile && neighbourTile.height < lowestHeight) {
             lowestNeighbour = neighbourTile
             lowestHeight = neighbourTile.height
@@ -121,10 +128,10 @@ export function generateWorld(
           // Look if a body of water is close (less than 5 tiles), if yes, connect
           // If no, create small lake
           let distance = 2
-          let target: Hex
+          let target: Hex | undefined = undefined
           while (true) {
-            Hexes.neighborsRange(tile.hex, distance).forEach((neighbour) => {
-              let neighbourTile = tiles[Hexes.hash(neighbour)]
+            neighborsRange(tile.hex, distance).forEach((neighbour) => {
+              let neighbourTile = tiles[hash(neighbour)]
               if (
                 neighbourTile &&
                 neighbourTile.height < Rules.settings.map_height_shore
@@ -143,12 +150,12 @@ export function generateWorld(
             // Connect to body of water
             let path = astar(tiles, tile.hex, target, false)
             path.forEach((hex) => {
-              tiles[Hexes.hash(hex)].biome = Biome.River
+              tiles[hash(hex)].biome = Biome.River
             })
           } else {
             // Create small lake
-            Hexes.neighbors(tile.hex).forEach((neighbour) => {
-              let neighbourTile = tiles[Hexes.hash(neighbour)]
+            neighbors(tile.hex).forEach((neighbour) => {
+              let neighbourTile = tiles[hash(neighbour)]
               if (neighbourTile && riverRng() > 0.5) {
                 neighbourTile.biome = Biome.River
               }
@@ -182,7 +189,7 @@ export function generateWorld(
       return Math.pow(Math.sin(y * Math.PI * 2) * 0.7, 4)
     }
     const rngPrecipitation = seedrandom(seed + 2)
-    const precipGen = new FastSimplexNoise({
+    const precipGen = createNoise({
       random: rngPrecipitation,
       frequency: 0.15,
       amplitude: 1,
@@ -204,16 +211,16 @@ export function generateWorld(
         return
       }
 
-      let region = Hexes.neighborsRange(tile.hex, 10)
+      let region = neighborsRange(tile.hex, 10)
       for (let hex of region) {
-        let neighbour = tiles[Hexes.hash(hex)]
+        let neighbour = tiles[hash(hex)]
         if (
           neighbour &&
           (neighbour.biome === Biome.River ||
             neighbour.height < Rules.settings.map_height_shore)
         ) {
-          let distance = Hexes.distance(tile.hex, neighbour.hex)
-          tile.precipitation += 0.02 / (distance * 2)
+          let dist = distance(tile.hex, neighbour.hex)
+          tile.precipitation += 0.02 / (dist * 2)
         }
       }
 
@@ -245,8 +252,8 @@ export function generateWorld(
 
       //Beaches
       if (tile.temperature > 8) {
-        let adjacentShores = Hexes.neighbors(tile.hex).filter((hex) => {
-          let neighbour = tiles[Hexes.hash(hex)]
+        let adjacentShores = neighbors(tile.hex).filter((hex) => {
+          let neighbour = tiles[hash(hex)]
           return neighbour && neighbour.biome === Biome.Shore
         }).length
         if (adjacentShores >= 2) {
@@ -342,7 +349,7 @@ function firstIteration(size: number): Hashtable<Tile> {
     let r1: number = Math.max(-size, -q - size)
     let r2: number = Math.min(size, -q + size)
     for (let r: number = r1; r <= r2; r++) {
-      let hex = Hexes.create(q, r)
+      let hex = create(q, r)
       let tile: Tile = {
         precipitation: 0,
         biome: Biome.None,
@@ -352,7 +359,7 @@ function firstIteration(size: number): Hashtable<Tile> {
         temperature: 0,
         id: getNextId(),
       }
-      result[Hexes.hash(hex)] = tile
+      result[hash(hex)] = tile
     }
   }
   return result

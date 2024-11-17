@@ -1,8 +1,8 @@
-import { Group } from "../../shared/objects"
-import Hex from "../../shared/hex"
-import * as Rules from "../../shared/rules.json"
-import { generateUnit } from "./unit"
-import Resources from "../../shared/resources"
+import { Group } from "../../shared/objects.js"
+import Rules from "../../shared/rules.json"
+import { generateUnit } from "./unit.js"
+import { Hex } from "../../shared/hex.js"
+import { Resources } from "../../shared/resources.js"
 
 export function createGroup(
   id: number,

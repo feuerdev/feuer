@@ -1,11 +1,10 @@
-import Vector2 from "./vector2"
+import Vector2 from "./vector2.js"
 
 export type Hex = {
   q: number
   r: number
   s: number
 }
-export default Hex
 
 export function create(q: number, r: number, s: number = -q - r): Hex {
   return { q: q, r: r, s: s }

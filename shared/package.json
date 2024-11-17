@@ -3,5 +3,6 @@
   "version": "1.0.0",
   "description": "shared code between client and server",
   "author": "feuerdev",
-  "license": "ISC"
+  "license": "ISC",
+  "type": "module"
 }

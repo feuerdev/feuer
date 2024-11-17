@@ -1,10 +1,10 @@
 import { Server } from "socket.io"
-import { generateWorld } from "./mapgen"
-import * as Rules from "../../shared/rules.json"
-import GameServer from "./gameserver"
-import Config from "./util/environment"
-import log from "./util/log"
-import { validateSessionToken } from "../../shared/auth/session"
+import { generateWorld } from "./mapgen.js"
+import Rules from "../../shared/rules.json"
+import GameServer from "./gameserver.js"
+import Config from "./util/environment.js"
+import log from "./util/log.js"
+import { validateSessionToken } from "../../shared/auth/session.js"
 
 // Initialize ID counter
 let idCounter = -1

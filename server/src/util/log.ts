@@ -1,5 +1,5 @@
 import { createLogger, transports, format, Logger } from "winston"
-import Config from "./environment"
+import Config from "./environment.js"
 
 let logger: Logger
 

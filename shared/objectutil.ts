@@ -1,4 +1,4 @@
-import { Hashtable } from "./util"
+import { Hashtable } from "./util.js"
 import {
   Biome,
   BodyPart,
@@ -7,9 +7,9 @@ import {
   Injury,
   InjurySeverity,
   Tile,
-} from "./objects"
-import Hex, { hash } from "./hex"
-import Resources from "./resources"
+} from "./objects.js"
+import { hash, Hex } from "./hex.js"
+import { Resources } from "./resources.js"
 
 export function getTileByPos(pos: Hex, tiles: Hashtable<Tile>) {
   return tiles[hash(pos)]

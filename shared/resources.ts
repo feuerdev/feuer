@@ -23,8 +23,6 @@ export type Resources = {
   ox: number
 }
 
-export default Resources
-
 export function create(): Partial<Resources> {
   return {
     wood: 0,

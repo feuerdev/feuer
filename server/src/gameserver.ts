@@ -1,13 +1,9 @@
-import Player from "../../shared/player"
-
-import Log from "./util/log"
+import Log from "./util/log.js"
 import Buildings from "../../shared/templates/buildings.json"
-import { astar } from "../../shared/pathfinding"
+import { astar } from "../../shared/pathfinding.js"
 import { Socket } from "socket.io"
-import { Hashtable } from "../../shared/util"
-import Hex from "../../shared/hex"
-import * as Hexes from "../../shared/hex"
-import Config from "./util/environment"
+import { Hashtable } from "../../shared/util.js"
+import Config from "./util/environment.js"
 import {
   Building,
   Group,
@@ -16,13 +12,13 @@ import {
   Biome,
   FightingUnit,
   TBuildingTemplate,
-} from "../../shared/objects"
-import * as PlayerRelation from "../../shared/relation"
-import { Battle } from "../../shared/objects"
-import * as Battles from "./battle"
-import { createGroup } from "./group"
-import { createBuilding } from "./building"
-import { EnumRelationType } from "../../shared/relation"
+} from "../../shared/objects.js"
+import * as PlayerRelation from "../../shared/relation.js"
+import { Battle } from "../../shared/objects.js"
+import * as Battles from "./battle.js"
+import { createGroup } from "./group.js"
+import { createBuilding } from "./building.js"
+import { EnumRelationType } from "../../shared/relation.js"
 import {
   applyAttackResult,
   calculateAttack,
@@ -32,8 +28,10 @@ import {
   isDead,
   isNavigable,
   subtractResources,
-} from "../../shared/objectutil"
-import Resources from "../../shared/resources"
+} from "../../shared/objectutil.js"
+import { Player } from "../../shared/player.js"
+import { create, equals, hash, Hex, neighborsRange } from "../../shared/hex.js"
+import { Resources } from "../../shared/resources.js"
 
 export default class GameServer {
   private socketplayer: {} = {}
@@ -95,12 +93,12 @@ export default class GameServer {
     //Group Movement
     Object.values(this.world.groups).forEach((group) => {
       if (group.targetHexes.length > 0) {
-        const currentTile = this.world.tiles[Hexes.hash(group.pos)]
+        const currentTile = this.world.tiles[hash(group.pos)]
         const nextHex = group.targetHexes[0]
 
         if (!nextHex || !currentTile) return
 
-        const nextTile = this.world.tiles[Hexes.hash(nextHex)]
+        const nextTile = this.world.tiles[hash(nextHex)]
 
         if (!nextTile) return
 
@@ -117,7 +115,7 @@ export default class GameServer {
 
     //Resource Gathering
     Object.values(this.world.buildings).forEach((building) => {
-      let tile = this.world.tiles[Hexes.hash(building.position)]
+      let tile = this.world.tiles[hash(building.position)]
       for (let res of Object.keys(building.production)) {
         tile.resources[res] += building.production[res] * deltaFactor
       }
@@ -195,7 +193,7 @@ export default class GameServer {
   checkForBattle(group: Group) {
     Object.values(this.world.groups).forEach((otherGroup) => {
       if (
-        Hexes.equals(group.pos, otherGroup.pos) &&
+        equals(group.pos, otherGroup.pos) &&
         group.owner !== otherGroup.owner &&
         group.id !== otherGroup.id
       ) {
@@ -305,10 +303,10 @@ export default class GameServer {
   onRequestMovement(socket: Socket, data: any) {
     let uid = this.getPlayerUid(socket.id)
     let selection: number = data.selection
-    let target = Hexes.create(data.target.q, data.target.r, data.target.s)
+    let target = create(data.target.q, data.target.r, data.target.s)
     const group = this.world.groups[selection]
     if (uid === group?.owner) {
-      let targetTile = this.world.tiles[Hexes.hash(target)]
+      let targetTile = this.world.tiles[hash(target)]
       if (targetTile && isNavigable(targetTile)) {
         group.movementStatus = 0
         group.targetHexes = astar(this.world.tiles, group.pos, target)
@@ -323,8 +321,8 @@ export default class GameServer {
       return
     }
 
-    let pos = Hexes.create(data.pos.q, data.pos.r, data.pos.s)
-    let tile = this.world.tiles[Hexes.hash(pos)]
+    let pos = create(data.pos.q, data.pos.r, data.pos.s)
+    let tile = this.world.tiles[hash(pos)]
 
     if (this.isAllowedToBuild(tile, uid, data.type)) {
       let building = createBuilding(++this.world.idCounter, uid, data.type, pos)
@@ -393,7 +391,7 @@ export default class GameServer {
     }
 
     if (group) {
-      let tile = this.world.tiles[Hexes.hash(group.pos)]
+      let tile = this.world.tiles[hash(group.pos)]
       let amount = data.amount
       let resource = data.resource
 
@@ -473,7 +471,7 @@ export default class GameServer {
   }
 
   /**
-   * Updates the player.discoveredHexes and player.visibleHexes. Call this method after something happens, that affects visibilities (movement, upgrades, deaths...)
+   * Updates the player.discoveredHexes and player.visible Call this method after something happens, that affects visibilities (movement, upgrades, deaths...)
    * @param uid player id
    */
   private updatePlayerVisibilities(uid: string) {
@@ -486,17 +484,14 @@ export default class GameServer {
     if (player) {
       Object.values(this.world.groups).forEach((group) => {
         if (group.owner === uid) {
-          let visible = Hexes.neighborsRange(group.pos, group.spotting)
+          let visible = neighborsRange(group.pos, group.spotting)
           this.addUniqueHexes(player.visibleHexes, visible)
           this.addUniqueHexes(player.discoveredHexes, visible)
         }
       })
       Object.values(this.world.buildings).forEach((building) => {
         if (building.owner === uid) {
-          let visible = Hexes.neighborsRange(
-            building.position,
-            building.spotting
-          )
+          let visible = neighborsRange(building.position, building.spotting)
           this.addUniqueHexes(player.visibleHexes, visible)
           this.addUniqueHexes(player.discoveredHexes, visible)
         }
@@ -508,7 +503,7 @@ export default class GameServer {
     for (let nHex of newHexes) {
       let found = false
       for (let h of hexarray) {
-        if (Hexes.equals(nHex, h)) {
+        if (equals(nHex, h)) {
           found = true
         }
       }
@@ -521,7 +516,7 @@ export default class GameServer {
   private getTiles(hexes: Hex[]): Hashtable<Tile> {
     let result: Hashtable<Tile> = {}
     for (let hex of hexes) {
-      result[Hexes.hash(hex)] = this.world.tiles[Hexes.hash(hex)]
+      result[hash(hex)] = this.world.tiles[hash(hex)]
     }
     return result
   }
@@ -530,7 +525,7 @@ export default class GameServer {
     let result: Hashtable<Group> = {}
     for (let hex of hexes) {
       Object.values(this.world.groups).forEach((group) => {
-        if (Hexes.equals(group.pos, hex)) result[group.id] = group
+        if (equals(group.pos, hex)) result[group.id] = group
       })
     }
     return result
@@ -539,7 +534,7 @@ export default class GameServer {
     let result: Battle[] = []
     for (let hex of hexes) {
       for (let battle of this.world.battles) {
-        if (Hexes.equals(battle.position, hex)) result.push(battle)
+        if (equals(battle.position, hex)) result.push(battle)
       }
     }
     return result
@@ -549,7 +544,7 @@ export default class GameServer {
     let result: Building[] = []
     for (let hex of hexes) {
       Object.values(this.world.buildings).forEach((building) => {
-        if (Hexes.equals(building.position, hex)) result.push(building)
+        if (equals(building.position, hex)) result.push(building)
       })
     }
     return result
@@ -581,7 +576,7 @@ export default class GameServer {
   private hasGroupAt(pos: Hex, uid: string): boolean {
     let found = false
     Object.values(this.world.groups).forEach((group) => {
-      if (Hexes.equals(group.pos, pos) && group.owner === uid) {
+      if (equals(group.pos, pos) && group.owner === uid) {
         found = true
       }
     })
@@ -596,7 +591,7 @@ export default class GameServer {
   private hasBuildingAt(pos: Hex, uid: string): boolean {
     let found = false
     Object.values(this.world.buildings).forEach((building) => {
-      if (Hexes.equals(building.position, pos) && building.owner === uid) {
+      if (equals(building.position, pos) && building.owner === uid) {
         found = true
       }
     })

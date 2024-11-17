@@ -1,6 +1,6 @@
-import Hex from "../../shared/hex"
-import { Building } from "../../shared/objects"
-import Resources from "../../shared/resources"
+import { Hex } from "../../shared/hex.js"
+import { Building } from "../../shared/objects.js"
+import { Resources } from "../../shared/resources.js"
 import Buildings from "../../shared/templates/buildings.json"
 
 export function createBuilding(

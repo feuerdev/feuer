@@ -2,6 +2,7 @@
   "name": "feuer-server",
   "version": "1.0.0",
   "description": "Gameserver for feuer.io",
+  "type": "module",
   "main": "src/main.ts",
   "scripts": {
     "build": "tsc",

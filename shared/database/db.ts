@@ -3,7 +3,8 @@ import path from "node:path"
 import * as schema from "./schema"
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres"
 import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator"
-import { Client } from "pg"
+import pkg from "pg"
+const { Client } = pkg
 import { eq } from "drizzle-orm"
 
 let dbInstance: ReturnType<typeof drizzlePg> | null = null

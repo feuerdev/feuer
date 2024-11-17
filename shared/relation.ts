@@ -1,4 +1,4 @@
-import { UserId } from "./objects"
+import { UserId } from "./objects.js"
 
 export type PlayerRelation = {
   id1: UserId

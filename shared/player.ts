@@ -1,6 +1,6 @@
-import Hex from "./hex"
+import { Hex } from "./hex.js"
 
-export default class Player {
+export class Player {
   public initialized: boolean = false
   public uid: string
   public discoveredHexes: Hex[] = []

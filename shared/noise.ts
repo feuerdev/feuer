@@ -20,7 +20,7 @@ export type Options = {
   random?: () => number
 }
 
-export default class FastSimplexNoise {
+class FastSimplexNoise {
   readonly amplitude: number
   readonly frequency: number
   readonly octaves: number
@@ -596,3 +596,6 @@ export default class FastSimplexNoise {
     return this.scaled4D(a, b, d, z)
   }
 }
+
+export const createNoise = (options: Options = {}) =>
+  new FastSimplexNoise(options)

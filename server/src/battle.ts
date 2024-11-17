@@ -1,5 +1,5 @@
-import Hex from "../../shared/hex"
-import { Battle, Group } from "../../shared/objects"
+import { Hex } from "../../shared/hex.js"
+import { Battle, Group } from "../../shared/objects.js"
 
 export function create(
   id: number,
