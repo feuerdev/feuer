@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server/src/main.js",
-    "dev": "npx ts-node-dev src/main",
+    "dev": "npx tsx ./src/main.ts",
     "prettier": "prettier -w ."
   },
   "repository": {
@@ -32,12 +32,12 @@
     "socket.io": "^4.5.3",
     "typescript": "^5",
     "winston": "^3.8.2",
-    "yargs": "^17.6.0"
+    "yargs": "^17.6.0",
+    "tsx": "^4.19.2"
   },
   "devDependencies": {
     "@types/yargs": "^17.0.24",
     "prettier": "^2.8.8",
-    "@types/pg": "^8.11.10",
-    "ts-node-dev": "^2.0.0"
+    "@types/pg": "^8.11.10"
   }
 }
