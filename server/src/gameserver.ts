@@ -66,18 +66,18 @@ export default class GameServer {
       ) {
         console.warn("Warning something is fucky with the gameloop")
       }
-      console.debug(
-        "Update took:" +
-          (dbgAfterUpdate - dbgStart) +
-          " Sending Data to clients took:" +
-          (dbgAfterSend - dbgAfterUpdate) +
-          " Time since last Frame:" +
-          timeSincelastFrame +
-          " Gesamtticks:" +
-          this.actualTicks +
-          " Abweichung:" +
-          (timeSincelastFrame - this.updaterate)
-      )
+      // console.debug(
+      //   "Update took:" +
+      //     (dbgAfterUpdate - dbgStart) +
+      //     " Sending Data to clients took:" +
+      //     (dbgAfterSend - dbgAfterUpdate) +
+      //     " Time since last Frame:" +
+      //     timeSincelastFrame +
+      //     " Gesamtticks:" +
+      //     this.actualTicks +
+      //     " Abweichung:" +
+      //     (timeSincelastFrame - this.updaterate)
+      // )
     }
     setInterval(gameloop, this.updaterate)
   }
