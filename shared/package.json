@@ -1,8 +1,7 @@
 {
-  "name": "shared",
-  "version": "1.0.0",
+  "name": "@feuer/shared",
+  "version": "0.1.0",
+  "private": true,
   "description": "shared code between client and server",
-  "author": "feuerdev",
-  "license": "ISC",
   "type": "module"
 }
