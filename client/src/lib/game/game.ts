@@ -16,10 +16,7 @@ import {
   updateSelection,
   viewport,
 } from "./renderer";
-
-export let world: World;
-export let uid: string;
-export let selection: Selection;
+import { atom, createStore } from "jotai";
 
 export const enum SelectionType {
   None = 0,
@@ -28,11 +25,20 @@ export const enum SelectionType {
   Building = 3,
 }
 
+export let world: World;
+export let uid: string;
+// export let selection: Selection;
+
+export const store = createStore();
+export const selectionAtom = atom<Selection>({ type: SelectionType.None });
+// store.set(selectionAtom, { type: SelectionType.None });
+
 export type Selection = {
   id?: number;
   type: SelectionType;
 };
 
+// TODO only do this once, probably useEffect
 window.addEventListener(
   "keyup",
   (event) => {
@@ -64,9 +70,9 @@ viewport.on("clicked", (click) => {
       break;
     case 2: //Right
       const clickedHex = round(layout.pixelToHex(point));
-      if (clickedHex && selection.type === SelectionType.Group) {
+      if (clickedHex && store.get(selectionAtom).type === SelectionType.Group) {
         socket.emit("request movement", {
-          selection: selection.id,
+          selection: store.get(selectionAtom).id,
           target: clickedHex,
         });
       }
@@ -169,8 +175,8 @@ socket.on("gamestate groups", (detail) => {
   }
 
   //Update the selection if a group is selected (it might have moved)
-  if (selection.type === SelectionType.Group) {
-    updateSelection(selection);
+  if (store.get(selectionAtom).type === SelectionType.Group) {
+    updateSelection(store.get(selectionAtom));
   }
 
   // TODO: refresh selection?
@@ -237,8 +243,8 @@ socket.on("gamestate buildings", (detail) => {
   }
 
   //Update the selection if a building is selected (it might have updated)
-  if (selection.type === SelectionType.Building) {
-    updateSelection(selection);
+  if (store.get(selectionAtom).type === SelectionType.Building) {
+    updateSelection(store.get(selectionAtom));
   }
   // TODO: refresh selection?
 });
@@ -269,7 +275,7 @@ const requestTiles = () => {
 };
 
 const trySelect = (point: Vector2) => {
-  selection = { type: SelectionType.None };
+  store.set(selectionAtom, { type: SelectionType.None });
 
   const hit = viewport.children.filter((sprite) => {
     return Util.isPointInRectangle(
@@ -286,26 +292,27 @@ const trySelect = (point: Vector2) => {
     const group =
       world.groups[Util.convertSpriteNameToObjectId(sprite.name, "g")];
     if (group) {
-      selection = { type: SelectionType.Group, id: group.id };
+      store.set(selectionAtom, { type: SelectionType.Group, id: group.id });
       break;
     }
 
     const building =
       world.buildings[Util.convertSpriteNameToObjectId(sprite.name, "b")];
     if (building) {
-      selection = { type: SelectionType.Building, id: building.id };
+      store.set(selectionAtom, {
+        type: SelectionType.Building,
+        id: building.id,
+      });
       break;
     }
 
     const hex = round(layout.pixelToHex(point));
     const tile = world.tiles[hash(hex)];
     if (tile) {
-      selection = { type: SelectionType.Tile, id: tile.id };
+      store.set(selectionAtom, { type: SelectionType.Tile, id: tile.id });
     }
   }
   // Update Canvas
-  updateSelection(selection);
+  updateSelection(store.get(selectionAtom));
   // Update HUD
-
-  // TODO: store.dispatch(select(selection));
 };

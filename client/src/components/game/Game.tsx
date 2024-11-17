@@ -1,8 +1,10 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
 import { useSocket } from "../hooks/useSocket";
 import Hud from "./Hud";
+import Loading from "../ui/loading";
+import { Provider } from "jotai";
+import { store } from "@/lib/game/game";
 
 export default function Game() {
   const { connected } = useSocket();
@@ -10,15 +12,11 @@ export default function Game() {
   // TODO: load textures during loading screen
 
   if (!connected) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center">
-        <Loader2 className="animate-spin" />
-      </div>
-    );
+    return <Loading text="Connecting to server..." />;
   }
 
   return (
-    <>
+    <Provider store={store}>
       <Hud />
       <canvas
         className="h-screen w-screen"
@@ -26,6 +24,6 @@ export default function Game() {
           e.preventDefault();
         }}
       />
-    </>
+    </Provider>
   );
 }

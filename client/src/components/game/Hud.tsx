@@ -3,18 +3,18 @@
 import GroupInfo from "./GroupInfo";
 import TileInfo from "./TileInfo";
 import { getTileById } from "@shared/objectutil";
-import { selection, SelectionType, uid, world } from "@/lib/game/game";
+import { selectionAtom, SelectionType, world } from "@/lib/game/game";
 import Link from "next/link";
+import { useAtomValue } from "jotai";
 
 const Hud = () => {
-  const { type, id } = selection;
+  const { type, id } = useAtomValue(selectionAtom);
 
   return (
     <div
       className="[&>*]:pointer-events-auto pointer-events-none absolute inset-0 h-screen w-screen text-white"
       id="hud"
     >
-      <div>Hello {uid}! You&apos;re in game! This is the dev branch btw</div>
       <Link href="/logout">Logout</Link>
 
       <div
