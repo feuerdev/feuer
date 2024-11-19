@@ -3,7 +3,7 @@
 import GroupInfo from "./GroupInfo";
 import TileInfo from "./TileInfo";
 import { getTileById } from "@shared/objectutil";
-import { selectionAtom, SelectionType, world } from "@/lib/game/game";
+import { selectionAtom, SelectionType, world } from "@/lib/game";
 import Link from "next/link";
 import { useAtomValue } from "jotai";
 

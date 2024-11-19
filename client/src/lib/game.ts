@@ -3,10 +3,10 @@ import * as Util from "@shared/util";
 import * as PlayerRelation from "@shared/relation";
 import { Hex, equals, hash, neighborsRange, round } from "@shared/hex";
 import { Battle, Building, Group, Tile, World } from "@shared/objects";
-import { ClientTile } from "./objects";
+import { ClientTile } from "./types";
 import { Hashtable } from "@shared/util";
 import { Point, Sprite } from "pixi.js";
-import socket from "../socket";
+import socket from "./socket";
 import {
   layout,
   removeItem,

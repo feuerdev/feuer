@@ -5,7 +5,7 @@ import { TBuildingTemplate, Tile } from "@shared/objects";
 import Buildings from "@shared/templates/buildings.json";
 import BuildingTemplate from "./BuildingTemplate";
 import ResourceInfo from "./ResourceInfo";
-import { world } from "@/lib/game/game";
+import { world } from "@/lib/game";
 
 const TileInfo = ({ tile }: { tile: Tile }) => {
   if (!tile) {
@@ -35,7 +35,11 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
             <BuildingTemplate
               key={buildingKey}
               tile={tile}
-              building={Buildings[buildingKey as keyof typeof Buildings] as TBuildingTemplate}
+              building={
+                Buildings[
+                  buildingKey as keyof typeof Buildings
+                ] as TBuildingTemplate
+              }
             />
           );
         })}

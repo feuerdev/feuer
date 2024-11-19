@@ -4,7 +4,7 @@ import { Group } from "@shared/objects";
 import { getTileByPos } from "@shared/objectutil";
 import ResourceInfo from "./ResourceInfo";
 import socket from "@/lib/socket";
-import { uid, world } from "@/lib/game/game";
+import { uid, world } from "@/lib/game";
 
 const GroupInfo = ({ group }: { group: Group }) => {
   if (!group) {

@@ -4,7 +4,7 @@ import { useSocket } from "../hooks/useSocket";
 import Hud from "./Hud";
 import Loading from "../ui/loading";
 import { Provider } from "jotai";
-import { store } from "@/lib/game/game";
+import { store } from "@/lib/game";
 
 export default function Game() {
   const { connected } = useSocket();
