@@ -30,7 +30,7 @@ export const loadTextures = () => {
     PIXI.utils.clearTextureCache();
     Loader.shared.reset();
     for (const sprite of Sprites) {
-      Loader.shared.add(sprite, `../img/${sprite}.png`);
+      Loader.shared.add(sprite, `../${sprite}.png`);
     }
 
     function onDone() {
