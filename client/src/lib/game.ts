@@ -3,7 +3,7 @@ import * as Util from "@shared/util";
 import * as PlayerRelation from "@shared/relation";
 import { Hex, equals, hash, neighborsRange, round } from "@shared/hex";
 import { Battle, Building, Group, Tile, World } from "@shared/objects";
-import { ClientTile } from "./types";
+import { ClientTile, SelectionType } from "./types";
 import { Hashtable } from "@shared/util";
 import { Point, Sprite } from "pixi.js";
 import socket from "./socket";
@@ -18,12 +18,6 @@ import {
 } from "./renderer";
 import { atom, createStore } from "jotai";
 
-export const enum SelectionType {
-  None = 0,
-  Group = 1,
-  Tile = 2,
-  Building = 3,
-}
 
 export let world: World;
 export let uid: string;
