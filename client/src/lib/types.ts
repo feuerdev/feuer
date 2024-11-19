@@ -2,7 +2,12 @@ import { Tile } from "@shared/objects";
 
 export type ClientTile = Tile & {
   visible: boolean;
-}
+};
+
+export type Selection = {
+  id?: number;
+  type: SelectionType;
+};
 
 export const enum SelectionType {
   None = 0,

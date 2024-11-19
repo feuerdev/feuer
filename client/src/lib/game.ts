@@ -3,7 +3,7 @@ import * as Util from "@shared/util";
 import * as PlayerRelation from "@shared/relation";
 import { Hex, equals, hash, neighborsRange, round } from "@shared/hex";
 import { Battle, Building, Group, Tile, World } from "@shared/objects";
-import { ClientTile, SelectionType } from "./types";
+import { ClientTile, Selection, SelectionType } from "./types";
 import { Hashtable } from "@shared/util";
 import { Point, Sprite } from "pixi.js";
 import socket from "./socket";
@@ -18,237 +18,232 @@ import {
 } from "./renderer";
 import { atom, createStore } from "jotai";
 
-
 export let world: World;
 export let uid: string;
-// export let selection: Selection;
-
 export const store = createStore();
 export const selectionAtom = atom<Selection>({ type: SelectionType.None });
-// store.set(selectionAtom, { type: SelectionType.None });
 
-export type Selection = {
-  id?: number;
-  type: SelectionType;
-};
+export const setListeners = () => {
+  window.addEventListener(
+    "keyup",
+    (event) => {
+      switch (event.keyCode) {
+        case 187:
+          viewport.zoom(-200, true);
+          break; //+
+        case 189:
+          viewport?.zoom(200, true);
+          break; //-
+        case 191:
+          viewport?.setZoom(1, true);
+          break; //#
+        case 82:
+          viewport!.center = new Point(0, 0);
+          break; //R
+        default:
+          break;
+      }
+    },
+    false
+  );
 
-// TODO only do this once, probably useEffect
-window.addEventListener(
-  "keyup",
-  (event) => {
-    switch (event.keyCode) {
-      case 187:
-        viewport.zoom(-200, true);
-        break; //+
-      case 189:
-        viewport?.zoom(200, true);
-        break; //-
-      case 191:
-        viewport?.setZoom(1, true);
-        break; //#
-      case 82:
-        viewport!.center = new Point(0, 0);
-        break; //R
-      default:
+  viewport.on("clicked", (click) => {
+    const point = create(click.world.x, click.world.y);
+    switch (click.event.data.button) {
+      case 0: //Left
+        trySelect(point);
+        break;
+      case 2: //Right
+        const clickedHex = round(layout.pixelToHex(point));
+        if (
+          clickedHex &&
+          store.get(selectionAtom).type === SelectionType.Group
+        ) {
+          socket.emit("request movement", {
+            selection: store.get(selectionAtom).id,
+            target: clickedHex,
+          });
+        }
         break;
     }
-  },
-  false
-);
+  });
 
-viewport.on("clicked", (click) => {
-  const point = create(click.world.x, click.world.y);
-  switch (click.event.data.button) {
-    case 0: //Left
-      trySelect(point);
-      break;
-    case 2: //Right
-      const clickedHex = round(layout.pixelToHex(point));
-      if (clickedHex && store.get(selectionAtom).type === SelectionType.Group) {
-        socket.emit("request movement", {
-          selection: store.get(selectionAtom).id,
-          target: clickedHex,
-        });
+  socket.on("gamestate tiles", (detail) => {
+    const tiles: Util.Hashtable<ClientTile> =
+      detail as unknown as Util.Hashtable<ClientTile>;
+    const visibleHexes: Hashtable<Hex> = {};
+    Object.values(world.groups).forEach((group) => {
+      neighborsRange(group.pos, group.spotting).forEach((hex) => {
+        visibleHexes[hash(hex)] = hex;
+      });
+    });
+    Object.values(world.buildings).forEach((building) => {
+      neighborsRange(building.position, building.spotting).forEach((hex) => {
+        visibleHexes[hash(hex)] = hex;
+      });
+    });
+
+    Object.entries(tiles).forEach(([id, tile]) => {
+      world.tiles[id] = tile;
+    });
+
+    Object.values(world.tiles).forEach((tile: Tile) => {
+      const cTile = tile as ClientTile;
+      const oldVisibility = cTile.visible;
+      cTile.visible = visibleHexes[hash(tile.hex)] !== undefined;
+      if (oldVisibility !== cTile.visible) {
+        updateScenegraphTile(cTile);
       }
-      break;
-  }
-});
-
-socket.on("gamestate tiles", (detail) => {
-  const tiles: Util.Hashtable<ClientTile> =
-    detail as unknown as Util.Hashtable<ClientTile>;
-  const visibleHexes: Hashtable<Hex> = {};
-  Object.values(world.groups).forEach((group) => {
-    neighborsRange(group.pos, group.spotting).forEach((hex) => {
-      visibleHexes[hash(hex)] = hex;
     });
+
+    //TODO: refresh selection?
   });
-  Object.values(world.buildings).forEach((building) => {
-    neighborsRange(building.position, building.spotting).forEach((hex) => {
-      visibleHexes[hash(hex)] = hex;
+
+  socket.on("gamestate group", (detail) => {
+    const group: Group = detail as unknown as Group;
+    world.groups[group.id] = group;
+    //TODO: refresh selection?
+  });
+
+  socket.on("gamestate groups", (detail) => {
+    const groups: Hashtable<Group> = detail as unknown as Hashtable<Group>;
+    const newGroups: Hashtable<Group> = {};
+    const visitedOldGroups: Hashtable<boolean> = {};
+
+    let needsTileUpdate = false;
+
+    // Merge groups
+    Object.values(groups).forEach((receivedGroup) => {
+      const oldGroup = world.groups[receivedGroup.id];
+      visitedOldGroups[receivedGroup.id] = true;
+      // Check if group is new, has moved or upgraded
+      // Redraw/request tiles accordingly
+      if (
+        !oldGroup ||
+        !equals(oldGroup.pos, receivedGroup.pos) ||
+        oldGroup.spotting !== receivedGroup.spotting
+      ) {
+        updateScenegraphGroup(receivedGroup);
+        needsTileUpdate = true;
+      }
+
+      // If group is new and foreign, request relation
+      if (
+        !oldGroup &&
+        receivedGroup.owner !== uid &&
+        world.playerRelations[PlayerRelation.hash(receivedGroup.owner, uid)] ===
+          undefined
+      ) {
+        window.dispatchEvent(
+          new CustomEvent("request relation", {
+            detail: {
+              id1: receivedGroup.owner,
+              id2: uid,
+            },
+          })
+        );
+      }
+
+      newGroups[receivedGroup.id] = receivedGroup;
     });
-  });
 
-  Object.entries(tiles).forEach(([id, tile]) => {
-    world.tiles[id] = tile;
-  });
+    // Remove groups that are not in the new list
+    Object.entries(world.groups).forEach(([id, oldGroup]) => {
+      if (!visitedOldGroups[id]) {
+        removeItem(oldGroup.id);
+        needsTileUpdate = true;
+      }
+    });
 
-  Object.values(world.tiles).forEach((tile: Tile) => {
-    const cTile = tile as ClientTile;
-    const oldVisibility = cTile.visible;
-    cTile.visible = visibleHexes[hash(tile.hex)] !== undefined;
-    if (oldVisibility !== cTile.visible) {
-      updateScenegraphTile(cTile);
-    }
-  });
+    // Server is sending exhaustive list of groups, so client can clean his own list
+    world.groups = newGroups;
 
-  //TODO: refresh selection?
-});
-
-socket.on("gamestate group", (detail) => {
-  const group: Group = detail as unknown as Group;
-  world.groups[group.id] = group;
-  //TODO: refresh selection?
-});
-
-socket.on("gamestate groups", (detail) => {
-  const groups: Hashtable<Group> = detail as unknown as Hashtable<Group>;
-  const newGroups: Hashtable<Group> = {};
-  const visitedOldGroups: Hashtable<boolean> = {};
-
-  let needsTileUpdate = false;
-
-  // Merge groups
-  Object.values(groups).forEach((receivedGroup) => {
-    const oldGroup = world.groups[receivedGroup.id];
-    visitedOldGroups[receivedGroup.id] = true;
-    // Check if group is new, has moved or upgraded
-    // Redraw/request tiles accordingly
-    if (
-      !oldGroup ||
-      !equals(oldGroup.pos, receivedGroup.pos) ||
-      oldGroup.spotting !== receivedGroup.spotting
-    ) {
-      updateScenegraphGroup(receivedGroup);
-      needsTileUpdate = true;
+    if (needsTileUpdate) {
+      requestTiles();
     }
 
-    // If group is new and foreign, request relation
-    if (
-      !oldGroup &&
-      receivedGroup.owner !== uid &&
-      world.playerRelations[PlayerRelation.hash(receivedGroup.owner, uid)] ===
-        undefined
-    ) {
-      window.dispatchEvent(
-        new CustomEvent("request relation", {
-          detail: {
-            id1: receivedGroup.owner,
-            id2: uid,
-          },
-        })
-      );
+    //Update the selection if a group is selected (it might have moved)
+    if (store.get(selectionAtom).type === SelectionType.Group) {
+      updateSelection(store.get(selectionAtom));
     }
 
-    newGroups[receivedGroup.id] = receivedGroup;
+    // TODO: refresh selection?
   });
 
-  // Remove groups that are not in the new list
-  Object.entries(world.groups).forEach(([id, oldGroup]) => {
-    if (!visitedOldGroups[id]) {
-      removeItem(oldGroup.id);
-      needsTileUpdate = true;
-    }
+  socket.on("gamestate battles", (detail) => {
+    const battles: Battle[] = detail as unknown as Battle[];
+    world.battles = battles;
   });
 
-  // Server is sending exhaustive list of groups, so client can clean his own list
-  world.groups = newGroups;
+  socket.on("gamestate buildings", (detail) => {
+    const buildings: Hashtable<Building> =
+      detail as unknown as Hashtable<Building>;
+    const newBuildings: Hashtable<Building> = {};
+    const visitedOldBuildings: Hashtable<boolean> = {};
 
-  if (needsTileUpdate) {
-    requestTiles();
-  }
+    let needsTileUpdate = false;
 
-  //Update the selection if a group is selected (it might have moved)
-  if (store.get(selectionAtom).type === SelectionType.Group) {
-    updateSelection(store.get(selectionAtom));
-  }
+    // Merge buildings
+    Object.values(buildings).forEach((receivedBuilding) => {
+      const oldBuilding = world.buildings[receivedBuilding.id];
+      visitedOldBuildings[receivedBuilding.id] = true;
+      // Check if Building is new or upgraded
+      // Redraw/request tiles accordingly
+      if (!oldBuilding || oldBuilding.spotting !== receivedBuilding.spotting) {
+        updateScenegraphBuilding(receivedBuilding);
+        needsTileUpdate = true;
+      }
 
-  // TODO: refresh selection?
-});
+      // If building is new and foreign, request relation
+      if (
+        !oldBuilding &&
+        receivedBuilding.owner !== uid &&
+        world.playerRelations[
+          PlayerRelation.hash(receivedBuilding.owner, uid)
+        ] === undefined
+      ) {
+        window.dispatchEvent(
+          new CustomEvent("request relation", {
+            detail: {
+              id1: receivedBuilding.owner,
+              id2: uid,
+            },
+          })
+        );
+      }
 
-socket.on("gamestate battles", (detail) => {
-  const battles: Battle[] = detail as unknown as Battle[];
-  world.battles = battles;
-});
+      newBuildings[receivedBuilding.id] = receivedBuilding;
+    });
 
-socket.on("gamestate buildings", (detail) => {
-  const buildings: Hashtable<Building> =
-    detail as unknown as Hashtable<Building>;
-  const newBuildings: Hashtable<Building> = {};
-  const visitedOldBuildings: Hashtable<boolean> = {};
+    // Remove buildings that are not in the new list
+    Object.entries(world.buildings).forEach(([id, oldBuilding]) => {
+      if (!visitedOldBuildings[id]) {
+        removeItem(oldBuilding.id);
+        needsTileUpdate = true;
+      }
+    });
 
-  let needsTileUpdate = false;
+    // Server is sending exhaustive list of buildings, so client can clean his own list
+    world.buildings = newBuildings;
 
-  // Merge buildings
-  Object.values(buildings).forEach((receivedBuilding) => {
-    const oldBuilding = world.buildings[receivedBuilding.id];
-    visitedOldBuildings[receivedBuilding.id] = true;
-    // Check if Building is new or upgraded
-    // Redraw/request tiles accordingly
-    if (!oldBuilding || oldBuilding.spotting !== receivedBuilding.spotting) {
-      updateScenegraphBuilding(receivedBuilding);
-      needsTileUpdate = true;
+    if (needsTileUpdate) {
+      requestTiles();
     }
 
-    // If building is new and foreign, request relation
-    if (
-      !oldBuilding &&
-      receivedBuilding.owner !== uid &&
-      world.playerRelations[
-        PlayerRelation.hash(receivedBuilding.owner, uid)
-      ] === undefined
-    ) {
-      window.dispatchEvent(
-        new CustomEvent("request relation", {
-          detail: {
-            id1: receivedBuilding.owner,
-            id2: uid,
-          },
-        })
-      );
+    //Update the selection if a building is selected (it might have updated)
+    if (store.get(selectionAtom).type === SelectionType.Building) {
+      updateSelection(store.get(selectionAtom));
     }
-
-    newBuildings[receivedBuilding.id] = receivedBuilding;
+    // TODO: refresh selection?
   });
 
-  // Remove buildings that are not in the new list
-  Object.entries(world.buildings).forEach(([id, oldBuilding]) => {
-    if (!visitedOldBuildings[id]) {
-      removeItem(oldBuilding.id);
-      needsTileUpdate = true;
-    }
+  socket.on("gamestate relation", (detail) => {
+    const relation: PlayerRelation.default =
+      detail as unknown as PlayerRelation.default;
+    const hash = PlayerRelation.hash(relation.id1, relation.id2);
+    world.playerRelations[hash] = relation;
   });
-
-  // Server is sending exhaustive list of buildings, so client can clean his own list
-  world.buildings = newBuildings;
-
-  if (needsTileUpdate) {
-    requestTiles();
-  }
-
-  //Update the selection if a building is selected (it might have updated)
-  if (store.get(selectionAtom).type === SelectionType.Building) {
-    updateSelection(store.get(selectionAtom));
-  }
-  // TODO: refresh selection?
-});
-
-socket.on("gamestate relation", (detail) => {
-  const relation: PlayerRelation.default =
-    detail as unknown as PlayerRelation.default;
-  const hash = PlayerRelation.hash(relation.id1, relation.id2);
-  world.playerRelations[hash] = relation;
-});
+};
 
 //#region Outgoing Messages
 const requestTiles = () => {

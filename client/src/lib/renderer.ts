@@ -4,13 +4,13 @@ import * as PIXI from "pixi.js";
 import { Layout, Hex } from "@shared/hex";
 import * as Vector2 from "@shared/vector2";
 import Rules from "@shared/rules.json";
-import { ClientTile, SelectionType } from "./types";
+import { ClientTile, Selection, SelectionType } from "./types";
 import { Biome, Building, Group } from "@shared/objects";
 import { Filter, Loader } from "pixi.js";
 import Sprites from "./sprites.json";
 import Buildings from "@shared/templates/buildings.json";
 import { convertToSpriteName } from "@shared/util";
-import { Selection, uid } from "./game";
+import { uid } from "./game";
 
 const HEX_SIZE = 40;
 
