@@ -26,8 +26,12 @@ export default function Game() {
     };
   }, []);
 
-  if (!connected || !texturesLoaded) {
+  if (!connected) {
     return <Loading text="Connecting to server..." />;
+  }
+
+  if (!texturesLoaded) {
+    return <Loading text="Loading textures..." />;
   }
 
   return (
