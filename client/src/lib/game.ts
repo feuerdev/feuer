@@ -18,7 +18,16 @@ import {
 } from "./renderer";
 import { atom, createStore } from "jotai";
 
-export let world: World;
+export let world: World = {
+  tiles: {},
+  groups: {},
+  buildings: {},
+  battles: [],
+  playerRelations: {},
+  idCounter: 0,
+  players: {},
+  units: []
+};
 export let uid: string;
 export const store = createStore();
 export const selectionAtom = atom<Selection>({ type: SelectionType.None });
