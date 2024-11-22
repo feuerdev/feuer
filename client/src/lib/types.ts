@@ -15,3 +15,14 @@ export const enum SelectionType {
   Tile = 2,
   Building = 3,
 }
+
+export enum ZIndices {
+  Background = 0,
+  Tiles = 1,
+  TileSelection = 2,
+  Nature = 3,
+  Buildings = 4,
+  BuildingsSelection = 5,
+  Units = 6,
+  UnitsSelection = 7,
+}

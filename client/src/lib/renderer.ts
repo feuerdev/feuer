@@ -4,7 +4,7 @@ import * as PIXI from "pixi.js";
 import { Layout, Hex } from "@shared/hex";
 import * as Vector2 from "@shared/vector2";
 import Rules from "@shared/rules.json";
-import { ClientTile, Selection, SelectionType } from "./types";
+import { ClientTile, Selection, SelectionType, ZIndices } from "./types";
 import { Biome, Building, Group } from "@shared/objects";
 import { Filter, Loader } from "pixi.js";
 import Sprites from "./sprites.json";
@@ -14,16 +14,6 @@ import { uid } from "./game";
 
 const HEX_SIZE = 40;
 
-enum ZIndices {
-  Background = 0,
-  Tiles = 1,
-  TileSelection = 2,
-  Nature = 3,
-  Buildings = 4,
-  BuildingsSelection = 5,
-  Units = 6,
-  UnitsSelection = 7,
-}
 
 export const loadTextures = () => {
   PIXI.utils.clearTextureCache();
