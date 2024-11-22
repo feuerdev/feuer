@@ -28,6 +28,8 @@ export const world: World = {
   players: {},
   units: [],
 };
+
+window.world = world;
 export let uid: string;
 export const store = createStore();
 export const selectionAtom = atom<Selection>({ type: SelectionType.None });

@@ -1,4 +1,10 @@
-import { Tile } from "@shared/objects";
+import { Tile, World } from "@shared/objects";
+
+declare global {
+  interface Window {
+    world: World;
+  }
+}
 
 export type ClientTile = Tile & {
   visible: boolean;
