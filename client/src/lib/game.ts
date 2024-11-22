@@ -18,7 +18,7 @@ import {
 } from "./renderer";
 import { atom, createStore } from "jotai";
 
-export let world: World = {
+export const world: World = {
   tiles: {},
   groups: {},
   buildings: {},
@@ -26,7 +26,7 @@ export let world: World = {
   playerRelations: {},
   idCounter: 0,
   players: {},
-  units: []
+  units: [],
 };
 export let uid: string;
 export const store = createStore();
