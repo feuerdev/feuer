@@ -7,6 +7,7 @@ import { Provider } from "jotai";
 import { removeAllListeners, setListeners, store } from "@/lib/game";
 import { useEffect, useState } from "react";
 import { loadTextures } from "@/lib/renderer";
+import { Canvas } from "./Canvas";
 
 export default function Game() {
   const { connected } = useSocket();
@@ -37,12 +38,7 @@ export default function Game() {
   return (
     <Provider store={store}>
       <Hud />
-      <canvas
-        className="h-screen w-screen"
-        onContextMenu={(e) => {
-          e.preventDefault();
-        }}
-      />
+      <Canvas />
     </Provider>
   );
 }

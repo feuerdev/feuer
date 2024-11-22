@@ -14,11 +14,9 @@ import { uid } from "./game";
 
 const HEX_SIZE = 40;
 
-
 export const loadTextures = () => {
   PIXI.utils.clearTextureCache();
   Loader.shared.reset();
-  
   for (const sprite of Sprites) {
     Loader.shared.add(sprite, `../${sprite}.png`);
   }
@@ -27,41 +25,6 @@ export const loadTextures = () => {
     Loader.shared.load(() => resolve());
   });
 };
-
-const canvas_map = <HTMLCanvasElement>document.querySelector("canvas");
-
-const pixi: PIXI.Renderer = new PIXI.Renderer({
-  view: canvas_map,
-  width: window.innerWidth,
-  height: window.innerHeight,
-  resolution: window.devicePixelRatio,
-  autoDensity: true,
-});
-
-window.addEventListener("resize", () => {
-  pixi.resize(window.innerWidth, window.innerHeight);
-  if (viewport) {
-    viewport.dirty = true;
-  }
-});
-
-export const viewport: Viewport = new Viewport({
-  screenWidth: window.innerWidth,
-  screenHeight: window.innerHeight,
-  worldWidth: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
-  worldHeight: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
-  interaction: pixi.plugins.interaction, // the interaction module is important for wheel() to work properly when renderer.view is placed or scaled
-})
-  .clampZoom({
-    maxScale: 2,
-    minScale: 0.2,
-  })
-  .drag()
-  .pinch()
-  .wheel()
-  .decelerate();
-
-viewport.sortableChildren = true;
 
 export const layout: Layout = new Layout(
   Layout.pointy,
@@ -78,12 +41,53 @@ const GLOWFILTER: Filter = new GlowFilter({
   color: 0x000000,
 }) as unknown as Filter;
 
-PIXI.Ticker.shared.add(() => {
-  if (viewport?.dirty) {
-    pixi.render(viewport);
-    viewport.dirty = false;
-  }
+export const viewport: Viewport = new Viewport({
+  screenWidth: window.innerWidth,
+  screenHeight: window.innerHeight,
+  worldWidth: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
+  worldHeight: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
 });
+
+export const startRenderer = (canvas: HTMLCanvasElement) => {
+  const pixi: PIXI.Renderer = new PIXI.Renderer({
+    view: canvas,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    resolution: window.devicePixelRatio,
+    autoDensity: true,
+  });
+
+  window.addEventListener("resize", () => {
+    pixi.resize(window.innerWidth, window.innerHeight);
+    if (viewport) {
+      viewport.dirty = true;
+    }
+  });
+
+  viewport.options.interaction = pixi.plugins.interaction; // the interaction module is important for wheel() to work properly when renderer.view is placed or scaled
+  viewport.sortableChildren = true;
+  viewport
+    .clampZoom({
+      maxScale: 2,
+      minScale: 0.2,
+    })
+    .drag()
+    .pinch()
+    .wheel()
+    .decelerate();
+
+  PIXI.Ticker.shared.add(() => {
+    if (viewport?.dirty) {
+      pixi.render(viewport);
+      viewport.dirty = false;
+    }
+  });
+};
+
+export const stopRenderer = () => {
+  // PIXI.Ticker.shared.stop();
+  // window.removeEventListener("resize", () => {});
+};
 
 export const updateSelection = (selection: Selection) => {
   const oldSprite = viewport.getChildByName("selection") as PIXI.Graphics;
