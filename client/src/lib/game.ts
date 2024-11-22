@@ -23,35 +23,37 @@ export let uid: string;
 export const store = createStore();
 export const selectionAtom = atom<Selection>({ type: SelectionType.None });
 
+const keyUpHandler = (event: KeyboardEvent) => {
+  switch (event.key) {
+    case "=":
+    case "+":
+      viewport.zoom(-200, true);
+      break;
+    case "-":
+      viewport?.zoom(200, true);
+      break;
+    case "/":
+      viewport?.setZoom(1, true);
+      break;
+    case "r":
+    case "R":
+      viewport!.center = new Point(0, 0);
+      break;
+    default:
+      break;
+  }
+};
+
 export const removeAllListeners = () => {
-  window.removeEventListener("keyup", () => {});
+  console.log("Removing all listeners");
+  window.removeEventListener("keyup", keyUpHandler, false);
   socket.removeAllListeners();
   viewport.removeAllListeners();
 };
 
 export const setListeners = () => {
-  window.addEventListener(
-    "keyup",
-    (event) => {
-      switch (event.keyCode) {
-        case 187:
-          viewport.zoom(-200, true);
-          break; //+
-        case 189:
-          viewport?.zoom(200, true);
-          break; //-
-        case 191:
-          viewport?.setZoom(1, true);
-          break; //#
-        case 82:
-          viewport!.center = new Point(0, 0);
-          break; //R
-        default:
-          break;
-      }
-    },
-    false
-  );
+  console.log("Setting all listeners");
+  window.addEventListener("keyup", keyUpHandler, false);
 
   viewport.on("clicked", (click) => {
     const point = create(click.world.x, click.world.y);
