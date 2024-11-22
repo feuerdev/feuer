@@ -26,21 +26,16 @@ enum ZIndices {
 }
 
 export const loadTextures = () => {
-  const promise = new Promise<void>((resolve) => {
-    PIXI.utils.clearTextureCache();
-    Loader.shared.reset();
-    for (const sprite of Sprites) {
-      Loader.shared.add(sprite, `../${sprite}.png`);
-    }
+  PIXI.utils.clearTextureCache();
+  Loader.shared.reset();
+  
+  for (const sprite of Sprites) {
+    Loader.shared.add(sprite, `../${sprite}.png`);
+  }
 
-    function onDone() {
-      resolve();
-    }
-
-    Loader.shared.load(onDone);
+  return new Promise<void>((resolve) => {
+    Loader.shared.load(() => resolve());
   });
-
-  return promise;
 };
 
 const canvas_map = <HTMLCanvasElement>document.querySelector("canvas");

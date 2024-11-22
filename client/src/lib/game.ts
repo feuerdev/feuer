@@ -23,6 +23,12 @@ export let uid: string;
 export const store = createStore();
 export const selectionAtom = atom<Selection>({ type: SelectionType.None });
 
+export const removeAllListeners = () => {
+  window.removeEventListener("keyup", () => {});
+  socket.removeAllListeners();
+  viewport.removeAllListeners();
+};
+
 export const setListeners = () => {
   window.addEventListener(
     "keyup",

@@ -4,7 +4,7 @@ import { useSocket } from "../hooks/useSocket";
 import Hud from "./Hud";
 import Loading from "../ui/loading";
 import { Provider } from "jotai";
-import { setListeners, store } from "@/lib/game";
+import { removeAllListeners, setListeners, store } from "@/lib/game";
 import { useEffect, useState } from "react";
 import { loadTextures } from "@/lib/renderer";
 
@@ -12,23 +12,22 @@ export default function Game() {
   const { connected } = useSocket();
   const [texturesLoaded, setTexturesLoaded] = useState(false);
 
-  // TODO: load textures during loading screen
-
   useEffect(() => {
     setListeners();
-    loadTextures().then(() => {
+    const loadTexturesAsync = async () => {
+      await loadTextures();
       setTexturesLoaded(true);
-    });
+    };
 
-    //TODO: remove listeners?
+    loadTexturesAsync();
+
+    return () => {
+      removeAllListeners();
+    };
   }, []);
 
-  if (!connected) {
+  if (!connected || !texturesLoaded) {
     return <Loading text="Connecting to server..." />;
-  }
-
-  if (!texturesLoaded) {
-    return <Loading text="Loading textures..." />;
   }
 
   return (
