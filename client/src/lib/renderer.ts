@@ -44,14 +44,6 @@ const GLOWFILTER: Filter = new GlowFilter({
 // We'll create the viewport in startRenderer when we have the actual dimensions
 let viewport: Viewport;
 let pixi: PIXI.Application | null = null;
-let animationFrame: number | null = null;
-
-const renderLoop = () => {
-  if (!pixi) return;
-
-  // No need for manual rendering - PIXI.Application handles this
-  animationFrame = requestAnimationFrame(renderLoop);
-};
 
 export const startRenderer = (canvas: HTMLCanvasElement) => {
   // First clean up any existing renderer
@@ -110,8 +102,9 @@ export const startRenderer = (canvas: HTMLCanvasElement) => {
       .wheel()
       .decelerate();
 
-    // Start the render loop (just for animation frame tracking)
-    animationFrame = requestAnimationFrame(renderLoop);
+    viewport.on("clicked", (click) => {
+      console.log("clicked", click);
+    });
 
     return true;
   } catch (error) {
@@ -121,11 +114,6 @@ export const startRenderer = (canvas: HTMLCanvasElement) => {
 };
 
 export const stopRenderer = () => {
-  if (animationFrame !== null) {
-    cancelAnimationFrame(animationFrame);
-    animationFrame = null;
-  }
-
   if (pixi) {
     // Don't pass true to destroy() so it won't remove the canvas
     pixi.destroy(false);
@@ -402,8 +390,6 @@ export const findSpritesAtPoint = (point: { x: number; y: number }) => {
 export const setupViewportClickHandlers = (
   clickHandler: (point: { x: number; y: number }, button: number) => void
 ) => {
-  if (!viewport) return false;
-
   viewport.on("clicked", (click) => {
     clickHandler(
       { x: click.world.x, y: click.world.y },
