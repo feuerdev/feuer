@@ -1,9 +1,8 @@
 import { startRenderer, stopRenderer } from "@/lib/renderer";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 export function Canvas() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [renderError, setRenderError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -28,14 +27,5 @@ export function Canvas() {
     return cleanup;
   }, []);
 
-  return (
-    <>
-      {renderError && (
-        <div className="absolute top-0 left-0 right-0 bg-red-600 text-white p-2 text-center">
-          {renderError}
-        </div>
-      )}
-      <div ref={containerRef} className="h-screen w-screen" />
-    </>
-  );
+  return <div ref={containerRef} className="h-screen w-screen" />;
 }

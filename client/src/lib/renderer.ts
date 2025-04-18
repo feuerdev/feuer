@@ -103,7 +103,6 @@ export const startRenderer = (canvas: HTMLCanvasElement) => {
     .wheel()
     .decelerate();
 
-  // Mark viewport as ready
   viewportReady = true;
 };
 
@@ -393,8 +392,7 @@ export const findSpritesAtPoint = (point: { x: number; y: number }) => {
   if (!viewport) return [];
 
   return viewport.children.filter((sprite) => {
-    // Type cast to any to access width and height properties
-    const displayObject = sprite as any;
+    const displayObject = sprite as PIXI.Sprite;
     if (!displayObject.width || !displayObject.height) return false;
 
     return (
