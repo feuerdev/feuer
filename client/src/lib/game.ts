@@ -13,7 +13,8 @@ import {
   updateScenegraphGroup,
   updateScenegraphTile,
   updateSelection,
-  setupViewportClickHandlers,
+  isViewportReady,
+  registerViewportClickHandler,
   zoomIn,
   zoomOut,
   resetZoom,
@@ -94,8 +95,7 @@ export const setListeners = () => {
   console.log("Setting all listeners");
   window.addEventListener("keyup", keyUpHandler, false);
 
-  // We no longer set up viewport click handlers here
-  // The handler will be passed directly to startRenderer in the Canvas component
+  trySetupViewportClickHandlers();
 
   // Set up socket listeners
   socket.on("gamestate tiles", (detail) => {
@@ -334,4 +334,21 @@ const trySelect = (point: Vector2) => {
 
   // Update Canvas
   updateSelection(store.get(selectionAtom));
+};
+
+// Attempt to register viewport click handlers
+// Will retry if viewport isn't ready yet
+const trySetupViewportClickHandlers = () => {
+  // If viewport is ready, register click handler
+  if (isViewportReady()) {
+    const success = registerViewportClickHandler(handleViewportClick);
+    if (success) {
+      console.log("Successfully registered viewport click handler");
+      return;
+    }
+  }
+
+  // If we got here, viewport is not ready yet, try again in a moment
+  console.log("Viewport not ready, will try again in 500ms");
+  setTimeout(trySetupViewportClickHandlers, 500);
 };

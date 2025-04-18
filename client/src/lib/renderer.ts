@@ -44,82 +44,67 @@ const GLOWFILTER: Filter = new GlowFilter({
 // We'll create the viewport in startRenderer when we have the actual dimensions
 let viewport: Viewport;
 let pixi: PIXI.Application | null = null;
+let viewportReady = false;
 
-export const startRenderer = (
-  canvas: HTMLCanvasElement,
-  clickHandler?: (point: { x: number; y: number }, button: number) => void
-) => {
+export const startRenderer = (canvas: HTMLCanvasElement) => {
   // First clean up any existing renderer
   stopRenderer();
+  viewportReady = false;
 
-  try {
-    // Create a PIXI Application
-    pixi = new PIXI.Application({
-      view: canvas,
-      width: window.innerWidth,
-      height: window.innerHeight,
-      resolution: window.devicePixelRatio || 1,
-      autoDensity: true,
-      antialias: true,
-      backgroundAlpha: 1,
-      forceCanvas: false,
-      // Important: Use PIXI's ticker for consistent updates
-      autoStart: true,
-    });
+  // Create a PIXI Application
+  pixi = new PIXI.Application({
+    view: canvas,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    resolution: window.devicePixelRatio || 1,
+    autoDensity: true,
+    antialias: true,
+    backgroundAlpha: 1,
+    forceCanvas: false,
+    // Important: Use PIXI's ticker for consistent updates
+    autoStart: true,
+  });
 
-    // Create the viewport using the application's screen dimensions
-    viewport = new Viewport({
-      screenWidth: pixi.screen.width,
-      screenHeight: pixi.screen.height,
-      worldWidth: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
-      worldHeight: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
-      // This is crucial - use the application's interaction manager
-      interaction: pixi.renderer.plugins.interaction,
-    });
+  // Create the viewport using the application's screen dimensions
+  viewport = new Viewport({
+    screenWidth: pixi.screen.width,
+    screenHeight: pixi.screen.height,
+    worldWidth: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
+    worldHeight: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
+    // This is crucial - use the application's interaction manager
+    interaction: pixi.renderer.plugins.interaction,
+  });
 
-    // Add the viewport to the stage
-    pixi.stage.addChild(viewport);
+  // Add the viewport to the stage
+  pixi.stage.addChild(viewport);
 
-    const resizeHandler = () => {
-      if (!pixi) return;
+  const resizeHandler = () => {
+    if (!pixi) return;
 
-      pixi.renderer.resize(window.innerWidth, window.innerHeight);
+    pixi.renderer.resize(window.innerWidth, window.innerHeight);
 
-      // Update viewport dimensions on resize
-      viewport.screenWidth = pixi.screen.width;
-      viewport.screenHeight = pixi.screen.height;
-      viewport.resize(pixi.screen.width, pixi.screen.height);
-    };
+    // Update viewport dimensions on resize
+    viewport.screenWidth = pixi.screen.width;
+    viewport.screenHeight = pixi.screen.height;
+    viewport.resize(pixi.screen.width, pixi.screen.height);
+  };
 
-    window.addEventListener("resize", resizeHandler);
+  window.addEventListener("resize", resizeHandler);
 
-    // Configure the viewport for user interaction
-    viewport.sortableChildren = true;
-    viewport
-      .clampZoom({
-        maxScale: 2,
-        minScale: 0.2,
-      })
-      .drag()
-      .pinch()
-      .wheel()
-      .decelerate();
+  // Configure the viewport for user interaction
+  viewport.sortableChildren = true;
+  viewport
+    .clampZoom({
+      maxScale: 2,
+      minScale: 0.2,
+    })
+    .drag()
+    .pinch()
+    .wheel()
+    .decelerate();
 
-    // Set up click handler if provided
-    if (clickHandler) {
-      viewport.on("clicked", (click) => {
-        clickHandler(
-          { x: click.world.x, y: click.world.y },
-          click.event.data.button
-        );
-      });
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Failed to initialize renderer:", error);
-    return false;
-  }
+  // Mark viewport as ready
+  viewportReady = true;
 };
 
 export const stopRenderer = () => {
@@ -129,9 +114,35 @@ export const stopRenderer = () => {
     pixi = null;
   }
 
+  viewportReady = false;
   // Remove resize event listeners
   window.removeEventListener("resize", () => {});
 };
+
+// New function to check if viewport is ready
+export const isViewportReady = () => viewportReady;
+
+// Function to register a viewport click handler that can be called from game.ts
+export const registerViewportClickHandler = (
+  clickHandler: (point: { x: number; y: number }, button: number) => void
+): boolean => {
+  if (!viewport || !viewportReady) {
+    console.warn("Viewport not initialized - click handler not set");
+    return false;
+  }
+
+  viewport.on("clicked", (click) => {
+    clickHandler(
+      { x: click.world.x, y: click.world.y },
+      click.event.data.button
+    );
+  });
+
+  return true;
+};
+
+// Function to set up viewport click handlers (deprecated but kept for compatibility)
+export const setupViewportClickHandlers = registerViewportClickHandler;
 
 export const updateSelection = (selection: Selection) => {
   if (!viewport) return;
@@ -414,24 +425,4 @@ export const resetZoom = () => {
 export const centerViewport = (x = 0, y = 0) => {
   if (!viewport) return;
   viewport.center = new PIXI.Point(x, y);
-};
-
-// Function to set up viewport click handlers
-// @deprecated Use clickHandler parameter in startRenderer instead
-export const setupViewportClickHandlers = (
-  clickHandler: (point: { x: number; y: number }, button: number) => void
-) => {
-  if (!viewport) {
-    console.warn("Viewport not initialized - click handler not set");
-    return false;
-  }
-
-  viewport.on("clicked", (click) => {
-    clickHandler(
-      { x: click.world.x, y: click.world.y },
-      click.event.data.button
-    );
-  });
-
-  return true;
 };
