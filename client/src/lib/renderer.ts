@@ -45,7 +45,10 @@ const GLOWFILTER: Filter = new GlowFilter({
 let viewport: Viewport;
 let pixi: PIXI.Application | null = null;
 
-export const startRenderer = (canvas: HTMLCanvasElement) => {
+export const startRenderer = (
+  canvas: HTMLCanvasElement,
+  clickHandler?: (point: { x: number; y: number }, button: number) => void
+) => {
   // First clean up any existing renderer
   stopRenderer();
 
@@ -102,9 +105,15 @@ export const startRenderer = (canvas: HTMLCanvasElement) => {
       .wheel()
       .decelerate();
 
-    viewport.on("clicked", (click) => {
-      console.log("clicked", click);
-    });
+    // Set up click handler if provided
+    if (clickHandler) {
+      viewport.on("clicked", (click) => {
+        clickHandler(
+          { x: click.world.x, y: click.world.y },
+          click.event.data.button
+        );
+      });
+    }
 
     return true;
   } catch (error) {
@@ -386,20 +395,6 @@ export const findSpritesAtPoint = (point: { x: number; y: number }) => {
   });
 };
 
-// Function to set up viewport click handlers
-export const setupViewportClickHandlers = (
-  clickHandler: (point: { x: number; y: number }, button: number) => void
-) => {
-  viewport.on("clicked", (click) => {
-    clickHandler(
-      { x: click.world.x, y: click.world.y },
-      click.event.data.button
-    );
-  });
-
-  return true;
-};
-
 // Add these viewport control functions
 export const zoomIn = () => {
   if (!viewport) return;
@@ -419,4 +414,24 @@ export const resetZoom = () => {
 export const centerViewport = (x = 0, y = 0) => {
   if (!viewport) return;
   viewport.center = new PIXI.Point(x, y);
+};
+
+// Function to set up viewport click handlers
+// @deprecated Use clickHandler parameter in startRenderer instead
+export const setupViewportClickHandlers = (
+  clickHandler: (point: { x: number; y: number }, button: number) => void
+) => {
+  if (!viewport) {
+    console.warn("Viewport not initialized - click handler not set");
+    return false;
+  }
+
+  viewport.on("clicked", (click) => {
+    clickHandler(
+      { x: click.world.x, y: click.world.y },
+      click.event.data.button
+    );
+  });
+
+  return true;
 };

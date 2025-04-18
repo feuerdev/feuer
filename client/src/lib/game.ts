@@ -80,6 +80,9 @@ const handleViewportClick = (
   }
 };
 
+// Export the click handler so it can be used directly by the Canvas component
+export { handleViewportClick };
+
 export const removeAllListeners = () => {
   console.log("Removing all listeners");
   window.removeEventListener("keyup", keyUpHandler, false);
@@ -91,13 +94,8 @@ export const setListeners = () => {
   console.log("Setting all listeners");
   window.addEventListener("keyup", keyUpHandler, false);
 
-  // Try to set up viewport click handlers
-  const success = setupViewportClickHandlers(handleViewportClick);
-  if (!success) {
-    console.warn(
-      "Failed to set up viewport click handlers - viewport not initialized yet"
-    );
-  }
+  // We no longer set up viewport click handlers here
+  // The handler will be passed directly to startRenderer in the Canvas component
 
   // Set up socket listeners
   socket.on("gamestate tiles", (detail) => {

@@ -1,4 +1,5 @@
 import { startRenderer, stopRenderer } from "@/lib/renderer";
+import { handleViewportClick } from "@/lib/game";
 import { useEffect, useRef, useState } from "react";
 
 export function Canvas() {
@@ -17,7 +18,8 @@ export function Canvas() {
     containerRef.current.innerHTML = "";
     containerRef.current.appendChild(canvas);
 
-    const success = startRenderer(canvas);
+    // Pass the click handler directly to startRenderer
+    const success = startRenderer(canvas, handleViewportClick);
     if (!success) {
       setRenderError(
         "Failed to initialize the renderer. Your browser may not support WebGL."
