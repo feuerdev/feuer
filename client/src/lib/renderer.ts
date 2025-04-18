@@ -41,58 +41,108 @@ const GLOWFILTER: Filter = new GlowFilter({
   color: 0x000000,
 }) as unknown as Filter;
 
-export const viewport: Viewport = new Viewport({
-  screenWidth: window.innerWidth,
-  screenHeight: window.innerHeight,
-  worldWidth: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
-  worldHeight: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
-});
+// We'll create the viewport in startRenderer when we have the actual dimensions
+let viewport: Viewport;
+let pixi: PIXI.Application | null = null;
+let animationFrame: number | null = null;
+
+const renderLoop = () => {
+  if (!pixi) return;
+
+  // No need for manual rendering - PIXI.Application handles this
+  animationFrame = requestAnimationFrame(renderLoop);
+};
 
 export const startRenderer = (canvas: HTMLCanvasElement) => {
-  const pixi: PIXI.Renderer = new PIXI.Renderer({
-    view: canvas,
-    width: window.innerWidth,
-    height: window.innerHeight,
-    resolution: window.devicePixelRatio,
-    autoDensity: true,
-  });
+  // First clean up any existing renderer
+  stopRenderer();
 
-  window.addEventListener("resize", () => {
-    pixi.resize(window.innerWidth, window.innerHeight);
-    if (viewport) {
-      viewport.dirty = true;
-    }
-  });
+  try {
+    // Create a PIXI Application
+    pixi = new PIXI.Application({
+      view: canvas,
+      width: window.innerWidth,
+      height: window.innerHeight,
+      resolution: window.devicePixelRatio || 1,
+      autoDensity: true,
+      antialias: true,
+      backgroundAlpha: 1,
+      forceCanvas: false,
+      // Important: Use PIXI's ticker for consistent updates
+      autoStart: true,
+    });
 
-  viewport.options.interaction = pixi.plugins.interaction; // the interaction module is important for wheel() to work properly when renderer.view is placed or scaled
-  viewport.sortableChildren = true;
-  viewport
-    .clampZoom({
-      maxScale: 2,
-      minScale: 0.2,
-    })
-    .drag()
-    .pinch()
-    .wheel()
-    .decelerate();
+    // Create the viewport using the application's screen dimensions
+    viewport = new Viewport({
+      screenWidth: pixi.screen.width,
+      screenHeight: pixi.screen.height,
+      worldWidth: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
+      worldHeight: (Rules.settings.map_size * 2 + 1) * HEX_SIZE,
+      // This is crucial - use the application's interaction manager
+      interaction: pixi.renderer.plugins.interaction,
+    });
 
-  PIXI.Ticker.shared.add(() => {
-    if (viewport?.dirty) {
-      pixi.render(viewport);
-      viewport.dirty = false;
-    }
-  });
+    // Add the viewport to the stage
+    pixi.stage.addChild(viewport);
+
+    const resizeHandler = () => {
+      if (!pixi) return;
+
+      pixi.renderer.resize(window.innerWidth, window.innerHeight);
+
+      // Update viewport dimensions on resize
+      viewport.screenWidth = pixi.screen.width;
+      viewport.screenHeight = pixi.screen.height;
+      viewport.resize(pixi.screen.width, pixi.screen.height);
+    };
+
+    window.addEventListener("resize", resizeHandler);
+
+    // Configure the viewport for user interaction
+    viewport.sortableChildren = true;
+    viewport
+      .clampZoom({
+        maxScale: 2,
+        minScale: 0.2,
+      })
+      .drag()
+      .pinch()
+      .wheel()
+      .decelerate();
+
+    // Start the render loop (just for animation frame tracking)
+    animationFrame = requestAnimationFrame(renderLoop);
+
+    return true;
+  } catch (error) {
+    console.error("Failed to initialize renderer:", error);
+    return false;
+  }
 };
 
 export const stopRenderer = () => {
-  // PIXI.Ticker.shared.stop();
-  // window.removeEventListener("resize", () => {});
+  if (animationFrame !== null) {
+    cancelAnimationFrame(animationFrame);
+    animationFrame = null;
+  }
+
+  if (pixi) {
+    // Don't pass true to destroy() so it won't remove the canvas
+    pixi.destroy(false);
+    pixi = null;
+  }
+
+  // Remove resize event listeners
+  window.removeEventListener("resize", () => {});
 };
 
 export const updateSelection = (selection: Selection) => {
+  if (!viewport) return;
+
   const oldSprite = viewport.getChildByName("selection") as PIXI.Graphics;
-  viewport.removeChild(oldSprite);
-  viewport.dirty = true;
+  if (oldSprite) {
+    viewport.removeChild(oldSprite);
+  }
 
   if (selection.id === undefined) {
     return;
@@ -127,22 +177,25 @@ export const updateSelection = (selection: Selection) => {
   sprite.height = original.height;
 
   sprite.filters = [GLOWFILTER];
-
-  viewport.dirty = true;
 };
 
 export const removeItem = (id: number) => {
+  if (!viewport) return;
+
   const oldSprite = viewport.getChildByName(String(id)) as PIXI.Sprite;
-  viewport.removeChild(oldSprite);
-  viewport.dirty = true;
+  if (oldSprite) {
+    viewport.removeChild(oldSprite);
+  }
 };
 
 export const updateScenegraphGroup = (group: Group) => {
+  if (!viewport) return;
+
   if (!initialFocusSet) {
     initialFocusSet = true;
     centerOn(group.pos);
   }
-  viewport.dirty = true;
+
   const spriteName = convertToSpriteName(group.id, "g");
   let object = viewport.getChildByName(spriteName) as PIXI.Sprite;
   if (!object) {
@@ -160,7 +213,9 @@ export const updateScenegraphGroup = (group: Group) => {
   const oldSprite = viewport.getChildByName(
     "MovementIndicator"
   ) as PIXI.Graphics;
-  viewport.removeChild(oldSprite);
+  if (oldSprite) {
+    viewport.removeChild(oldSprite);
+  }
 
   if (group.owner === uid) {
     const movementIndicatorContainer = new PIXI.Container();
@@ -185,7 +240,7 @@ export const updateScenegraphGroup = (group: Group) => {
 };
 
 export const updateScenegraphBuilding = (building: Building) => {
-  viewport.dirty = true;
+  if (!viewport) return;
 
   const spriteName = convertToSpriteName(building.id, "b");
   let object = viewport.getChildByName(spriteName) as PIXI.Sprite;
@@ -202,7 +257,7 @@ export const updateScenegraphBuilding = (building: Building) => {
 };
 
 export const updateScenegraphTile = (tile: ClientTile) => {
-  viewport.dirty = true;
+  if (!viewport) return;
 
   const spriteName = convertToSpriteName(tile.id, "t");
   let object = viewport.getChildByName(spriteName) as PIXI.Sprite;
@@ -227,6 +282,8 @@ export const updateScenegraphTile = (tile: ClientTile) => {
 };
 
 const centerOn = (pos: Hex) => {
+  if (!viewport) return;
+
   const x = layout.hexToPixel(pos).x;
   const y = layout.hexToPixel(pos).y;
   viewport.center = new PIXI.Point(x, y);
@@ -321,4 +378,59 @@ const getSelectionZIndex = (selection: Selection) => {
   } else {
     throw new Error("Unknown selection type");
   }
+};
+
+// Function to find sprites at a given point
+export const findSpritesAtPoint = (point: { x: number; y: number }) => {
+  if (!viewport) return [];
+
+  return viewport.children.filter((sprite) => {
+    // Type cast to any to access width and height properties
+    const displayObject = sprite as any;
+    if (!displayObject.width || !displayObject.height) return false;
+
+    return (
+      point.x >= displayObject.x &&
+      point.x <= displayObject.x + displayObject.width &&
+      point.y >= displayObject.y &&
+      point.y <= displayObject.y + displayObject.height
+    );
+  });
+};
+
+// Function to set up viewport click handlers
+export const setupViewportClickHandlers = (
+  clickHandler: (point: { x: number; y: number }, button: number) => void
+) => {
+  if (!viewport) return false;
+
+  viewport.on("clicked", (click) => {
+    clickHandler(
+      { x: click.world.x, y: click.world.y },
+      click.event.data.button
+    );
+  });
+
+  return true;
+};
+
+// Add these viewport control functions
+export const zoomIn = () => {
+  if (!viewport) return;
+  viewport.zoom(-200, true);
+};
+
+export const zoomOut = () => {
+  if (!viewport) return;
+  viewport.zoom(200, true);
+};
+
+export const resetZoom = () => {
+  if (!viewport) return;
+  viewport.setZoom(1, true);
+};
+
+export const centerViewport = (x = 0, y = 0) => {
+  if (!viewport) return;
+  viewport.center = new PIXI.Point(x, y);
 };

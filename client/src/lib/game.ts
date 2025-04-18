@@ -5,7 +5,6 @@ import { Hex, equals, hash, neighborsRange, round } from "@shared/hex";
 import { Battle, Building, Group, Tile, World } from "@shared/objects";
 import { ClientTile, Selection, SelectionType } from "./types";
 import { Hashtable } from "@shared/util";
-import { Point, Sprite } from "pixi.js";
 import socket from "./socket";
 import {
   layout,
@@ -14,7 +13,12 @@ import {
   updateScenegraphGroup,
   updateScenegraphTile,
   updateSelection,
-  viewport,
+  setupViewportClickHandlers,
+  zoomIn,
+  zoomOut,
+  resetZoom,
+  centerViewport,
+  findSpritesAtPoint,
 } from "./renderer";
 import { atom, createStore } from "jotai";
 
@@ -38,19 +42,40 @@ const keyUpHandler = (event: KeyboardEvent) => {
   switch (event.key) {
     case "=":
     case "+":
-      viewport.zoom(-200, true);
+      zoomIn();
       break;
     case "-":
-      viewport?.zoom(200, true);
+      zoomOut();
       break;
     case "/":
-      viewport?.setZoom(1, true);
+      resetZoom();
       break;
     case "r":
     case "R":
-      viewport!.center = new Point(0, 0);
+      centerViewport();
       break;
     default:
+      break;
+  }
+};
+
+const handleViewportClick = (
+  point: { x: number; y: number },
+  button: number
+) => {
+  const vec2Point = create(point.x, point.y);
+  switch (button) {
+    case 0: //Left
+      trySelect(vec2Point);
+      break;
+    case 2: //Right
+      const clickedHex = round(layout.pixelToHex(vec2Point));
+      if (clickedHex && store.get(selectionAtom).type === SelectionType.Group) {
+        socket.emit("request movement", {
+          selection: store.get(selectionAtom).id,
+          target: clickedHex,
+        });
+      }
       break;
   }
 };
@@ -59,34 +84,22 @@ export const removeAllListeners = () => {
   console.log("Removing all listeners");
   window.removeEventListener("keyup", keyUpHandler, false);
   socket.removeAllListeners();
-  viewport.removeAllListeners();
+  // Viewport listeners are managed by the renderer module
 };
 
 export const setListeners = () => {
   console.log("Setting all listeners");
   window.addEventListener("keyup", keyUpHandler, false);
 
-  viewport.on("clicked", (click) => {
-    const point = create(click.world.x, click.world.y);
-    switch (click.event.data.button) {
-      case 0: //Left
-        trySelect(point);
-        break;
-      case 2: //Right
-        const clickedHex = round(layout.pixelToHex(point));
-        if (
-          clickedHex &&
-          store.get(selectionAtom).type === SelectionType.Group
-        ) {
-          socket.emit("request movement", {
-            selection: store.get(selectionAtom).id,
-            target: clickedHex,
-          });
-        }
-        break;
-    }
-  });
+  // Try to set up viewport click handlers
+  const success = setupViewportClickHandlers(handleViewportClick);
+  if (!success) {
+    console.warn(
+      "Failed to set up viewport click handlers - viewport not initialized yet"
+    );
+  }
 
+  // Set up socket listeners
   socket.on("gamestate tiles", (detail) => {
     const tiles: Util.Hashtable<ClientTile> =
       detail as unknown as Util.Hashtable<ClientTile>;
@@ -285,27 +298,24 @@ const requestTiles = () => {
 const trySelect = (point: Vector2) => {
   store.set(selectionAtom, { type: SelectionType.None });
 
-  const hit = viewport.children.filter((sprite) => {
-    return Util.isPointInRectangle(
-      point.x,
-      point.y,
-      sprite.x,
-      sprite.y,
-      (<Sprite>sprite).width,
-      (<Sprite>sprite).height
-    );
-  });
+  // Use the new findSpritesAtPoint function
+  const hit = findSpritesAtPoint(point);
 
   for (const sprite of hit) {
-    const group =
-      world.groups[Util.convertSpriteNameToObjectId(sprite.name, "g")];
+    // Use the sprite name to find the corresponding object
+    const spriteName = sprite.name || "";
+
+    // Check if it's a group
+    const groupId = Util.convertSpriteNameToObjectId(spriteName, "g");
+    const group = world.groups[groupId];
     if (group) {
       store.set(selectionAtom, { type: SelectionType.Group, id: group.id });
       break;
     }
 
-    const building =
-      world.buildings[Util.convertSpriteNameToObjectId(sprite.name, "b")];
+    // Check if it's a building
+    const buildingId = Util.convertSpriteNameToObjectId(spriteName, "b");
+    const building = world.buildings[buildingId];
     if (building) {
       store.set(selectionAtom, {
         type: SelectionType.Building,
@@ -313,14 +323,17 @@ const trySelect = (point: Vector2) => {
       });
       break;
     }
+  }
 
+  // If no sprite was hit, try selecting a tile
+  if (store.get(selectionAtom).type === SelectionType.None) {
     const hex = round(layout.pixelToHex(point));
     const tile = world.tiles[hash(hex)];
     if (tile) {
       store.set(selectionAtom, { type: SelectionType.Tile, id: tile.id });
     }
   }
+
   // Update Canvas
   updateSelection(store.get(selectionAtom));
-  // Update HUD
 };

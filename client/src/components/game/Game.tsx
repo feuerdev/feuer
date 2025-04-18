@@ -5,25 +5,30 @@ import Hud from "./Hud";
 import Loading from "../ui/loading";
 import { Provider } from "jotai";
 import { removeAllListeners, setListeners, store } from "@/lib/game";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { loadTextures } from "@/lib/renderer";
 import { Canvas } from "./Canvas";
 
 export default function Game() {
   const { connected } = useSocket();
   const [texturesLoaded, setTexturesLoaded] = useState(false);
+  const renderInitialized = useRef(false);
 
   useEffect(() => {
-    setListeners();
     const loadTexturesAsync = async () => {
       await loadTextures();
       setTexturesLoaded(true);
+      // Now textures are loaded, we can set listeners
+      setListeners();
+      renderInitialized.current = true;
     };
 
     loadTexturesAsync();
 
     return () => {
-      removeAllListeners();
+      if (renderInitialized.current) {
+        removeAllListeners();
+      }
     };
   }, []);
 
