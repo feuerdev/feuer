@@ -1,10 +1,6 @@
 import { io } from "socket.io-client";
 
-if (!process.env.NEXT_PUBLIC_SERVER_URL) {
-  throw new Error("NEXT_PUBLIC_SERVER_URL is not set");
-}
-
-const socket = io(process.env.NEXT_PUBLIC_SERVER_URL, {
+const socket = io(import.meta.env.VITE_SERVER_URL || "http://localhost:5001", {
   autoConnect: false,
   withCredentials: true,
 });
