@@ -34,12 +34,12 @@ export function radiansToDegrees(angle: number): number {
 }
 
 export function isPointInRectangle(
-  pointX,
-  pointY,
-  rectX,
-  rectY,
-  rectWidth,
-  rectHeight
+  pointX: number,
+  pointY: number,
+  rectX: number,
+  rectY: number,
+  rectWidth: number,
+  rectHeight: number
 ) {
   if (pointX > rectX && pointX < rectX + rectWidth) {
     if (pointY > rectY && pointY < rectY + rectHeight) {
