@@ -1,6 +1,6 @@
 "use client";
 
-import socket from "@/lib/socket";
+import { useSocket } from "@/components/hooks/useSocket";
 import { TBuildingTemplate, Tile } from "@shared/objects";
 
 const BuildingTemplate = ({
@@ -10,6 +10,8 @@ const BuildingTemplate = ({
   building: TBuildingTemplate;
   tile: Tile;
 }) => {
+  const { socket } = useSocket();
+
   return (
     <div className="flex gap-4">
       <img

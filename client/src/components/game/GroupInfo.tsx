@@ -4,9 +4,11 @@ import { Group } from "@shared/objects";
 import { getTileByPos } from "@shared/objectutil";
 import ResourceInfo from "./ResourceInfo";
 import socket from "@/lib/socket";
-import { uid, world } from "@/lib/game";
+import { useGameStateContext } from "@/lib/GameStateProvider";
 
 const GroupInfo = ({ group }: { group: Group }) => {
+  const { world, uid } = useGameStateContext();
+
   if (!group) {
     return <div>No group selected</div>;
   }
@@ -24,7 +26,7 @@ const GroupInfo = ({ group }: { group: Group }) => {
           {/* General Info */}
           <h2 className="col-span-2 text-xl">Group</h2>
           <div>Owner</div>
-          <div>{group.owner == uid ? "You" : "Other Player"}</div>
+          <div>{group.owner === uid ? "You" : "Other Player"}</div>
           <div>Position</div>
           <div>
             {group.pos.q}:{group.pos.r}

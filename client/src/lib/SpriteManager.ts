@@ -24,7 +24,10 @@ export class SpriteManager {
     return new Promise<void>((resolve) => {
       Loader.shared.load(() => {
         for (const sprite of Sprites) {
-          this.textures.set(sprite, Loader.shared.resources[sprite].texture);
+          const texture = Loader.shared.resources[sprite]?.texture;
+          if (texture) {
+            this.textures.set(sprite, texture);
+          }
         }
         resolve();
       });
@@ -40,7 +43,8 @@ export class SpriteManager {
 
     if (!texture) {
       console.warn(`Texture not found: ${textureKey}, using fallback`);
-      return Loader.shared.resources["biome_ice"].texture;
+      const fallbackTexture = Loader.shared.resources["biome_ice"]?.texture;
+      return fallbackTexture as PIXI.Texture;
     }
 
     return texture;
@@ -50,16 +54,22 @@ export class SpriteManager {
    * Get a terrain texture based on biome
    */
   getTerrainTexture(tile: ClientTile): PIXI.Texture {
-    const biomeMap: Record<Biome, { name: string; variants: number }> = {
+    const biomeMap: Record<number, { name: string; variants: number }> = {
       [Biome.Ice]: { name: "biome_ice", variants: 1 },
       [Biome.Tundra]: { name: "biome_tundra", variants: 8 },
-      [Biome.BorealForest]: { name: "biome_boreal", variants: 8 },
+      [Biome.Boreal]: { name: "biome_boreal", variants: 8 },
       [Biome.Grassland]: { name: "biome_grassland", variants: 8 },
-      [Biome.TemperateForest]: { name: "biome_forest", variants: 8 },
-      [Biome.Jungle]: { name: "biome_jungle", variants: 8 },
-      [Biome.Savanna]: { name: "biome_savanna", variants: 8 },
+      [Biome.Temperate]: { name: "biome_forest", variants: 8 },
+      [Biome.Tropical]: { name: "biome_jungle", variants: 8 },
       [Biome.Desert]: { name: "biome_desert", variants: 8 },
       [Biome.Ocean]: { name: "biome_ocean", variants: 1 },
+      [Biome.None]: { name: "biome_ice", variants: 1 },
+      [Biome.Shore]: { name: "biome_ocean", variants: 1 },
+      [Biome.Treeline]: { name: "biome_forest", variants: 8 },
+      [Biome.Mountain]: { name: "biome_tundra", variants: 8 },
+      [Biome.Beach]: { name: "biome_desert", variants: 8 },
+      [Biome.Peaks]: { name: "biome_tundra", variants: 8 },
+      [Biome.River]: { name: "biome_ocean", variants: 1 },
     };
 
     const biomeInfo = biomeMap[tile.biome] || biomeMap[Biome.Ice];
@@ -78,7 +88,6 @@ export class SpriteManager {
       return this.getTexture(name);
     }
 
-    // Ensure we get a stable "random" result by using the tile id
     const variant = (Math.abs(tile.id) % max) + 1;
     return this.getTexture(name, variant);
   }
@@ -87,8 +96,9 @@ export class SpriteManager {
    * Get a building sprite based on building type
    */
   getBuildingSprite(building: Building): PIXI.Texture {
-    const buildingTemplate = Buildings.find((b) => b.type === building.type);
-    const spriteName = buildingTemplate?.sprite || "building_unknown";
+    const buildingKey = building.key;
+    const buildingData = Buildings[buildingKey as keyof typeof Buildings];
+    const spriteName = buildingData?.texture || "building_unknown";
 
     return this.getTexture(spriteName);
   }
@@ -97,7 +107,6 @@ export class SpriteManager {
    * Get a group sprite based on owner
    */
   getGroupSprite(owner: string): PIXI.Texture {
-    // Based on group owner, return different sprites
     const suffix = owner === "ai" ? "_ai" : "";
     const textureName = `group${suffix}`;
 

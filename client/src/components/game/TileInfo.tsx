@@ -5,9 +5,11 @@ import { TBuildingTemplate, Tile } from "@shared/objects";
 import Buildings from "@shared/templates/buildings.json";
 import BuildingTemplate from "./BuildingTemplate";
 import ResourceInfo from "./ResourceInfo";
-import { world } from "@/lib/game";
+import { useGameStateContext } from "@/lib/GameStateProvider";
 
 const TileInfo = ({ tile }: { tile: Tile }) => {
+  const { world } = useGameStateContext();
+
   if (!tile) {
     return <div>No tile selected</div>;
   }

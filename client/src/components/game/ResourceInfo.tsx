@@ -3,12 +3,14 @@
 import { useEffect } from "react";
 import { Group, Tile } from "@shared/objects";
 import { TransferDirection } from "@shared/objectutil";
-import socket from "@/lib/socket";
+import { useSocket } from "@/components/hooks/useSocket";
 
 /**
  * React Component to display resource information and display controls to transfer resources between tile and groups
  */
 const ResourceInfo = ({ group, tile }: { group: Group; tile: Tile }) => {
+  const { socket } = useSocket();
+
   const requestResourceTransfer = (
     group: Group,
     resource: string,
@@ -18,7 +20,7 @@ const ResourceInfo = ({ group, tile }: { group: Group; tile: Tile }) => {
     socket.emit("request transfer", {
       groupId: group.id,
       resource: resource,
-      amount: direction == TransferDirection.group ? -amount : amount,
+      amount: direction === TransferDirection.group ? -amount : amount,
     });
     socket.emit("request tiles", [group.pos]);
     socket.emit("request group", group.id);
@@ -29,7 +31,7 @@ const ResourceInfo = ({ group, tile }: { group: Group; tile: Tile }) => {
       socket.emit("request tiles", [group.pos]);
     }, 500);
     return () => clearInterval(interval);
-  }, [group.pos]);
+  }, [group.pos, socket]);
 
   return (
     <div className="grid grid-cols-5 gap-1 border p-2">
