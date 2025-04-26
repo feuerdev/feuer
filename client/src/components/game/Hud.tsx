@@ -3,12 +3,12 @@
 import GroupInfo from "@/components/game/GroupInfo";
 import TileInfo from "@/components/game/TileInfo";
 import { getTileById } from "@shared/objectutil";
-import { selectionAtom, world } from "@/lib/game";
-import { useAtomValue } from "jotai";
+import { useGameStateContext } from "@/lib/GameStateProvider";
 import { SelectionType } from "@/lib/types";
 
 const Hud = () => {
-  const { type, id } = useAtomValue(selectionAtom);
+  const { selection, world } = useGameStateContext();
+  const { type, id } = selection;
 
   return (
     <div

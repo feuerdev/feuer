@@ -1,8 +1,13 @@
-import { startRenderer, stopRenderer } from "@/lib/renderer";
 import { useEffect, useRef } from "react";
+import { RenderEngine } from "@/lib/RenderEngine";
 
-export function Canvas() {
+export function Canvas({
+  registerRenderer,
+}: {
+  registerRenderer: (engine: RenderEngine) => void;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const engineRef = useRef<RenderEngine | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -16,16 +21,24 @@ export function Canvas() {
     containerRef.current.innerHTML = "";
     containerRef.current.appendChild(canvas);
 
-    startRenderer(canvas);
+    // Create and initialize the renderer engine
+    const engine = new RenderEngine();
+    engineRef.current = engine;
 
-    // Create proper cleanup function
-    const cleanup = () => {
-      stopRenderer();
-      // We don't need to remove the canvas manually as PIXI.destroy() likely does this
+    // Mount canvas to the engine
+    engine.mount(canvas);
+
+    // Register the engine with the parent component
+    registerRenderer(engine);
+
+    // Clean up
+    return () => {
+      if (engineRef.current) {
+        engineRef.current.destroy();
+        engineRef.current = null;
+      }
     };
-
-    return cleanup;
-  }, []);
+  }, [registerRenderer]);
 
   return <div ref={containerRef} className="h-screen w-screen" />;
 }
