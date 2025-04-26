@@ -7,7 +7,7 @@ import Rules from "@shared/rules.json";
 import { ClientTile, Selection, SelectionType, ZIndices } from "./types";
 import { Biome, Building, Group } from "@shared/objects";
 import { Filter, Loader } from "pixi.js";
-import Sprites from "./sprites.json";
+import Sprites from "../../../next/src/lib/sprites.json";
 import Buildings from "@shared/templates/buildings.json";
 import { convertToSpriteName } from "@shared/util";
 import { uid } from "./game";
