@@ -3,7 +3,7 @@ import { RenderEngine } from "./RenderEngine";
 import { useSocket } from "@/components/hooks/useSocket";
 import { ClientTile, Selection, SelectionType } from "./types";
 import { create, Vector2 } from "@shared/vector2";
-import { Battle, Building, Group, Tile, World } from "@shared/objects";
+import { Building, Group, Tile, World } from "@shared/objects";
 import * as Util from "@shared/util";
 import * as PlayerRelation from "@shared/relation";
 import { Hashtable } from "@shared/util";
@@ -88,7 +88,8 @@ export function useGameState() {
         case 0: // Left
           trySelect(vec2Point);
           break;
-        case 2: // Right
+        case 2: {
+          // Right - Added braces for lexical declaration
           const clickedHex = round(engine.layout.pixelToHex(vec2Point));
           if (clickedHex && selection.type === SelectionType.Group) {
             socket.emit("request movement", {
@@ -97,6 +98,7 @@ export function useGameState() {
             });
           }
           break;
+        }
       }
     };
 
@@ -131,8 +133,8 @@ export function useGameState() {
       const prefix = parts[0];
       const id = parseInt(parts[1]);
 
-      // Create selection based on entity type
-      let newSelection: Selection = { id, type: SelectionType.None };
+      // Create selection based on entity type - changed let to const
+      const newSelection: Selection = { id, type: SelectionType.None };
       switch (prefix) {
         case "g":
           newSelection.type = SelectionType.Group;
@@ -269,8 +271,9 @@ export function useGameState() {
         });
       });
 
+      // Fixed building.pos to building.position
       Object.values(world.buildings).forEach((building) => {
-        neighborsRange(building.pos, building.spotting).forEach((hex) => {
+        neighborsRange(building.position, building.spotting).forEach((hex) => {
           visibleHexes[hash(hex)] = hex;
         });
       });

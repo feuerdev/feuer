@@ -5,11 +5,10 @@ import { Layout, Hex } from "@shared/hex";
 import * as Vector2 from "@shared/vector2";
 import Rules from "@shared/rules.json";
 import { ClientTile, Selection, SelectionType, ZIndices } from "./types";
-import { Biome, Building, Group } from "@shared/objects";
-import { Filter, Loader } from "pixi.js";
-import Sprites from "./sprites.json";
-import Buildings from "@shared/templates/buildings.json";
+import { Building, Group } from "@shared/objects";
+import { Filter } from "pixi.js";
 import { convertToSpriteName } from "@shared/util";
+import { SpriteManager } from "./SpriteManager";
 
 export class RenderEngine {
   app: PIXI.Application | null = null;
@@ -20,6 +19,7 @@ export class RenderEngine {
   private initialFocusSet: boolean = false;
   private readonly HEX_SIZE: number;
   private readonly GLOW_FILTER: Filter;
+  private spriteManager: SpriteManager;
 
   constructor(hexSize: number = 40) {
     this.HEX_SIZE = hexSize;
@@ -34,19 +34,12 @@ export class RenderEngine {
       outerStrength: 2,
       color: 0x000000,
     }) as unknown as Filter;
+
+    this.spriteManager = new SpriteManager();
   }
 
   async loadAssets(): Promise<void> {
-    PIXI.utils.clearTextureCache();
-    Loader.shared.reset();
-
-    for (const sprite of Sprites) {
-      Loader.shared.add(sprite, `../${sprite}.png`);
-    }
-
-    return new Promise<void>((resolve) => {
-      Loader.shared.load(() => resolve());
-    });
+    return this.spriteManager.loadTextures();
   }
 
   mount(canvas: HTMLCanvasElement): void {
@@ -200,7 +193,7 @@ export class RenderEngine {
     const spriteName = convertToSpriteName(group.id, "g");
     let object = this.viewport.getChildByName(spriteName) as PIXI.Sprite;
     if (!object) {
-      object = new PIXI.Sprite(this.getGroupSprite(group));
+      object = new PIXI.Sprite(this.spriteManager.getGroupSprite(group.owner));
       object.name = spriteName;
       object.scale = new PIXI.Point(0.5, 0.5);
       this.viewport.addChild(object);
@@ -246,14 +239,14 @@ export class RenderEngine {
     const spriteName = convertToSpriteName(building.id, "b");
     let object = this.viewport.getChildByName(spriteName) as PIXI.Sprite;
     if (!object) {
-      object = new PIXI.Sprite(this.getBuildingSprite(building));
+      object = new PIXI.Sprite(this.spriteManager.getBuildingSprite(building));
       object.name = spriteName;
       object.scale = new PIXI.Point(0.5, 0.5);
       this.viewport.addChild(object);
     }
 
-    object.x = this.layout.hexToPixel(building.pos).x - this.HEX_SIZE / 3;
-    object.y = this.layout.hexToPixel(building.pos).y + this.HEX_SIZE / 3;
+    object.x = this.layout.hexToPixel(building.position).x - this.HEX_SIZE / 3;
+    object.y = this.layout.hexToPixel(building.position).y + this.HEX_SIZE / 3;
     object.zIndex = ZIndices.Buildings;
   }
 
@@ -263,7 +256,7 @@ export class RenderEngine {
     const spriteName = convertToSpriteName(tile.id, "t");
     let object = this.viewport.getChildByName(spriteName) as PIXI.Sprite;
     if (!object) {
-      object = new PIXI.Sprite(this.getTerrainTexture(tile));
+      object = new PIXI.Sprite(this.spriteManager.getTerrainTexture(tile));
       object.name = spriteName;
       this.viewport.addChild(object);
     }
@@ -352,65 +345,6 @@ export class RenderEngine {
     if (!this.viewport) return;
     const point = this.layout.hexToPixel(pos);
     this.viewport.moveCenter(new PIXI.Point(point.x, point.y));
-  }
-
-  // Helper methods for textures and sprites
-  private getTerrainTexture(tile: ClientTile): PIXI.Texture {
-    const biomeMap: Record<Biome, { name: string; variants: number }> = {
-      [Biome.Ice]: { name: "biome_ice", variants: 1 },
-      [Biome.Tundra]: { name: "biome_tundra", variants: 8 },
-      [Biome.BorealForest]: { name: "biome_boreal", variants: 8 },
-      [Biome.Grassland]: { name: "biome_grassland", variants: 8 },
-      [Biome.TemperateForest]: { name: "biome_forest", variants: 8 },
-      [Biome.Jungle]: { name: "biome_jungle", variants: 8 },
-      [Biome.Savanna]: { name: "biome_savanna", variants: 8 },
-      [Biome.Desert]: { name: "biome_desert", variants: 8 },
-      [Biome.Ocean]: { name: "biome_ocean", variants: 1 },
-    };
-
-    const biomeInfo = biomeMap[tile.biome] || biomeMap[Biome.Ice];
-    return this.getRandomTile(tile, biomeInfo.name, biomeInfo.variants);
-  }
-
-  private getRandomTile(
-    tile: ClientTile,
-    name: string,
-    max: number
-  ): PIXI.Texture {
-    if (max <= 1) {
-      return Loader.shared.resources[name].texture;
-    }
-
-    // Ensure we get a stable "random" result by using the tile id
-    const variant = (Math.abs(tile.id) % max) + 1;
-    const textureName = `${name}_${variant}`;
-
-    // Return the texture with variant if it exists, otherwise the base texture
-    return (
-      Loader.shared.resources[textureName]?.texture ||
-      Loader.shared.resources[name].texture
-    );
-  }
-
-  private getBuildingSprite(building: Building): PIXI.Texture {
-    const buildingTemplate = Buildings.find((b) => b.type === building.type);
-    const spriteName = buildingTemplate?.sprite || "building_unknown";
-
-    return (
-      Loader.shared.resources[spriteName]?.texture ||
-      Loader.shared.resources["building_unknown"].texture
-    );
-  }
-
-  private getGroupSprite(group: Group): PIXI.Texture {
-    // Based on group owner, return different sprites - simplified here
-    const suffix = group.owner === "ai" ? "_ai" : "";
-    const textureName = `group${suffix}`;
-
-    return (
-      Loader.shared.resources[textureName]?.texture ||
-      Loader.shared.resources["group"].texture
-    );
   }
 
   private getSelectionZIndex(selection: Selection): number {
