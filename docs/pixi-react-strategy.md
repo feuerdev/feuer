@@ -5,11 +5,13 @@ This guide outlines how to improve the integration of Pixi.js with React in your
 ## Current Architecture Assessment
 
 Your current implementation follows some good practices:
+
 - Using useRef for canvas references
 - Separating renderer initialization from React state
 - Proper cleanup on component unmount
 
 However, there are several areas for improvement:
+
 - The renderer logic is not encapsulated in a class
 - Global variables are used extensively
 - Event handling is scattered across files
@@ -35,11 +37,11 @@ export class RenderEngine {
   elements: Record<string, PIXI.DisplayObject> = {};
   layout: Layout;
   viewportReady: boolean = false;
-  
+
   constructor(hexSize: number = 40) {
     this.layout = new Layout(/* your layout initialization */);
   }
-  
+
   mount(canvas: HTMLCanvasElement) {
     // Initialize PIXI application
     this.app = new PIXI.Application({
@@ -55,16 +57,16 @@ export class RenderEngine {
 
     // Initialize viewport
     this.initializeViewport();
-    
+
     // Set up event listeners
     this.setupEventListeners();
-    
+
     this.viewportReady = true;
   }
-  
+
   private initializeViewport() {
     if (!this.app) return;
-    
+
     this.viewport = new Viewport({
       screenWidth: this.app.screen.width,
       screenHeight: this.app.screen.height,
@@ -72,9 +74,9 @@ export class RenderEngine {
       worldHeight: /* your world height */,
       interaction: this.app.renderer.plugins.interaction,
     });
-    
+
     this.app.stage.addChild(this.viewport);
-    
+
     // Configure viewport
     this.viewport.sortableChildren = true;
     this.viewport
@@ -87,14 +89,14 @@ export class RenderEngine {
       .wheel()
       .decelerate();
   }
-  
+
   private setupEventListeners() {
     window.addEventListener("resize", this.handleResize);
   }
-  
+
   private handleResize = () => {
     if (!this.app || !this.viewport) return;
-    
+
     this.app.renderer.resize(window.innerWidth, window.innerHeight);
     this.viewport.screenWidth = this.app.screen.width;
     this.viewport.screenHeight = this.app.screen.height;
@@ -104,66 +106,66 @@ export class RenderEngine {
   // Add all your updating methods as class methods
   updateScenegraphGroup(group: Group) {
     if (!this.viewport) return;
-    
+
     // Implementation of group updates
   }
-  
+
   updateScenegraphTile(tile: ClientTile) {
     if (!this.viewport) return;
-    
+
     // Implementation of tile updates
   }
-  
+
   updateScenegraphBuilding(building: Building) {
     if (!this.viewport) return;
-    
+
     // Implementation of building updates
   }
-  
+
   updateSelection(selection: Selection) {
     if (!this.viewport) return;
-    
+
     // Implementation of selection updates
   }
-  
+
   // Other methods for control
   zoomIn() {
     if (!this.viewport) return;
     this.viewport.zoom(-200, true);
   }
-  
+
   // Add the rest of your control methods...
-  
+
   // Click handling
   registerClickHandler(handler: (point: {x: number, y: number}, button: number) => void) {
     if (!this.viewport || !this.viewportReady) return false;
-    
+
     this.viewport.on("clicked", (click) => {
       handler(
         { x: click.world.x, y: click.world.y },
         click.event.data.button
       );
     });
-    
+
     return true;
   }
-  
+
   // Asset loading
   async loadAssets() {
     PIXI.utils.clearTextureCache();
-    
+
     // Load textures
     // Return promise that resolves when loading is complete
   }
-  
+
   destroy() {
     window.removeEventListener("resize", this.handleResize);
-    
+
     if (this.app) {
       this.app.destroy(false);
       this.app = null;
     }
-    
+
     this.viewportReady = false;
   }
 }
@@ -199,10 +201,10 @@ export function Canvas() {
     // Create and initialize the renderer engine
     const engine = new RenderEngine();
     engineRef.current = engine;
-    
+
     // Mount canvas to the engine
     engine.mount(canvas);
-    
+
     // Register the engine with your game state
     registerRenderer(engine);
 
@@ -250,25 +252,25 @@ export function useGameState() {
       // Handle clicks and selection
       // This replaces your global click handler
     });
-  
+
     // Listen for game state updates
     const handleTileUpdate = (tile: ClientTile) => {
       engine.updateScenegraphTile(tile);
     };
-    
+
     const handleGroupUpdate = (group: Group) => {
       engine.updateScenegraphGroup(group);
     };
-    
+
     const handleBuildingUpdate = (building: Building) => {
       engine.updateScenegraphBuilding(building);
     };
-    
+
     // Set up socket listeners
     socket.on("updateTile", handleTileUpdate);
     socket.on("updateGroup", handleGroupUpdate);
     socket.on("updateBuilding", handleBuildingUpdate);
-    
+
     return () => {
       // Clean up socket listeners
       socket.off("updateTile", handleTileUpdate);
@@ -353,11 +355,13 @@ Create a context provider to share game state across components:
 import { createContext, useContext, ReactNode, useMemo } from "react";
 import { useGameState } from "./useGameState";
 
-const GameStateContext = createContext<ReturnType<typeof useGameState> | null>(null);
+const GameStateContext = createContext<ReturnType<typeof useGameState> | null>(
+  null
+);
 
 export function GameStateProvider({ children }: { children: ReactNode }) {
   const gameState = useGameState();
-  
+
   return (
     <GameStateContext.Provider value={gameState}>
       {children}
@@ -368,7 +372,9 @@ export function GameStateProvider({ children }: { children: ReactNode }) {
 export function useGameStateContext() {
   const context = useContext(GameStateContext);
   if (!context) {
-    throw new Error("useGameStateContext must be used within a GameStateProvider");
+    throw new Error(
+      "useGameStateContext must be used within a GameStateProvider"
+    );
   }
   return context;
 }
@@ -384,7 +390,7 @@ import { useGameStateContext } from "@/lib/GameStateProvider";
 
 export default function Hud() {
   const { selection, zoomIn, zoomOut, resetZoom } = useGameStateContext();
-  
+
   return (
     <div className="absolute top-0 left-0 z-10 p-4">
       {/* Render HUD based on selection */}
@@ -393,11 +399,9 @@ export default function Hud() {
         <button onClick={zoomOut}>Zoom Out</button>
         <button onClick={resetZoom}>Reset</button>
       </div>
-      
+
       {selection.id && (
-        <div className="selection-info">
-          {/* Display selection info */}
-        </div>
+        <div className="selection-info">{/* Display selection info */}</div>
       )}
     </div>
   );
@@ -410,7 +414,7 @@ export default function Hud() {
 2. **Cleaner Component Model**: Each component has a clear responsibility
 3. **No Global State**: Eliminated global variables in favor of React context
 4. **Better Testability**: Components and logic can be tested independently
-5. **Reusability**: The RenderEngine can be reused in other components 
+5. **Reusability**: The RenderEngine can be reused in other components
 6. **React Performance**: Proper separation of React rendering from Pixi updates
 7. **Memory Management**: Consistent cleanup of resources
 8. **Separation of Concerns**: UI logic is separate from rendering logic
@@ -422,3 +426,383 @@ export default function Hud() {
 3. **Implement State Versioning**: To prevent unnecessary updates
 4. **Add Error Boundaries**: For graceful failure handling
 5. **Consider Using TypeScript Strict Mode**: For better type safety
+
+## Code Reduction Strategy
+
+In addition to the architectural improvements, here are specific opportunities to reduce code volume and complexity:
+
+### 1. Eliminate Global Module-Level Variables
+
+The current renderer.ts has many global variables:
+
+```typescript
+// Current approach with global variables
+let viewport: Viewport;
+let pixi: PIXI.Application | null = null;
+let viewportReady = false;
+let initialFocusSet = false;
+const layout: Layout = new Layout(/* ... */);
+const GLOWFILTER: Filter = new GlowFilter(/* ... */);
+```
+
+Moving these into the RenderEngine class:
+
+```typescript
+export class RenderEngine {
+  private viewport: Viewport | null = null;
+  private app: PIXI.Application | null = null;
+  private viewportReady = false;
+  private initialFocusSet = false;
+  private layout: Layout;
+  private glowFilter: Filter;
+
+  constructor() {
+    this.layout = new Layout(/* ... */);
+    this.glowFilter = new GlowFilter(/* ... */) as unknown as Filter;
+  }
+
+  // Methods using these properties
+}
+```
+
+Benefits:
+
+- Eliminates global state that can cause side effects
+- Improves testability since the state is encapsulated
+- Enables multiple instances if needed
+
+### 2. Remove Redundant Utility Functions
+
+The current codebase has these overlapping functions:
+
+```typescript
+// Current redundant utility functions
+export const isViewportReady = () => viewportReady;
+export const registerViewportClickHandler = (clickHandler) => {
+  /* ... */
+};
+export const setupViewportClickHandlers = registerViewportClickHandler; // Duplicate
+```
+
+Consolidate into a single method in the RenderEngine class:
+
+```typescript
+class RenderEngine {
+  // Other properties...
+
+  registerClickHandler(
+    handler: (point: { x: number; y: number }, button: number) => void
+  ): boolean {
+    if (!this.viewport || !this.viewportReady) return false;
+
+    this.viewport.on("clicked", (click) => {
+      handler({ x: click.world.x, y: click.world.y }, click.event.data.button);
+    });
+
+    return true;
+  }
+
+  // The isViewportReady function becomes unnecessary as components
+  // can simply check if the engine instance exists
+}
+```
+
+### 3. Consolidate Entity Update Methods
+
+Replace multiple specialized update methods with a generic one:
+
+```typescript
+// Current approach with separate methods
+export const updateScenegraphGroup = (group: Group) => {
+  /* ~50 lines */
+};
+export const updateScenegraphBuilding = (building: Building) => {
+  /* ~40 lines */
+};
+export const updateScenegraphTile = (tile: ClientTile) => {
+  /* ~40 lines */
+};
+```
+
+Generic approach:
+
+```typescript
+// Define a type for all possible entities
+type Entity = Group | Building | ClientTile;
+
+// Define an enum for entity types
+enum EntityType {
+  Group = "group",
+  Building = "building",
+  Tile = "tile",
+}
+
+class RenderEngine {
+  // Other properties...
+
+  // Generic update method
+  updateScenegraph(entity: Entity, type: EntityType) {
+    if (!this.viewport) return;
+
+    // Common operations for all entities
+    const id = entity.id;
+    const spriteName = this.getSpriteNameForEntity(entity, type);
+
+    // Get or create sprite
+    let sprite = this.viewport.getChildByName(spriteName) as PIXI.Sprite;
+    if (!sprite) {
+      sprite = this.createSprite(entity, type);
+      this.viewport.addChild(sprite);
+    }
+
+    // Position and configure sprite based on entity type
+    switch (type) {
+      case EntityType.Group:
+        this.configureGroupSprite(sprite, entity as Group);
+        break;
+      case EntityType.Building:
+        this.configureBuildingSprite(sprite, entity as Building);
+        break;
+      case EntityType.Tile:
+        this.configureTileSprite(sprite, entity as ClientTile);
+        break;
+    }
+  }
+
+  // Helper methods specific to each entity type
+  private configureGroupSprite(sprite: PIXI.Sprite, group: Group) {
+    // Group-specific sprite configuration
+  }
+
+  // Similar methods for other entity types...
+}
+```
+
+This approach reduces approximately 100 lines of similar code while maintaining type safety.
+
+### 4. Create a SpriteManager for Asset Management
+
+Extract all sprite and texture management into a dedicated class:
+
+```typescript
+class SpriteManager {
+  private textures: Map<string, PIXI.Texture> = new Map();
+  private spriteCache: Map<string, PIXI.Sprite> = new Map();
+
+  constructor() {}
+
+  async loadTextures(sprites: string[]) {
+    PIXI.utils.clearTextureCache();
+
+    return new Promise<void>((resolve) => {
+      const loader = PIXI.Loader.shared;
+      loader.reset();
+
+      sprites.forEach((sprite) => {
+        loader.add(sprite, `../${sprite}.png`);
+      });
+
+      loader.load(() => {
+        sprites.forEach((sprite) => {
+          this.textures.set(sprite, loader.resources[sprite].texture);
+        });
+        resolve();
+      });
+    });
+  }
+
+  getTexture(key: string, variant: number = 1): PIXI.Texture {
+    const textureKey = variant > 1 ? `${key}_${variant}` : key;
+    return this.textures.get(textureKey) || this.textures.get("fallback")!;
+  }
+
+  // Entity-specific texture getters
+  getTerrainTexture(tile: ClientTile): PIXI.Texture {
+    const biomeMap: Record<Biome, { name: string; variants: number }> = {
+      [Biome.Ice]: { name: "biome_ice", variants: 1 },
+      [Biome.Tundra]: { name: "biome_tundra", variants: 8 },
+      // ...other biomes
+    };
+
+    const biomeInfo = biomeMap[tile.biome] || biomeMap[Biome.Ice];
+    const variant =
+      biomeInfo.variants > 1 ? (Math.abs(tile.id) % biomeInfo.variants) + 1 : 1;
+
+    return this.getTexture(biomeInfo.name, variant);
+  }
+
+  // Similar methods for building and unit textures
+}
+```
+
+This encapsulates all texture-related logic, making it easier to test and modify.
+
+### 5. Simplify Game Component and Texture Loading
+
+Move texture loading out of the Game component and into the engine initialization:
+
+Current Game.tsx:
+
+```tsx
+export default function Game() {
+  const { connected } = useSocket();
+  const [texturesLoaded, setTexturesLoaded] = useState(false);
+
+  useEffect(() => {
+    const loadTexturesAsync = async () => {
+      await loadTextures();
+      setTexturesLoaded(true);
+      setListeners();
+      renderInitialized.current = true;
+    };
+
+    loadTexturesAsync();
+    return () => {
+      /* cleanup */
+    };
+  }, []);
+
+  // Loading checks and rendering
+}
+```
+
+Simplified Game.tsx:
+
+```tsx
+export default function Game() {
+  const { connected } = useSocket();
+
+  // No texture loading logic here - handled by the engine
+
+  if (!connected) {
+    return <Loading text="Connecting to server..." />;
+  }
+
+  return (
+    <GameStateProvider>
+      <Hud />
+      <Canvas />
+    </GameStateProvider>
+  );
+}
+```
+
+Update RenderEngine to handle loading:
+
+```typescript
+class RenderEngine {
+  // ...other properties
+  private spriteManager = new SpriteManager();
+  private loadingPromise: Promise<void> | null = null;
+
+  // When the engine is created, it automatically starts loading
+  constructor() {
+    // Initialize other properties
+    this.loadingPromise = this.spriteManager.loadTextures(Sprites);
+  }
+
+  // Wait for loading to complete
+  async waitForLoading(): Promise<void> {
+    return this.loadingPromise || Promise.resolve();
+  }
+}
+```
+
+Create a hook to handle loading:
+
+```typescript
+function useEngineLoading() {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const { engine } = useGameStateContext();
+
+  useEffect(() => {
+    if (!engine) return;
+
+    engine.waitForLoading().then(() => {
+      setIsLoaded(true);
+    });
+  }, [engine]);
+
+  return isLoaded;
+}
+```
+
+### 6. Remove Global Events Setup from game.ts
+
+Currently, event setup is handled globally:
+
+```typescript
+// In game.ts
+export const setListeners = () => {
+  socket.on("updateTile", (tile) => {
+    /* ... */
+  });
+  socket.on("updateGroup", (group) => {
+    /* ... */
+  });
+  // ...more listeners
+};
+
+export const removeAllListeners = () => {
+  socket.off("updateTile");
+  socket.off("updateGroup");
+  // ...more removals
+};
+```
+
+Move this into the RenderEngine class:
+
+```typescript
+class RenderEngine {
+  // ...other properties
+
+  setupSocketListeners(socket: Socket) {
+    socket.on("updateTile", this.handleTileUpdate);
+    socket.on("updateGroup", this.handleGroupUpdate);
+    socket.on("updateBuilding", this.handleBuildingUpdate);
+    // ...other listeners
+  }
+
+  removeSocketListeners(socket: Socket) {
+    socket.off("updateTile", this.handleTileUpdate);
+    socket.off("updateGroup", this.handleGroupUpdate);
+    socket.off("updateBuilding", this.handleBuildingUpdate);
+    // ...other removals
+  }
+
+  private handleTileUpdate = (tile: ClientTile) => {
+    this.updateScenegraph(tile, EntityType.Tile);
+  };
+
+  // Similar handlers for other entity types
+}
+```
+
+In the useGameState hook:
+
+```typescript
+export function useGameState() {
+  // ...other state
+  const { socket } = useSocket();
+
+  useEffect(() => {
+    if (!engine || !socket) return;
+
+    engine.setupSocketListeners(socket);
+
+    return () => {
+      engine.removeSocketListeners(socket);
+    };
+  }, [engine, socket]);
+
+  // ...rest of the hook
+}
+```
+
+This approach:
+
+- Eliminates the need for the game.ts file entirely
+- Encapsulates all game logic in the RenderEngine and hooks
+- Provides better cleanup and resource management
+
+By implementing these changes, the codebase will be significantly simplified with fewer lines of code and clearer architecture.
