@@ -7,6 +7,7 @@ This guide explains how to properly integrate Pixi.js canvas rendering with Reac
 - [Basic Integration with useRef](#basic-integration-with-useref)
 - [Advanced Ref Usage Patterns](#advanced-ref-usage-patterns)
 - [Complete Game Wrapper Component](#complete-game-wrapper-component)
+- [Handling Remote State with WebSockets](#handling-remote-state-with-websockets)
 - [Best Practices](#best-practices)
 
 ## Basic Integration with useRef
@@ -384,6 +385,304 @@ const AppContainer = () => {
   );
 };
 ```
+
+## Handling Remote State with WebSockets
+
+For applications where state is primarily managed remotely and streamed via WebSockets, you can adapt the wrapper pattern to efficiently handle real-time updates:
+
+```jsx
+// RemoteStateEngine.js
+class RemoteStateEngine {
+  constructor(width, height) {
+    this.app = new PIXI.Application({
+      width,
+      height,
+      backgroundColor: 0x1099bb,
+      antialias: true,
+    });
+
+    this.elements = {};
+    this.remoteState = {}; // Latest state from server
+    this.localState = {}; // Local state and interpolations
+
+    // Setup main update loop
+    this.app.ticker.add(this.update.bind(this));
+  }
+
+  mount(container) {
+    if (container && !container.contains(this.app.view)) {
+      container.appendChild(this.app.view);
+    }
+  }
+
+  // Initialize scene and assets
+  initialize() {
+    return new Promise((resolve) => {
+      PIXI.Assets.load([
+        // Load assets
+      ]).then(() => {
+        this.setupElements();
+        resolve();
+      });
+    });
+  }
+
+  setupElements() {
+    // Create visual elements that will be updated from remote state
+  }
+
+  // Process incoming state from WebSocket
+  processRemoteState(state) {
+    // Store the latest state from server
+    this.remoteState = state;
+
+    // Process server timestamp and data for interpolation
+    // (Important for smooth animations)
+    this.lastStateTimestamp = Date.now();
+  }
+
+  // Main update loop
+  update(delta) {
+    // Calculate interpolation between states if needed
+    const interpolation = this.calculateInterpolation();
+
+    // Update visual elements based on remote state and interpolation
+    this.updateVisuals(interpolation);
+  }
+
+  calculateInterpolation() {
+    // If using interpolation between updates:
+    // return a value between 0 and 1 indicating how far we are between states
+    // This helps create smooth transitions even if server updates are less frequent
+    return Math.min(
+      1,
+      (Date.now() - this.lastStateTimestamp) / this.updateInterval
+    );
+  }
+
+  updateVisuals(interpolation) {
+    // Update positions, animations, etc. based on remote state
+    // Use interpolation for smoother transitions
+    if (!this.remoteState || Object.keys(this.remoteState).length === 0) return;
+
+    // Example: update entities based on remote state
+    if (this.remoteState.entities) {
+      this.remoteState.entities.forEach((entity) => {
+        const visualElement = this.elements[entity.id];
+        if (visualElement) {
+          // Apply state to visual element
+          visualElement.position.set(entity.x, entity.y);
+          // Apply other properties...
+        }
+      });
+    }
+  }
+
+  destroy() {
+    this.app.ticker.stop();
+    this.app.destroy(true, {
+      children: true,
+      texture: true,
+      baseTexture: true,
+    });
+  }
+
+  getState() {
+    // Combine remote and local state for React components
+    return {
+      ...this.remoteState,
+      ...this.localState,
+    };
+  }
+}
+
+// React component with WebSocket integration
+import React, { useRef, useEffect, useState, useCallback } from "react";
+import * as PIXI from "pixi.js";
+import { RemoteStateEngine } from "./RemoteStateEngine";
+import useWebSocket from "react-use-websocket"; // Or your preferred WebSocket hook
+
+const WebSocketPixiComponent = ({ width = 800, height = 600 }) => {
+  const containerRef = useRef(null);
+  const engineRef = useRef(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // WebSocket setup
+  const { sendMessage, lastMessage, readyState } = useWebSocket(
+    "wss://your-websocket-server.com", // Your WebSocket endpoint
+    {
+      onOpen: () => setIsConnected(true),
+      onClose: () => setIsConnected(false),
+      // Optional: shouldReconnect: (closeEvent) => true, // for auto-reconnect
+    }
+  );
+
+  // Initialize the engine
+  useEffect(() => {
+    if (!engineRef.current) {
+      engineRef.current = new RemoteStateEngine(width, height);
+
+      // Initialize engine and load assets
+      setIsLoading(true);
+      engineRef.current.initialize().then(() => {
+        setIsLoading(false);
+      });
+    }
+
+    // Mount canvas to DOM
+    if (containerRef.current && engineRef.current) {
+      engineRef.current.mount(containerRef.current);
+    }
+
+    return () => {
+      if (engineRef.current) {
+        engineRef.current.destroy();
+        engineRef.current = null;
+      }
+    };
+  }, [width, height]);
+
+  // Process WebSocket messages
+  useEffect(() => {
+    if (lastMessage && engineRef.current) {
+      try {
+        const data = JSON.parse(lastMessage.data);
+        engineRef.current.processRemoteState(data);
+
+        // Optional: Log or handle specific events
+        if (data.type === "event") {
+          console.log("Event received:", data.event);
+          // Handle special events like game start/end
+        }
+      } catch (err) {
+        console.error("Failed to parse WebSocket message:", err);
+      }
+    }
+  }, [lastMessage]);
+
+  // Example: Send input to server
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (!isConnected) return;
+
+      // Send user input to server
+      sendMessage(
+        JSON.stringify({
+          type: "input",
+          key: e.key,
+          timestamp: Date.now(),
+        })
+      );
+    },
+    [isConnected, sendMessage]
+  );
+
+  // Attach input listeners
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      {isLoading && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            color: "white",
+            zIndex: 10,
+          }}
+        >
+          Loading assets...
+        </div>
+      )}
+
+      {!isConnected && !isLoading && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            color: "white",
+            zIndex: 5,
+          }}
+        >
+          Connecting to server...
+        </div>
+      )}
+
+      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+    </div>
+  );
+};
+
+// Usage example
+const RemoteControlledApp = () => {
+  return (
+    <div className="app-container">
+      <div className="ui-container">
+        {/* UI Components */}
+        <div className="status-bar">
+          Status: {isConnected ? "Connected" : "Disconnected"}
+        </div>
+      </div>
+
+      <div
+        className="canvas-container"
+        style={{ width: "800px", height: "600px" }}
+      >
+        <WebSocketPixiComponent width={800} height={600} />
+      </div>
+    </div>
+  );
+};
+```
+
+### Key Considerations for WebSocket Integration
+
+1. **State Synchronization**
+
+   - Keep remote (server) state separate from local (client) state
+   - Use timestamps for accurate state reconciliation
+   - Consider implementing interpolation for smooth visuals
+
+2. **Connection Management**
+
+   - Handle connection drops and reconnections gracefully
+   - Show appropriate UI indicators for connection state
+   - Buffer input during connection loss if appropriate
+
+3. **Performance Optimization**
+
+   - Only update visual elements that have changed
+   - Use delta compression if sending frequent updates
+   - Consider throttling WebSocket updates for high-frequency data
+
+4. **Latency Compensation**
+
+   - Implement client-side prediction for responsive input
+   - Use interpolation between state updates for smooth animation
+   - Consider extrapolation for moving objects when updates are delayed
+
+5. **Error Handling**
+   - Validate incoming WebSocket data before processing
+   - Implement fallback rendering for missing data
+   - Log and recover from parsing or processing errors
 
 ## Best Practices
 
