@@ -3,11 +3,14 @@
 import { Group } from "@shared/objects";
 import { getTileByPos } from "@shared/objectutil";
 import ResourceInfo from "./ResourceInfo";
-import socket from "@/lib/socket";
 import { useGameStateContext } from "@/lib/GameStateProvider";
+import { InfoBox, InfoRow, InfoDivider } from "../ui/InfoBox";
+import { Button } from "../ui/button";
+import { useSocket } from "@/components/hooks/useSocket";
 
 const GroupInfo = ({ group }: { group: Group }) => {
   const { world, uid } = useGameStateContext();
+  const { socket } = useSocket();
 
   if (!group) {
     return <div>No group selected</div>;
@@ -20,37 +23,39 @@ const GroupInfo = ({ group }: { group: Group }) => {
   }
 
   return (
-    <div>
-      <div className="flex items-start place-content-start gap-1 flex-row p-2">
-        <div className="grid auto-cols-min gap-1 border p-2">
-          {/* General Info */}
-          <h2 className="col-span-2 text-xl">Group</h2>
-          <div>Owner</div>
-          <div>{group.owner === uid ? "You" : "Other Player"}</div>
-          <div>Position</div>
-          <div>
-            {group.pos.q}:{group.pos.r}
-          </div>
-          <div>Status</div>
-          <div>
-            {group.targetHexes?.length > 0
+    <div className="flex flex-wrap gap-4 p-4">
+      <InfoBox title="Group Details" className="flex-1 min-w-[250px]">
+        <InfoRow
+          label="Owner"
+          value={group.owner === uid ? "You" : "Other Player"}
+        />
+        <InfoRow label="Position" value={`${group.pos.q}:${group.pos.r}`} />
+        <InfoRow
+          label="Status"
+          value={
+            group.targetHexes?.length > 0
               ? `Moving (${group.movementStatus.toFixed()} %)`
-              : "Waiting"}
-          </div>
-          <div>Spotting</div>
-          <div>{group.spotting}</div>
-          <div>Units</div>
-          <div>{group.units.length}</div>
-        </div>
-        {/* Units Info */}
-        <div className="grid auto-cols-min gap-1 border p-2">
-          <h2 className="col-span-2 text-xl">Units</h2>
-          {group.units.map((unit) => {
-            return [
-              <div key={unit.id}>
-                <div>Owner</div>,<div>{unit.owner}</div>,<div>Leadership</div>,
-                <div>{unit.leadership}</div>,
-                <button
+              : "Waiting"
+          }
+        />
+        <InfoRow label="Spotting" value={group.spotting} />
+        <InfoRow label="Units" value={group.units.length} />
+      </InfoBox>
+
+      <InfoBox title="Units" className="flex-1 min-w-[300px]">
+        {group.units.length === 0 ? (
+          <p className="text-gray-400 italic">No units in this group</p>
+        ) : (
+          group.units.map((unit, index) => (
+            <div key={unit.id} className="mb-2">
+              {index > 0 && <InfoDivider />}
+              <InfoRow label="ID" value={unit.id} />
+              <InfoRow label="Owner" value={unit.owner} />
+              <InfoRow label="Leadership" value={unit.leadership} />
+              <div className="mt-2">
+                <Button
+                  variant="danger"
+                  size="sm"
                   onClick={() =>
                     socket.emit("request unit remove", {
                       groupId: group.id,
@@ -58,13 +63,15 @@ const GroupInfo = ({ group }: { group: Group }) => {
                     })
                   }
                 >
-                  Remove
-                </button>
-              </div>,
-            ];
-          })}
-        </div>
-        {/* Resources Info */}
+                  Remove Unit
+                </Button>
+              </div>
+            </div>
+          ))
+        )}
+      </InfoBox>
+
+      <div className="w-full">
         <ResourceInfo group={group} tile={tile} />
       </div>
     </div>

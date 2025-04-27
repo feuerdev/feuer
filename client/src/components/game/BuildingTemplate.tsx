@@ -2,6 +2,7 @@
 
 import { useSocket } from "@/components/hooks/useSocket";
 import { TBuildingTemplate, Tile } from "@shared/objects";
+import { Button } from "../ui/button";
 
 const BuildingTemplate = ({
   building,
@@ -13,19 +14,33 @@ const BuildingTemplate = ({
   const { socket } = useSocket();
 
   return (
-    <div className="flex gap-4">
+    <div className="flex items-center gap-3 p-2 mb-2 bg-gray-800 bg-opacity-50 rounded">
       <img
-        className="w-16 h-16 self-center"
-        src={"img/" + building.texture + ".png"}
+        className="w-12 h-12 object-contain"
+        src={`img/${building.texture}.png`}
         alt={building.name}
       />
-      <div>
-        <h3>{building.name}</h3>
-        <p>Spotting: {building.spotting}</p>
-        <p>Cost: {JSON.stringify(building.cost)}</p>
-        <p>Production: {JSON.stringify(building.production)}</p>
+      <div className="flex-1">
+        <h3 className="font-semibold text-white">{building.name}</h3>
+        <div className="grid grid-cols-2 gap-x-4 mt-1 text-sm text-gray-300">
+          <div>Spotting: {building.spotting}</div>
+          <div>
+            Cost:{" "}
+            {Object.entries(building.cost)
+              .map(([key, value]) => `${key}: ${value}`)
+              .join(", ")}
+          </div>
+          <div className="col-span-2">
+            Production:{" "}
+            {Object.entries(building.production)
+              .map(([key, value]) => `${key}: ${value}`)
+              .join(", ")}
+          </div>
+        </div>
       </div>
-      <button
+      <Button
+        variant="primary"
+        size="sm"
         onClick={() =>
           socket.emit("request construction", {
             pos: tile.hex,
@@ -33,8 +48,8 @@ const BuildingTemplate = ({
           })
         }
       >
-        Construct
-      </button>
+        Build
+      </Button>
     </div>
   );
 };

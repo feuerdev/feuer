@@ -6,6 +6,7 @@ import Buildings from "@shared/templates/buildings.json";
 import BuildingTemplate from "./BuildingTemplate";
 import ResourceInfo from "./ResourceInfo";
 import { useGameStateContext } from "@/lib/GameStateProvider";
+import { InfoBox, InfoRow } from "../ui/InfoBox";
 
 const TileInfo = ({ tile }: { tile: Tile }) => {
   const { world } = useGameStateContext();
@@ -20,38 +21,63 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
   });
 
   return (
-    <div className="flex">
-      <div className="w-full">
-        <div>
-          Position: {tile.hex.q}, {tile.hex.r}
-        </div>
-        <div>Biome: {tile.biome}</div>
-        <div>Height: {tile.height}</div>
-        <div>Precipitation: {tile.precipitation}</div>
-        <div>Temperature: {tile.temperature}</div>
-        {/* <div>Resources: {JSON.stringify(tile.resources)}</div> */}
-      </div>
-      <div className="w-full">
-        {Object.keys(Buildings).map((buildingKey) => {
-          return (
-            <BuildingTemplate
-              key={buildingKey}
-              tile={tile}
-              building={
-                Buildings[
-                  buildingKey as keyof typeof Buildings
-                ] as TBuildingTemplate
-              }
-            />
-          );
-        })}
-      </div>
+    <div className="flex flex-wrap gap-4 p-4">
+      <InfoBox title="Tile Details" className="flex-1 min-w-[250px]">
+        <InfoRow label="Position" value={`${tile.hex.q}, ${tile.hex.r}`} />
+        <InfoRow label="Biome" value={getBiomeName(tile.biome)} />
+        <InfoRow label="Height" value={tile.height.toFixed(2)} />
+        <InfoRow label="Precipitation" value={tile.precipitation.toFixed(2)} />
+        <InfoRow label="Temperature" value={tile.temperature.toFixed(2)} />
+      </InfoBox>
 
-      <div className="w-full">
-        {group && <ResourceInfo group={group} tile={tile} />}
-      </div>
+      <InfoBox title="Available Buildings" className="flex-1 min-w-[300px]">
+        <div className="max-h-60 overflow-auto pr-2">
+          {Object.keys(Buildings).length === 0 ? (
+            <p className="text-gray-400 italic">
+              No building templates available
+            </p>
+          ) : (
+            Object.keys(Buildings).map((buildingKey) => (
+              <BuildingTemplate
+                key={buildingKey}
+                tile={tile}
+                building={
+                  Buildings[
+                    buildingKey as keyof typeof Buildings
+                  ] as TBuildingTemplate
+                }
+              />
+            ))
+          )}
+        </div>
+      </InfoBox>
+
+      {group && <ResourceInfo group={group} tile={tile} />}
     </div>
   );
 };
+
+// Helper function to get biome name from biome enum value
+function getBiomeName(biomeValue: number): string {
+  const biomeNames: Record<number, string> = {
+    0: "None",
+    1: "Ice",
+    2: "Tundra",
+    3: "Boreal",
+    4: "Temperate",
+    5: "Tropical",
+    6: "Grassland",
+    7: "Desert",
+    8: "Ocean",
+    9: "Shore",
+    10: "Treeline",
+    11: "Mountain",
+    12: "Beach",
+    13: "Peaks",
+    14: "River",
+  };
+
+  return biomeNames[biomeValue] || `Unknown (${biomeValue})`;
+}
 
 export default TileInfo;

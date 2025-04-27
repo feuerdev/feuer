@@ -5,6 +5,7 @@ import TileInfo from "@/components/game/TileInfo";
 import { getTileById } from "@shared/objectutil";
 import { useGameStateContext } from "@/lib/GameStateProvider";
 import { SelectionType } from "@/lib/types";
+import { ControlPanel } from "./ControlPanel";
 
 // Helper for displaying selection type names
 const getSelectionTypeName = (type: SelectionType): string => {
@@ -23,8 +24,7 @@ const getSelectionTypeName = (type: SelectionType): string => {
 };
 
 const Hud = () => {
-  const { selection, world, zoomIn, zoomOut, resetZoom, centerViewport } =
-    useGameStateContext();
+  const { selection, world } = useGameStateContext();
   const { type, id } = selection;
 
   return (
@@ -32,56 +32,27 @@ const Hud = () => {
       className="[&>*]:pointer-events-auto pointer-events-none absolute inset-0 h-screen w-screen text-white"
       id="hud"
     >
-      {/* Top bar with controls */}
-      <div
-        id="top-bar"
-        className="w-full flex justify-between items-center p-2 bg-slate-900 bg-opacity-80"
-      >
-        <div className="flex gap-2">
-          <button
-            onClick={zoomIn}
-            className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded"
-          >
-            Zoom In
-          </button>
-          <button
-            onClick={zoomOut}
-            className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded"
-          >
-            Zoom Out
-          </button>
-          <button
-            onClick={resetZoom}
-            className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded"
-          >
-            Reset Zoom
-          </button>
-          <button
-            onClick={() => centerViewport()}
-            className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded"
-          >
-            Center View
-          </button>
-        </div>
-        <div>
-          {selection.id && (
-            <div className="text-right">
-              Selected: {getSelectionTypeName(type)} {id}
-            </div>
-          )}
-        </div>
+      {/* Top control panel */}
+      <div id="top-panel" className="absolute top-0 left-0 right-0 z-10">
+        <ControlPanel />
       </div>
 
-      {/* Bottom bar with information */}
+      {/* Bottom info panel */}
       <div
-        id="bottom-bar"
-        className="w-full h-1/5 bg-slate-900 fixed bottom-0 overflow-y-scroll"
+        id="bottom-panel"
+        className="absolute bottom-0 left-0 right-0 z-10 h-1/4 bg-slate-900 bg-opacity-90 overflow-y-auto"
       >
+        {/* Show different info based on selection type */}
         {type === SelectionType.Group && (
           <GroupInfo group={world.groups[id!]} />
         )}
         {type === SelectionType.Tile && (
           <TileInfo tile={getTileById(id!, world.tiles)!} />
+        )}
+        {type === SelectionType.None && (
+          <div className="p-4 text-center text-gray-400">
+            <p>No selection. Click on a tile or unit to view details.</p>
+          </div>
         )}
       </div>
     </div>

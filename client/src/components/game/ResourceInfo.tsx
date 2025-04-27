@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { Group, Tile } from "@shared/objects";
 import { TransferDirection } from "@shared/objectutil";
 import { useSocket } from "@/components/hooks/useSocket";
+import { InfoBox, InfoRow } from "../ui/InfoBox";
+import { Button } from "../ui/button";
 
 /**
  * React Component to display resource information and display controls to transfer resources between tile and groups
@@ -33,28 +35,51 @@ const ResourceInfo = ({ group, tile }: { group: Group; tile: Tile }) => {
     return () => clearInterval(interval);
   }, [group.pos, socket]);
 
+  // Get all unique resource keys from both group and tile
+  const resourceKeys = [
+    ...new Set([
+      ...Object.keys(group.resources),
+      ...Object.keys(tile.resources),
+    ]),
+  ].filter(
+    (key) =>
+      (group.resources[key as keyof typeof group.resources] || 0) > 0 ||
+      (tile.resources[key as keyof typeof tile.resources] || 0) > 0
+  );
+
+  if (resourceKeys.length === 0) {
+    return (
+      <InfoBox title="Resources" className="w-full">
+        <p className="text-center text-gray-400 italic">
+          No resources available
+        </p>
+      </InfoBox>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-5 gap-1 border p-2">
-      <h2 className="col-span-2 text-xl">Group</h2>
-      <h2 className="col-span-1 text-xl text-center">Resources</h2>
-      <h2 className="col-span-2 text-xl text-right">Tile</h2>
-      {Object.keys(group.resources)
-        .filter((resourceKey) => {
-          return (
-            group.resources[resourceKey as keyof typeof group.resources]! > 0 ||
-            tile.resources[resourceKey as keyof typeof tile.resources]! > 0
-          );
-        })
-        .map((resourceKey) => {
-          return [
-            <div key={resourceKey}>
-              <div className="capitalized">{resourceKey}</div>,
-              <div>
+    <InfoBox title="Resources" className="w-full">
+      <div className="grid grid-cols-3 gap-4">
+        <div className="font-semibold text-center">Group Resources</div>
+        <div className="font-semibold text-center">Transfer</div>
+        <div className="font-semibold text-center">Tile Resources</div>
+
+        {resourceKeys.map((resourceKey) => (
+          <div key={resourceKey} className="contents">
+            <div className="bg-gray-800 p-2 rounded text-center">
+              <div className="capitalize text-sm text-gray-400 mb-1">
+                {resourceKey}
+              </div>
+              <div className="font-medium">
                 {group.resources[resourceKey as keyof typeof group.resources] ||
                   0}
               </div>
-              ,
-              <button
+            </div>
+
+            <div className="flex justify-center items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() =>
                   requestResourceTransfer(
                     group,
@@ -63,10 +88,11 @@ const ResourceInfo = ({ group, tile }: { group: Group; tile: Tile }) => {
                   )
                 }
               >
-                &lt;
-              </button>
-              ,
-              <button
+                &larr;
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() =>
                   requestResourceTransfer(
                     group,
@@ -75,16 +101,23 @@ const ResourceInfo = ({ group, tile }: { group: Group; tile: Tile }) => {
                   )
                 }
               >
-                &gt;
-              </button>
-              <div>
+                &rarr;
+              </Button>
+            </div>
+
+            <div className="bg-gray-800 p-2 rounded text-center">
+              <div className="capitalize text-sm text-gray-400 mb-1">
+                {resourceKey}
+              </div>
+              <div className="font-medium">
                 {tile.resources[resourceKey as keyof typeof tile.resources] ||
                   0}
               </div>
-            </div>,
-          ];
-        })}
-    </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </InfoBox>
   );
 };
 
