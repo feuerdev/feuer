@@ -1,7 +1,7 @@
 import * as PIXI from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { GlowFilter } from "pixi-filters";
-import { Layout, Hex } from "@shared/hex";
+import { Layout, Hex, equals } from "@shared/hex";
 import * as Vector2 from "@shared/vector2";
 import Rules from "@shared/rules.json";
 import { ClientTile, Selection, SelectionType, ZIndices } from "./types";
@@ -261,8 +261,8 @@ export class RenderEngine {
       this.viewport.addChild(object);
     }
 
-    object.x = this.layout.hexToPixel(tile).x - this.HEX_SIZE;
-    object.y = this.layout.hexToPixel(tile).y - this.HEX_SIZE;
+    object.x = this.layout.hexToPixel(tile.hex).x - this.HEX_SIZE;
+    object.y = this.layout.hexToPixel(tile.hex).y - this.HEX_SIZE;
     object.zIndex = ZIndices.Tiles;
     object.visible = tile.visible;
   }
@@ -284,7 +284,7 @@ export class RenderEngine {
       const prefix = child.name.charAt(0);
       if (prefix === "t" || prefix === "g" || prefix === "b") {
         const childHex = this.getHexFromSprite(child);
-        if (childHex && Hex.equals(childHex, hexCoord)) {
+        if (childHex && equals(childHex, hexCoord)) {
           found.push(child);
         }
       }
@@ -299,7 +299,6 @@ export class RenderEngine {
     if (parts.length !== 2) return null;
 
     const prefix = parts[0];
-    const id = parseInt(parts[1]);
 
     // We would need access to the game state to convert IDs to hex coordinates
     // This is a simplification - in a real implementation, we would need to

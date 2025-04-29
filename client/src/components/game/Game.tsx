@@ -6,7 +6,6 @@ import Loading from "../ui/loading";
 import { Canvas } from "./Canvas";
 import {
   GameStateProvider,
-  useGameStateContext,
 } from "@/lib/GameStateProvider";
 
 export default function Game() {
@@ -25,12 +24,11 @@ export default function Game() {
 
 // Separate component to access the context
 function GameScreen() {
-  const { registerRenderer } = useGameStateContext();
 
   return (
     <>
       <Hud />
-      <Canvas registerRenderer={registerRenderer} />
+      <Canvas />
     </>
   );
 }

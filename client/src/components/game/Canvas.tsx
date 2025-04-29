@@ -1,13 +1,11 @@
 import { useEffect, useRef } from "react";
 import { RenderEngine } from "@/lib/RenderEngine";
+import { useGameStateContext } from "@/lib/GameStateProvider";
 
-export function Canvas({
-  registerRenderer,
-}: {
-  registerRenderer: (engine: RenderEngine) => void;
-}) {
+export function Canvas() {
   const containerRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<RenderEngine | null>(null);
+  const { registerRenderer } = useGameStateContext();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -40,5 +38,5 @@ export function Canvas({
     };
   }, [registerRenderer]);
 
-  return <div ref={containerRef} className="h-screen w-screen" />;
+  return <div ref={containerRef} />;
 }
