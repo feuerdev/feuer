@@ -2,7 +2,7 @@
 
 import { useSocket } from "@/components/hooks/useSocket";
 import { TBuildingTemplate, Tile } from "@shared/objects";
-import { Button } from "../ui/button";
+import { Button } from "../ui/Button";
 
 const BuildingTemplate = ({
   building,

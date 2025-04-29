@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { Group, Tile } from "@shared/objects";
 import { TransferDirection } from "@shared/objectutil";
 import { useSocket } from "@/components/hooks/useSocket";
-import { InfoBox, InfoRow } from "../ui/InfoBox";
-import { Button } from "../ui/button";
+import { InfoBox } from "../ui/InfoBox";
+import { Button } from "../ui/Button";
 
 /**
  * React Component to display resource information and display controls to transfer resources between tile and groups

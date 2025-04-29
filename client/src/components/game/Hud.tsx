@@ -7,21 +7,6 @@ import { useGameStateContext } from "@/lib/GameStateProvider";
 import { SelectionType } from "@/lib/types";
 import { ControlPanel } from "./ControlPanel";
 
-// Helper for displaying selection type names
-const getSelectionTypeName = (type: SelectionType): string => {
-  switch (type) {
-    case SelectionType.None:
-      return "None";
-    case SelectionType.Group:
-      return "Group";
-    case SelectionType.Tile:
-      return "Tile";
-    case SelectionType.Building:
-      return "Building";
-    default:
-      return "Unknown";
-  }
-};
 
 const Hud = () => {
   const { selection, world } = useGameStateContext();
