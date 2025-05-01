@@ -1,5 +1,5 @@
 import { Button } from "../ui/Button";
-import { InfoBox } from "../ui/InfoBox";
+import { InfoBox } from "./InfoBox";
 import { useGameStateContext } from "@/lib/GameStateProvider";
 import { SelectionType } from "@/lib/types";
 

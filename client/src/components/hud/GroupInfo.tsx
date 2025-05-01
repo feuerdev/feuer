@@ -1,10 +1,8 @@
-"use client";
-
 import { Group } from "@shared/objects";
 import { getTileByPos } from "@shared/objectutil";
 import ResourceInfo from "./ResourceInfo";
 import { useGameStateContext } from "@/lib/GameStateProvider";
-import { InfoBox, InfoRow, InfoDivider } from "../ui/InfoBox";
+import { InfoBox, InfoRow, InfoDivider } from "./InfoBox";
 import { Button } from "../ui/Button";
 import { useSocket } from "@/lib/SocketProvider";
 

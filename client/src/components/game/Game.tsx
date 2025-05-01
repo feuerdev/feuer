@@ -1,7 +1,5 @@
-"use client";
-
 import { useSocket } from "@/lib/SocketProvider";
-import Hud from "./Hud";
+import Hud from "@/components/hud/Hud";
 import Loading from "../ui/loading";
 import { Canvas } from "./Canvas";
 import { GameStateProvider } from "@/lib/GameStateProvider";

@@ -1,12 +1,10 @@
-"use client";
-
 import { equals } from "@shared/hex";
 import { TBuildingTemplate, Tile } from "@shared/objects";
 import Buildings from "@shared/templates/buildings.json";
 import BuildingTemplate from "./BuildingTemplate";
 import ResourceInfo from "./ResourceInfo";
 import { useGameStateContext } from "@/lib/GameStateProvider";
-import { InfoBox, InfoRow } from "../ui/InfoBox";
+import { InfoBox, InfoRow } from "./InfoBox";
 
 const TileInfo = ({ tile }: { tile: Tile }) => {
   const { world } = useGameStateContext();

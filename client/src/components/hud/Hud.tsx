@@ -1,7 +1,5 @@
-"use client";
-
-import GroupInfo from "@/components/game/GroupInfo";
-import TileInfo from "@/components/game/TileInfo";
+import GroupInfo from "@/components/hud/GroupInfo";
+import TileInfo from "@/components/hud/TileInfo";
 import { getTileById } from "@shared/objectutil";
 import { useGameStateContext } from "@/lib/GameStateProvider";
 import { SelectionType } from "@/lib/types";

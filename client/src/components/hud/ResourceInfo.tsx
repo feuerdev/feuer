@@ -1,10 +1,8 @@
-"use client";
-
 import { useEffect } from "react";
 import { Group, Tile } from "@shared/objects";
 import { TransferDirection } from "@shared/objectutil";
 import { useSocket } from "@/lib/SocketProvider";
-import { InfoBox } from "../ui/InfoBox";
+import { InfoBox } from "./InfoBox";
 import { Button } from "../ui/Button";
 
 /**
