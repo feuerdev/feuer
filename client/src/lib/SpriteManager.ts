@@ -1,9 +1,12 @@
 import * as PIXI from "pixi.js";
-import { Loader } from "pixi.js";
 import { Biome, Building } from "@shared/objects";
-import Sprites from "./sprites.json";
 import Buildings from "@shared/templates/buildings.json";
 import { ClientTile } from "./types";
+
+// Define the type for the modules loaded by import.meta.glob
+interface AssetModule {
+  default: string;
+}
 
 export class SpriteManager {
   private textures: Map<string, PIXI.Texture> = new Map();
@@ -11,27 +14,35 @@ export class SpriteManager {
   constructor() {}
 
   /**
-   * Load all textures defined in sprites.json
+   * Load all textures from the assets directory using Vite's import.meta.glob
    */
   async loadTextures(): Promise<void> {
+    // Clear existing textures and cache if needed (optional)
+    this.textures.clear();
     PIXI.utils.clearTextureCache();
-    Loader.shared.reset();
 
-    for (const sprite of Sprites) {
-      Loader.shared.add(sprite, `../${sprite}.png`);
+    // Use import.meta.glob to find all .png files in src/assets
+    // The ?url query suffix tells Vite to return the resolved URL of the asset
+    const imageModules = import.meta.glob<AssetModule>(
+      "/src/assets/**/*.png",
+      { eager: true } // Use eager: true to load modules immediately
+    );
+
+    for (const path in imageModules) {
+      const url = imageModules[path].default;
+      // Extract the filename without extension to use as the key
+      // e.g., /src/assets/biome_ice.png -> biome_ice
+      const key = path.split("/").pop()?.replace(".png", "");
+      if (key) {
+        const texture = await PIXI.Texture.fromURL(url);
+        this.textures.set(key, texture);
+        console.log(`Loaded texture: ${key} from ${url}`); // Added for debugging
+      }
     }
 
-    return new Promise<void>((resolve) => {
-      Loader.shared.load(() => {
-        for (const sprite of Sprites) {
-          const texture = Loader.shared.resources[sprite]?.texture;
-          if (texture) {
-            this.textures.set(sprite, texture);
-          }
-        }
-        resolve();
-      });
-    });
+    // No need for PIXI.Loader, the textures are loaded directly
+    // console.log("Textures loaded:", this.textures.keys()); // Added for debugging
+    return Promise.resolve();
   }
 
   /**
@@ -39,12 +50,19 @@ export class SpriteManager {
    */
   getTexture(key: string, variant: number = 1): PIXI.Texture {
     const textureKey = variant > 1 ? `${key}_${variant}` : key;
-    const texture = Loader.shared.resources[textureKey]?.texture;
+    // Retrieve texture directly from the map
+    const texture = this.textures.get(textureKey);
 
     if (!texture) {
       console.warn(`Texture not found: ${textureKey}, using fallback`);
-      const fallbackTexture = Loader.shared.resources["biome_ice"]?.texture;
-      return fallbackTexture as PIXI.Texture;
+      // Fallback logic remains the same, but ensure 'biome_ice' exists in the map
+      const fallbackTexture = this.textures.get("biome_ice");
+      if (!fallbackTexture) {
+        console.error("Fallback texture 'biome_ice' not found!");
+        // Return a default empty texture or handle error appropriately
+        return PIXI.Texture.EMPTY;
+      }
+      return fallbackTexture;
     }
 
     return texture;
@@ -57,27 +75,28 @@ export class SpriteManager {
     const biomeMap: Record<number, { name: string; variants: number }> = {
       [Biome.Ice]: { name: "biome_ice", variants: 1 },
       [Biome.Tundra]: { name: "biome_tundra", variants: 8 },
-      [Biome.Boreal]: { name: "biome_boreal", variants: 8 },
-      [Biome.Grassland]: { name: "biome_grassland", variants: 8 },
-      [Biome.Temperate]: { name: "biome_forest", variants: 8 },
-      [Biome.Tropical]: { name: "biome_jungle", variants: 8 },
+      [Biome.Boreal]: { name: "biome_boreal_forest", variants: 4 }, // Updated name based on assets
+      [Biome.Grassland]: { name: "biome_grassland", variants: 2 }, // Updated name/variant count
+      [Biome.Temperate]: { name: "biome_temperate_forest", variants: 4 }, // Updated name
+      [Biome.Tropical]: { name: "biome_tropical_forest", variants: 2 }, // Updated name
       [Biome.Desert]: { name: "biome_desert", variants: 8 },
       [Biome.Ocean]: { name: "biome_ocean", variants: 1 },
-      [Biome.None]: { name: "biome_ice", variants: 1 },
-      [Biome.Shore]: { name: "biome_ocean", variants: 1 },
-      [Biome.Treeline]: { name: "biome_forest", variants: 8 },
-      [Biome.Mountain]: { name: "biome_tundra", variants: 8 },
-      [Biome.Beach]: { name: "biome_desert", variants: 8 },
-      [Biome.Peaks]: { name: "biome_tundra", variants: 8 },
-      [Biome.River]: { name: "biome_ocean", variants: 1 },
+      [Biome.None]: { name: "biome_ice", variants: 1 }, // Default fallback
+      [Biome.Shore]: { name: "biome_shore", variants: 1 }, // Assuming biome_shore.png
+      [Biome.Treeline]: { name: "biome_tree_line", variants: 3 }, // Updated name/variant count
+      [Biome.Mountain]: { name: "biome_mountain", variants: 4 }, // Updated name/variant count
+      [Biome.Beach]: { name: "biome_beach", variants: 1 }, // Assuming biome_beach.png
+      [Biome.Peaks]: { name: "biome_ice_peaks", variants: 3 }, // Updated name/variant count
+      [Biome.River]: { name: "biome_river", variants: 1 }, // Assuming biome_river.png
     };
 
-    const biomeInfo = biomeMap[tile.biome] || biomeMap[Biome.Ice];
+    const biomeInfo = biomeMap[tile.biome] || biomeMap[Biome.Ice]; // Use Ice as fallback
     return this.getRandomTile(tile, biomeInfo.name, biomeInfo.variants);
   }
 
   /**
-   * Get a random tile texture variant based on tile ID
+   * Get a random tile texture variant based on tile coordinates
+   * This ensures the same tile always gets the same texture variant
    */
   private getRandomTile(
     tile: ClientTile,
@@ -85,10 +104,14 @@ export class SpriteManager {
     max: number
   ): PIXI.Texture {
     if (max <= 1) {
-      return this.getTexture(name);
+      return this.getTexture(name); // No suffix if max is 1
     }
 
-    const variant = (Math.abs(tile.id) % max) + 1;
+    // Use the tile's hex coordinates for consistent variant selection
+    // A simple hash function using the hex q and r coordinates
+    const hash = Math.abs(tile.hex.q * 31 + tile.hex.r);
+    const variant = (hash % max) + 1;
+
     return this.getTexture(name, variant);
   }
 
@@ -98,18 +121,33 @@ export class SpriteManager {
   getBuildingSprite(building: Building): PIXI.Texture {
     const buildingKey = building.key;
     const buildingData = Buildings[buildingKey as keyof typeof Buildings];
-    const spriteName = buildingData?.texture || "building_unknown";
+    // Ensure texture names match files in assets, e.g., 'town_center' instead of 'building_town_center'
+    const spriteName = buildingData?.texture || "fallback_building"; // Use a generic fallback key
+    const texture = this.textures.get(spriteName);
 
-    return this.getTexture(spriteName);
+    if (!texture) {
+      console.warn(`Building texture not found: ${spriteName}, using fallback`);
+      // Provide a default texture if available, e.g., the fallback 'biome_ice' or a specific 'unknown_building' texture
+      return this.textures.get("biome_ice") || PIXI.Texture.EMPTY;
+    }
+    return texture;
   }
 
   /**
    * Get a group sprite based on owner
    */
   getGroupSprite(owner: string): PIXI.Texture {
-    const suffix = owner === "ai" ? "_ai" : "";
-    const textureName = `group${suffix}`;
+    // Assuming group sprites are named like 'unit_scout_own', 'unit_scout_enemy' etc.
+    // This method might need adjustment based on actual group sprite naming convention
+    const suffix = owner === "ai" ? "_enemy" : "_own"; // Example adjustment
+    const baseName = "unit_scout"; // Example base name, adjust as needed
+    const textureName = `${baseName}${suffix}`;
 
-    return this.getTexture(textureName);
+    const texture = this.textures.get(textureName);
+    if (!texture) {
+      console.warn(`Group texture not found: ${textureName}, using fallback`);
+      return this.textures.get("biome_ice") || PIXI.Texture.EMPTY; // Fallback
+    }
+    return texture;
   }
 }
