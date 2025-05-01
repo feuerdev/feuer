@@ -17,6 +17,8 @@ type WorldState = {
 
 type SocketState = {
   socket: Socket;
+  connected: boolean;
+  setConnected: (connected: boolean) => void;
 };
 
 type EngineState = {
@@ -27,8 +29,10 @@ export const useEngineStore = create<EngineState>(() => ({
   engine: new Engine(),
 }));
 
-export const useSocketStore = create<SocketState>(() => ({
+export const useSocketStore = create<SocketState>((set) => ({
   socket: initializeSocket(),
+  connected: false,
+  setConnected: (connected: boolean) => set({ connected }),
 }));
 
 export const useSelectionStore = create<SelectionState>((set) => ({

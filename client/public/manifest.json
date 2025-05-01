@@ -1,7 +1,7 @@
 {
   "bundles": [
     {
-      "name": "main",
+      "name": "images",
       "assets": {
         "biome_beach": {
           "src": "biome_beach.png"
@@ -143,9 +143,6 @@
         },
         "gold": {
           "src": "gold.png"
-        },
-        "google": {
-          "src": "google.svg"
         },
         "hud_gold": {
           "src": "hud_gold.png"

@@ -19,7 +19,12 @@ import { Building, Group, Tile } from "@shared/objects";
 import { convertToSpriteName, Hashtable } from "@shared/util";
 import { useSelectionStore, useSocketStore, useWorldStore } from "@/lib/state";
 import * as PlayerRelation from "@shared/relation";
-import { getBuildingSprite, getGroupSprite, getTerrainTexture } from "./sprites";
+import {
+  getBuildingSprite,
+  getGroupSprite,
+  getTerrainTexture,
+} from "./sprites";
+import { Socket } from "socket.io-client";
 
 export class Engine {
   private app: Application = new Application();
@@ -36,10 +41,8 @@ export class Engine {
     outerStrength: 2,
     color: 0x000000,
   });
-  private socket = useSocketStore.getState().socket;
-  private setWorld = useWorldStore.getState().setWorld;
-  private setSelection = useSelectionStore.getState().setSelection;
-  private uid = new URLSearchParams(window.location.search).get("user") || "test";
+  private uid =
+    new URLSearchParams(window.location.search).get("user") || "test";
 
   async mount(): Promise<void> {
     await this.app.init({
@@ -86,23 +89,24 @@ export class Engine {
     window.addEventListener("resize", this.handleResize);
     window.addEventListener("keyup", this.handleKeyUp, false);
 
-    this.socket.on("gamestate tiles", this.handleTilesUpdate);
-    this.socket.on("gamestate group", this.handleGroupUpdate);
-    this.socket.on("gamestate groups", this.handleGroupsUpdate);
-    this.socket.on("gamestate building", this.handleBuildingUpdate);
+    const socket = useSocketStore.getState().socket;
+    socket.on("gamestate tiles", this.handleTilesUpdate);
+    socket.on("gamestate group", this.handleGroupUpdate);
+    socket.on("gamestate groups", this.handleGroupsUpdate);
+    socket.on("gamestate building", this.handleBuildingUpdate);
 
-    this.requestTiles();
+    this.requestTiles(socket);
   }
 
-  private requestTiles = () => {
-    this.socket.emit("request tiles");
+  private requestTiles = (socket: Socket) => {
+    socket.emit("request tiles");
   };
 
   private handleGroupUpdate = (group: Group) => {
-    const world = useWorldStore.getState().world;
+    const { world, setWorld } = useWorldStore.getState();
     if (world.groups[group.id]) {
       // Update existing group
-      this.setWorld({
+      setWorld({
         ...world,
         groups: {
           ...world.groups,
@@ -111,7 +115,7 @@ export class Engine {
       });
     } else {
       // New group
-      this.setWorld({
+      setWorld({
         ...world,
         groups: {
           ...world.groups,
@@ -123,7 +127,8 @@ export class Engine {
   };
 
   private handleGroupsUpdate = (groups: Hashtable<Group>) => {
-    const world = useWorldStore.getState().world;
+    const socket = useSocketStore.getState().socket;
+    const { world, setWorld } = useWorldStore.getState();
     const newGroups: Hashtable<Group> = {};
     const visitedOldGroups: Hashtable<boolean> = {};
     let needsTileUpdate = false;
@@ -151,7 +156,7 @@ export class Engine {
           PlayerRelation.hash(receivedGroup.owner, this.uid)
         ] === undefined
       ) {
-        this.socket.emit("request relation", {
+        socket.emit("request relation", {
           id1: receivedGroup.owner,
           id2: this.uid,
         });
@@ -169,19 +174,19 @@ export class Engine {
     });
 
     // Update world state
-    this.setWorld({
+    setWorld({
       ...world,
       groups: newGroups,
     });
 
     if (needsTileUpdate) {
-      this.requestTiles();
+      this.requestTiles(socket);
     }
   };
 
   private handleBuildingUpdate = (building: Building) => {
-    const world = useWorldStore.getState().world;
-    this.setWorld({
+    const { world, setWorld } = useWorldStore.getState();
+    setWorld({
       ...world,
       buildings: {
         ...world.buildings,
@@ -192,7 +197,7 @@ export class Engine {
   };
 
   private handleTilesUpdate = (tiles: Util.Hashtable<ClientTile>) => {
-    const world = useWorldStore.getState().world;
+    const { world, setWorld } = useWorldStore.getState();
     const visibleHexes: Hashtable<Hex> = {};
 
     // Determine visible hexes based on groups and buildings
@@ -210,12 +215,12 @@ export class Engine {
     });
 
     // Add new tiles to world
-    this.setWorld({
+    setWorld({
       ...world,
       tiles: {
         ...world.tiles,
-        ...tiles
-      }
+        ...tiles,
+      },
     });
 
     // Update visibility and render tiles
@@ -263,8 +268,9 @@ export class Engine {
   };
 
   private registerClickHandler(): boolean {
+    const { selection, setSelection } = useSelectionStore.getState();
+    const { socket } = useSocketStore.getState();
     this.viewport.on("click", (e: FederatedPointerEvent) => {
-      const selection = useSelectionStore.getState().selection;
       const worldPos = this.viewport?.toWorld(e.global.x, e.global.y);
       if (worldPos) {
         const vec2Point = Vector2.create(worldPos.x, worldPos.y);
@@ -274,7 +280,7 @@ export class Engine {
             const sprites = this.findSpritesAtPoint(vec2Point);
             if (sprites.length === 0) {
               // Clicked on empty space, clear selection
-              this.setSelection({ type: SelectionType.None });
+              setSelection({ type: SelectionType.None });
               return;
             }
 
@@ -313,14 +319,14 @@ export class Engine {
             }
 
             // Update selection
-            this.setSelection(newSelection);
+            setSelection(newSelection);
             break;
           }
           case 2: {
             // Right - Added braces for lexical declaration
             const clickedHex = round(this.layout.pixelToHex(vec2Point));
             if (clickedHex && selection.type === SelectionType.Group) {
-              this.socket.emit("request movement", {
+              socket.emit("request movement", {
                 selection: selection.id,
                 target: clickedHex,
               });
@@ -471,7 +477,9 @@ export class Engine {
     object.visible = tile.visible;
   }
 
-  findSpritesAtPoint(point: Vector2.Vector2): Array<Sprite | Container | Graphics> {
+  findSpritesAtPoint(
+    point: Vector2.Vector2
+  ): Array<Sprite | Container | Graphics> {
     if (!this.viewport) return [];
 
     const found: Array<Sprite | Container | Graphics> = [];

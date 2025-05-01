@@ -1,10 +1,17 @@
 import { io } from "socket.io-client";
+import { useSocketStore } from "./state";
 
 export const initializeSocket = () => {
-  return io(import.meta.env.VITE_SERVER_URL || "http://localhost:5001", {
+  const socket = io(import.meta.env.VITE_SERVER_URL || "http://localhost:5001", {
     withCredentials: true,
     auth: {
       user: new URLSearchParams(window.location.search).get("user") || "test",
     },
   });
+
+  socket.on("connect", () => {
+    useSocketStore.getState().setConnected(true);
+  });
+
+  return socket;
 };

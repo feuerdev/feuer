@@ -3,14 +3,14 @@ import Loading from "./ui/loading";
 import { useEffect  } from "react";
 import { useEngineStore, useSocketStore } from "@/lib/state";
 export default function Game() {
-  const engine = useEngineStore.getState().engine;
-  const socket = useSocketStore.getState().socket;
+  const engine = useEngineStore((state) => state.engine);
+  const connected = useSocketStore((state) => state.connected);
 
   useEffect(() => {
     engine.mount();
   }, [engine]);
 
-  if (!socket.connected) {
+  if (!connected) {
     return <Loading text="Connecting to server..." />;
   }
 
