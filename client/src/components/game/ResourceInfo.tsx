@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { Group, Tile } from "@shared/objects";
 import { TransferDirection } from "@shared/objectutil";
-import { useSocket } from "@/components/hooks/useSocket";
+import { useSocket } from "@/lib/SocketProvider";
 import { InfoBox } from "../ui/InfoBox";
 import { Button } from "../ui/Button";
 

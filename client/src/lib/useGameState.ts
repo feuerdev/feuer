@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { RenderEngine } from "./RenderEngine";
-import { useSocket } from "@/components/hooks/useSocket";
+import { useSocket } from "@/lib/SocketProvider";
 import { ClientTile, Selection, SelectionType } from "./types";
 import { create, Vector2 } from "@shared/vector2";
 import { Building, Group, Tile, World } from "@shared/objects";

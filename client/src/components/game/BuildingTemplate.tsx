@@ -1,6 +1,4 @@
-"use client";
-
-import { useSocket } from "@/components/hooks/useSocket";
+import { useSocket } from "@/lib/SocketProvider";
 import { TBuildingTemplate, Tile } from "@shared/objects";
 import { Button } from "../ui/Button";
 
