@@ -232,6 +232,8 @@ export default class GameServer {
     const player: Player = this.socketplayer[socket.id]
     if (player) {
       console.info("Player Disconnected: " + player.uid)
+      // Clean up socket listeners
+      socket.removeAllListeners()
     }
   }
 
@@ -260,10 +262,6 @@ export default class GameServer {
       )
       this.world.groups[initialGroup.id] = initialGroup
 
-      // let initialCamp = createBuilding(player.uid, "Town Hall", pos)
-      // Building.updateBuilding(initialCamp);
-      // this.world.buildings.push(initialCamp)
-
       //Register player in Gamesever
       this.world.players[uid] = player
       this.updatePlayerVisibilities(uid)
@@ -278,13 +276,30 @@ export default class GameServer {
     //Register player in Gamesever
     this.socketplayer[socket.id] = player
     this.uidsockets[uid] = socket
+
+    // Setup socket listeners
+    this.setupSocketListeners(socket)
+  }
+
+  private setupSocketListeners(socket: Socket) {
+    socket.on("disconnect", () => this.onPlayerDisconnected(socket))
+    socket.on("request tiles", (data: Hex[]) => this.onRequestTiles(socket, data))
+    socket.on("request group", (id: number) => this.onRequestGroup(socket, id))
+    socket.on("request movement", (data) => this.onRequestMovement(socket, data))
+    socket.on("request construction", (data) => this.onRequestConstruction(socket, data))
+    socket.on("request relation", (data) => this.onRequestRelation(socket, data))
+    socket.on("request disband", (data) => this.onRequestDisband(socket, data))
+    socket.on("request transfer", (data) => this.onRequestTransfer(socket, data))
+    socket.on("request unit add", (data) => this.onRequestUnitAdd(socket, data))
+    socket.on("request unit remove", (data) => this.onRequestUnitRemove(socket, data))
+    socket.on("request demolish", (data) => this.onRequestDemolish(socket, data))
   }
 
   onRequestTiles(socket: Socket, data: Hex[]) {
     const player: Player = this.socketplayer[socket.id]
     if (player) {
       //TODO: Check if player has permission to see these tiles
-      socket.emit("gamestate tiles", this.getTiles(data))
+      socket.emit("gamestate tiles", this.getTiles(data || player.discoveredHexes))
     }
   }
 

@@ -51,22 +51,6 @@ io.on("connection", async (socket) => {
   })
 
   await game.onPlayerInitialize(socket, user)
-  socket.on("disconnect", () => game.onPlayerDisconnected(socket))
-  socket.on("request tiles", (data: Hex[]) => game.onRequestTiles(socket, data))
-  socket.on("request group", (id: number) => game.onRequestGroup(socket, id))
-  socket.on("request movement", (data) => game.onRequestMovement(socket, data))
-  socket.on("request construction", (data) =>
-    game.onRequestConstruction(socket, data)
-  )
-  socket.on("request relation", (data) => game.onRequestRelation(socket, data))
-  socket.on("request disband", (data) => game.onRequestDisband(socket, data))
-  socket.on("request transfer", (data) => game.onRequestTransfer(socket, data))
-  socket.on("request unit add", (data) => game.onRequestUnitAdd(socket, data))
-  socket.on("request unit remove", (data) =>
-    game.onRequestUnitRemove(socket, data)
-  )
-  // socket.on("request upgrade", (data) => game.onRequestUpgrade(socket, data))
-  socket.on("request demolish", (data) => game.onRequestDemolish(socket, data))
 })
 
-console.log("Server running on port:", Config.port)
+console.info("Server running on port: " + port)
