@@ -1,10 +1,7 @@
-import GroupInfo from "@/components/hud/GroupInfo";
-import TileInfo from "@/components/hud/TileInfo";
+import GroupInfo from "@/components/GroupInfo";
+import TileInfo from "@/components/TileInfo";
 import { getTileById } from "@shared/objectutil";
-import { useGameStateContext } from "@/lib/GameStateProvider";
 import { SelectionType } from "@/lib/types";
-import { ControlPanel } from "./ControlPanel";
-
 
 const Hud = () => {
   const { selection, world } = useGameStateContext();
@@ -15,11 +12,6 @@ const Hud = () => {
       className="[&>*]:pointer-events-auto pointer-events-none absolute inset-0 h-screen w-screen text-white"
       id="hud"
     >
-      {/* Top control panel */}
-      <div id="top-panel" className="absolute top-0 left-0 right-0 z-10">
-        <ControlPanel />
-      </div>
-
       {/* Bottom info panel */}
       <div
         id="bottom-panel"

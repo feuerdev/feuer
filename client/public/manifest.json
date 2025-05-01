@@ -1,7 +1,7 @@
 {
   "bundles": [
     {
-      "name": "images",
+      "name": "main",
       "assets": {
         "biome_beach": {
           "src": "biome_beach.png"

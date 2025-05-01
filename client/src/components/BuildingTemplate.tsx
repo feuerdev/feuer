@@ -1,6 +1,6 @@
 import { useSocket } from "@/lib/SocketProvider";
 import { TBuildingTemplate, Tile } from "@shared/objects";
-import { Button } from "../ui/Button";
+import { Button } from "./ui/Button";
 
 const BuildingTemplate = ({
   building,

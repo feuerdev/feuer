@@ -5,17 +5,23 @@ import {
   Graphics,
   Point,
   Assets,
+  FederatedPointerEvent,
 } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { GlowFilter } from "pixi-filters";
-import { Layout, Hex, equals } from "@shared/hex";
+
+import * as Util from "@shared/util";
+import { Layout, equals, round, hash, neighborsRange, Hex } from "@shared/hex";
 import * as Vector2 from "@shared/vector2";
 import Rules from "@shared/rules.json";
 import { ClientTile, Selection, SelectionType, ZIndices } from "./types";
-import { Building, Group } from "@shared/objects";
-import { convertToSpriteName } from "@shared/util";
+import { Building, Group, Tile } from "@shared/objects";
+import { convertToSpriteName, Hashtable } from "@shared/util";
+import { useSelectionStore, useSocketStore, useWorldStore } from "@/lib/state";
+import * as PlayerRelation from "@shared/relation";
+import { getBuildingSprite, getGroupSprite, getTerrainTexture } from "./sprites";
 
-export class RenderEngine {
+export class Engine {
   private app: Application = new Application();
   private viewport!: Viewport;
   private readonly HEX_SIZE: number = 40;
@@ -24,13 +30,16 @@ export class RenderEngine {
     Vector2.create(this.HEX_SIZE, this.HEX_SIZE),
     Vector2.create(0, 0)
   );
-  private viewportReady: boolean = false;
   private initialFocusSet: boolean = false;
   private readonly GLOW_FILTER: GlowFilter = new GlowFilter({
     distance: 30,
     outerStrength: 2,
     color: 0x000000,
   });
+  private socket = useSocketStore.getState().socket;
+  private setWorld = useWorldStore.getState().setWorld;
+  private setSelection = useSelectionStore.getState().setSelection;
+  private uid = new URLSearchParams(window.location.search).get("user") || "test";
 
   async mount(): Promise<void> {
     await this.app.init({
@@ -40,8 +49,10 @@ export class RenderEngine {
     document.body.appendChild(this.app.canvas);
 
     await Assets.init({
-      manifest: "assets/manifest.json",
+      manifest: "manifest.json",
     });
+
+    await Assets.loadBundle("main");
 
     // Get dimensions after app is initialized
     const screenWidth = window.innerWidth;
@@ -70,10 +81,175 @@ export class RenderEngine {
       .wheel()
       .decelerate();
 
-    window.addEventListener("resize", this.handleResize);
+    this.registerClickHandler();
 
-    this.viewportReady = true;
+    window.addEventListener("resize", this.handleResize);
+    window.addEventListener("keyup", this.handleKeyUp, false);
+
+    this.socket.on("gamestate tiles", this.handleTilesUpdate);
+    this.socket.on("gamestate group", this.handleGroupUpdate);
+    this.socket.on("gamestate groups", this.handleGroupsUpdate);
+    this.socket.on("gamestate building", this.handleBuildingUpdate);
+
+    this.requestTiles();
   }
+
+  private requestTiles = () => {
+    this.socket.emit("request tiles");
+  };
+
+  private handleGroupUpdate = (group: Group) => {
+    const world = useWorldStore.getState().world;
+    if (world.groups[group.id]) {
+      // Update existing group
+      this.setWorld({
+        ...world,
+        groups: {
+          ...world.groups,
+          [group.id]: group,
+        },
+      });
+    } else {
+      // New group
+      this.setWorld({
+        ...world,
+        groups: {
+          ...world.groups,
+          [group.id]: group,
+        },
+      });
+    }
+    this.updateScenegraphGroup(group, this.uid);
+  };
+
+  private handleGroupsUpdate = (groups: Hashtable<Group>) => {
+    const world = useWorldStore.getState().world;
+    const newGroups: Hashtable<Group> = {};
+    const visitedOldGroups: Hashtable<boolean> = {};
+    let needsTileUpdate = false;
+
+    // Process received groups
+    Object.values(groups).forEach((receivedGroup) => {
+      const oldGroup = world.groups[receivedGroup.id];
+      visitedOldGroups[receivedGroup.id] = true;
+
+      // Check if group is new, has moved or upgraded
+      if (
+        !oldGroup ||
+        !equals(oldGroup.pos, receivedGroup.pos) ||
+        oldGroup.spotting !== receivedGroup.spotting
+      ) {
+        this.updateScenegraphGroup(receivedGroup, this.uid);
+        needsTileUpdate = true;
+      }
+
+      // If group is new and foreign, request relation
+      if (
+        !oldGroup &&
+        receivedGroup.owner !== this.uid &&
+        world.playerRelations[
+          PlayerRelation.hash(receivedGroup.owner, this.uid)
+        ] === undefined
+      ) {
+        this.socket.emit("request relation", {
+          id1: receivedGroup.owner,
+          id2: this.uid,
+        });
+      }
+
+      newGroups[receivedGroup.id] = receivedGroup;
+    });
+
+    // Remove groups that are not in the new list
+    Object.entries(world.groups).forEach(([id, oldGroup]) => {
+      if (!visitedOldGroups[id]) {
+        this.removeItem(oldGroup.id);
+        needsTileUpdate = true;
+      }
+    });
+
+    // Update world state
+    this.setWorld({
+      ...world,
+      groups: newGroups,
+    });
+
+    if (needsTileUpdate) {
+      this.requestTiles();
+    }
+  };
+
+  private handleBuildingUpdate = (building: Building) => {
+    const world = useWorldStore.getState().world;
+    this.setWorld({
+      ...world,
+      buildings: {
+        ...world.buildings,
+        [building.id]: building,
+      },
+    });
+    this.updateScenegraphBuilding(building);
+  };
+
+  private handleTilesUpdate = (tiles: Util.Hashtable<ClientTile>) => {
+    const world = useWorldStore.getState().world;
+    const visibleHexes: Hashtable<Hex> = {};
+
+    // Determine visible hexes based on groups and buildings
+    Object.values(world.groups).forEach((group) => {
+      neighborsRange(group.pos, group.spotting).forEach((hex) => {
+        visibleHexes[hash(hex)] = hex;
+      });
+    });
+
+    // Fixed building.pos to building.position
+    Object.values(world.buildings).forEach((building) => {
+      neighborsRange(building.position, building.spotting).forEach((hex) => {
+        visibleHexes[hash(hex)] = hex;
+      });
+    });
+
+    // Add new tiles to world
+    this.setWorld({
+      ...world,
+      tiles: {
+        ...world.tiles,
+        ...tiles
+      }
+    });
+
+    // Update visibility and render tiles
+    Object.values(world.tiles).forEach((tile: Tile) => {
+      const cTile = tile as ClientTile;
+      const oldVisibility = cTile.visible;
+      cTile.visible = visibleHexes[hash(tile.hex)] !== undefined;
+
+      if (oldVisibility !== cTile.visible) {
+        this.updateScenegraphTile(cTile);
+      }
+    });
+  };
+
+  private handleKeyUp = (event: KeyboardEvent) => {
+    switch (event.key) {
+      case "=":
+      case "+":
+        this.zoomIn();
+        break;
+      case "-":
+        this.zoomOut();
+        break;
+      case "/":
+        this.resetZoom();
+        break;
+      case "r":
+      case "R":
+        this.centerViewport();
+        break;
+      default:
+        break;
+    }
+  };
 
   private handleResize = (): void => {
     if (!this.app || !this.viewport) return;
@@ -86,24 +262,71 @@ export class RenderEngine {
     this.viewport.resize(this.app.screen.width, this.app.screen.height);
   };
 
-  registerClickHandler(
-    handler: (point: { x: number; y: number }, button: number) => void
-  ): boolean {
-    if (!this.viewport || !this.viewportReady) {
-      console.warn("Viewport not initialized - click handler not set");
-      return false;
-    }
+  private registerClickHandler(): boolean {
+    this.viewport.on("click", (e: FederatedPointerEvent) => {
+      const selection = useSelectionStore.getState().selection;
+      const worldPos = this.viewport?.toWorld(e.global.x, e.global.y);
+      if (worldPos) {
+        const vec2Point = Vector2.create(worldPos.x, worldPos.y);
+        switch (e.button) {
+          case 0: {
+            // Left
+            const sprites = this.findSpritesAtPoint(vec2Point);
+            if (sprites.length === 0) {
+              // Clicked on empty space, clear selection
+              this.setSelection({ type: SelectionType.None });
+              return;
+            }
 
-    this.viewport.on("clicked", (e: any) => {
-      // Handle both old (pixi-viewport) and new (PixiJS v8) event formats
-      if (e.world) {
-        // Old pixi-viewport format
-        handler({ x: e.world.x, y: e.world.y }, e.event.data.button || 0);
-      } else if (e.global) {
-        // New PixiJS v8 format
-        const worldPos = this.viewport?.toWorld(e.global.x, e.global.y);
-        if (worldPos) {
-          handler({ x: worldPos.x, y: worldPos.y }, e.button || 0);
+            // Find the sprite with highest z-index (topmost)
+            let highestZ = -1;
+            let topSprite = sprites[0];
+            sprites.forEach((sprite) => {
+              if (sprite.zIndex > highestZ) {
+                highestZ = sprite.zIndex;
+                topSprite = sprite;
+              }
+            });
+
+            // Extract entity type and ID from sprite name
+            const name = topSprite.name;
+            if (!name) return;
+
+            const parts = name.split("_");
+            if (parts.length !== 2) return;
+
+            const prefix = parts[0];
+            const id = parseInt(parts[1]);
+
+            // Create selection based on entity type - changed let to const
+            const newSelection: Selection = { id, type: SelectionType.None };
+            switch (prefix) {
+              case "g":
+                newSelection.type = SelectionType.Group;
+                break;
+              case "b":
+                newSelection.type = SelectionType.Building;
+                break;
+              case "t":
+                newSelection.type = SelectionType.Tile;
+                break;
+            }
+
+            // Update selection
+            this.setSelection(newSelection);
+            break;
+          }
+          case 2: {
+            // Right - Added braces for lexical declaration
+            const clickedHex = round(this.layout.pixelToHex(vec2Point));
+            if (clickedHex && selection.type === SelectionType.Group) {
+              this.socket.emit("request movement", {
+                selection: selection.id,
+                target: clickedHex,
+              });
+            }
+            break;
+          }
         }
       }
     });
@@ -174,7 +397,7 @@ export class RenderEngine {
     const spriteName = convertToSpriteName(group.id, "g");
     let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
-      object = new Sprite(this.spriteManager.getGroupSprite(group.owner));
+      object = new Sprite(Assets.get(getGroupSprite(group.owner)));
       object.name = spriteName;
       object.scale.set(0.5, 0.5);
       this.viewport.addChild(object);
@@ -220,7 +443,7 @@ export class RenderEngine {
     const spriteName = convertToSpriteName(building.id, "b");
     let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
-      object = new Sprite(this.spriteManager.getBuildingSprite(building));
+      object = new Sprite(Assets.get(getBuildingSprite(building)));
       object.name = spriteName;
       object.scale.set(0.5, 0.5);
       this.viewport.addChild(object);
@@ -237,7 +460,7 @@ export class RenderEngine {
     const spriteName = convertToSpriteName(tile.id, "t");
     let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
-      object = new Sprite(this.spriteManager.getTerrainTexture(tile));
+      object = new Sprite(Assets.get(getTerrainTexture(tile)));
       object.name = spriteName;
       this.viewport.addChild(object);
     }
@@ -248,10 +471,7 @@ export class RenderEngine {
     object.visible = tile.visible;
   }
 
-  findSpritesAtPoint(point: {
-    x: number;
-    y: number;
-  }): Array<Sprite | Container | Graphics> {
+  findSpritesAtPoint(point: Vector2.Vector2): Array<Sprite | Container | Graphics> {
     if (!this.viewport) return [];
 
     const found: Array<Sprite | Container | Graphics> = [];
@@ -338,16 +558,5 @@ export class RenderEngine {
       default:
         return ZIndices.TileSelection;
     }
-  }
-
-  destroy(): void {
-    window.removeEventListener("resize", this.handleResize);
-
-    if (this.app) {
-      this.app.destroy(true, { children: true, texture: true });
-    }
-
-    this.viewportReady = false;
-    this.initialFocusSet = false;
   }
 }
