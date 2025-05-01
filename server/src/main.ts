@@ -3,7 +3,6 @@ import { generateWorld } from "./mapgen.js"
 import Rules from "../../shared/rules.json" with { type: "json" };
 import GameServer from "./gameserver.js"
 import Config from "./environment.js"
-import { validateSessionToken } from "../../shared/auth/session.js"
 import { Hex } from "../../shared/hex.js";
 
 // Initialize ID counter
@@ -38,32 +37,20 @@ const io = new Server(port, {
 })
 
 io.on("connection", async (socket) => {
-  const cookies = socket.request.headers.cookie
-  const sessionCookie = cookies
-    ?.split(";")
-    .find((cookie) => cookie.trim().startsWith("session="))
-    ?.split("=")[1]
-
-  if (!cookies) {
-    console.warn("No session cookie received")
-    socket.disconnect()
-    return
-  }
-
-  const { user } = await validateSessionToken(sessionCookie)
+  const user = socket.handshake.auth.user
   if (!user) {
-    console.warn(`Invalid session cookie received: ${sessionCookie}`)
+    console.warn(`Invalid auth received: ${user}`)
     socket.disconnect()
     return
   }
 
-  console.log(`User "${user.name}" connected`)
+  console.log(`User "${user}" connected`)
 
   socket.on("disconnect", function () {
-    console.log(`User "${user.name}" disconnected`)
+    console.log(`User "${user}" disconnected`)
   })
 
-  game.onPlayerInitialize(socket, String(user.id))
+  await game.onPlayerInitialize(socket, user)
   socket.on("disconnect", () => game.onPlayerDisconnected(socket))
   socket.on("request tiles", (data: Hex[]) => game.onRequestTiles(socket, data))
   socket.on("request group", (id: number) => game.onRequestGroup(socket, id))
