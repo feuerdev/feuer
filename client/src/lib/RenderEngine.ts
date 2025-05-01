@@ -3,8 +3,8 @@ import {
   Container,
   Sprite,
   Graphics,
-  Filter,
   Point,
+  Assets,
 } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { GlowFilter } from "pixi-filters";
@@ -14,73 +14,34 @@ import Rules from "@shared/rules.json";
 import { ClientTile, Selection, SelectionType, ZIndices } from "./types";
 import { Building, Group } from "@shared/objects";
 import { convertToSpriteName } from "@shared/util";
-import { SpriteManager } from "./SpriteManager";
 
 export class RenderEngine {
-  app: Application | null = null;
-  viewport: Viewport | null = null;
-  elements: Record<string, Sprite | Container | Graphics> = {};
-  layout: Layout;
-  viewportReady: boolean = false;
+  private app: Application = new Application();
+  private viewport!: Viewport;
+  private readonly HEX_SIZE: number = 40;
+  private layout: Layout = new Layout(
+    Layout.pointy,
+    Vector2.create(this.HEX_SIZE, this.HEX_SIZE),
+    Vector2.create(0, 0)
+  );
+  private viewportReady: boolean = false;
   private initialFocusSet: boolean = false;
-  private readonly HEX_SIZE: number;
-  private readonly GLOW_FILTER: Filter;
-  private spriteManager: SpriteManager;
+  private readonly GLOW_FILTER: GlowFilter = new GlowFilter({
+    distance: 30,
+    outerStrength: 2,
+    color: 0x000000,
+  });
 
-  constructor(hexSize: number = 40) {
-    this.HEX_SIZE = hexSize;
-    this.layout = new Layout(
-      Layout.pointy,
-      Vector2.create(this.HEX_SIZE, this.HEX_SIZE),
-      Vector2.create(0, 0)
-    );
-
-    this.GLOW_FILTER = new GlowFilter({
-      distance: 30,
-      outerStrength: 2,
-      color: 0x000000,
-    }) as Filter;
-
-    this.spriteManager = new SpriteManager();
-  }
-
-  async loadAssets(): Promise<void> {
-    return this.spriteManager.loadTextures();
-  }
-
-  async mount(canvas: HTMLCanvasElement): Promise<void> {
-    // First clean up any existing renderer
-    this.destroy();
-    this.viewportReady = false;
-
-    // Create a PIXI Application
-    this.app = new Application();
-
-    // Initialize the application with the canvas
+  async mount(): Promise<void> {
     await this.app.init({
-      view: canvas,
       width: window.innerWidth,
       height: window.innerHeight,
-      resolution: window.devicePixelRatio || 1,
-      autoDensity: true,
-      antialias: true,
-      backgroundAlpha: 1,
-      // PixiJS v8 doesn't use forceCanvas anymore
-      // Important: Use PIXI's ticker for consistent updates
-      autoStart: true,
     });
+    document.body.appendChild(this.app.canvas);
 
-    // Initialize viewport after app is ready
-    this.initializeViewport();
-
-    // Set up event listeners
-    this.setupEventListeners();
-
-    this.viewportReady = true;
-  }
-
-  private initializeViewport(): void {
-    if (!this.app) return;
+    await Assets.init({
+      manifest: "assets/manifest.json",
+    });
 
     // Get dimensions after app is initialized
     const screenWidth = window.innerWidth;
@@ -108,10 +69,10 @@ export class RenderEngine {
       .pinch()
       .wheel()
       .decelerate();
-  }
 
-  private setupEventListeners(): void {
     window.addEventListener("resize", this.handleResize);
+
+    this.viewportReady = true;
   }
 
   private handleResize = (): void => {
@@ -384,10 +345,8 @@ export class RenderEngine {
 
     if (this.app) {
       this.app.destroy(true, { children: true, texture: true });
-      this.app = null;
     }
 
-    this.viewport = null;
     this.viewportReady = false;
     this.initialFocusSet = false;
   }

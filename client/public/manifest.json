@@ -1,0 +1,231 @@
+{
+  "bundles": [
+    {
+      "name": "images",
+      "assets": {
+        "biome_beach": {
+          "src": "biome_beach.png"
+        },
+        "biome_boreal_forest_1": {
+          "src": "biome_boreal_forest_1.png"
+        },
+        "biome_boreal_forest_2": {
+          "src": "biome_boreal_forest_2.png"
+        },
+        "biome_boreal_forest_3": {
+          "src": "biome_boreal_forest_3.png"
+        },
+        "biome_boreal_forest_4": {
+          "src": "biome_boreal_forest_4.png"
+        },
+        "biome_desert_1": {
+          "src": "biome_desert_1.png"
+        },
+        "biome_desert_2": {
+          "src": "biome_desert_2.png"
+        },
+        "biome_desert_3": {
+          "src": "biome_desert_3.png"
+        },
+        "biome_desert_4": {
+          "src": "biome_desert_4.png"
+        },
+        "biome_desert_5": {
+          "src": "biome_desert_5.png"
+        },
+        "biome_desert_6": {
+          "src": "biome_desert_6.png"
+        },
+        "biome_desert_7": {
+          "src": "biome_desert_7.png"
+        },
+        "biome_desert_8": {
+          "src": "biome_desert_8.png"
+        },
+        "biome_grassland_1": {
+          "src": "biome_grassland_1.png"
+        },
+        "biome_grassland_2": {
+          "src": "biome_grassland_2.png"
+        },
+        "biome_ice": {
+          "src": "biome_ice.png"
+        },
+        "biome_ice_peaks_1": {
+          "src": "biome_ice_peaks_1.png"
+        },
+        "biome_ice_peaks_2": {
+          "src": "biome_ice_peaks_2.png"
+        },
+        "biome_ice_peaks_3": {
+          "src": "biome_ice_peaks_3.png"
+        },
+        "biome_mountain_1": {
+          "src": "biome_mountain_1.png"
+        },
+        "biome_mountain_2": {
+          "src": "biome_mountain_2.png"
+        },
+        "biome_mountain_3": {
+          "src": "biome_mountain_3.png"
+        },
+        "biome_mountain_4": {
+          "src": "biome_mountain_4.png"
+        },
+        "biome_ocean": {
+          "src": "biome_ocean.png"
+        },
+        "biome_path": {
+          "src": "biome_path.png"
+        },
+        "biome_river": {
+          "src": "biome_river.png"
+        },
+        "biome_shore": {
+          "src": "biome_shore.png"
+        },
+        "biome_temperate_forest_1": {
+          "src": "biome_temperate_forest_1.png"
+        },
+        "biome_temperate_forest_2": {
+          "src": "biome_temperate_forest_2.png"
+        },
+        "biome_temperate_forest_3": {
+          "src": "biome_temperate_forest_3.png"
+        },
+        "biome_temperate_forest_4": {
+          "src": "biome_temperate_forest_4.png"
+        },
+        "biome_tree_line_1": {
+          "src": "biome_tree_line_1.png"
+        },
+        "biome_tree_line_2": {
+          "src": "biome_tree_line_2.png"
+        },
+        "biome_tree_line_3": {
+          "src": "biome_tree_line_3.png"
+        },
+        "biome_tropical_forest_1": {
+          "src": "biome_tropical_forest_1.png"
+        },
+        "biome_tropical_forest_2": {
+          "src": "biome_tropical_forest_2.png"
+        },
+        "biome_tundra_1": {
+          "src": "biome_tundra_1.png"
+        },
+        "biome_tundra_2": {
+          "src": "biome_tundra_2.png"
+        },
+        "biome_tundra_3": {
+          "src": "biome_tundra_3.png"
+        },
+        "biome_tundra_4": {
+          "src": "biome_tundra_4.png"
+        },
+        "biome_tundra_5": {
+          "src": "biome_tundra_5.png"
+        },
+        "biome_tundra_6": {
+          "src": "biome_tundra_6.png"
+        },
+        "biome_tundra_7": {
+          "src": "biome_tundra_7.png"
+        },
+        "biome_tundra_8": {
+          "src": "biome_tundra_8.png"
+        },
+        "favicon": {
+          "src": "favicon.png"
+        },
+        "forester_hut": {
+          "src": "forester_hut.png"
+        },
+        "gold": {
+          "src": "gold.png"
+        },
+        "google": {
+          "src": "google.svg"
+        },
+        "hud_gold": {
+          "src": "hud_gold.png"
+        },
+        "hud_iron": {
+          "src": "hud_iron.png"
+        },
+        "hud_stone": {
+          "src": "hud_stone.png"
+        },
+        "hud_tree": {
+          "src": "hud_tree.png"
+        },
+        "iron": {
+          "src": "iron.png"
+        },
+        "login_bg": {
+          "src": "login_bg.png"
+        },
+        "login_bg_crop": {
+          "src": "login_bg_crop.png"
+        },
+        "login_title": {
+          "src": "login_title.png"
+        },
+        "mine": {
+          "src": "mine.png"
+        },
+        "town_center": {
+          "src": "town_center.png"
+        },
+        "unit_peasant_enemy": {
+          "src": "unit_peasant_enemy.png"
+        },
+        "unit_peasant_friend": {
+          "src": "unit_peasant_friend.png"
+        },
+        "unit_peasant_neutral": {
+          "src": "unit_peasant_neutral.png"
+        },
+        "unit_peasant_own": {
+          "src": "unit_peasant_own.png"
+        },
+        "unit_scout_enemy": {
+          "src": "unit_scout_enemy.png"
+        },
+        "unit_scout_friend": {
+          "src": "unit_scout_friend.png"
+        },
+        "unit_scout_neutral": {
+          "src": "unit_scout_neutral.png"
+        },
+        "unit_scout_own": {
+          "src": "unit_scout_own.png"
+        },
+        "unit_warrior2_enemy": {
+          "src": "unit_warrior2_enemy.png"
+        },
+        "unit_warrior2_friend": {
+          "src": "unit_warrior2_friend.png"
+        },
+        "unit_warrior2_neutral": {
+          "src": "unit_warrior2_neutral.png"
+        },
+        "unit_warrior2_own": {
+          "src": "unit_warrior2_own.png"
+        },
+        "unit_warrior_enemy": {
+          "src": "unit_warrior_enemy.png"
+        },
+        "unit_warrior_friend": {
+          "src": "unit_warrior_friend.png"
+        },
+        "unit_warrior_neutral": {
+          "src": "unit_warrior_neutral.png"
+        },
+        "unit_warrior_own": {
+          "src": "unit_warrior_own.png"
+        }
+      }
+    }
+  ]
+}
