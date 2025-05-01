@@ -3,11 +3,11 @@ import { TBuildingTemplate, Tile } from "@shared/objects";
 import Buildings from "@shared/templates/buildings.json";
 import BuildingTemplate from "./BuildingTemplate";
 import ResourceInfo from "./ResourceInfo";
-import { useGameStateContext } from "@/lib/GameStateProvider";
+import { useWorldStore } from "@/lib/state";
 import { InfoBox, InfoRow } from "./InfoBox";
 
 const TileInfo = ({ tile }: { tile: Tile }) => {
-  const { world } = useGameStateContext();
+  const world = useWorldStore((state) => state.world);
 
   if (!tile) {
     return <div>No tile selected</div>;

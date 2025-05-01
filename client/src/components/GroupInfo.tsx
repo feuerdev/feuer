@@ -1,14 +1,13 @@
 import { Group } from "@shared/objects";
 import { getTileByPos } from "@shared/objectutil";
 import ResourceInfo from "./ResourceInfo";
-import { useGameStateContext } from "@/lib/GameStateProvider";
 import { InfoBox, InfoRow, InfoDivider } from "./InfoBox";
 import { Button } from "./ui/Button";
-import { useSocket } from "@/lib/SocketProvider";
+import { useSocketStore, useWorldStore } from "@/lib/state";
 
 const GroupInfo = ({ group }: { group: Group }) => {
-  const { world, uid } = useGameStateContext();
-  const { socket } = useSocket();
+  const world = useWorldStore((state) => state.world);
+  const socket = useSocketStore((state) => state.socket);
 
   if (!group) {
     return <div>No group selected</div>;
@@ -23,10 +22,6 @@ const GroupInfo = ({ group }: { group: Group }) => {
   return (
     <div className="flex flex-wrap gap-4 p-4">
       <InfoBox title="Group Details" className="flex-1 min-w-[250px]">
-        <InfoRow
-          label="Owner"
-          value={group.owner === uid ? "You" : "Other Player"}
-        />
         <InfoRow label="Position" value={`${group.pos.q}:${group.pos.r}`} />
         <InfoRow
           label="Status"

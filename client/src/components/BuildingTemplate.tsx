@@ -1,6 +1,7 @@
-import { useSocket } from "@/lib/SocketProvider";
+
 import { TBuildingTemplate, Tile } from "@shared/objects";
 import { Button } from "./ui/Button";
+import { useSocketStore } from "@/lib/state";
 
 const BuildingTemplate = ({
   building,
@@ -9,7 +10,7 @@ const BuildingTemplate = ({
   building: TBuildingTemplate;
   tile: Tile;
 }) => {
-  const { socket } = useSocket();
+  const socket = useSocketStore((state) => state.socket);
 
   return (
     <div className="flex items-center gap-3 p-2 mb-2 bg-gray-800 bg-opacity-50 rounded">

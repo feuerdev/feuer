@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Group, Tile } from "@shared/objects";
 import { TransferDirection } from "@shared/objectutil";
-import { useSocket } from "@/lib/SocketProvider";
+import { useSocketStore } from "@/lib/state";
 import { InfoBox } from "./InfoBox";
 import { Button } from "./ui/Button";
 
@@ -9,7 +9,7 @@ import { Button } from "./ui/Button";
  * React Component to display resource information and display controls to transfer resources between tile and groups
  */
 const ResourceInfo = ({ group, tile }: { group: Group; tile: Tile }) => {
-  const { socket } = useSocket();
+  const socket = useSocketStore((state) => state.socket);
 
   const requestResourceTransfer = (
     group: Group,

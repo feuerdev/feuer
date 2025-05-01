@@ -2,9 +2,11 @@ import GroupInfo from "@/components/GroupInfo";
 import TileInfo from "@/components/TileInfo";
 import { getTileById } from "@shared/objectutil";
 import { SelectionType } from "@/lib/types";
+import { useSelectionStore, useWorldStore } from "@/lib/state";
 
 const Hud = () => {
-  const { selection, world } = useGameStateContext();
+  const world = useWorldStore((state) => state.world);
+  const selection = useSelectionStore((state) => state.selection);
   const { type, id } = selection;
 
   return (
