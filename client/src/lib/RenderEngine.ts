@@ -1,4 +1,11 @@
-import * as PIXI from "pixi.js";
+import {
+  Application,
+  Container,
+  Sprite,
+  Graphics,
+  Filter,
+  Point,
+} from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { GlowFilter } from "pixi-filters";
 import { Layout, Hex, equals } from "@shared/hex";
@@ -6,14 +13,13 @@ import * as Vector2 from "@shared/vector2";
 import Rules from "@shared/rules.json";
 import { ClientTile, Selection, SelectionType, ZIndices } from "./types";
 import { Building, Group } from "@shared/objects";
-import { Filter } from "pixi.js";
 import { convertToSpriteName } from "@shared/util";
 import { SpriteManager } from "./SpriteManager";
 
 export class RenderEngine {
-  app: PIXI.Application | null = null;
+  app: Application | null = null;
   viewport: Viewport | null = null;
-  elements: Record<string, PIXI.DisplayObject> = {};
+  elements: Record<string, Sprite | Container | Graphics> = {};
   layout: Layout;
   viewportReady: boolean = false;
   private initialFocusSet: boolean = false;
@@ -33,7 +39,7 @@ export class RenderEngine {
       distance: 30,
       outerStrength: 2,
       color: 0x000000,
-    }) as unknown as Filter;
+    }) as Filter;
 
     this.spriteManager = new SpriteManager();
   }
@@ -42,13 +48,16 @@ export class RenderEngine {
     return this.spriteManager.loadTextures();
   }
 
-  mount(canvas: HTMLCanvasElement): void {
+  async mount(canvas: HTMLCanvasElement): Promise<void> {
     // First clean up any existing renderer
     this.destroy();
     this.viewportReady = false;
 
     // Create a PIXI Application
-    this.app = new PIXI.Application({
+    this.app = new Application();
+
+    // Initialize the application with the canvas
+    await this.app.init({
       view: canvas,
       width: window.innerWidth,
       height: window.innerHeight,
@@ -56,12 +65,12 @@ export class RenderEngine {
       autoDensity: true,
       antialias: true,
       backgroundAlpha: 1,
-      forceCanvas: false,
+      // PixiJS v8 doesn't use forceCanvas anymore
       // Important: Use PIXI's ticker for consistent updates
       autoStart: true,
     });
 
-    // Initialize viewport
+    // Initialize viewport after app is ready
     this.initializeViewport();
 
     // Set up event listeners
@@ -73,13 +82,16 @@ export class RenderEngine {
   private initializeViewport(): void {
     if (!this.app) return;
 
+    // Get dimensions after app is initialized
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+
     this.viewport = new Viewport({
-      screenWidth: this.app.screen.width,
-      screenHeight: this.app.screen.height,
+      screenWidth,
+      screenHeight,
       worldWidth: (Rules.settings.map_size * 2 + 1) * this.HEX_SIZE,
       worldHeight: (Rules.settings.map_size * 2 + 1) * this.HEX_SIZE,
-      // This is crucial - use the application's interaction manager
-      interaction: this.app.renderer.plugins.interaction,
+      events: this.app.renderer.events,
     });
 
     // Add the viewport to the stage
@@ -121,8 +133,18 @@ export class RenderEngine {
       return false;
     }
 
-    this.viewport.on("clicked", (click) => {
-      handler({ x: click.world.x, y: click.world.y }, click.event.data.button);
+    this.viewport.on("clicked", (e: any) => {
+      // Handle both old (pixi-viewport) and new (PixiJS v8) event formats
+      if (e.world) {
+        // Old pixi-viewport format
+        handler({ x: e.world.x, y: e.world.y }, e.event.data.button || 0);
+      } else if (e.global) {
+        // New PixiJS v8 format
+        const worldPos = this.viewport?.toWorld(e.global.x, e.global.y);
+        if (worldPos) {
+          handler({ x: worldPos.x, y: worldPos.y }, e.button || 0);
+        }
+      }
     });
 
     return true;
@@ -131,9 +153,7 @@ export class RenderEngine {
   updateSelection(selection: Selection): void {
     if (!this.viewport) return;
 
-    const oldSprite = this.viewport.getChildByName(
-      "selection"
-    ) as PIXI.Graphics;
+    const oldSprite = this.viewport.getChildByName("selection") as Sprite;
     if (oldSprite) {
       this.viewport.removeChild(oldSprite);
     }
@@ -156,12 +176,12 @@ export class RenderEngine {
     }
 
     const spriteName = convertToSpriteName(selection.id, prefix);
-    const original = this.viewport.getChildByName(spriteName) as PIXI.Sprite;
+    const original = this.viewport.getChildByName(spriteName) as Sprite;
     if (!original) {
       return;
     }
 
-    const sprite = new PIXI.Sprite(original.texture);
+    const sprite = new Sprite(original.texture);
     sprite.name = "selection";
     this.viewport.addChild(sprite);
 
@@ -176,7 +196,7 @@ export class RenderEngine {
   removeItem(id: number): void {
     if (!this.viewport) return;
 
-    const oldSprite = this.viewport.getChildByName(String(id)) as PIXI.Sprite;
+    const oldSprite = this.viewport.getChildByName(String(id)) as Sprite;
     if (oldSprite) {
       this.viewport.removeChild(oldSprite);
     }
@@ -191,11 +211,11 @@ export class RenderEngine {
     }
 
     const spriteName = convertToSpriteName(group.id, "g");
-    let object = this.viewport.getChildByName(spriteName) as PIXI.Sprite;
+    let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
-      object = new PIXI.Sprite(this.spriteManager.getGroupSprite(group.owner));
+      object = new Sprite(this.spriteManager.getGroupSprite(group.owner));
       object.name = spriteName;
-      object.scale = new PIXI.Point(0.5, 0.5);
+      object.scale.set(0.5, 0.5);
       this.viewport.addChild(object);
     }
 
@@ -206,20 +226,20 @@ export class RenderEngine {
     // Update movement indicator
     const oldSprite = this.viewport.getChildByName(
       "MovementIndicator"
-    ) as PIXI.Graphics;
+    ) as Container;
     if (oldSprite) {
       this.viewport.removeChild(oldSprite);
     }
 
     if (uid && group.owner === uid) {
-      const movementIndicatorContainer = new PIXI.Container();
+      const movementIndicatorContainer = new Container();
       movementIndicatorContainer.name = "MovementIndicator";
       movementIndicatorContainer.zIndex = ZIndices.Units;
 
       this.viewport.addChild(movementIndicatorContainer);
 
       for (const hex of group.targetHexes) {
-        const indicator = new PIXI.Graphics();
+        const indicator = new Graphics();
         indicator.beginFill(0x0000ff);
         indicator.drawCircle(5, 5, 5);
         indicator.endFill();
@@ -229,7 +249,7 @@ export class RenderEngine {
 
         movementIndicatorContainer.addChild(indicator);
       }
-      movementIndicatorContainer.calculateBounds();
+      // In PixiJS v8, calculateBounds is no longer needed, the bounds are updated automatically
     }
   }
 
@@ -237,11 +257,11 @@ export class RenderEngine {
     if (!this.viewport) return;
 
     const spriteName = convertToSpriteName(building.id, "b");
-    let object = this.viewport.getChildByName(spriteName) as PIXI.Sprite;
+    let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
-      object = new PIXI.Sprite(this.spriteManager.getBuildingSprite(building));
+      object = new Sprite(this.spriteManager.getBuildingSprite(building));
       object.name = spriteName;
-      object.scale = new PIXI.Point(0.5, 0.5);
+      object.scale.set(0.5, 0.5);
       this.viewport.addChild(object);
     }
 
@@ -254,9 +274,9 @@ export class RenderEngine {
     if (!this.viewport) return;
 
     const spriteName = convertToSpriteName(tile.id, "t");
-    let object = this.viewport.getChildByName(spriteName) as PIXI.Sprite;
+    let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
-      object = new PIXI.Sprite(this.spriteManager.getTerrainTexture(tile));
+      object = new Sprite(this.spriteManager.getTerrainTexture(tile));
       object.name = spriteName;
       this.viewport.addChild(object);
     }
@@ -270,10 +290,10 @@ export class RenderEngine {
   findSpritesAtPoint(point: {
     x: number;
     y: number;
-  }): Array<PIXI.DisplayObject> {
+  }): Array<Sprite | Container | Graphics> {
     if (!this.viewport) return [];
 
-    const found: Array<PIXI.DisplayObject> = [];
+    const found: Array<Sprite | Container | Graphics> = [];
     const hexCoord = this.layout.pixelToHex(point);
 
     this.viewport.children.forEach((child) => {
@@ -283,9 +303,9 @@ export class RenderEngine {
       // Check if this is a tile, group, or building by name prefix
       const prefix = child.name.charAt(0);
       if (prefix === "t" || prefix === "g" || prefix === "b") {
-        const childHex = this.getHexFromSprite(child);
+        const childHex = this.getHexFromSprite(child as Container);
         if (childHex && equals(childHex, hexCoord)) {
-          found.push(child);
+          found.push(child as Sprite | Container | Graphics);
         }
       }
     });
@@ -293,7 +313,7 @@ export class RenderEngine {
     return found;
   }
 
-  private getHexFromSprite(sprite: PIXI.DisplayObject): Hex | null {
+  private getHexFromSprite(sprite: Container): Hex | null {
     // Extract the ID from the sprite name (format is "prefix_id")
     const parts = sprite.name.split("_");
     if (parts.length !== 2) return null;
@@ -337,13 +357,13 @@ export class RenderEngine {
 
   centerViewport(x = 0, y = 0): void {
     if (!this.viewport) return;
-    this.viewport.center = new PIXI.Point(x, y);
+    this.viewport.center = new Point(x, y);
   }
 
   centerOn(pos: Hex): void {
     if (!this.viewport) return;
     const point = this.layout.hexToPixel(pos);
-    this.viewport.moveCenter(new PIXI.Point(point.x, point.y));
+    this.viewport.moveCenter(new Point(point.x, point.y));
   }
 
   private getSelectionZIndex(selection: Selection): number {
@@ -363,7 +383,7 @@ export class RenderEngine {
     window.removeEventListener("resize", this.handleResize);
 
     if (this.app) {
-      this.app.destroy(false);
+      this.app.destroy(true, { children: true, texture: true });
       this.app = null;
     }
 
