@@ -13,5 +13,9 @@ export const initializeSocket = () => {
     useSocketStore.getState().setConnected(true);
   });
 
+  socket.on("disconnect", () => {
+    useSocketStore.getState().setConnected(false);
+  });
+
   return socket;
 };
