@@ -6,7 +6,7 @@ import { loadAssets } from "@/lib/assets";
 export const Canvas = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const appRef = useRef<Application | null>(null);
-  const setApp = useStore((state) => state.setApp);
+  const setPixi = useStore((state) => state.setPixi);
 
   useEffect(() => {
     const initCanvas = async () => {
@@ -25,7 +25,7 @@ export const Canvas = () => {
 
       await loadAssets();
 
-      setApp(app);
+      setPixi(app);
 
       if (app.view && canvasRef.current) {
         canvasRef.current.appendChild(app.view as HTMLCanvasElement);
@@ -38,10 +38,10 @@ export const Canvas = () => {
       if (appRef.current) {
         appRef.current.destroy(true, { children: true });
         appRef.current = null;
-        setApp(null);
+        setPixi(null);
       }
     };
-  }, [setApp]);
+  }, [setPixi]);
 
   return (
     <div

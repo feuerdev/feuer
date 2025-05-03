@@ -7,8 +7,8 @@ import { initializeSocket } from "./socket";
 import { Application } from "pixi.js";
 
 type AppState = {
-  app: Application | null;
-  setApp: (app: Application | null) => void;
+  pixi: Application | null;
+  setPixi: (pixi: Application | null) => void;
 
   engine: Engine;
 
@@ -24,20 +24,16 @@ type AppState = {
 };
 
 export const useStore = create<AppState>((set) => ({
-  app: null,
-  setApp: (app) => set({ app }),
-
+  pixi: null,
+  setPixi: (pixi) => set({ pixi }),
   engine: new Engine(),
-
   socket: initializeSocket(),
   connected: false,
   setConnected: (connected) => set({ connected }),
-
   selection: {
     type: SelectionType.None,
   },
   setSelection: (selection) => set({ selection }),
-
   world: {
     tiles: {},
     groups: {},
