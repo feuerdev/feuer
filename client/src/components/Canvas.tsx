@@ -1,6 +1,7 @@
 import { Application } from "pixi.js";
 import { useEffect, useRef } from "react";
 import { usePixiAppStore } from "@/lib/state";
+import { loadAssets } from "@/lib/asset";
 
 export const Canvas = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
@@ -8,21 +9,30 @@ export const Canvas = () => {
   const setApp = usePixiAppStore((state) => state.setApp);
 
   useEffect(() => {
-    if (appRef.current) {
-      appRef.current.destroy(true, { children: true });
-    }
+    const initCanvas = async () => {
+      if (appRef.current) {
+        appRef.current.destroy(true, { children: true });
+      }
 
-    const app = new Application({
-      width: window.innerWidth,
-      height: window.innerHeight,
-    });
-    appRef.current = app;
+      const app = new Application({
+        width: window.innerWidth,
+        height: window.innerHeight,
+        backgroundColor: 0x1099bb,
+        resizeTo: window,
+      });
 
-    setApp(app);
+      appRef.current = app;
 
-    if (canvasRef.current) {
-      canvasRef.current.appendChild(app.view as unknown as Node);
-    }
+      await loadAssets();
+
+      setApp(app);
+
+      if (canvasRef.current) {
+        canvasRef.current.appendChild(app.view as unknown as Node);
+      }
+    };
+
+    initCanvas();
 
     return () => {
       if (appRef.current) {
@@ -36,7 +46,12 @@ export const Canvas = () => {
   return (
     <div
       ref={canvasRef}
-      style={{ width: window.innerWidth, height: window.innerHeight }}
+      style={{
+        width: "100%",
+        height: "100%",
+        position: "absolute",
+        overflow: "hidden",
+      }}
     ></div>
   );
 };

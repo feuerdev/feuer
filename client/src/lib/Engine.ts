@@ -3,8 +3,8 @@ import {
   Sprite,
   Graphics,
   Point,
-  Assets,
   FederatedPointerEvent,
+  Assets,
 } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { GlowFilter } from "pixi-filters";
@@ -53,12 +53,6 @@ export class Engine {
       console.error("No Pixi application found in store");
       return;
     }
-
-    await Assets.init({
-      manifest: "manifest.json",
-    });
-
-    await Assets.loadBundle("main");
 
     // Get dimensions after app is initialized
     const screenWidth = window.innerWidth;
