@@ -4,6 +4,7 @@ import { World } from "@shared/objects";
 import { Socket } from "socket.io-client";
 import { Engine } from "./Engine";
 import { initializeSocket } from "./socket";
+import { Application } from "pixi.js";
 
 type SelectionState = {
   selection: Selection;
@@ -24,6 +25,16 @@ type SocketState = {
 type EngineState = {
   engine: Engine;
 };
+
+type PixiAppState = {
+  app: Application | null;
+  setApp: (app: Application | null) => void;
+};
+
+export const usePixiAppStore = create<PixiAppState>((set) => ({
+  app: null,
+  setApp: (app) => set({ app }),
+}));
 
 export const useEngineStore = create<EngineState>(() => ({
   engine: new Engine(),

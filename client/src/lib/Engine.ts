@@ -1,5 +1,4 @@
 import {
-  Application,
   Container,
   Sprite,
   Graphics,
@@ -17,7 +16,12 @@ import Rules from "@shared/rules.json";
 import { ClientTile, Selection, SelectionType, ZIndices } from "./types";
 import { Building, Group, Tile } from "@shared/objects";
 import { convertToSpriteName, Hashtable } from "@shared/util";
-import { useSelectionStore, useSocketStore, useWorldStore } from "@/lib/state";
+import {
+  usePixiAppStore,
+  useSelectionStore,
+  useSocketStore,
+  useWorldStore,
+} from "@/lib/state";
 import * as PlayerRelation from "@shared/relation";
 import {
   getBuildingSprite,
@@ -27,7 +31,6 @@ import {
 import { Socket } from "socket.io-client";
 
 export class Engine {
-  private app: Application = new Application();
   private viewport!: Viewport;
   private readonly HEX_SIZE: number = 40;
   private layout: Layout = new Layout(
@@ -45,11 +48,11 @@ export class Engine {
     new URLSearchParams(window.location.search).get("user") || "test";
 
   async mount(): Promise<void> {
-    await this.app.init({
-      width: window.innerWidth,
-      height: window.innerHeight,
-    });
-    document.body.appendChild(this.app.canvas);
+    const app = usePixiAppStore.getState().app;
+    if (!app) {
+      console.error("No Pixi application found in store");
+      return;
+    }
 
     await Assets.init({
       manifest: "manifest.json",
@@ -66,11 +69,11 @@ export class Engine {
       screenHeight,
       worldWidth: (Rules.settings.map_size * 2 + 1) * this.HEX_SIZE,
       worldHeight: (Rules.settings.map_size * 2 + 1) * this.HEX_SIZE,
-      events: this.app.renderer.events,
+      events: app.renderer.events,
     });
 
     // Add the viewport to the stage
-    this.app.stage.addChild(this.viewport);
+    app.stage.addChild(this.viewport);
 
     // Configure the viewport for user interaction
     this.viewport.sortableChildren = true;
@@ -257,14 +260,15 @@ export class Engine {
   };
 
   private handleResize = (): void => {
-    if (!this.app || !this.viewport) return;
+    const app = usePixiAppStore.getState().app;
+    if (!app || !this.viewport) return;
 
-    this.app.renderer.resize(window.innerWidth, window.innerHeight);
+    app.renderer.resize(window.innerWidth, window.innerHeight);
 
     // Update viewport dimensions on resize
-    this.viewport.screenWidth = this.app.screen.width;
-    this.viewport.screenHeight = this.app.screen.height;
-    this.viewport.resize(this.app.screen.width, this.app.screen.height);
+    this.viewport.screenWidth = app.screen.width;
+    this.viewport.screenHeight = app.screen.height;
+    this.viewport.resize(app.screen.width, app.screen.height);
   };
 
   private registerClickHandler(): boolean {
