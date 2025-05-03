@@ -1,7 +1,7 @@
 import { Application } from "pixi.js";
 import { useEffect, useRef } from "react";
 import { useStore } from "@/lib/state";
-import { loadAssets } from "@/lib/asset";
+import { loadAssets } from "@/lib/assets";
 
 export const Canvas = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
@@ -27,8 +27,8 @@ export const Canvas = () => {
 
       setApp(app);
 
-      if (canvasRef.current) {
-        canvasRef.current.appendChild(app.view as unknown as Node);
+      if (app.view && canvasRef.current) {
+        canvasRef.current.appendChild(app.view as HTMLCanvasElement);
       }
     };
 

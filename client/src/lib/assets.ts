@@ -6,12 +6,11 @@ let initialized = false;
  * This function ensures initialization and loading happens only once
  */
 export async function loadAssets(): Promise<void> {
-  // Initialize assets only once
   if (!initialized) {
+    initialized = true;
     await Assets.init({
       manifest: "manifest.json",
     });
     await Assets.loadBundle("main");
-    initialized = true;
   }
 }
