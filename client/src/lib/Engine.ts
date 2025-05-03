@@ -295,7 +295,7 @@ export class Engine {
             });
 
             // Extract entity type and ID from sprite name
-            const name = topSprite.name;
+            const name = topSprite.label;
             if (!name) return;
 
             const parts = name.split("_");
@@ -372,7 +372,7 @@ export class Engine {
     }
 
     const sprite = new Sprite(original.texture);
-    sprite.name = "selection";
+    sprite.label = "selection";
     this.viewport.addChild(sprite);
 
     sprite.position.set(original.position.x, original.position.y);
@@ -404,7 +404,7 @@ export class Engine {
     let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
       object = new Sprite(Assets.get(getGroupSprite(group.owner)));
-      object.name = spriteName;
+      object.label = spriteName;
       object.scale.set(0.5, 0.5);
       this.viewport.addChild(object);
     }
@@ -423,7 +423,7 @@ export class Engine {
 
     if (uid && group.owner === uid) {
       const movementIndicatorContainer = new Container();
-      movementIndicatorContainer.name = "MovementIndicator";
+      movementIndicatorContainer.label = "MovementIndicator";
       movementIndicatorContainer.zIndex = ZIndices.Units;
 
       this.viewport.addChild(movementIndicatorContainer);
@@ -450,7 +450,7 @@ export class Engine {
     let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
       object = new Sprite(Assets.get(getBuildingSprite(building)));
-      object.name = spriteName;
+      object.label = spriteName;
       object.scale.set(0.5, 0.5);
       this.viewport.addChild(object);
     }
@@ -467,7 +467,7 @@ export class Engine {
     let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
       object = new Sprite(Assets.get(getTerrainTexture(tile)));
-      object.name = spriteName;
+      object.label = spriteName;
       this.viewport.addChild(object);
     }
 
@@ -487,10 +487,10 @@ export class Engine {
 
     this.viewport.children.forEach((child) => {
       // Skip non-sprite objects or objects without a name
-      if (!child.name) return;
+      if (!child.label) return;
 
       // Check if this is a tile, group, or building by name prefix
-      const prefix = child.name.charAt(0);
+      const prefix = child.label.charAt(0);
       if (prefix === "t" || prefix === "g" || prefix === "b") {
         const childHex = this.getHexFromSprite(child as Container);
         if (childHex && equals(childHex, hexCoord)) {
@@ -504,7 +504,7 @@ export class Engine {
 
   private getHexFromSprite(sprite: Container): Hex | null {
     // Extract the ID from the sprite name (format is "prefix_id")
-    const parts = sprite.name.split("_");
+    const parts = sprite.label.split("_");
     if (parts.length !== 2) return null;
 
     const prefix = parts[0];
