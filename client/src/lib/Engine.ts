@@ -16,12 +16,7 @@ import Rules from "@shared/rules.json";
 import { ClientTile, Selection, SelectionType, ZIndices } from "./types";
 import { Building, Group, Tile } from "@shared/objects";
 import { convertToSpriteName, Hashtable } from "@shared/util";
-import {
-  usePixiAppStore,
-  useSelectionStore,
-  useSocketStore,
-  useWorldStore,
-} from "@/lib/state";
+import { useStore } from "@/lib/state";
 import * as PlayerRelation from "@shared/relation";
 import {
   getBuildingSprite,
@@ -48,7 +43,7 @@ export class Engine {
     new URLSearchParams(window.location.search).get("user") || "test";
 
   async mount(): Promise<void> {
-    const app = usePixiAppStore.getState().app;
+    const app = useStore.getState().app;
     if (!app) {
       console.error("No Pixi application found in store");
       return;
@@ -86,7 +81,7 @@ export class Engine {
     window.addEventListener("resize", this.handleResize);
     window.addEventListener("keyup", this.handleKeyUp, false);
 
-    const socket = useSocketStore.getState().socket;
+    const socket = useStore.getState().socket;
     socket.on("gamestate tiles", this.handleTilesUpdate);
     socket.on("gamestate group", this.handleGroupUpdate);
     socket.on("gamestate groups", this.handleGroupsUpdate);
@@ -100,7 +95,7 @@ export class Engine {
   };
 
   private handleGroupUpdate = (group: Group) => {
-    const { world, setWorld } = useWorldStore.getState();
+    const { world, setWorld } = useStore.getState();
     if (world.groups[group.id]) {
       // Update existing group
       setWorld({
@@ -124,8 +119,8 @@ export class Engine {
   };
 
   private handleGroupsUpdate = (groups: Hashtable<Group>) => {
-    const socket = useSocketStore.getState().socket;
-    const { world, setWorld } = useWorldStore.getState();
+    const socket = useStore.getState().socket;
+    const { world, setWorld } = useStore.getState();
     const newGroups: Hashtable<Group> = {};
     const visitedOldGroups: Hashtable<boolean> = {};
     let needsTileUpdate = false;
@@ -182,7 +177,7 @@ export class Engine {
   };
 
   private handleBuildingUpdate = (building: Building) => {
-    const { world, setWorld } = useWorldStore.getState();
+    const { world, setWorld } = useStore.getState();
     setWorld({
       ...world,
       buildings: {
@@ -194,7 +189,7 @@ export class Engine {
   };
 
   private handleTilesUpdate = (tiles: Util.Hashtable<ClientTile>) => {
-    const { world, setWorld } = useWorldStore.getState();
+    const { world, setWorld } = useStore.getState();
     const visibleHexes: Hashtable<Hex> = {};
 
     // Determine visible hexes based on groups and buildings
@@ -254,7 +249,7 @@ export class Engine {
   };
 
   private handleResize = (): void => {
-    const app = usePixiAppStore.getState().app;
+    const app = useStore.getState().app;
     if (!app || !this.viewport) return;
 
     app.renderer.resize(window.innerWidth, window.innerHeight);
@@ -266,8 +261,8 @@ export class Engine {
   };
 
   private registerClickHandler(): boolean {
-    const { selection, setSelection } = useSelectionStore.getState();
-    const { socket } = useSocketStore.getState();
+    const { selection, setSelection } = useStore.getState();
+    const { socket } = useStore.getState();
     this.viewport.on("click", (e: FederatedPointerEvent) => {
       const worldPos = this.viewport?.toWorld(e.global.x, e.global.y);
       if (worldPos) {

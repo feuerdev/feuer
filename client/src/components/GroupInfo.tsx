@@ -3,11 +3,11 @@ import { getTileByPos } from "@shared/objectutil";
 import ResourceInfo from "./ResourceInfo";
 import { InfoBox, InfoRow, InfoDivider } from "./InfoBox";
 import { Button } from "./ui/Button";
-import { useSocketStore, useWorldStore } from "@/lib/state";
+import { useStore } from "@/lib/state";
 
 const GroupInfo = ({ group }: { group: Group }) => {
-  const world = useWorldStore((state) => state.world);
-  const socket = useSocketStore((state) => state.socket);
+  const world = useStore((state) => state.world);
+  const socket = useStore((state) => state.socket);
 
   if (!group) {
     return <div>No group selected</div>;

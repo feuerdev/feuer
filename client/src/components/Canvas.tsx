@@ -1,12 +1,12 @@
 import { Application } from "pixi.js";
 import { useEffect, useRef } from "react";
-import { usePixiAppStore } from "@/lib/state";
+import { useStore } from "@/lib/state";
 import { loadAssets } from "@/lib/asset";
 
 export const Canvas = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const appRef = useRef<Application | null>(null);
-  const setApp = usePixiAppStore((state) => state.setApp);
+  const setApp = useStore((state) => state.setApp);
 
   useEffect(() => {
     const initCanvas = async () => {
