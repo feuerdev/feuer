@@ -1,13 +1,12 @@
 import { Application } from "pixi.js";
 import { useEffect, useRef } from "react";
-import { useStore } from "@/lib/state";
 import { loadAssets } from "@/lib/assets";
+import { Engine } from "@/lib/Engine";
 
 export const Canvas = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const appRef = useRef<Application | null>(null);
-  const setPixi = useStore((state) => state.setPixi);
-
+  const engineRef = useRef<Engine | null>(null);
   useEffect(() => {
     const initCanvas = async () => {
       if (appRef.current) {
@@ -25,11 +24,10 @@ export const Canvas = () => {
 
       await loadAssets();
 
-      setPixi(app);
-
       if (app.view && canvasRef.current) {
         canvasRef.current.appendChild(app.view as HTMLCanvasElement);
       }
+      engineRef.current = new Engine(app);
     };
 
     initCanvas();
@@ -38,10 +36,10 @@ export const Canvas = () => {
       if (appRef.current) {
         appRef.current.destroy(true, { children: true });
         appRef.current = null;
-        setPixi(null);
+        engineRef.current?.destroy();
       }
     };
-  }, [setPixi]);
+  }, []);
 
   return (
     <div

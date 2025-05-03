@@ -5,6 +5,7 @@ import {
   Point,
   FederatedPointerEvent,
   Assets,
+  Application,
 } from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { GlowFilter } from "pixi-filters";
@@ -26,7 +27,7 @@ import {
 import { Socket } from "socket.io-client";
 
 export class Engine {
-  private viewport!: Viewport;
+  private viewport: Viewport;
   private readonly HEX_SIZE: number = 40;
   private layout: Layout = new Layout(
     Layout.pointy,
@@ -41,15 +42,11 @@ export class Engine {
   });
   private uid =
     new URLSearchParams(window.location.search).get("user") || "test";
+  private app: Application;
 
-  async mount(): Promise<void> {
-    const app = useStore.getState().app;
-    if (!app) {
-      console.error("No Pixi application found in store");
-      return;
-    }
+  constructor(app: Application) {
+    this.app = app;
 
-    // Get dimensions after app is initialized
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
 
@@ -58,13 +55,11 @@ export class Engine {
       screenHeight,
       worldWidth: (Rules.settings.map_size * 2 + 1) * this.HEX_SIZE,
       worldHeight: (Rules.settings.map_size * 2 + 1) * this.HEX_SIZE,
-      events: app.renderer.events,
+      events: this.app.renderer.events,
     });
 
-    // Add the viewport to the stage
-    app.stage.addChild(this.viewport);
+    this.app.stage.addChild(this.viewport);
 
-    // Configure the viewport for user interaction
     this.viewport.sortableChildren = true;
     this.viewport
       .clampZoom({
@@ -78,7 +73,6 @@ export class Engine {
 
     this.registerClickHandler();
 
-    window.addEventListener("resize", this.handleResize);
     window.addEventListener("keyup", this.handleKeyUp, false);
 
     const socket = useStore.getState().socket;
@@ -246,18 +240,6 @@ export class Engine {
       default:
         break;
     }
-  };
-
-  private handleResize = (): void => {
-    const app = useStore.getState().app;
-    if (!app || !this.viewport) return;
-
-    app.renderer.resize(window.innerWidth, window.innerHeight);
-
-    // Update viewport dimensions on resize
-    this.viewport.screenWidth = app.screen.width;
-    this.viewport.screenHeight = app.screen.height;
-    this.viewport.resize(app.screen.width, app.screen.height);
   };
 
   private registerClickHandler(): boolean {
