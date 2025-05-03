@@ -43,9 +43,11 @@ export class Engine {
   private uid =
     new URLSearchParams(window.location.search).get("user") || "test";
   private app: Application;
+  private socket: Socket;
 
   constructor(app: Application) {
     this.app = app;
+    this.socket = useStore.getState().socket;
 
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
@@ -75,13 +77,30 @@ export class Engine {
 
     window.addEventListener("keyup", this.handleKeyUp, false);
 
-    const socket = useStore.getState().socket;
-    socket.on("gamestate tiles", this.handleTilesUpdate);
-    socket.on("gamestate group", this.handleGroupUpdate);
-    socket.on("gamestate groups", this.handleGroupsUpdate);
-    socket.on("gamestate building", this.handleBuildingUpdate);
+    this.socket.on("gamestate tiles", this.handleTilesUpdate);
+    this.socket.on("gamestate group", this.handleGroupUpdate);
+    this.socket.on("gamestate groups", this.handleGroupsUpdate);
+    this.socket.on("gamestate building", this.handleBuildingUpdate);
 
-    this.requestTiles(socket);
+    this.requestTiles(this.socket);
+  }
+
+  destroy(): void {
+    // Remove event listeners
+    window.removeEventListener("keyup", this.handleKeyUp);
+
+    // Remove socket listeners
+    this.socket.off("gamestate tiles", this.handleTilesUpdate);
+    this.socket.off("gamestate group", this.handleGroupUpdate);
+    this.socket.off("gamestate groups", this.handleGroupsUpdate);
+    this.socket.off("gamestate building", this.handleBuildingUpdate);
+
+    // Clean up viewport and its listeners
+    if (this.viewport) {
+      this.viewport.removeAllListeners();
+      this.app.stage.removeChild(this.viewport);
+      this.viewport.destroy();
+    }
   }
 
   private requestTiles = (socket: Socket) => {
@@ -113,18 +132,15 @@ export class Engine {
   };
 
   private handleGroupsUpdate = (groups: Hashtable<Group>) => {
-    const socket = useStore.getState().socket;
     const { world, setWorld } = useStore.getState();
     const newGroups: Hashtable<Group> = {};
     const visitedOldGroups: Hashtable<boolean> = {};
     let needsTileUpdate = false;
 
-    // Process received groups
     Object.values(groups).forEach((receivedGroup) => {
       const oldGroup = world.groups[receivedGroup.id];
       visitedOldGroups[receivedGroup.id] = true;
 
-      // Check if group is new, has moved or upgraded
       if (
         !oldGroup ||
         !equals(oldGroup.pos, receivedGroup.pos) ||
@@ -134,7 +150,6 @@ export class Engine {
         needsTileUpdate = true;
       }
 
-      // If group is new and foreign, request relation
       if (
         !oldGroup &&
         receivedGroup.owner !== this.uid &&
@@ -142,7 +157,7 @@ export class Engine {
           PlayerRelation.hash(receivedGroup.owner, this.uid)
         ] === undefined
       ) {
-        socket.emit("request relation", {
+        this.socket.emit("request relation", {
           id1: receivedGroup.owner,
           id2: this.uid,
         });
@@ -151,7 +166,6 @@ export class Engine {
       newGroups[receivedGroup.id] = receivedGroup;
     });
 
-    // Remove groups that are not in the new list
     Object.entries(world.groups).forEach(([id, oldGroup]) => {
       if (!visitedOldGroups[id]) {
         this.removeItem(oldGroup.id);
@@ -159,14 +173,13 @@ export class Engine {
       }
     });
 
-    // Update world state
     setWorld({
       ...world,
       groups: newGroups,
     });
 
     if (needsTileUpdate) {
-      this.requestTiles(socket);
+      this.requestTiles(this.socket);
     }
   };
 
@@ -244,22 +257,18 @@ export class Engine {
 
   private registerClickHandler(): boolean {
     const { selection, setSelection } = useStore.getState();
-    const { socket } = useStore.getState();
     this.viewport.on("click", (e: FederatedPointerEvent) => {
       const worldPos = this.viewport?.toWorld(e.global.x, e.global.y);
       if (worldPos) {
         const vec2Point = Vector2.create(worldPos.x, worldPos.y);
         switch (e.button) {
           case 0: {
-            // Left
             const sprites = this.findSpritesAtPoint(vec2Point);
             if (sprites.length === 0) {
-              // Clicked on empty space, clear selection
               setSelection({ type: SelectionType.None });
               return;
             }
 
-            // Find the sprite with highest z-index (topmost)
             let highestZ = -1;
             let topSprite = sprites[0];
             sprites.forEach((sprite) => {
@@ -269,7 +278,6 @@ export class Engine {
               }
             });
 
-            // Extract entity type and ID from sprite name
             const name = topSprite.name;
             if (!name) return;
 
@@ -279,7 +287,6 @@ export class Engine {
             const prefix = parts[0];
             const id = parseInt(parts[1]);
 
-            // Create selection based on entity type - changed let to const
             const newSelection: Selection = { id, type: SelectionType.None };
             switch (prefix) {
               case "g":
@@ -293,15 +300,13 @@ export class Engine {
                 break;
             }
 
-            // Update selection
             setSelection(newSelection);
             break;
           }
           case 2: {
-            // Right - Added braces for lexical declaration
             const clickedHex = round(this.layout.pixelToHex(vec2Point));
             if (clickedHex && selection.type === SelectionType.Group) {
-              socket.emit("request movement", {
+              this.socket.emit("request movement", {
                 selection: selection.id,
                 target: clickedHex,
               });
