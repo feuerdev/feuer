@@ -1,12 +1,3 @@
-import {
-  Container,
-  Sprite,
-  Graphics,
-  Point,
-  FederatedPointerEvent,
-  Assets,
-  Application,
-} from "pixi.js";
 import { Viewport } from "pixi-viewport";
 import { GlowFilter } from "pixi-filters";
 
@@ -25,6 +16,15 @@ import {
   getTerrainTexture,
 } from "./sprites";
 import { Socket } from "socket.io-client";
+import {
+  Application,
+  Assets,
+  Container,
+  FederatedPointerEvent,
+  Graphics,
+  Point,
+  Sprite,
+} from "pixi.js";
 
 export class Engine {
   private viewport: Viewport;
@@ -46,24 +46,20 @@ export class Engine {
   private socket: Socket;
 
   constructor(app: Application) {
-    this.app = app;
-    this.socket = useStore.getState().socket;
-
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
 
-    this.viewport = new Viewport({
+    const viewport = new Viewport({
       screenWidth,
       screenHeight,
       worldWidth: (Rules.settings.map_size * 2 + 1) * this.HEX_SIZE,
       worldHeight: (Rules.settings.map_size * 2 + 1) * this.HEX_SIZE,
-      events: this.app.renderer.events,
+      passiveWheel: false,
+      events: app.renderer.events,
     });
-
-    this.app.stage.addChild(this.viewport);
-
-    this.viewport.sortableChildren = true;
-    this.viewport
+    this.viewport = viewport;
+    // activate plugins
+    viewport
       .clampZoom({
         maxScale: 2,
         minScale: 0.2,
@@ -72,6 +68,19 @@ export class Engine {
       .pinch()
       .wheel()
       .decelerate();
+
+    app.stage.addChild(viewport);
+    this.app = app;
+    this.socket = useStore.getState().socket;
+
+    this.viewport.sortableChildren = true;
+
+    // Add a debug red rectangle
+    const debugRect = new Graphics();
+    debugRect.rect(0, 0, 100, 100);
+    debugRect.stroke({ color: 0xff0000, width: 1 });
+    // app.stage.addChild(debugRect);
+    viewport.addChild(debugRect);
 
     this.registerClickHandler();
 
@@ -372,7 +381,7 @@ export class Engine {
     }
   }
 
-  updateScenegraphGroup(group: Group, uid?: string): void {
+  async updateScenegraphGroup(group: Group, uid?: string): Promise<void> {
     if (!this.viewport) return;
 
     if (!this.initialFocusSet) {
@@ -383,7 +392,8 @@ export class Engine {
     const spriteName = convertToSpriteName(group.id, "g");
     let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
-      object = new Sprite(Assets.get(getGroupSprite(group.owner)));
+      const texture = await Assets.load(getGroupSprite(group.owner));
+      object = new Sprite(texture);
       object.name = spriteName;
       object.scale.set(0.5, 0.5);
       this.viewport.addChild(object);
@@ -423,13 +433,14 @@ export class Engine {
     }
   }
 
-  updateScenegraphBuilding(building: Building): void {
+  async updateScenegraphBuilding(building: Building): Promise<void> {
     if (!this.viewport) return;
 
     const spriteName = convertToSpriteName(building.id, "b");
     let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
-      object = new Sprite(Assets.get(getBuildingSprite(building)));
+      const texture = await Assets.load(getBuildingSprite(building));
+      object = new Sprite(texture);
       object.name = spriteName;
       object.scale.set(0.5, 0.5);
       this.viewport.addChild(object);
@@ -440,13 +451,14 @@ export class Engine {
     object.zIndex = ZIndices.Buildings;
   }
 
-  updateScenegraphTile(tile: ClientTile): void {
+  async updateScenegraphTile(tile: ClientTile): Promise<void> {
     if (!this.viewport) return;
 
     const spriteName = convertToSpriteName(tile.id, "t");
     let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
-      object = new Sprite(Assets.get(getTerrainTexture(tile)));
+      const texture = await Assets.load(getTerrainTexture(tile));
+      object = new Sprite(texture);
       object.name = spriteName;
       this.viewport.addChild(object);
     }

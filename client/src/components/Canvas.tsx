@@ -1,44 +1,39 @@
-import { Application } from "pixi.js";
 import { useEffect, useRef } from "react";
 import { loadAssets } from "@/lib/assets";
 import { Engine } from "@/lib/Engine";
-
+import * as Pixi from "pixi.js";
 export const Canvas = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
-  const appRef = useRef<Application | null>(null);
-  const engineRef = useRef<Engine | null>(null);
+
   useEffect(() => {
     const initCanvas = async () => {
-      if (appRef.current) {
-        appRef.current.destroy(true, { children: true });
-      }
+      const app = new Pixi.Application();
 
-      const app = new Application({
-        width: window.innerWidth,
-        height: window.innerHeight,
-        backgroundColor: 0x1099bb,
+      await app.init({
+        backgroundColor: "#FFF5D4",
+        antialias: true,
         resizeTo: window,
       });
 
-      appRef.current = app;
-
       await loadAssets();
 
-      if (app.view && canvasRef.current) {
-        canvasRef.current.appendChild(app.view as HTMLCanvasElement);
+      if (app.canvas && canvasRef.current) {
+        console.log("append");
+        canvasRef.current.appendChild(app.canvas);
       }
-      engineRef.current = new Engine(app);
+
+      const engine = new Engine(app);
+      if (import.meta.hot) {
+        import.meta.hot.dispose(() => {
+          console.log("dispose");
+          canvasRef.current?.removeChild(app.canvas);
+          engine.destroy();
+          app.destroy(true);
+        });
+      }
     };
 
     initCanvas();
-
-    return () => {
-      if (appRef.current) {
-        appRef.current.destroy(true, { children: true });
-        appRef.current = null;
-        engineRef.current?.destroy();
-      }
-    };
   }, []);
 
   return (

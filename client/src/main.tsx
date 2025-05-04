@@ -1,10 +1,5 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
 import "./globals.css";
 import Game from "./components/Game";
+import { createRoot } from "react-dom/client";
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <Game />
-  </StrictMode>
-);
+createRoot(document.getElementById("root")!).render(<Game />);
