@@ -45,8 +45,7 @@ export class Engine {
   private app: Application;
   private socket: Socket;
   private debugMode: boolean = false;
-  private debugGraphics: Graphics | null = null;
-
+  private debugContainer: Container | null = null;
   constructor(app: Application) {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
@@ -603,10 +602,10 @@ export class Engine {
   clearDebugVisuals(): void {
     if (!this.viewport) return;
 
-    // Remove the debug graphics
-    if (this.debugGraphics) {
-      this.viewport.removeChild(this.debugGraphics);
-      this.debugGraphics = null;
+    if (this.debugContainer) {
+      this.viewport.removeChild(this.debugContainer);
+      this.debugContainer.destroy();
+      this.debugContainer = null;
     }
 
     // Remove all coordinate text elements
@@ -623,38 +622,41 @@ export class Engine {
     // Clear previous debug visuals first
     this.clearDebugVisuals();
 
-    this.debugGraphics = new Graphics();
-    this.debugGraphics.zIndex = ZIndices.Debug;
-    this.viewport.addChild(this.debugGraphics);
+    this.debugContainer = new Container();
+    this.debugContainer.zIndex = ZIndices.Debug;
+    this.viewport.addChild(this.debugContainer);
 
     // Render visible hex boundaries
     const { world } = useStore.getState();
     Object.values(world.tiles).forEach((tile: Tile) => {
       const cTile = tile as ClientTile;
-      // if (cTile.visible) {
-        const corners = this.layout.polygonCorners(cTile.hex);
+      const corners = this.layout.polygonCorners(cTile.hex);
+      const outline = new Graphics();
 
-        this.debugGraphics!.lineStyle(1, 0xff0000, 0.8);
+      outline.setStrokeStyle({
+        width: 3,
+        color: 0xff0000,
+      });
 
-        // Draw the hex boundary
-        this.debugGraphics!.moveTo(corners[5].x, corners[5].y);
-        for (const corner of corners) {
-          this.debugGraphics!.lineTo(corner.x, corner.y);
-        }
+      // Draw the hex boundary
+      outline.moveTo(corners[5].x, corners[5].y);
+      for (const corner of corners) {
+        outline.lineTo(corner.x, corner.y);
+      }
+      this.debugContainer?.addChild(outline);
 
-        // Draw hex coordinates for debugging
-        const center = this.layout.hexToPixel(cTile.hex);
+      // Draw hex coordinates for debugging
+      const center = this.layout.hexToPixel(cTile.hex);
 
-        // Create a text object instead of using Graphics text methods
-        const coordText = new Text(`${cTile.hex.q},${cTile.hex.r}`, {
-          fontSize: 8,
-          fill: 0x000000,
-        });
-        coordText.position.set(center.x - 10, center.y - 5);
-        coordText.zIndex = ZIndices.Debug;
-        coordText.label = "debug_coord";
-        this.viewport.addChild(coordText);
-      // }
+      // Create a text object instead of using Graphics text methods
+      const coordText = new Text(`${cTile.hex.q},${cTile.hex.r}`, {
+        fontSize: 8,
+        fill: 0x000000,
+      });
+      coordText.position.set(center.x - 10, center.y - 5);
+      coordText.zIndex = ZIndices.Debug;
+      coordText.label = "debug_coord";
+      this.debugContainer?.addChild(coordText);
     });
   }
 }
