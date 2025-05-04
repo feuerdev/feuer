@@ -18,17 +18,19 @@ export const Canvas = () => {
       await loadAssets();
 
       if (app.canvas && canvasRef.current) {
-        console.log("append");
         canvasRef.current.appendChild(app.canvas);
       }
 
       const engine = new Engine(app);
       if (import.meta.hot) {
         import.meta.hot.dispose(() => {
-          console.log("dispose");
-          canvasRef.current?.removeChild(app.canvas);
-          engine.destroy();
-          app.destroy(true);
+          try {
+            canvasRef.current?.removeChild(app?.canvas);
+            engine.destroy();
+            app.destroy(true);
+          } catch (error) {
+            console.error("Error disposing of Pixi app:", error);
+          }
         });
       }
     };

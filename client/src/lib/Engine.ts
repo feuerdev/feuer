@@ -4,7 +4,6 @@ import { GlowFilter } from "pixi-filters";
 import * as Util from "@shared/util";
 import { Layout, equals, round, hash, neighborsRange, Hex } from "@shared/hex";
 import * as Vector2 from "@shared/vector2";
-import Rules from "@shared/rules.json";
 import { ClientTile, Selection, SelectionType, ZIndices } from "./types";
 import { Building, Group, Tile } from "@shared/objects";
 import { convertToSpriteName, Hashtable } from "@shared/util";
@@ -52,9 +51,8 @@ export class Engine {
     const viewport = new Viewport({
       screenWidth,
       screenHeight,
-      worldWidth: (Rules.settings.map_size * 2 + 1) * this.HEX_SIZE,
-      worldHeight: (Rules.settings.map_size * 2 + 1) * this.HEX_SIZE,
       passiveWheel: false,
+      disableOnContextMenu: true,
       events: app.renderer.events,
     });
     this.viewport = viewport;
@@ -92,6 +90,12 @@ export class Engine {
     this.socket.on("gamestate building", this.handleBuildingUpdate);
 
     this.requestTiles(this.socket);
+
+    if (import.meta.hot) {
+      import.meta.hot.dispose(() => {
+        this.initialFocusSet = false;
+      });
+    }
   }
 
   destroy(): void {
@@ -552,7 +556,13 @@ export class Engine {
   centerOn(pos: Hex): void {
     if (!this.viewport) return;
     const point = this.layout.hexToPixel(pos);
-    this.viewport.moveCenter(new Point(point.x, point.y));
+    this.viewport.animate({
+      time: 400,
+      position: {
+        x: point.x,
+        y: point.y,
+      },
+    });
   }
 
   private getSelectionZIndex(selection: Selection): number {
