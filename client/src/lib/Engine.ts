@@ -85,7 +85,7 @@ export class Engine {
     this.registerClickHandler();
 
     window.addEventListener("keyup", this.handleKeyUp, false);
-
+    window.addEventListener("resize", this.resize, false);
     this.socket.on("gamestate tiles", this.handleTilesUpdate);
     this.socket.on("gamestate group", this.handleGroupUpdate);
     this.socket.on("gamestate groups", this.handleGroupsUpdate);
@@ -97,6 +97,7 @@ export class Engine {
   destroy(): void {
     // Remove event listeners
     window.removeEventListener("keyup", this.handleKeyUp);
+    window.removeEventListener("resize", this.resize);
 
     // Remove socket listeners
     this.socket.off("gamestate tiles", this.handleTilesUpdate);
@@ -111,6 +112,13 @@ export class Engine {
       this.viewport.destroy();
     }
   }
+
+  private resize = () => {
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+
+    this.viewport.resize(screenWidth, screenHeight);
+  };
 
   private requestTiles = (socket: Socket) => {
     socket.emit("request tiles");
