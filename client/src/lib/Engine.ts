@@ -22,6 +22,7 @@ import {
   FederatedPointerEvent,
   Graphics,
   Point,
+  Rectangle,
   Sprite,
   Text,
 } from "pixi.js";
@@ -46,6 +47,7 @@ export class Engine {
   private socket: Socket;
   private debugMode: boolean = false;
   private debugContainer: Container | null = null;
+  private isDragging: boolean = false;
   constructor(app: Application) {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
@@ -75,7 +77,17 @@ export class Engine {
 
     this.viewport.sortableChildren = true;
 
-    this.registerClickHandler();
+    this.viewport.on("click", () => {
+      this.viewport.plugins.remove("follow");
+    });
+
+    this.viewport.on("drag-start", () => {
+      this.isDragging = true;
+    });
+
+    this.viewport.on("drag-end", () => {
+      this.isDragging = false;
+    });
 
     window.addEventListener("keyup", this.handleKeyUp, false);
     window.addEventListener("resize", this.resize, false);
@@ -280,74 +292,8 @@ export class Engine {
     }
   };
 
-  private registerClickHandler(): boolean {
-    const { selection, setSelection } = useStore.getState();
-    this.viewport.on("click", (e: FederatedPointerEvent) => {
-      const worldPos = this.viewport?.toWorld(e.global.x, e.global.y);
-      if (worldPos) {
-        const vec2Point = Vector2.create(worldPos.x, worldPos.y);
-        switch (e.button) {
-          case 0: {
-            const sprites = this.findSpritesAtPoint(vec2Point);
-            if (sprites.length === 0) {
-              setSelection({ type: SelectionType.None });
-              return;
-            }
-
-            let highestZ = -1;
-            let topSprite = sprites[0];
-            sprites.forEach((sprite) => {
-              if (sprite.zIndex > highestZ) {
-                highestZ = sprite.zIndex;
-                topSprite = sprite;
-              }
-            });
-
-            const name = topSprite.label;
-            if (!name) return;
-
-            const parts = name.split("_");
-            if (parts.length !== 2) return;
-
-            const prefix = parts[0];
-            const id = parseInt(parts[1]);
-
-            const newSelection: Selection = { id, type: SelectionType.None };
-            switch (prefix) {
-              case "g":
-                newSelection.type = SelectionType.Group;
-                break;
-              case "b":
-                newSelection.type = SelectionType.Building;
-                break;
-              case "t":
-                newSelection.type = SelectionType.Tile;
-                break;
-            }
-
-            setSelection(newSelection);
-            break;
-          }
-          case 2: {
-            const clickedHex = round(this.layout.pixelToHex(vec2Point));
-            if (clickedHex && selection.type === SelectionType.Group) {
-              this.socket.emit("request movement", {
-                selection: selection.id,
-                target: clickedHex,
-              });
-            }
-            break;
-          }
-        }
-      }
-    });
-
-    return true;
-  }
-
-  updateSelection(selection: Selection): void {
-    if (!this.viewport) return;
-
+  updateSelection(): void {
+    const { selection } = useStore.getState();
     const oldSprite = this.viewport.getChildByName("selection") as Sprite;
     if (oldSprite) {
       this.viewport.removeChild(oldSprite);
@@ -399,7 +345,7 @@ export class Engine {
   }
 
   async updateScenegraphGroup(group: Group, uid?: string): Promise<void> {
-    if (!this.viewport) return;
+    const { setSelection } = useStore.getState();
 
     if (!this.initialFocusSet) {
       this.initialFocusSet = true;
@@ -414,6 +360,24 @@ export class Engine {
       object.label = spriteName;
       object.scale.set(0.5, 0.5);
       object.anchor.set(0.5, 0.5);
+      object.interactive = true;
+      object.cursor = "pointer";
+      object.hitArea = new Rectangle(-25, -25, 50, 50);
+      object.on("pointerup", (event: FederatedPointerEvent) => {
+        if (this.isDragging) {
+          return;
+        }
+        if (event.button === 0) {
+          console.log(`clicked group ${group.id}`);
+          setSelection({ type: SelectionType.Group, id: group.id });
+          this.updateSelection();
+        } else if (event.button === 2) {
+          console.log(`right clicked group ${group.id}`);
+        } else if (event.button === 1) {
+          console.log(`middle clicked group ${group.id}`);
+          this.viewport.follow(object);
+        }
+      });
       this.viewport.addChild(object);
     }
 
@@ -476,8 +440,7 @@ export class Engine {
   }
 
   async updateScenegraphTile(tile: ClientTile): Promise<void> {
-    if (!this.viewport) return;
-
+    const { setSelection, selection } = useStore.getState();
     const spriteName = convertToSpriteName(tile.id, "t");
     let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
@@ -485,6 +448,27 @@ export class Engine {
       object = new Sprite(texture);
       object.label = spriteName;
       this.viewport.addChild(object);
+      object.interactive = true;
+      object.on("pointerup", (event: FederatedPointerEvent) => {
+        if (this.isDragging) {
+          return;
+        }
+        if (event.button === 0) {
+          console.log(`clicked tile ${tile.id}`);
+          setSelection({ type: SelectionType.Tile, id: tile.id });
+          this.updateSelection();
+        } else if (event.button === 2) {
+          console.log(`right clicked tile ${tile.id}`);
+          if (tile.visible && selection.type === SelectionType.Group) {
+            this.socket.emit("request movement", {
+              selection: selection.id,
+              target: tile.hex,
+            });
+          }
+        } else if (event.button === 1) {
+          console.log(`middle clicked tile ${tile.id}`);
+        }
+      });
     }
 
     // Position the tile at its center point
