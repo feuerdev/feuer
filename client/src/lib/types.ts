@@ -31,4 +31,5 @@ export enum ZIndices {
   BuildingsSelection = 5,
   Units = 6,
   UnitsSelection = 7,
+  Debug = 9999,
 }

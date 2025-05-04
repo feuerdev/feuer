@@ -23,6 +23,7 @@ import {
   Graphics,
   Point,
   Sprite,
+  Text,
 } from "pixi.js";
 
 export class Engine {
@@ -43,6 +44,8 @@ export class Engine {
     new URLSearchParams(window.location.search).get("user") || "test";
   private app: Application;
   private socket: Socket;
+  private debugMode: boolean = false;
+  private debugGraphics: Graphics | null = null;
 
   constructor(app: Application) {
     const screenWidth = window.innerWidth;
@@ -257,7 +260,6 @@ export class Engine {
 
   private handleKeyUp = (event: KeyboardEvent) => {
     switch (event.key) {
-      case "=":
       case "+":
         this.zoomIn();
         break;
@@ -270,6 +272,13 @@ export class Engine {
       case "r":
       case "R":
         this.centerViewport();
+        break;
+      case "d":
+      case "D":
+        this.toggleDebugMode();
+        break;
+      case "s":
+        this.viewport.dirty = true;
         break;
       default:
         break;
@@ -374,6 +383,7 @@ export class Engine {
 
     const sprite = new Sprite(original.texture);
     sprite.label = "selection";
+    sprite.anchor.set(0.5, 0.5);
     this.viewport.addChild(sprite);
 
     sprite.position.set(original.position.x, original.position.y);
@@ -408,11 +418,14 @@ export class Engine {
       object = new Sprite(texture);
       object.label = spriteName;
       object.scale.set(0.5, 0.5);
+      object.anchor.set(0.5, 0.5);
       this.viewport.addChild(object);
     }
 
-    object.x = this.layout.hexToPixel(group.pos).x - this.HEX_SIZE / 3;
-    object.y = this.layout.hexToPixel(group.pos).y + this.HEX_SIZE / 3;
+    // Position at the center of the hex
+    const hexCenter = this.layout.hexToPixel(group.pos);
+    object.x = hexCenter.x;
+    object.y = hexCenter.y;
     object.zIndex = ZIndices.Units;
 
     // Update movement indicator
@@ -435,13 +448,14 @@ export class Engine {
         indicator.beginFill(0x0000ff);
         indicator.drawCircle(5, 5, 5);
         indicator.endFill();
-        indicator.x = this.layout.hexToPixel(hex).x - this.HEX_SIZE / 3;
-        indicator.y = this.layout.hexToPixel(hex).y + this.HEX_SIZE / 3;
+
+        const hexPoint = this.layout.hexToPixel(hex);
+        indicator.x = hexPoint.x - 5;
+        indicator.y = hexPoint.y - 5;
         indicator.alpha = 0.7;
 
         movementIndicatorContainer.addChild(indicator);
       }
-      // In PixiJS v8, calculateBounds is no longer needed, the bounds are updated automatically
     }
   }
 
@@ -455,11 +469,14 @@ export class Engine {
       object = new Sprite(texture);
       object.label = spriteName;
       object.scale.set(0.5, 0.5);
+      object.anchor.set(0.5, 0.5);
       this.viewport.addChild(object);
     }
 
-    object.x = this.layout.hexToPixel(building.position).x - this.HEX_SIZE / 3;
-    object.y = this.layout.hexToPixel(building.position).y + this.HEX_SIZE / 3;
+    // Position at the center of the hex
+    const hexCenter = this.layout.hexToPixel(building.position);
+    object.x = hexCenter.x;
+    object.y = hexCenter.y;
     object.zIndex = ZIndices.Buildings;
   }
 
@@ -475,8 +492,11 @@ export class Engine {
       this.viewport.addChild(object);
     }
 
-    object.x = this.layout.hexToPixel(tile.hex).x - this.HEX_SIZE;
-    object.y = this.layout.hexToPixel(tile.hex).y - this.HEX_SIZE;
+    // Position the tile at its center point
+    const hexCenter = this.layout.hexToPixel(tile.hex);
+    object.anchor.set(0.5, 0.5);
+    object.x = hexCenter.x;
+    object.y = hexCenter.y;
     object.zIndex = ZIndices.Tiles;
     object.visible = tile.visible;
   }
@@ -487,50 +507,41 @@ export class Engine {
     if (!this.viewport) return [];
 
     const found: Array<Sprite | Container | Graphics> = [];
-    const hexCoord = this.layout.pixelToHex(point);
+    const clickedHex = round(this.layout.pixelToHex(point));
 
     this.viewport.children.forEach((child) => {
       // Skip non-sprite objects or objects without a name
       if (!child.label) return;
 
+      // Skip debug elements
+      if (child.label === "debug_coord") return;
+
       // Check if this is a tile, group, or building by name prefix
       const prefix = child.label.charAt(0);
       if (prefix === "t" || prefix === "g" || prefix === "b") {
-        const childHex = this.getHexFromSprite(child as Container);
-        if (childHex && equals(childHex, hexCoord)) {
+        const parts = child.label.split("_");
+        if (parts.length !== 2) return;
+
+        const id = parseInt(parts[1]);
+        const { world } = useStore.getState();
+
+        // Get the hex based on the object type
+        let objectHex: Hex | undefined;
+        if (prefix === "t" && world.tiles[id]) {
+          objectHex = (world.tiles[id] as ClientTile).hex;
+        } else if (prefix === "g" && world.groups[id]) {
+          objectHex = world.groups[id].pos;
+        } else if (prefix === "b" && world.buildings[id]) {
+          objectHex = world.buildings[id].position;
+        }
+
+        if (objectHex && equals(objectHex, clickedHex)) {
           found.push(child as Sprite | Container | Graphics);
         }
       }
     });
 
     return found;
-  }
-
-  private getHexFromSprite(sprite: Container): Hex | null {
-    // Extract the ID from the sprite name (format is "prefix_id")
-    const parts = sprite.label?.split("_");
-    if (!parts || parts.length !== 2) return null;
-
-    const prefix = parts[0];
-
-    // We would need access to the game state to convert IDs to hex coordinates
-    // This is a simplification - in a real implementation, we would need to
-    // either store this mapping or access it through a callback
-
-    // For now, we'll use the sprite's position to approximate the hex
-    if (!this.viewport) return null;
-
-    const position = {
-      x: sprite.x + this.HEX_SIZE,
-      y: sprite.y + this.HEX_SIZE,
-    };
-
-    if (prefix === "g" || prefix === "b") {
-      position.x += this.HEX_SIZE / 3;
-      position.y -= this.HEX_SIZE / 3;
-    }
-
-    return this.layout.pixelToHex(position);
   }
 
   zoomIn(): void {
@@ -576,5 +587,74 @@ export class Engine {
       default:
         return ZIndices.TileSelection;
     }
+  }
+
+  toggleDebugMode(): void {
+    this.debugMode = !this.debugMode;
+    console.log(`Debug mode: ${this.debugMode ? "ON" : "OFF"}`);
+
+    if (this.debugMode) {
+      this.renderDebugHexGrid();
+    } else {
+      this.clearDebugVisuals();
+    }
+  }
+
+  clearDebugVisuals(): void {
+    if (!this.viewport) return;
+
+    // Remove the debug graphics
+    if (this.debugGraphics) {
+      this.viewport.removeChild(this.debugGraphics);
+      this.debugGraphics = null;
+    }
+
+    // Remove all coordinate text elements
+    this.viewport.children.forEach((child) => {
+      if (child.label === "debug_coord") {
+        this.viewport!.removeChild(child);
+      }
+    });
+  }
+
+  renderDebugHexGrid(): void {
+    if (!this.viewport) return;
+
+    // Clear previous debug visuals first
+    this.clearDebugVisuals();
+
+    this.debugGraphics = new Graphics();
+    this.debugGraphics.zIndex = ZIndices.Debug;
+    this.viewport.addChild(this.debugGraphics);
+
+    // Render visible hex boundaries
+    const { world } = useStore.getState();
+    Object.values(world.tiles).forEach((tile: Tile) => {
+      const cTile = tile as ClientTile;
+      // if (cTile.visible) {
+        const corners = this.layout.polygonCorners(cTile.hex);
+
+        this.debugGraphics!.lineStyle(1, 0xff0000, 0.8);
+
+        // Draw the hex boundary
+        this.debugGraphics!.moveTo(corners[5].x, corners[5].y);
+        for (const corner of corners) {
+          this.debugGraphics!.lineTo(corner.x, corner.y);
+        }
+
+        // Draw hex coordinates for debugging
+        const center = this.layout.hexToPixel(cTile.hex);
+
+        // Create a text object instead of using Graphics text methods
+        const coordText = new Text(`${cTile.hex.q},${cTile.hex.r}`, {
+          fontSize: 8,
+          fill: 0x000000,
+        });
+        coordText.position.set(center.x - 10, center.y - 5);
+        coordText.zIndex = ZIndices.Debug;
+        coordText.label = "debug_coord";
+        this.viewport.addChild(coordText);
+      // }
+    });
   }
 }
