@@ -440,7 +440,7 @@ export class Engine {
   }
 
   async updateScenegraphTile(tile: ClientTile): Promise<void> {
-    const { setSelection, selection } = useStore.getState();
+    const { setSelection } = useStore.getState();
     const spriteName = convertToSpriteName(tile.id, "t");
     let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
@@ -450,6 +450,7 @@ export class Engine {
       this.viewport.addChild(object);
       object.interactive = true;
       object.on("pointerup", (event: FederatedPointerEvent) => {
+        const { selection } = useStore.getState();
         if (this.isDragging) {
           return;
         }
@@ -459,7 +460,7 @@ export class Engine {
           this.updateSelection();
         } else if (event.button === 2) {
           console.log(`right clicked tile ${tile.id}`);
-          if (tile.visible && selection.type === SelectionType.Group) {
+          if (selection.type === SelectionType.Group) {
             this.socket.emit("request movement", {
               selection: selection.id,
               target: tile.hex,
