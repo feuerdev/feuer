@@ -160,6 +160,7 @@ export class Engine {
       });
     }
     this.updateScenegraphGroup(group, this.uid);
+    this.updateSelection();
   };
 
   private handleGroupsUpdate = (groups: Hashtable<Group>) => {
@@ -195,6 +196,7 @@ export class Engine {
       }
 
       newGroups[receivedGroup.id] = receivedGroup;
+      this.updateSelection();
     });
 
     Object.entries(world.groups).forEach(([id, oldGroup]) => {
