@@ -28,7 +28,7 @@ import {
 
 export class Engine {
   private viewport: Viewport;
-  private readonly HEX_SIZE: number = 40;
+  private readonly HEX_SIZE: number = 80;
   private layout: Layout = new Layout(
     Layout.pointy,
     Vector2.create(this.HEX_SIZE, this.HEX_SIZE),
@@ -75,13 +75,6 @@ export class Engine {
 
     this.viewport.sortableChildren = true;
 
-    // Add a debug red rectangle
-    const debugRect = new Graphics();
-    debugRect.rect(0, 0, 100, 100);
-    debugRect.stroke({ color: 0xff0000, width: 1 });
-    // app.stage.addChild(debugRect);
-    viewport.addChild(debugRect);
-
     this.registerClickHandler();
 
     window.addEventListener("keyup", this.handleKeyUp, false);
@@ -92,6 +85,9 @@ export class Engine {
     this.socket.on("gamestate building", this.handleBuildingUpdate);
 
     this.requestTiles(this.socket);
+    if (import.meta.env.DEV) {
+      this.toggleDebugMode();
+    }
 
     if (import.meta.hot) {
       import.meta.hot.dispose(() => {
@@ -496,6 +492,8 @@ export class Engine {
     object.anchor.set(0.5, 0.5);
     object.x = hexCenter.x;
     object.y = hexCenter.y;
+    object.width = this.layout.size.x * Math.sqrt(3) - 2;
+    object.height = this.layout.size.y * 2 - 2;
     object.zIndex = ZIndices.Tiles;
     object.visible = tile.visible;
   }
@@ -631,24 +629,20 @@ export class Engine {
     Object.values(world.tiles).forEach((tile: Tile) => {
       const cTile = tile as ClientTile;
       const corners = this.layout.polygonCorners(cTile.hex);
-      const outline = new Graphics();
-
-      outline.setStrokeStyle({
-        width: 3,
-        color: 0xff0000,
-      });
-
-      // Draw the hex boundary
-      outline.moveTo(corners[5].x, corners[5].y);
-      for (const corner of corners) {
-        outline.lineTo(corner.x, corner.y);
-      }
-      this.debugContainer?.addChild(outline);
-
-      // Draw hex coordinates for debugging
       const center = this.layout.hexToPixel(cTile.hex);
 
-      // Create a text object instead of using Graphics text methods
+      const outline = new Graphics();
+
+      // Draw the hexagon using the new API
+      outline.moveTo(corners[0].x, corners[0].y);
+      for (let i = 1; i < corners.length; i++) {
+        outline.lineTo(corners[i].x, corners[i].y);
+      }
+      outline.lineTo(corners[0].x, corners[0].y);
+      outline.stroke({ color: 0x000000, width: 1, pixelLine: true });
+
+      this.debugContainer?.addChild(outline);
+
       const coordText = new Text(`${cTile.hex.q},${cTile.hex.r}`, {
         fontSize: 8,
         fill: 0x000000,
