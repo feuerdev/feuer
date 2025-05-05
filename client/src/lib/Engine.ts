@@ -199,9 +199,9 @@ export class Engine {
       this.updateSelection();
     });
 
-    Object.entries(world.groups).forEach(([id, oldGroup]) => {
+    Object.keys(world.groups).forEach((id) => {
       if (!visitedOldGroups[id]) {
-        this.removeItem(oldGroup.id);
+        this.removeItem(parseInt(id));
         needsTileUpdate = true;
       }
     });
@@ -383,10 +383,22 @@ export class Engine {
       this.viewport.addChild(object);
     }
 
-    // Position at the center of the hex
+    // Position at a random point in the lower half of the hex
     const hexCenter = this.layout.hexToPixel(group.pos);
-    object.x = hexCenter.x;
-    object.y = hexCenter.y;
+
+    // Calculate the size of the lower half of the hex (pointy-top hexagon)
+    const hexHeight = this.HEX_SIZE * 2;
+    const hexWidth = this.HEX_SIZE * Math.sqrt(3);
+
+    // Generate random position in the lower half of the hex
+    // For a pointy-top hex, the lower half means y > center.y
+    const randX = hexCenter.x + (Math.random() * hexWidth - hexWidth / 2) * 0.6;
+    // Only use the bottom half of the tile
+    const randY = hexCenter.y + ((Math.random() * hexHeight) / 2) * 0.6;
+
+    // Update the sprite position
+    object.x = randX;
+    object.y = randY;
     object.zIndex = ZIndices.Units;
 
     // Update movement indicator
