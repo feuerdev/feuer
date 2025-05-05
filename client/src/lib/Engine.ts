@@ -358,6 +358,33 @@ export class Engine {
     }
   }
 
+  /**
+   * Generate a random position within a hex tile
+   * @param hexPos The hex coordinates
+   * @param useTopHalf Whether to use the top half (true) or bottom half (false) of the hex
+   * @returns A random position as {x, y} coordinates
+   */
+  private getRandomPositionInHex(
+    hexPos: Hex,
+    useTopHalf: boolean
+  ): Vector2.Vector2 {
+    const hexCenter = this.layout.hexToPixel(hexPos);
+    const hexHeight = this.HEX_SIZE * 2;
+    const hexWidth = this.HEX_SIZE * Math.sqrt(3);
+
+    // Random position horizontally (-0.5 to 0.5 of hex width)
+    const randX = hexCenter.x + (Math.random() * hexWidth - hexWidth / 2) * 0.6;
+
+    // For y position:
+    // - If useTopHalf is true: use the top half (negative offset from center)
+    // - If useTopHalf is false: use the bottom half (positive offset from center)
+    const yDirection = useTopHalf ? -1 : 1;
+    const randY =
+      hexCenter.y + yDirection * ((Math.random() * hexHeight) / 2) * 0.6;
+
+    return Vector2.create(randX, randY);
+  }
+
   async updateScenegraphGroup(group: Group, uid?: string): Promise<void> {
     const { setSelection } = useStore.getState();
 
@@ -395,22 +422,12 @@ export class Engine {
       this.viewport.addChild(object);
     }
 
-    // Position at a random point in the lower half of the hex
-    const hexCenter = this.layout.hexToPixel(group.pos);
-
-    // Calculate the size of the lower half of the hex (pointy-top hexagon)
-    const hexHeight = this.HEX_SIZE * 2;
-    const hexWidth = this.HEX_SIZE * Math.sqrt(3);
-
-    // Generate random position in the lower half of the hex
-    // For a pointy-top hex, the lower half means y > center.y
-    const randX = hexCenter.x + (Math.random() * hexWidth - hexWidth / 2) * 0.6;
-    // Only use the bottom half of the tile
-    const randY = hexCenter.y + ((Math.random() * hexHeight) / 2) * 0.6;
+    // Position at a random point in the bottom half of the hex
+    const randomPos = this.getRandomPositionInHex(group.pos, false);
 
     // Update the sprite position
-    object.x = randX;
-    object.y = randY;
+    object.x = randomPos.x;
+    object.y = randomPos.y;
     object.zIndex = ZIndices.Units;
 
     // Update movement indicator
@@ -455,13 +472,29 @@ export class Engine {
       object.label = spriteName;
       object.scale.set(0.5, 0.5);
       object.anchor.set(0.5, 0.5);
+      object.interactive = true;
+      object.cursor = "pointer";
+      object.hitArea = new Rectangle(-25, -25, 50, 50);
+      object.on("pointerup", (event: FederatedPointerEvent) => {
+        if (this.isDragging) {
+          return;
+        }
+        const { setSelection } = useStore.getState();
+        if (event.button === 0) {
+          console.log(`clicked building ${building.id}`);
+          setSelection({ type: SelectionType.Building, id: building.id });
+          this.updateSelection();
+        }
+      });
       this.viewport.addChild(object);
     }
 
-    // Position at the center of the hex
-    const hexCenter = this.layout.hexToPixel(building.position);
-    object.x = hexCenter.x;
-    object.y = hexCenter.y;
+    // Position at a random point in the top half of the hex
+    const randomPos = this.getRandomPositionInHex(building.position, true);
+
+    // Update the sprite position
+    object.x = randomPos.x;
+    object.y = randomPos.y;
     object.zIndex = ZIndices.Buildings;
   }
 
