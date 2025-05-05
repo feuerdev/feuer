@@ -2,7 +2,7 @@ import { Viewport } from "pixi-viewport";
 import { GlowFilter } from "pixi-filters";
 
 import * as Util from "@shared/util";
-import { Layout, equals, round, hash, neighborsRange, Hex } from "@shared/hex";
+import { Layout, equals, hash, neighborsRange, Hex } from "@shared/hex";
 import * as Vector2 from "@shared/vector2";
 import { ClientTile, Selection, SelectionType, ZIndices } from "./types";
 import { Building, Group, Tile } from "@shared/objects";
@@ -495,49 +495,6 @@ export class Engine {
     object.zIndex = ZIndices.Tiles;
     object.visible = true;
     object.alpha = tile.visible ? 1 : 0.5;
-  }
-
-  findSpritesAtPoint(
-    point: Vector2.Vector2
-  ): Array<Sprite | Container | Graphics> {
-    if (!this.viewport) return [];
-
-    const found: Array<Sprite | Container | Graphics> = [];
-    const clickedHex = round(this.layout.pixelToHex(point));
-
-    this.viewport.children.forEach((child) => {
-      // Skip non-sprite objects or objects without a name
-      if (!child.label) return;
-
-      // Skip debug elements
-      if (child.label === "debug_coord") return;
-
-      // Check if this is a tile, group, or building by name prefix
-      const prefix = child.label.charAt(0);
-      if (prefix === "t" || prefix === "g" || prefix === "b") {
-        const parts = child.label.split("_");
-        if (parts.length !== 2) return;
-
-        const id = parseInt(parts[1]);
-        const { world } = useStore.getState();
-
-        // Get the hex based on the object type
-        let objectHex: Hex | undefined;
-        if (prefix === "t" && world.tiles[id]) {
-          objectHex = (world.tiles[id] as ClientTile).hex;
-        } else if (prefix === "g" && world.groups[id]) {
-          objectHex = world.groups[id].pos;
-        } else if (prefix === "b" && world.buildings[id]) {
-          objectHex = world.buildings[id].position;
-        }
-
-        if (objectHex && equals(objectHex, clickedHex)) {
-          found.push(child as Sprite | Container | Graphics);
-        }
-      }
-    });
-
-    return found;
   }
 
   zoomIn(): void {
