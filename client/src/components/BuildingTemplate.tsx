@@ -15,7 +15,7 @@ const BuildingTemplate = ({
     <div className="flex items-center gap-3 p-2 mb-2 bg-gray-800 bg-opacity-50 rounded">
       <img
         className="w-12 h-12 object-contain"
-        src={`img/${building.texture}.png`}
+        src={`${building.texture}.png`}
         alt={building.name}
       />
       <div className="flex-1">
