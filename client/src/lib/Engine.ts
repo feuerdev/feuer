@@ -486,7 +486,6 @@ export class Engine {
       });
     }
 
-    // Position the tile at its center point
     const hexCenter = this.layout.hexToPixel(tile.hex);
     object.anchor.set(0.5, 0.5);
     object.x = hexCenter.x;
@@ -494,7 +493,8 @@ export class Engine {
     object.width = this.layout.size.x * Math.sqrt(3) - 2;
     object.height = this.layout.size.y * 2 - 2;
     object.zIndex = ZIndices.Tiles;
-    object.visible = tile.visible;
+    object.visible = true;
+    object.alpha = tile.visible ? 1 : 0.5;
   }
 
   findSpritesAtPoint(

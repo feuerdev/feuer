@@ -10,7 +10,6 @@ export const Canvas = () => {
       const app = new Pixi.Application();
 
       await app.init({
-        backgroundColor: "#FFF5D4",
         antialias: true,
         resizeTo: window,
       });
