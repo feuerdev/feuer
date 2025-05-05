@@ -224,7 +224,11 @@ export class Engine {
     Object.values(buildings).forEach((building) => {
       visitedOldBuildings[building.id] = true;
       newBuildings[building.id] = building;
-      this.updateScenegraphBuilding(building);
+
+      // Only update scenegraph if it's a new building
+      if (!world.buildings[building.id]) {
+        this.updateScenegraphBuilding(building);
+      }
     });
 
     // Remove buildings that are no longer present
@@ -466,7 +470,12 @@ export class Engine {
 
     const spriteName = convertToSpriteName(building.id, "b");
     let object = this.viewport.getChildByName(spriteName) as Sprite;
-    if (!object) {
+
+    // If object already exists, we only need to update its position if it moved
+    // Otherwise we need to create a new sprite
+    const isNewSprite = !object;
+
+    if (isNewSprite) {
       const texture = await Assets.load(getBuildingSprite(building));
       object = new Sprite(texture);
       object.label = spriteName;
@@ -486,15 +495,25 @@ export class Engine {
           this.updateSelection();
         }
       });
+
+      // For new sprites, set a random position in the top half of the hex
+      const randomPos = this.getRandomPositionInHex(building.position, true);
+      object.x = randomPos.x;
+      object.y = randomPos.y;
+
       this.viewport.addChild(object);
+    } else {
+      // For existing sprites that moved, update their position based on the hex center
+      // This preserves their relative offset within the hex
+      const oldHexCenter = this.layout.hexToPixel(building.position);
+      const currentOffsetX = object.x - oldHexCenter.x;
+      const currentOffsetY = object.y - oldHexCenter.y;
+
+      const newHexCenter = this.layout.hexToPixel(building.position);
+      object.x = newHexCenter.x + currentOffsetX;
+      object.y = newHexCenter.y + currentOffsetY;
     }
 
-    // Position at a random point in the top half of the hex
-    const randomPos = this.getRandomPositionInHex(building.position, true);
-
-    // Update the sprite position
-    object.x = randomPos.x;
-    object.y = randomPos.y;
     object.zIndex = ZIndices.Buildings;
   }
 
