@@ -94,7 +94,7 @@ export class Engine {
     this.socket.on("gamestate tiles", this.handleTilesUpdate);
     this.socket.on("gamestate group", this.handleGroupUpdate);
     this.socket.on("gamestate groups", this.handleGroupsUpdate);
-    this.socket.on("gamestate building", this.handleBuildingUpdate);
+    this.socket.on("gamestate buildings", this.handleBuildingsUpdate);
 
     this.requestTiles(this.socket);
     if (import.meta.env.DEV) {
@@ -117,7 +117,7 @@ export class Engine {
     this.socket.off("gamestate tiles", this.handleTilesUpdate);
     this.socket.off("gamestate group", this.handleGroupUpdate);
     this.socket.off("gamestate groups", this.handleGroupsUpdate);
-    this.socket.off("gamestate building", this.handleBuildingUpdate);
+    this.socket.off("gamestate buildings", this.handleBuildingsUpdate);
 
     // Clean up viewport and its listeners
     if (this.viewport) {
@@ -216,16 +216,28 @@ export class Engine {
     }
   };
 
-  private handleBuildingUpdate = (building: Building) => {
+  private handleBuildingsUpdate = (buildings: Hashtable<Building>) => {
     const { world, setWorld } = useStore.getState();
+    const newBuildings: Hashtable<Building> = {};
+    const visitedOldBuildings: Hashtable<boolean> = {};
+
+    Object.values(buildings).forEach((building) => {
+      visitedOldBuildings[building.id] = true;
+      newBuildings[building.id] = building;
+      this.updateScenegraphBuilding(building);
+    });
+
+    // Remove buildings that are no longer present
+    Object.keys(world.buildings).forEach((id) => {
+      if (!visitedOldBuildings[id]) {
+        this.removeItem(parseInt(id));
+      }
+    });
+
     setWorld({
       ...world,
-      buildings: {
-        ...world.buildings,
-        [building.id]: building,
-      },
+      buildings: newBuildings,
     });
-    this.updateScenegraphBuilding(building);
   };
 
   private handleTilesUpdate = (tiles: Util.Hashtable<ClientTile>) => {
