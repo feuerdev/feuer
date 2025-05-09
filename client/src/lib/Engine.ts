@@ -175,11 +175,13 @@ export class Engine {
   };
 
   private handleGroupsUpdate = (groups: Hashtable<Group>) => {
-    const { world, setWorld, selection } = useStore.getState();
+    const { world, setWorld } = useStore.getState();
     const newGroups: Hashtable<Group> = {};
     const visitedOldGroups: Hashtable<boolean> = {};
     let needsTileUpdate = false;
-    let selectedGroupExists = false;
+
+    // We no longer need to worry about selection state since updateScenegraphGroup handles it
+    // Each group will maintain its own selection state properly
 
     Object.values(groups).forEach((receivedGroup) => {
       const oldGroup = world.groups[receivedGroup.id];
@@ -207,14 +209,6 @@ export class Engine {
         });
       }
 
-      // Check if the selected group still exists
-      if (
-        selection.type === SelectionType.Group &&
-        selection.id === receivedGroup.id
-      ) {
-        selectedGroupExists = true;
-      }
-
       newGroups[receivedGroup.id] = receivedGroup;
     });
 
@@ -233,13 +227,6 @@ export class Engine {
 
     if (needsTileUpdate) {
       this.requestTiles(this.socket);
-    }
-
-    // Update selection after all group changes
-    if (selection.type === SelectionType.Group) {
-      if (selectedGroupExists) {
-        this.updateSelection();
-      }
     }
   };
 
@@ -433,7 +420,7 @@ export class Engine {
   }
 
   async updateScenegraphGroup(group: Group, uid?: string): Promise<void> {
-    const { setSelection } = useStore.getState();
+    const { selection } = useStore.getState();
 
     if (!this.initialFocusSet) {
       this.initialFocusSet = true;
@@ -441,6 +428,15 @@ export class Engine {
     }
 
     const spriteName = convertToSpriteName(group.id, "g");
+    const isCurrentlySelected =
+      this.selectedSprite &&
+      selection.type === SelectionType.Group &&
+      selection.id === group.id;
+
+    // If this group is selected, clear selection before removing the sprite
+    if (isCurrentlySelected) {
+      this.clearSelection();
+    }
 
     // Remove existing sprite to prevent duplicates
     this.removeItem(group.id);
@@ -460,6 +456,7 @@ export class Engine {
       }
       if (event.button === 0) {
         console.log(`clicked group ${group.id}`);
+        const { setSelection } = useStore.getState();
         setSelection({ type: SelectionType.Group, id: group.id });
         this.updateSelection();
       } else if (event.button === 2) {
@@ -485,6 +482,13 @@ export class Engine {
       this.startMovementAnimation(spriteName, object);
     } else {
       this.stopMovementAnimation(spriteName, object);
+    }
+
+    // Restore selection state if this was the selected group
+    if (isCurrentlySelected) {
+      // Apply glow filter to the object
+      object.filters = [this.GLOW_FILTER];
+      this.selectedSprite = object;
     }
 
     // Update movement indicator
@@ -577,7 +581,18 @@ export class Engine {
   async updateScenegraphBuilding(building: Building): Promise<void> {
     if (!this.viewport) return;
 
+    const { selection } = useStore.getState();
     const spriteName = convertToSpriteName(building.id, "b");
+    const isCurrentlySelected =
+      this.selectedSprite &&
+      selection.type === SelectionType.Building &&
+      selection.id === building.id;
+
+    // Clear selection temporarily if this building is selected
+    if (isCurrentlySelected) {
+      this.clearSelection();
+    }
+
     let object = this.viewport.getChildByName(spriteName) as Sprite;
 
     // If object already exists, we only need to update its position if it moved
@@ -624,6 +639,12 @@ export class Engine {
     }
 
     object.zIndex = ZIndices.Buildings;
+
+    // Restore selection if this was the selected building
+    if (isCurrentlySelected) {
+      object.filters = [this.GLOW_FILTER];
+      this.selectedSprite = object;
+    }
   }
 
   async updateScenegraphTile(tile: ClientTile): Promise<void> {
