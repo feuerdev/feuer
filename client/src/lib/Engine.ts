@@ -50,6 +50,7 @@ export class Engine {
   private isDragging: boolean = false;
   private animationFrameIds: Map<string, number> = new Map();
   private selectedSprite: Sprite | null = null;
+  private pendingMovementRequests: Set<number> = new Set();
   constructor(app: Application) {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
@@ -120,6 +121,9 @@ export class Engine {
     // Clear selection state
     this.clearSelection();
 
+    // Clear pending movement requests
+    this.pendingMovementRequests.clear();
+
     // Remove event listeners
     window.removeEventListener("keyup", this.handleKeyUp);
     window.removeEventListener("resize", this.resize);
@@ -187,6 +191,11 @@ export class Engine {
       const oldGroup = world.groups[receivedGroup.id];
       visitedOldGroups[receivedGroup.id] = true;
 
+      // Remove from pending movement requests if it's now officially moving
+      if (receivedGroup.targetHexes && receivedGroup.targetHexes.length > 0) {
+        this.pendingMovementRequests.delete(receivedGroup.id);
+      }
+
       if (
         !oldGroup ||
         !equals(oldGroup.pos, receivedGroup.pos) ||
@@ -216,6 +225,8 @@ export class Engine {
     Object.keys(world.groups).forEach((id) => {
       if (!visitedOldGroups[id]) {
         this.removeItem(parseInt(id));
+        // Also remove from pending movement requests if deleted
+        this.pendingMovementRequests.delete(parseInt(id));
         needsTileUpdate = true;
       }
     });
@@ -668,11 +679,11 @@ export class Engine {
           this.updateSelection();
         } else if (event.button === 2) {
           console.log(`right clicked tile ${tile.id}`);
-          if (selection.type === SelectionType.Group) {
-            this.socket.emit("request movement", {
-              selection: selection.id,
-              target: tile.hex,
-            });
+          if (
+            selection.type === SelectionType.Group &&
+            selection.id !== undefined
+          ) {
+            this.requestGroupMovement(selection.id, tile.hex);
           }
         } else if (event.button === 1) {
           console.log(`middle clicked tile ${tile.id}`);
@@ -721,19 +732,6 @@ export class Engine {
         y: point.y,
       },
     });
-  }
-
-  private getSelectionZIndex(selection: Selection): number {
-    switch (selection.type) {
-      case SelectionType.Group:
-        return ZIndices.UnitsSelection;
-      case SelectionType.Building:
-        return ZIndices.BuildingsSelection;
-      case SelectionType.Tile:
-        return ZIndices.TileSelection;
-      default:
-        return ZIndices.TileSelection;
-    }
   }
 
   toggleDebugMode(): void {
@@ -802,5 +800,35 @@ export class Engine {
       coordText.label = "debug_coord";
       this.debugContainer?.addChild(coordText);
     });
+  }
+
+  /**
+   * Request a group to move to a target hex and start animation immediately
+   * @param groupId The ID of the group to move
+   * @param targetHex The destination hex
+   */
+  private requestGroupMovement(groupId: number, targetHex: Hex): void {
+    const { world } = useStore.getState();
+    const group = world.groups[groupId];
+
+    if (!group) {
+      console.warn(`Cannot move group ${groupId}: not found`);
+      return;
+    }
+
+    // Send movement request to server
+    this.socket.emit("request movement", {
+      selection: groupId,
+      target: targetHex,
+    });
+
+    // Start animation immediately without waiting for server response
+    const spriteName = convertToSpriteName(groupId, "g");
+    const sprite = this.viewport.getChildByName(spriteName) as Sprite;
+
+    if (sprite && !this.pendingMovementRequests.has(groupId)) {
+      this.pendingMovementRequests.add(groupId);
+      this.startMovementAnimation(spriteName, sprite);
+    }
   }
 }
