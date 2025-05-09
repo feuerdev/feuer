@@ -48,6 +48,7 @@ export class Engine {
   private debugMode: boolean = false;
   private debugContainer: Container | null = null;
   private isDragging: boolean = false;
+  private animationFrameIds: Map<string, number> = new Map();
   constructor(app: Application) {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
@@ -109,6 +110,12 @@ export class Engine {
   }
 
   destroy(): void {
+    // Cancel all animations
+    this.animationFrameIds.forEach((frameId) => {
+      cancelAnimationFrame(frameId);
+    });
+    this.animationFrameIds.clear();
+
     // Remove event listeners
     window.removeEventListener("keyup", this.handleKeyUp);
     window.removeEventListener("resize", this.resize);
@@ -356,9 +363,16 @@ export class Engine {
   removeItem(id: number): void {
     if (!this.viewport) return;
 
-    const oldSprite = this.viewport.getChildByName(String(id)) as Sprite;
+    const spriteName = convertToSpriteName(id, "g");
+    const oldSprite = this.viewport.getChildByName(spriteName) as Sprite;
     if (oldSprite) {
       this.viewport.removeChild(oldSprite);
+    }
+
+    const buildingName = convertToSpriteName(id, "b");
+    const buildingSprite = this.viewport.getChildByName(buildingName) as Sprite;
+    if (buildingSprite) {
+      this.viewport.removeChild(buildingSprite);
     }
   }
 
@@ -398,33 +412,35 @@ export class Engine {
     }
 
     const spriteName = convertToSpriteName(group.id, "g");
-    let object = this.viewport.getChildByName(spriteName) as Sprite;
-    if (!object) {
-      const texture = await Assets.load(getGroupSprite(group.owner));
-      object = new Sprite(texture);
-      object.label = spriteName;
-      object.scale.set(0.5, 0.5);
-      object.anchor.set(0.5, 0.5);
-      object.interactive = true;
-      object.cursor = "pointer";
-      object.hitArea = new Rectangle(-25, -25, 50, 50);
-      object.on("pointerup", (event: FederatedPointerEvent) => {
-        if (this.isDragging) {
-          return;
-        }
-        if (event.button === 0) {
-          console.log(`clicked group ${group.id}`);
-          setSelection({ type: SelectionType.Group, id: group.id });
-          this.updateSelection();
-        } else if (event.button === 2) {
-          console.log(`right clicked group ${group.id}`);
-        } else if (event.button === 1) {
-          console.log(`middle clicked group ${group.id}`);
-          this.viewport.follow(object);
-        }
-      });
-      this.viewport.addChild(object);
-    }
+
+    // Remove existing sprite to prevent duplicates
+    this.removeItem(group.id);
+
+    // Create new sprite
+    const texture = await Assets.load(getGroupSprite(group.owner));
+    const object = new Sprite(texture);
+    object.label = spriteName;
+    object.scale.set(0.5, 0.5);
+    object.anchor.set(0.5, 0.5);
+    object.interactive = true;
+    object.cursor = "pointer";
+    object.hitArea = new Rectangle(-25, -25, 50, 50);
+    object.on("pointerup", (event: FederatedPointerEvent) => {
+      if (this.isDragging) {
+        return;
+      }
+      if (event.button === 0) {
+        console.log(`clicked group ${group.id}`);
+        setSelection({ type: SelectionType.Group, id: group.id });
+        this.updateSelection();
+      } else if (event.button === 2) {
+        console.log(`right clicked group ${group.id}`);
+      } else if (event.button === 1) {
+        console.log(`middle clicked group ${group.id}`);
+        this.viewport.follow(object);
+      }
+    });
+    this.viewport.addChild(object);
 
     // Position at a random point in the bottom half of the hex
     const randomPos = this.getRandomPositionInHex(group.pos, false);
@@ -433,6 +449,14 @@ export class Engine {
     object.x = randomPos.x;
     object.y = randomPos.y;
     object.zIndex = ZIndices.Units;
+
+    // Handle animation for moving groups
+    const isMoving = group.targetHexes && group.targetHexes.length > 0;
+    if (isMoving) {
+      this.startMovementAnimation(spriteName, object);
+    } else {
+      this.stopMovementAnimation(spriteName, object);
+    }
 
     // Update movement indicator
     const oldSprite = this.viewport.getChildByName(
@@ -462,6 +486,62 @@ export class Engine {
 
         movementIndicatorContainer.addChild(indicator);
       }
+    }
+  }
+
+  /**
+   * Start the wobble animation for a moving group
+   * @param spriteName The unique name of the sprite
+   * @param sprite The sprite to animate
+   */
+  private startMovementAnimation(spriteName: string, sprite: Sprite): void {
+    // Cancel any existing animation
+    this.stopMovementAnimation(spriteName);
+
+    // Initialize animation parameters
+    let time = 0;
+    const animationSpeed = 0.05;
+    const bobHeight = 4; // Maximum vertical movement
+    const rotationAmount = 0.1; // Maximum rotation in radians (increased)
+
+    // Store sprite's original position
+    const originalY = sprite.y;
+
+    // Animation function
+    const animate = () => {
+      time += animationSpeed;
+
+      // Vertical bobbing motion
+      sprite.y = originalY + Math.sin(time) * bobHeight;
+
+      // Slight rotation - make it more noticeable
+      sprite.angle = Math.sin(time * 1.5) * ((rotationAmount * 180) / Math.PI);
+
+      // Request next frame
+      const frameId = requestAnimationFrame(animate);
+      this.animationFrameIds.set(spriteName, frameId);
+    };
+
+    // Start the animation
+    animate();
+  }
+
+  /**
+   * Stop the wobble animation for a group
+   * @param spriteName The unique name of the sprite
+   * @param sprite Optional sprite to reset position and rotation
+   */
+  private stopMovementAnimation(spriteName: string, sprite?: Sprite): void {
+    // Cancel the animation if it exists
+    const frameId = this.animationFrameIds.get(spriteName);
+    if (frameId) {
+      cancelAnimationFrame(frameId);
+      this.animationFrameIds.delete(spriteName);
+    }
+
+    // Reset sprite position and rotation if provided
+    if (sprite) {
+      sprite.angle = 0;
     }
   }
 
