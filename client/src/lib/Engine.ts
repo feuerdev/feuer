@@ -190,7 +190,9 @@ export class Engine {
       if (
         !oldGroup ||
         !equals(oldGroup.pos, receivedGroup.pos) ||
-        oldGroup.spotting !== receivedGroup.spotting
+        oldGroup.spotting !== receivedGroup.spotting ||
+        // oldGroup.targetHexes !== receivedGroup.targetHexes
+        oldGroup.movementStatus !== receivedGroup.movementStatus
       ) {
         this.updateScenegraphGroup(receivedGroup, this.uid);
         needsTileUpdate = true;
@@ -810,6 +812,10 @@ export class Engine {
       selection: groupId,
       target: targetHex,
     });
+
+    // Set movement status to 1 so that in case the server cancels the movement,
+    // the animation is stopped because the movement status is reset to 0 and the group will be updated in the scenegraph.
+    group.movementStatus = 1;
 
     // Start animation immediately without waiting for server response
     const spriteName = convertToSpriteName(groupId, "g");
