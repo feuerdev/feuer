@@ -49,6 +49,7 @@ export class Engine {
   private debugContainer: Container | null = null;
   private isDragging: boolean = false;
   private animationFrameIds: Map<string, number> = new Map();
+  private selectedSprite: Sprite | null = null;
   constructor(app: Application) {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
@@ -116,6 +117,9 @@ export class Engine {
     });
     this.animationFrameIds.clear();
 
+    // Clear selection state
+    this.clearSelection();
+
     // Remove event listeners
     window.removeEventListener("keyup", this.handleKeyUp);
     window.removeEventListener("resize", this.resize);
@@ -171,10 +175,11 @@ export class Engine {
   };
 
   private handleGroupsUpdate = (groups: Hashtable<Group>) => {
-    const { world, setWorld } = useStore.getState();
+    const { world, setWorld, selection } = useStore.getState();
     const newGroups: Hashtable<Group> = {};
     const visitedOldGroups: Hashtable<boolean> = {};
     let needsTileUpdate = false;
+    let selectedGroupExists = false;
 
     Object.values(groups).forEach((receivedGroup) => {
       const oldGroup = world.groups[receivedGroup.id];
@@ -202,10 +207,18 @@ export class Engine {
         });
       }
 
+      // Check if the selected group still exists
+      if (
+        selection.type === SelectionType.Group &&
+        selection.id === receivedGroup.id
+      ) {
+        selectedGroupExists = true;
+      }
+
       newGroups[receivedGroup.id] = receivedGroup;
-      this.updateSelection();
     });
 
+    // Handle groups that no longer exist
     Object.keys(world.groups).forEach((id) => {
       if (!visitedOldGroups[id]) {
         this.removeItem(parseInt(id));
@@ -220,6 +233,13 @@ export class Engine {
 
     if (needsTileUpdate) {
       this.requestTiles(this.socket);
+    }
+
+    // Update selection after all group changes
+    if (selection.type === SelectionType.Group) {
+      if (selectedGroupExists) {
+        this.updateSelection();
+      }
     }
   };
 
@@ -317,12 +337,21 @@ export class Engine {
     }
   };
 
+  /**
+   * Clear any existing selection highlighting
+   */
+  private clearSelection(): void {
+    if (this.selectedSprite) {
+      this.selectedSprite.filters = [];
+      this.selectedSprite = null;
+    }
+  }
+
   updateSelection(): void {
     const { selection } = useStore.getState();
-    const oldSprite = this.viewport.getChildByName("selection") as Sprite;
-    if (oldSprite) {
-      this.viewport.removeChild(oldSprite);
-    }
+
+    // Clear previous selection
+    this.clearSelection();
 
     if (selection.id === undefined) {
       return;
@@ -342,26 +371,26 @@ export class Engine {
     }
 
     const spriteName = convertToSpriteName(selection.id, prefix);
-    const original = this.viewport.getChildByName(spriteName) as Sprite;
-    if (!original) {
+    const sprite = this.viewport.getChildByName(spriteName) as Sprite;
+    if (!sprite) {
       return;
     }
 
-    const sprite = new Sprite(original.texture);
-    sprite.label = "selection";
-    sprite.anchor.set(0.5, 0.5);
-    this.viewport.addChild(sprite);
-
-    sprite.position.set(original.position.x, original.position.y);
-    sprite.zIndex = this.getSelectionZIndex(selection);
-    sprite.width = original.width;
-    sprite.height = original.height;
-
+    // Apply glow filter to the original sprite
     sprite.filters = [this.GLOW_FILTER];
+    this.selectedSprite = sprite;
   }
 
   removeItem(id: number): void {
     if (!this.viewport) return;
+
+    const { selection } = useStore.getState();
+
+    // Check if this is the currently selected item
+    if (selection.id === id) {
+      // Clear selection before removing to avoid filter errors
+      this.clearSelection();
+    }
 
     const spriteName = convertToSpriteName(id, "g");
     const oldSprite = this.viewport.getChildByName(spriteName) as Sprite;
