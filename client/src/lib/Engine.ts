@@ -4,7 +4,7 @@ import { GlowFilter } from "pixi-filters";
 import * as Util from "@shared/util";
 import { Layout, equals, hash, neighborsRange, Hex } from "@shared/hex";
 import * as Vector2 from "@shared/vector2";
-import { ClientTile, Selection, SelectionType, ZIndices } from "./types";
+import { ClientTile, SelectionType, ZIndices } from "./types";
 import { Building, Group, Tile } from "@shared/objects";
 import { convertToSpriteName, Hashtable } from "@shared/util";
 import { useStore } from "@/lib/state";
@@ -50,7 +50,6 @@ export class Engine {
   private isDragging: boolean = false;
   private animationFrameIds: Map<string, number> = new Map();
   private selectedSprite: Sprite | null = null;
-  private pendingMovementRequests: Set<number> = new Set();
   constructor(app: Application) {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
@@ -121,9 +120,6 @@ export class Engine {
     // Clear selection state
     this.clearSelection();
 
-    // Clear pending movement requests
-    this.pendingMovementRequests.clear();
-
     // Remove event listeners
     window.removeEventListener("keyup", this.handleKeyUp);
     window.removeEventListener("resize", this.resize);
@@ -191,11 +187,6 @@ export class Engine {
       const oldGroup = world.groups[receivedGroup.id];
       visitedOldGroups[receivedGroup.id] = true;
 
-      // Remove from pending movement requests if it's now officially moving
-      if (receivedGroup.targetHexes && receivedGroup.targetHexes.length > 0) {
-        this.pendingMovementRequests.delete(receivedGroup.id);
-      }
-
       if (
         !oldGroup ||
         !equals(oldGroup.pos, receivedGroup.pos) ||
@@ -225,8 +216,6 @@ export class Engine {
     Object.keys(world.groups).forEach((id) => {
       if (!visitedOldGroups[id]) {
         this.removeItem(parseInt(id));
-        // Also remove from pending movement requests if deleted
-        this.pendingMovementRequests.delete(parseInt(id));
         needsTileUpdate = true;
       }
     });
@@ -826,8 +815,7 @@ export class Engine {
     const spriteName = convertToSpriteName(groupId, "g");
     const sprite = this.viewport.getChildByName(spriteName) as Sprite;
 
-    if (sprite && !this.pendingMovementRequests.has(groupId)) {
-      this.pendingMovementRequests.add(groupId);
+    if (sprite) {
       this.startMovementAnimation(spriteName, sprite);
     }
   }
