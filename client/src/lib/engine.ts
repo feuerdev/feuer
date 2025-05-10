@@ -534,7 +534,7 @@ export class Engine {
     // Initialize animation parameters
     let time = 0;
     const animationSpeed = 0.05;
-    const bobHeight = 4; // Maximum vertical movement
+    const bobHeight = 2; // Maximum vertical movement
     const rotationAmount = 0.1; // Maximum rotation in radians (increased)
 
     // Store sprite's original position
