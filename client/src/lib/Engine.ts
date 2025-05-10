@@ -7,7 +7,6 @@ import * as Vector2 from "@shared/vector2";
 import { ClientTile, SelectionType, ZIndices } from "./types";
 import { Building, Group, Tile } from "@shared/objects";
 import { convertToSpriteName, Hashtable } from "@shared/util";
-import { uid } from "./state";
 import { useStore } from "@/lib/state";
 import * as PlayerRelation from "@shared/relation";
 import {
@@ -42,7 +41,7 @@ export class Engine {
     outerStrength: 2,
     color: 0x000000,
   });
-  private uid = uid;
+  private uid: string;
   private app: Application;
   private socket: Socket;
   private debugMode: boolean = false;
@@ -51,6 +50,7 @@ export class Engine {
   private animationFrameIds: Map<string, number> = new Map();
   private selectedSprite: Sprite | null = null;
   constructor(app: Application) {
+    this.uid = useStore.getState().userId!;
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
 

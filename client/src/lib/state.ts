@@ -2,12 +2,13 @@ import { create } from "zustand";
 import { Selection, SelectionType } from "./types";
 import { World } from "@shared/objects";
 import { Socket } from "socket.io-client";
-import { randomName } from "./utils";
 
 type AppState = {
   socket: Socket | null;
+  userId: string | null;
   connected: boolean;
   setSocket: (socket: Socket) => void;
+  setUserId: (userId: string) => void;
   setConnected: (connected: boolean) => void;
   selection: Selection;
   setSelection: (selection: Selection) => void;
@@ -15,13 +16,12 @@ type AppState = {
   setWorld: (world: World) => void;
 };
 
-export const uid =
-  new URLSearchParams(window.location.search).get("user") || randomName();
-
 export const useStore = create<AppState>((set) => ({
   socket: null,
+  userId: null,
   connected: false,
   setSocket: (socket) => set({ socket }),
+  setUserId: (userId) => set({ userId }),
   setConnected: (connected) => set({ connected }),
   selection: {
     type: SelectionType.None,
