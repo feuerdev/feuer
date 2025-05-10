@@ -190,9 +190,7 @@ export class Engine {
       if (
         !oldGroup ||
         !equals(oldGroup.pos, receivedGroup.pos) ||
-        oldGroup.spotting !== receivedGroup.spotting ||
-        // oldGroup.targetHexes !== receivedGroup.targetHexes
-        oldGroup.movementStatus !== receivedGroup.movementStatus
+        oldGroup.spotting !== receivedGroup.spotting
       ) {
         this.updateScenegraphGroup(receivedGroup, this.uid);
         needsTileUpdate = true;
