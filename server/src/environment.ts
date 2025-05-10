@@ -50,6 +50,15 @@ const Config = yargs(process.argv.slice(2))
     description: "Clerk secret key",
     type: "string",
   })
+  .option("dbConnectionString", {
+    description: "Database connection string for world state persistence",
+    type: "string",
+  })
+  .option("worldName", {
+    description: "Name of the world to load or create",
+    type: "string",
+    default: "default"
+  })
   .option("nodeEnv", {
     description: "Node environment (development/production)",
     type: "string",
