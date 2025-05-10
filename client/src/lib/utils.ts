@@ -23,5 +23,5 @@ export function randomName() {
 }
 
 export function skipAuth() {
-  return import.meta.env.DEV && !import.meta.env.VITE_FORCE_AUTH;
+  return import.meta.env.DEV && import.meta.env.VITE_FORCE_AUTH !== "true";
 }
