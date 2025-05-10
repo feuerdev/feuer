@@ -807,6 +807,11 @@ export class Engine {
       return;
     }
 
+    if (group.owner !== this.uid) {
+      console.warn(`Cannot move group ${groupId}: not owned by ${this.uid}`);
+      return;
+    }
+
     // Send movement request to server
     this.socket.emit("request movement", {
       selection: groupId,
