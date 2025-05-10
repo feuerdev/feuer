@@ -34,6 +34,3 @@ export async function loadWorld(): Promise<World | null> {
 export async function listWorlds(): Promise<string[]> {
   return await listWorldsFromDb();
 }
-
-// Re-export initDatabase for backward compatibility
-export { initDatabase };
