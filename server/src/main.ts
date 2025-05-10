@@ -5,14 +5,6 @@ import GameServer from "./gameserver.js"
 import Config from "./environment.js"
 import { createClerkClient, User } from '@clerk/clerk-sdk-node';
 
-// Create a Clerk client if CLERK_SECRET_KEY is present
-const clerk = Config.clerkSecretKey 
-  ? createClerkClient({ secretKey: Config.clerkSecretKey })
-  : null;
-
-// Determine if we're in development mode and not forcing auth
-const isDevNoAuth = Config.nodeEnv === 'development' && !Config.forceAuth;
-
 // Initialize ID counter
 let idCounter = -1
 export const getNextId = () => {
@@ -47,6 +39,9 @@ const io = new Server(port, {
 })
 
 async function verifyToken(token: string): Promise<User | null> {
+  const clerk = Config.clerkSecretKey 
+    ? createClerkClient({ secretKey: Config.clerkSecretKey })
+    : null;
   if (!clerk) return null;
   
   try {
@@ -67,7 +62,9 @@ io.on("connection", async (socket) => {
   let username: string | null = null;
   
   // If in dev mode with no auth required, accept user from auth
-  if (isDevNoAuth && user) {
+  const skipAuth = Config.nodeEnv === 'development' && !Config.forceAuth;
+  
+  if (skipAuth && user) {
     userId = user;
     username = user;
   } 
