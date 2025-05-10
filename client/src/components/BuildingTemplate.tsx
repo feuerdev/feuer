@@ -40,7 +40,7 @@ const BuildingTemplate = ({
         variant="primary"
         size="sm"
         onClick={() =>
-          socket.emit("request construction", {
+          socket?.emit("request construction", {
             pos: tile.hex,
             type: building.key,
           })

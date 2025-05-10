@@ -11,6 +11,9 @@
     "manifest": "npx tsx scripts/generateManifest.ts"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.31.2",
+    "@clerk/clerk-js": "^5.65.0",
+    "unique-names-generator": "^4.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.503.0",
     "pixi-filters": "^6.1.2",

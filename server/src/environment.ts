@@ -41,6 +41,20 @@ const Config = yargs(process.argv.slice(2))
     description: "Comma-separated list of client URLs",
     type: "string",
   })
+  .option("forceAuth", {
+    description: "Whether to force authentication in development",
+    type: "boolean",
+    default: false
+  })
+  .option("clerkSecretKey", {
+    description: "Clerk secret key",
+    type: "string",
+  })
+  .option("nodeEnv", {
+    description: "Node environment (development/production)",
+    type: "string",
+    default: process.env.NODE_ENV || "development"
+  })
   .parseSync()
 
 console.debug("Config loaded:", Config)

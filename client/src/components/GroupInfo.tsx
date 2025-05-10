@@ -50,7 +50,7 @@ const GroupInfo = ({ group }: { group: Group }) => {
                   variant="danger"
                   size="sm"
                   onClick={() =>
-                    socket.emit("request unit remove", {
+                    socket?.emit("request unit remove", {
                       groupId: group.id,
                       unitId: unit.id,
                     })

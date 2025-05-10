@@ -17,16 +17,18 @@ const ResourceInfo = ({ group, tile }: { group: Group; tile: Tile }) => {
     direction: TransferDirection,
     amount: number = 5
   ) => {
-    socket.emit("request transfer", {
+    socket?.emit("request transfer", {
       groupId: group.id,
       resource: resource,
       amount: direction === TransferDirection.group ? -amount : amount,
     });
-    socket.emit("request tiles", [group.pos]);
-    socket.emit("request group", group.id);
+    socket?.emit("request tiles", [group.pos]);
+    socket?.emit("request group", group.id);
   };
 
   useEffect(() => {
+    if (!socket) return;
+
     const interval = setInterval(() => {
       socket.emit("request tiles", [group.pos]);
     }, 500);

@@ -7,6 +7,7 @@ import * as Vector2 from "@shared/vector2";
 import { ClientTile, SelectionType, ZIndices } from "./types";
 import { Building, Group, Tile } from "@shared/objects";
 import { convertToSpriteName, Hashtable } from "@shared/util";
+import { uid } from "./state";
 import { useStore } from "@/lib/state";
 import * as PlayerRelation from "@shared/relation";
 import {
@@ -41,8 +42,7 @@ export class Engine {
     outerStrength: 2,
     color: 0x000000,
   });
-  private uid =
-    new URLSearchParams(window.location.search).get("user") || "test";
+  private uid = uid;
   private app: Application;
   private socket: Socket;
   private debugMode: boolean = false;
@@ -75,7 +75,7 @@ export class Engine {
 
     app.stage.addChild(viewport);
     this.app = app;
-    this.socket = useStore.getState().socket;
+    this.socket = useStore.getState().socket!;
 
     this.viewport.sortableChildren = true;
 
