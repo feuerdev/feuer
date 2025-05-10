@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { loadAssets } from "@/lib/assets";
-import { Engine } from "@/lib/Engine";
+import { Engine } from "@/lib/engine";
 import * as Pixi from "pixi.js";
 export const Canvas = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
