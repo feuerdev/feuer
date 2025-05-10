@@ -29,9 +29,11 @@ game.run()
 
 // Listen to connections
 const port: number = Config.port
+
+const corsOrigins = Config.clientUrls.split(",")
 const io = new Server(port, {
   cors: {
-    origin: Config.clientUrl,
+    origin: corsOrigins,
     credentials: true,
   },
 })

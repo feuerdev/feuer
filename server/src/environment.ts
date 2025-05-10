@@ -36,9 +36,9 @@ const Config = yargs(process.argv.slice(2))
     type: "number",
     default: 1,
   })
-  .option("clientUrl", {
+  .option("clientUrls", {
     alias: "c",
-    description: "The URL of the client",
+    description: "Comma-separated list of client URLs",
     type: "string",
   })
   .parseSync()
