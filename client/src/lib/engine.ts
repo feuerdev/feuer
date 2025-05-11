@@ -422,11 +422,6 @@ export class Engine {
   async updateScenegraphGroup(group: Group, uid?: string): Promise<void> {
     const { selection } = useStore.getState();
 
-    if (!this.initialFocusSet) {
-      this.initialFocusSet = true;
-      this.centerOn(group.pos);
-    }
-
     const spriteName = convertToSpriteName(group.id, "g");
     const isCurrentlySelected =
       this.selectedSprite &&
@@ -579,7 +574,10 @@ export class Engine {
   }
 
   async updateScenegraphBuilding(building: Building): Promise<void> {
-    if (!this.viewport) return;
+    if (!this.initialFocusSet) {
+      this.initialFocusSet = true;
+      this.centerOn(building.position);
+    }
 
     const { selection } = useStore.getState();
     const spriteName = convertToSpriteName(building.id, "b");

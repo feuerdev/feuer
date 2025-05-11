@@ -251,16 +251,24 @@ export default class GameServer {
 
       console.info("New Player Connected: " + player.uid)
 
-      //Give Player an initial Scout and Camp
+      //Give Player an initial Campsite
       let pos = this.getRandomSpawnHex()
-      let initialGroup = createGroup(
+      
+      // Ensure the tile has 100 wood
+      let tile = this.world.tiles[hash(pos)]
+      if (!tile.resources.wood) {
+        tile.resources.wood = 0
+      }
+      tile.resources.wood = 100
+      
+      // Create initial campsite building
+      let initialBuilding = createBuilding(
         ++this.world.idCounter,
         player.uid,
-        "Scout",
-        pos,
-        { wood: 100 }
+        "campsite",
+        pos
       )
-      this.world.groups[initialGroup.id] = initialGroup
+      this.world.buildings[initialBuilding.id] = initialBuilding
 
       //Register player in Gamesever
       this.world.players[uid] = player
