@@ -11,9 +11,9 @@
     "manifest": "npx tsx scripts/generateManifest.ts"
   },
   "dependencies": {
-    "@clerk/clerk-react": "^5.31.2",
     "@clerk/clerk-js": "^5.65.0",
-    "unique-names-generator": "^4.7.1",
+    "@clerk/clerk-react": "^5.31.2",
+    "@clerk/themes": "^2.2.43",
     "clsx": "^2.1.1",
     "lucide-react": "^0.503.0",
     "pixi-filters": "^6.1.2",
@@ -24,6 +24,7 @@
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.2.0",
     "tailwindcss-animate": "^1.0.7",
+    "unique-names-generator": "^4.7.1",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
