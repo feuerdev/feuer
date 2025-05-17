@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { loadAssets } from "@/lib/assets";
 import { Engine } from "@/lib/engine";
 import * as Pixi from "pixi.js";
 export const Canvas = () => {
@@ -13,8 +12,6 @@ export const Canvas = () => {
         antialias: true,
         resizeTo: window,
       });
-
-      await loadAssets();
 
       if (app.canvas && canvasRef.current) {
         canvasRef.current.appendChild(app.canvas);

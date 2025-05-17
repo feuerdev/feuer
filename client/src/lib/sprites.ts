@@ -1,62 +1,223 @@
 import { Biome, Building } from "@shared/objects";
 import Buildings from "@shared/templates/buildings.json";
 import { ClientTile } from "./types";
+import { EnumRelationType } from "@shared/relation";
+import { Container, Graphics, Text } from "pixi.js";
 
-function getRandomTile(tile: ClientTile, name: string, max: number): string {
-  if (max <= 1) {
-    return name; // No suffix if max is 1
+/**
+ * Biome color mapping
+ */
+export const BIOME_COLORS: Record<number, number> = {
+  [Biome.None]: 0x999999, // Gray
+  [Biome.Ice]: 0xeeffff, // White/light blue
+  [Biome.Tundra]: 0xdddddd, // Light gray
+  [Biome.Boreal]: 0x557755, // Dark green
+  [Biome.Grassland]: 0x88aa55, // Light green
+  [Biome.Temperate]: 0x338833, // Medium green
+  [Biome.Tropical]: 0x227722, // Dark saturated green
+  [Biome.Desert]: 0xddcc77, // Sand yellow
+  [Biome.Ocean]: 0x3388cc, // Medium blue
+  [Biome.Shore]: 0x66aadd, // Light blue
+  [Biome.Treeline]: 0x667755, // Gray-green
+  [Biome.Mountain]: 0x777777, // Medium gray
+  [Biome.Beach]: 0xeedd88, // Light sand
+  [Biome.Peaks]: 0xffffff, // White
+  [Biome.River]: 0x44aaff, // Light blue
+};
+
+/**
+ * Player relation color mapping
+ */
+export const RELATION_COLORS: Record<number, number> = {
+  [EnumRelationType.neutral]: 0xffcc33, // Yellow
+  [EnumRelationType.friendly]: 0x33cc33, // Green
+  [EnumRelationType.hostile]: 0xcc3333, // Red
+  own: 0x3399ff, // Blue for own units
+};
+
+/**
+ * Building type color mapping
+ */
+export const BUILDING_COLORS: Record<string, number> = {
+  towncenter: 0x9966cc, // Purple
+  campsite: 0x77aadd, // Light blue
+  wood: 0x338833, // Green
+  stone: 0x777777, // Gray
+  iron: 0x555577, // Dark gray
+  gold: 0xffdd33, // Gold
+  default: 0xaaaaaa, // Medium gray
+};
+
+/**
+ * Create a terrain graphics object based on tile biome
+ */
+export function createTerrainGraphics(tile: ClientTile): Graphics {
+  const graphics = new Graphics();
+
+  const biomeColor = BIOME_COLORS[tile.biome] || BIOME_COLORS[Biome.None];
+
+  // Add some variance to the color based on tile properties
+  const heightFactor = Math.min(1, Math.max(0, tile.height));
+  const temperatureFactor = Math.min(
+    1,
+    Math.max(0, (tile.temperature + 10) / 30)
+  );
+  const precipitationFactor = Math.min(1, Math.max(0, tile.precipitation));
+
+  // Slightly adjust color based on factors (subtly)
+  let color = biomeColor;
+  // Darken for height
+  if (heightFactor > 0.6) {
+    color = adjustColor(color, -20, -20, -20);
+  }
+  // Yellow tint for hot areas
+  if (temperatureFactor > 0.7) {
+    color = adjustColor(color, 15, 5, -10);
+  }
+  // Darken and saturate for precipitation
+  if (precipitationFactor > 0.6) {
+    color = adjustColor(color, -5, 0, 15);
   }
 
-  // Use the tile's hex coordinates for consistent variant selection
-  const hash = Math.abs(tile.hex.q * 31 + tile.hex.r);
-  const variant = (hash % max) + 1;
+  // Draw filled hexagon
+  graphics.beginFill(color);
+  graphics.lineStyle(1, 0x000000, 0.3);
+  graphics.drawPolygon([0, 0]); // This will be replaced with actual hex corners
+  graphics.endFill();
 
-  return `${name}_${variant}`;
+  return graphics;
 }
 
 /**
- * Get a terrain texture based on biome
+ * Create a building graphics object
  */
-export function getTerrainTexture(tile: ClientTile): string {
-  const biomeMap: Record<number, { name: string; variants: number }> = {
-    [Biome.Ice]: { name: "biome_ice", variants: 1 },
-    [Biome.Tundra]: { name: "biome_tundra", variants: 8 },
-    [Biome.Boreal]: { name: "biome_boreal_forest", variants: 4 },
-    [Biome.Grassland]: { name: "biome_grassland", variants: 2 },
-    [Biome.Temperate]: { name: "biome_temperate_forest", variants: 4 },
-    [Biome.Tropical]: { name: "biome_tropical_forest", variants: 2 },
-    [Biome.Desert]: { name: "biome_desert", variants: 8 },
-    [Biome.Ocean]: { name: "biome_ocean", variants: 1 },
-    [Biome.None]: { name: "biome_ice", variants: 1 }, // Default fallback
-    [Biome.Shore]: { name: "biome_shore", variants: 1 },
-    [Biome.Treeline]: { name: "biome_tree_line", variants: 3 },
-    [Biome.Mountain]: { name: "biome_mountain", variants: 4 },
-    [Biome.Beach]: { name: "biome_beach", variants: 1 },
-    [Biome.Peaks]: { name: "biome_ice_peaks", variants: 3 },
-    [Biome.River]: { name: "biome_river", variants: 1 },
-  };
+export function createBuildingGraphics(building: Building): Container {
+  const container = new Container();
+  const graphics = new Graphics();
 
-  const biomeInfo = biomeMap[tile.biome] || biomeMap[Biome.Ice]; // Use Ice as fallback
-  return getRandomTile(tile, biomeInfo.name, biomeInfo.variants);
+  // Determine building color
+  const buildingColor =
+    BUILDING_COLORS[building.key] || BUILDING_COLORS.default;
+
+  // Draw building as a simple square with a symbol
+  graphics.beginFill(buildingColor);
+  graphics.lineStyle(2, 0x000000, 0.7);
+  graphics.drawRect(-15, -15, 30, 30);
+  graphics.endFill();
+
+  // Add a symbol or letter based on building type
+  graphics.lineStyle(2, 0xffffff);
+
+  switch (building.key) {
+    case "towncenter":
+    case "campsite":
+      // Draw a simple house shape
+      graphics.moveTo(-8, 5);
+      graphics.lineTo(-8, -3);
+      graphics.lineTo(0, -10);
+      graphics.lineTo(8, -3);
+      graphics.lineTo(8, 5);
+      graphics.lineTo(-8, 5);
+      break;
+    case "wood":
+      // Draw a tree shape
+      graphics.moveTo(0, -10);
+      graphics.lineTo(5, 0);
+      graphics.lineTo(3, 0);
+      graphics.lineTo(6, 7);
+      graphics.lineTo(-6, 7);
+      graphics.lineTo(-3, 0);
+      graphics.lineTo(-5, 0);
+      graphics.lineTo(0, -10);
+      break;
+    case "stone":
+    case "iron":
+    case "gold":
+      // Draw a simple mine shape (mountain)
+      graphics.moveTo(-8, 5);
+      graphics.lineTo(-3, -5);
+      graphics.lineTo(0, 0);
+      graphics.lineTo(3, -7);
+      graphics.lineTo(8, 5);
+      graphics.lineTo(-8, 5);
+      break;
+    default:
+      // Draw "B" for generic building
+      const text = new Text("B", { fontSize: 16, fill: 0xffffff });
+      text.anchor.set(0.5);
+      container.addChild(text);
+  }
+
+  container.addChild(graphics);
+  return container;
 }
 
 /**
- * Get a building sprite based on building type
+ * Create a group graphics object
  */
-export function getBuildingSprite(building: Building): string {
-  const buildingKey = building.key;
-  const buildingData = Buildings[buildingKey as keyof typeof Buildings];
-  return buildingData?.texture || "fallback_building";
+export function createGroupGraphics(
+  owner: string,
+  ownerId: string,
+  relationtype?: number
+): Container {
+  const container = new Container();
+  const graphics = new Graphics();
+
+  // Determine color based on relation
+  let color: number;
+  if (owner === ownerId) {
+    color = RELATION_COLORS.own;
+  } else if (relationtype !== undefined) {
+    color =
+      RELATION_COLORS[relationtype] ||
+      RELATION_COLORS[EnumRelationType.neutral];
+  } else {
+    color = RELATION_COLORS[EnumRelationType.neutral];
+  }
+
+  // Draw unit as a small square with a colored "head"
+  // Body
+  graphics.beginFill(0x333333);
+  graphics.lineStyle(1, 0x000000);
+  graphics.drawRect(-7, -5, 14, 15);
+  graphics.endFill();
+
+  // Head (colored based on relation)
+  graphics.beginFill(color);
+  graphics.lineStyle(1, 0x000000);
+  graphics.drawCircle(0, -10, 7);
+  graphics.endFill();
+
+  // Add simple legs
+  graphics.lineStyle(2, 0x333333);
+  graphics.moveTo(-5, 10);
+  graphics.lineTo(-5, 15);
+  graphics.moveTo(5, 10);
+  graphics.lineTo(5, 15);
+
+  container.addChild(graphics);
+  return container;
 }
 
 /**
- * Get a group sprite based on owner
+ * Helper function to adjust a color
  */
-export function getGroupSprite(owner: string): string {
-  // Assuming group sprites are named like 'unit_scout_own', 'unit_scout_enemy' etc.
-  // This method might need adjustment based on actual group sprite naming convention
-  const suffix = owner === "ai" ? "_enemy" : "_own"; // Example adjustment
-  const baseName = "unit_scout"; // Example base name, adjust as needed
-  return `${baseName}${suffix}`;
-}
+function adjustColor(
+  color: number,
+  rDiff: number,
+  gDiff: number,
+  bDiff: number
+): number {
+  // Extract RGB components
+  const r = (color >> 16) & 0xff;
+  const g = (color >> 8) & 0xff;
+  const b = color & 0xff;
 
+  // Adjust components with clamping
+  const newR = Math.min(255, Math.max(0, r + rDiff));
+  const newG = Math.min(255, Math.max(0, g + gDiff));
+  const newB = Math.min(255, Math.max(0, b + bDiff));
+
+  // Recombine and return
+  return (newR << 16) | (newG << 8) | newB;
+}

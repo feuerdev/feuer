@@ -10,14 +10,14 @@ import { convertToSpriteName, Hashtable } from "@shared/util";
 import { useStore } from "@/lib/state";
 import * as PlayerRelation from "@shared/relation";
 import {
-  getBuildingSprite,
-  getGroupSprite,
-  getTerrainTexture,
+  createBuildingGraphics,
+  createGroupGraphics,
+  createTerrainGraphics,
+  BIOME_COLORS,
 } from "./sprites";
 import { Socket } from "socket.io-client";
 import {
   Application,
-  Assets,
   Container,
   FederatedPointerEvent,
   Graphics,
@@ -420,7 +420,7 @@ export class Engine {
   }
 
   async updateScenegraphGroup(group: Group, uid?: string): Promise<void> {
-    const { selection } = useStore.getState();
+    const { selection, world } = useStore.getState();
 
     const spriteName = convertToSpriteName(group.id, "g");
     const isCurrentlySelected =
@@ -436,12 +436,16 @@ export class Engine {
     // Remove existing sprite to prevent duplicates
     this.removeItem(group.id);
 
-    // Create new sprite
-    const texture = await Assets.load(getGroupSprite(group.owner));
-    const object = new Sprite(texture);
+    // Get relation type for color
+    const relationHash = PlayerRelation.hash(group.owner, this.uid);
+    const relation = world.playerRelations[relationHash];
+    const relationType = relation?.relationType;
+
+    // Create new sprite with programmatic drawing
+    const container = createGroupGraphics(group.owner, this.uid, relationType);
+    const object = new Sprite();
     object.label = spriteName;
-    object.scale.set(0.5, 0.5);
-    object.anchor.set(0.5, 0.5);
+    object.addChild(container);
     object.interactive = true;
     object.cursor = "pointer";
     object.hitArea = new Rectangle(-25, -25, 50, 50);
@@ -598,11 +602,11 @@ export class Engine {
     const isNewSprite = !object;
 
     if (isNewSprite) {
-      const texture = await Assets.load(getBuildingSprite(building));
-      object = new Sprite(texture);
+      // Create new building with programmatic drawing
+      const container = createBuildingGraphics(building);
+      object = new Sprite();
+      object.addChild(container);
       object.label = spriteName;
-      object.scale.set(0.5, 0.5);
-      object.anchor.set(0.5, 0.5);
       object.interactive = true;
       object.cursor = "pointer";
       object.hitArea = new Rectangle(-25, -25, 50, 50);
@@ -650,8 +654,10 @@ export class Engine {
     const spriteName = convertToSpriteName(tile.id, "t");
     let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
-      const texture = await Assets.load(getTerrainTexture(tile));
-      object = new Sprite(texture);
+      // Create terrain with programmatic drawing
+      const graphics = createTerrainGraphics(tile);
+      object = new Sprite();
+      object.addChild(graphics);
       object.label = spriteName;
       this.viewport.addChild(object);
       object.interactive = true;
@@ -682,8 +688,31 @@ export class Engine {
     object.anchor.set(0.5, 0.5);
     object.x = hexCenter.x;
     object.y = hexCenter.y;
-    object.width = this.layout.size.x * Math.sqrt(3) - 2;
-    object.height = this.layout.size.y * 2 - 2;
+
+    // Draw hex boundary directly on the graphics object
+    const hexGraphics = object.getChildAt(0) as Graphics;
+    if (hexGraphics) {
+      // Clear any existing paths
+      hexGraphics.clear();
+
+      // Get hex corners
+      const corners = this.layout.polygonCorners(tile.hex);
+
+      // Convert corners to array of points for drawPolygon
+      const points: number[] = [];
+      for (const corner of corners) {
+        points.push(corner.x - hexCenter.x);
+        points.push(corner.y - hexCenter.y);
+      }
+
+      // Redraw with correct color - get from our biome colors map
+      const biomeColor = BIOME_COLORS[tile.biome];
+      hexGraphics.beginFill(biomeColor);
+      hexGraphics.lineStyle(1, 0x000000, 0.5);
+      hexGraphics.drawPolygon(points);
+      hexGraphics.endFill();
+    }
+
     object.zIndex = ZIndices.Tiles;
     object.visible = true;
     object.alpha = tile.visible ? 1 : 0.5;
