@@ -68,72 +68,69 @@ const ResourceInfo = ({
   return (
     <InfoBox title="Resources" className={className}>
       <div className="grid grid-cols-3 gap-1 text-xs">
-        <div className="font-semibold text-center text-xs sticky top-0 bg-gray-900 py-0.5">
-          Group
-        </div>
-        <div className="font-semibold text-center text-xs sticky top-0 bg-gray-900 py-0.5">
-          Transfer
-        </div>
-        <div className="font-semibold text-center text-xs sticky top-0 bg-gray-900 py-0.5">
-          Tile
-        </div>
+        <div className="font-semibold text-center text-xs">Group</div>
+        <div className="font-semibold text-center text-xs">Transfer</div>
+        <div className="font-semibold text-center text-xs">Tile</div>
       </div>
 
-      <div className="grid grid-cols-3 gap-1 max-h-40 overflow-y-auto pr-1 pt-1">
-        {resourceKeys.map((resourceKey) => (
-          <div key={resourceKey} className="contents">
-            <div className="bg-gray-800 p-0.5 rounded text-center h-9">
-              <div className="capitalize text-xs text-gray-400 truncate">
-                {resourceKey}
+      <div className="max-h-48 overflow-auto pr-1 mt-1">
+        <div className="grid grid-cols-3 gap-1">
+          {resourceKeys.map((resourceKey) => (
+            <div key={resourceKey} className="contents">
+              <div className="bg-gray-800 p-0.5 rounded text-center h-9">
+                <div className="capitalize text-xs text-gray-400 truncate">
+                  {resourceKey}
+                </div>
+                <div className="font-medium text-xs">
+                  {group.resources[
+                    resourceKey as keyof typeof group.resources
+                  ] || 0}
+                </div>
               </div>
-              <div className="font-medium text-xs">
-                {group.resources[resourceKey as keyof typeof group.resources] ||
-                  0}
-              </div>
-            </div>
 
-            <div className="flex justify-center items-center gap-0.5 h-9">
-              <Button
-                size="xs"
-                variant="outline"
-                onClick={() =>
-                  requestResourceTransfer(
-                    group,
-                    resourceKey,
-                    TransferDirection.group
-                  )
-                }
-                className="min-w-0 w-6 px-0"
-              >
-                &larr;
-              </Button>
-              <Button
-                size="xs"
-                variant="outline"
-                onClick={() =>
-                  requestResourceTransfer(
-                    group,
-                    resourceKey,
-                    TransferDirection.tile
-                  )
-                }
-                className="min-w-0 w-6 px-0"
-              >
-                &rarr;
-              </Button>
-            </div>
+              <div className="flex justify-center items-center gap-0.5 h-9">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  onClick={() =>
+                    requestResourceTransfer(
+                      group,
+                      resourceKey,
+                      TransferDirection.group
+                    )
+                  }
+                  className="min-w-0 w-6 px-0"
+                >
+                  &larr;
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  onClick={() =>
+                    requestResourceTransfer(
+                      group,
+                      resourceKey,
+                      TransferDirection.tile
+                    )
+                  }
+                  className="min-w-0 w-6 px-0"
+                >
+                  &rarr;
+                </Button>
+              </div>
 
-            <div className="bg-gray-800 p-0.5 rounded text-center h-9">
-              <div className="capitalize text-xs text-gray-400 truncate">
-                {resourceKey}
-              </div>
-              <div className="font-medium text-xs">
-                {tile.resources[resourceKey as keyof typeof tile.resources] ||
-                  0}
+              <div className="bg-gray-800 p-0.5 rounded text-center h-9">
+                <div className="capitalize text-xs text-gray-400 truncate">
+                  {resourceKey}
+                </div>
+                <div className="font-medium text-xs">
+                  {tile.resources[resourceKey as keyof typeof tile.resources] ||
+                    0}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </InfoBox>
   );
