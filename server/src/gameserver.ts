@@ -270,15 +270,16 @@ export default class GameServer {
       )
       this.world.buildings[initialBuilding.id] = initialBuilding
 
+      // Create initial group
+      let initialGroup = createGroup(++this.world.idCounter, player.uid, 'Scout', pos)
+      this.world.groups[initialGroup.id] = initialGroup
+
       //Register player in Gamesever
       this.world.players[uid] = player
       this.updatePlayerVisibilities(uid)
     } else {
       console.info(`Player reconnected: ${player.uid}`)
-      // TODO: Fix this hack, this is a workaround for the client not receiving the tiles (socket is not ready yet?)
-      setTimeout(() => {
-        socket.emit("gamestate tiles", this.getTiles(player.discoveredHexes))
-      }, 3000)
+      socket.emit("gamestate tiles", this.getTiles(player.discoveredHexes))
     }
 
     //Register player in Gamesever
