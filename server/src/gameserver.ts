@@ -260,6 +260,9 @@ export default class GameServer {
         tile.resources.wood = 0
       }
       tile.resources.wood = 100
+      tile.resources.stone = 100
+      tile.resources.iron = 100
+      tile.resources.gold = 100
       
       // Create initial campsite building
       let initialBuilding = createBuilding(

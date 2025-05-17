@@ -17,7 +17,7 @@ const Hud = () => {
       {/* Bottom info panel */}
       <div
         id="bottom-panel"
-        className="absolute bottom-0 left-0 right-0 z-10 h-1/4 bg-slate-900 bg-opacity-90 overflow-y-auto"
+        className="absolute bottom-0 left-0 right-0 z-10 h-[20%] bg-slate-900 bg-opacity-90 overflow-hidden"
       >
         {/* Show different info based on selection type */}
         {type === SelectionType.Group && (
@@ -27,7 +27,7 @@ const Hud = () => {
           <TileInfo tile={getTileById(id!, world.tiles)!} />
         )}
         {type === SelectionType.None && (
-          <div className="p-4 text-center text-gray-400">
+          <div className="p-2 text-center text-gray-400 text-sm">
             <p>No selection. Click on a tile or unit to view details.</p>
           </div>
         )}

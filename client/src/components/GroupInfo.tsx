@@ -20,8 +20,8 @@ const GroupInfo = ({ group }: { group: Group }) => {
   }
 
   return (
-    <div className="flex flex-wrap gap-4 p-4">
-      <InfoBox title="Group Details" className="flex-1 min-w-[250px]">
+    <div className="flex flex-nowrap gap-2 p-2 overflow-x-auto">
+      <InfoBox title="Group Details" className="w-60 shrink-0">
         <InfoRow label="Position" value={`${group.pos.q}:${group.pos.r}`} />
         <InfoRow
           label="Status"
@@ -35,38 +35,40 @@ const GroupInfo = ({ group }: { group: Group }) => {
         <InfoRow label="Units" value={group.units.length} />
       </InfoBox>
 
-      <InfoBox title="Units" className="flex-1 min-w-[300px]">
-        {group.units.length === 0 ? (
-          <p className="text-gray-400 italic">No units in this group</p>
-        ) : (
-          group.units.map((unit, index) => (
-            <div key={unit.id} className="mb-2">
-              {index > 0 && <InfoDivider />}
-              <InfoRow label="ID" value={unit.id} />
-              <InfoRow label="Owner" value={unit.owner} />
-              <InfoRow label="Leadership" value={unit.leadership} />
-              <div className="mt-2">
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() =>
-                    socket?.emit("request unit remove", {
-                      groupId: group.id,
-                      unitId: unit.id,
-                    })
-                  }
-                >
-                  Remove Unit
-                </Button>
+      <InfoBox title="Units" className="w-64 shrink-0">
+        <div className="max-h-48 overflow-auto pr-1">
+          {group.units.length === 0 ? (
+            <p className="text-gray-400 italic text-xs">
+              No units in this group
+            </p>
+          ) : (
+            group.units.map((unit, index) => (
+              <div key={unit.id} className="mb-1">
+                {index > 0 && <InfoDivider />}
+                <InfoRow label="ID" value={unit.id} />
+                <InfoRow label="Owner" value={unit.owner} />
+                <InfoRow label="Leadership" value={unit.leadership} />
+                <div className="mt-1">
+                  <Button
+                    variant="danger"
+                    size="xs"
+                    onClick={() =>
+                      socket?.emit("request unit remove", {
+                        groupId: group.id,
+                        unitId: unit.id,
+                      })
+                    }
+                  >
+                    Remove Unit
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </InfoBox>
 
-      <div className="w-full">
-        <ResourceInfo group={group} tile={tile} />
-      </div>
+      <ResourceInfo group={group} tile={tile} className="w-80 shrink-0" />
     </div>
   );
 };

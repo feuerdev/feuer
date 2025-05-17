@@ -8,7 +8,15 @@ import { Button } from "./ui/Button";
 /**
  * React Component to display resource information and display controls to transfer resources between tile and groups
  */
-const ResourceInfo = ({ group, tile }: { group: Group; tile: Tile }) => {
+const ResourceInfo = ({
+  group,
+  tile,
+  className,
+}: {
+  group: Group;
+  tile: Tile;
+  className?: string;
+}) => {
   const socket = useStore((state) => state.socket);
 
   const requestResourceTransfer = (
@@ -49,8 +57,8 @@ const ResourceInfo = ({ group, tile }: { group: Group; tile: Tile }) => {
 
   if (resourceKeys.length === 0) {
     return (
-      <InfoBox title="Resources" className="w-full">
-        <p className="text-center text-gray-400 italic">
+      <InfoBox title="Resources" className={className}>
+        <p className="text-center text-gray-400 italic text-xs">
           No resources available
         </p>
       </InfoBox>
@@ -58,27 +66,35 @@ const ResourceInfo = ({ group, tile }: { group: Group; tile: Tile }) => {
   }
 
   return (
-    <InfoBox title="Resources" className="w-full">
-      <div className="grid grid-cols-3 gap-4">
-        <div className="font-semibold text-center">Group Resources</div>
-        <div className="font-semibold text-center">Transfer</div>
-        <div className="font-semibold text-center">Tile Resources</div>
+    <InfoBox title="Resources" className={className}>
+      <div className="grid grid-cols-3 gap-1 text-xs">
+        <div className="font-semibold text-center text-xs sticky top-0 bg-gray-900 py-0.5">
+          Group
+        </div>
+        <div className="font-semibold text-center text-xs sticky top-0 bg-gray-900 py-0.5">
+          Transfer
+        </div>
+        <div className="font-semibold text-center text-xs sticky top-0 bg-gray-900 py-0.5">
+          Tile
+        </div>
+      </div>
 
+      <div className="grid grid-cols-3 gap-1 max-h-40 overflow-y-auto pr-1 pt-1">
         {resourceKeys.map((resourceKey) => (
           <div key={resourceKey} className="contents">
-            <div className="bg-gray-800 p-2 rounded text-center">
-              <div className="capitalize text-sm text-gray-400 mb-1">
+            <div className="bg-gray-800 p-0.5 rounded text-center h-9">
+              <div className="capitalize text-xs text-gray-400 truncate">
                 {resourceKey}
               </div>
-              <div className="font-medium">
+              <div className="font-medium text-xs">
                 {group.resources[resourceKey as keyof typeof group.resources] ||
                   0}
               </div>
             </div>
 
-            <div className="flex justify-center items-center gap-2">
+            <div className="flex justify-center items-center gap-0.5 h-9">
               <Button
-                size="sm"
+                size="xs"
                 variant="outline"
                 onClick={() =>
                   requestResourceTransfer(
@@ -87,11 +103,12 @@ const ResourceInfo = ({ group, tile }: { group: Group; tile: Tile }) => {
                     TransferDirection.group
                   )
                 }
+                className="min-w-0 w-6 px-0"
               >
                 &larr;
               </Button>
               <Button
-                size="sm"
+                size="xs"
                 variant="outline"
                 onClick={() =>
                   requestResourceTransfer(
@@ -100,16 +117,17 @@ const ResourceInfo = ({ group, tile }: { group: Group; tile: Tile }) => {
                     TransferDirection.tile
                   )
                 }
+                className="min-w-0 w-6 px-0"
               >
                 &rarr;
               </Button>
             </div>
 
-            <div className="bg-gray-800 p-2 rounded text-center">
-              <div className="capitalize text-sm text-gray-400 mb-1">
+            <div className="bg-gray-800 p-0.5 rounded text-center h-9">
+              <div className="capitalize text-xs text-gray-400 truncate">
                 {resourceKey}
               </div>
-              <div className="font-medium">
+              <div className="font-medium text-xs">
                 {tile.resources[resourceKey as keyof typeof tile.resources] ||
                   0}
               </div>

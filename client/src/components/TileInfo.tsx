@@ -19,8 +19,8 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
   });
 
   return (
-    <div className="flex flex-wrap gap-4 p-4">
-      <InfoBox title="Tile Details" className="flex-1 min-w-[250px]">
+    <div className="flex flex-nowrap gap-2 p-2 overflow-x-auto">
+      <InfoBox title="Tile Details" className="w-60 shrink-0">
         <InfoRow label="Position" value={`${tile.hex.q}, ${tile.hex.r}`} />
         <InfoRow label="Biome" value={getBiomeName(tile.biome)} />
         <InfoRow label="Height" value={tile.height.toFixed(2)} />
@@ -28,10 +28,10 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
         <InfoRow label="Temperature" value={tile.temperature.toFixed(2)} />
       </InfoBox>
 
-      <InfoBox title="Available Buildings" className="flex-1 min-w-[300px]">
-        <div className="max-h-60 overflow-auto pr-2">
+      <InfoBox title="Available Buildings" className="w-64 shrink-0">
+        <div className="max-h-48 overflow-auto pr-1">
           {Object.keys(Buildings).length === 0 ? (
-            <p className="text-gray-400 italic">
+            <p className="text-gray-400 italic text-xs">
               No building templates available
             </p>
           ) : (
@@ -50,7 +50,9 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
         </div>
       </InfoBox>
 
-      {group && <ResourceInfo group={group} tile={tile} />}
+      {group && (
+        <ResourceInfo group={group} tile={tile} className="w-80 shrink-0" />
+      )}
     </div>
   );
 };
