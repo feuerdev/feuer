@@ -1,8 +1,7 @@
 import { Biome, Building } from "@shared/objects";
-import Buildings from "@shared/templates/buildings.json";
 import { ClientTile } from "./types";
 import { EnumRelationType } from "@shared/relation";
-import { Container, Graphics, Text } from "pixi.js";
+import { Graphics, Text } from "pixi.js";
 
 /**
  * Biome color mapping
@@ -28,7 +27,7 @@ export const BIOME_COLORS: Record<number, number> = {
 /**
  * Player relation color mapping
  */
-export const RELATION_COLORS: Record<number, number> = {
+export const RELATION_COLORS: Record<string | number, number> = {
   [EnumRelationType.neutral]: 0xffcc33, // Yellow
   [EnumRelationType.friendly]: 0x33cc33, // Green
   [EnumRelationType.hostile]: 0xcc3333, // Red
@@ -49,11 +48,12 @@ export const BUILDING_COLORS: Record<string, number> = {
 };
 
 /**
- * Create a terrain graphics object based on tile biome
+ * Draw terrain graphics onto the provided graphics object
  */
-export function createTerrainGraphics(tile: ClientTile): Graphics {
-  const graphics = new Graphics();
-
+export function drawTerrainGraphics(
+  graphics: Graphics,
+  tile: ClientTile
+): void {
   const biomeColor = BIOME_COLORS[tile.biome] || BIOME_COLORS[Biome.None];
 
   // Add some variance to the color based on tile properties
@@ -79,27 +79,28 @@ export function createTerrainGraphics(tile: ClientTile): Graphics {
     color = adjustColor(color, -5, 0, 15);
   }
 
-  // Draw filled hexagon
+  // Draw filled hexagon (will be replaced with actual corners in Engine.ts)
+  graphics.clear();
   graphics.beginFill(color);
   graphics.lineStyle(1, 0x000000, 0.3);
-  graphics.drawPolygon([0, 0]); // This will be replaced with actual hex corners
+  // Initial dummy polygon that will be replaced
+  graphics.drawPolygon([0, 0]);
   graphics.endFill();
-
-  return graphics;
 }
 
 /**
- * Create a building graphics object
+ * Draw building graphics onto the provided graphics object
  */
-export function createBuildingGraphics(building: Building): Container {
-  const container = new Container();
-  const graphics = new Graphics();
-
+export function drawBuildingGraphics(
+  graphics: Graphics,
+  building: Building
+): void {
   // Determine building color
   const buildingColor =
     BUILDING_COLORS[building.key] || BUILDING_COLORS.default;
 
   // Draw building as a simple square with a symbol
+  graphics.clear();
   graphics.beginFill(buildingColor);
   graphics.lineStyle(2, 0x000000, 0.7);
   graphics.drawRect(-15, -15, 30, 30);
@@ -142,31 +143,51 @@ export function createBuildingGraphics(building: Building): Container {
       graphics.lineTo(-8, 5);
       break;
     default:
-      // Draw "B" for generic building
-      const text = new Text("B", { fontSize: 16, fill: 0xffffff });
-      text.anchor.set(0.5);
-      container.addChild(text);
+      // Just add a visible letter B for the default case
+      graphics.beginFill(0xffffff);
+      graphics.drawCircle(0, 0, 5);
+      graphics.endFill();
+      break;
   }
-
-  container.addChild(graphics);
-  return container;
 }
 
 /**
- * Create a group graphics object
+ * Helper function to add text to a building if needed
+ * Should be called after drawBuildingGraphics
  */
-export function createGroupGraphics(
+export function addBuildingText(text: Text, building: Building): void {
+  if (
+    building.key !== "towncenter" &&
+    building.key !== "campsite" &&
+    building.key !== "wood" &&
+    building.key !== "stone" &&
+    building.key !== "iron" &&
+    building.key !== "gold"
+  ) {
+    // Set text for generic building
+    text.text = "B";
+    text.style.fontSize = 16;
+    text.style.fill = 0x000000;
+    text.anchor.set(0.5);
+    text.visible = true;
+  } else {
+    text.visible = false;
+  }
+}
+
+/**
+ * Draw unit graphics onto the provided graphics object
+ */
+export function drawGroupGraphics(
+  graphics: Graphics,
   owner: string,
   ownerId: string,
   relationtype?: number
-): Container {
-  const container = new Container();
-  const graphics = new Graphics();
-
+): void {
   // Determine color based on relation
   let color: number;
   if (owner === ownerId) {
-    color = RELATION_COLORS.own;
+    color = RELATION_COLORS["own"];
   } else if (relationtype !== undefined) {
     color =
       RELATION_COLORS[relationtype] ||
@@ -174,6 +195,8 @@ export function createGroupGraphics(
   } else {
     color = RELATION_COLORS[EnumRelationType.neutral];
   }
+
+  graphics.clear();
 
   // Draw unit as a small square with a colored "head"
   // Body
@@ -194,9 +217,6 @@ export function createGroupGraphics(
   graphics.lineTo(-5, 15);
   graphics.moveTo(5, 10);
   graphics.lineTo(5, 15);
-
-  container.addChild(graphics);
-  return container;
 }
 
 /**

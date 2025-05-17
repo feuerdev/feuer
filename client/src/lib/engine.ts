@@ -10,9 +10,10 @@ import { convertToSpriteName, Hashtable } from "@shared/util";
 import { useStore } from "@/lib/state";
 import * as PlayerRelation from "@shared/relation";
 import {
-  createBuildingGraphics,
-  createGroupGraphics,
-  createTerrainGraphics,
+  drawBuildingGraphics,
+  drawGroupGraphics,
+  drawTerrainGraphics,
+  addBuildingText,
   BIOME_COLORS,
 } from "./sprites";
 import { Socket } from "socket.io-client";
@@ -441,11 +442,14 @@ export class Engine {
     const relation = world.playerRelations[relationHash];
     const relationType = relation?.relationType;
 
-    // Create new sprite with programmatic drawing
-    const container = createGroupGraphics(group.owner, this.uid, relationType);
+    // Create container and graphics for the new sprite
     const object = new Sprite();
     object.label = spriteName;
-    object.addChild(container);
+
+    const graphics = new Graphics();
+    drawGroupGraphics(graphics, group.owner, this.uid, relationType);
+    object.addChild(graphics);
+
     object.interactive = true;
     object.cursor = "pointer";
     object.hitArea = new Rectangle(-25, -25, 50, 50);
@@ -602,11 +606,20 @@ export class Engine {
     const isNewSprite = !object;
 
     if (isNewSprite) {
-      // Create new building with programmatic drawing
-      const container = createBuildingGraphics(building);
+      // Create new container for building
       object = new Sprite();
-      object.addChild(container);
       object.label = spriteName;
+
+      // Create graphics for building shape
+      const graphics = new Graphics();
+      drawBuildingGraphics(graphics, building);
+      object.addChild(graphics);
+
+      // Add text for building label if needed
+      const text = new Text("", { fontSize: 16, fill: 0x000000 });
+      addBuildingText(text, building);
+      object.addChild(text);
+
       object.interactive = true;
       object.cursor = "pointer";
       object.hitArea = new Rectangle(-25, -25, 50, 50);
@@ -629,8 +642,17 @@ export class Engine {
 
       this.viewport.addChild(object);
     } else {
-      // For existing sprites that moved, update their position based on the hex center
-      // This preserves their relative offset within the hex
+      // For existing sprites, update the graphics
+      const graphics = object.getChildAt(0) as Graphics;
+      drawBuildingGraphics(graphics, building);
+
+      // Update text if it exists
+      if (object.children.length > 1) {
+        const text = object.getChildAt(1) as Text;
+        addBuildingText(text, building);
+      }
+
+      // Update position if needed based on the hex center
       const oldHexCenter = this.layout.hexToPixel(building.position);
       const currentOffsetX = object.x - oldHexCenter.x;
       const currentOffsetY = object.y - oldHexCenter.y;
@@ -654,11 +676,15 @@ export class Engine {
     const spriteName = convertToSpriteName(tile.id, "t");
     let object = this.viewport.getChildByName(spriteName) as Sprite;
     if (!object) {
-      // Create terrain with programmatic drawing
-      const graphics = createTerrainGraphics(tile);
+      // Create new container for tile
       object = new Sprite();
-      object.addChild(graphics);
       object.label = spriteName;
+
+      // Create graphics for tile
+      const graphics = new Graphics();
+      drawTerrainGraphics(graphics, tile);
+      object.addChild(graphics);
+
       this.viewport.addChild(object);
       object.interactive = true;
       object.on("pointerup", (event: FederatedPointerEvent) => {
@@ -682,6 +708,10 @@ export class Engine {
           console.log(`middle clicked tile ${tile.id}`);
         }
       });
+    } else {
+      // Update existing tile graphics
+      const graphics = object.getChildAt(0) as Graphics;
+      drawTerrainGraphics(graphics, tile);
     }
 
     const hexCenter = this.layout.hexToPixel(tile.hex);
@@ -692,9 +722,6 @@ export class Engine {
     // Draw hex boundary directly on the graphics object
     const hexGraphics = object.getChildAt(0) as Graphics;
     if (hexGraphics) {
-      // Clear any existing paths
-      hexGraphics.clear();
-
       // Get hex corners
       const corners = this.layout.polygonCorners(tile.hex);
 
@@ -707,6 +734,7 @@ export class Engine {
 
       // Redraw with correct color - get from our biome colors map
       const biomeColor = BIOME_COLORS[tile.biome];
+      hexGraphics.clear();
       hexGraphics.beginFill(biomeColor);
       hexGraphics.lineStyle(1, 0x000000, 0.5);
       hexGraphics.drawPolygon(points);
