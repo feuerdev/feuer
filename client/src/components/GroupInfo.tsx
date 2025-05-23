@@ -8,7 +8,6 @@ import { Engine } from "@/lib/engine";
 
 const GroupInfo = ({ group, engine }: { group: Group; engine: Engine }) => {
   const world = useStore((state) => state.world);
-  const socket = useStore((state) => state.socket);
 
   if (!group) {
     return <div>No group selected</div>;
@@ -35,7 +34,6 @@ const GroupInfo = ({ group, engine }: { group: Group; engine: Engine }) => {
     <div className="flex gap-2 p-2 h-full">
       <InfoBox title="Group Details" className="h-full max-w-[250px]">
         <InfoRow label="Name" value={group.name} />
-        <InfoRow label="Type" value={group.groupType} />
         <InfoRow label="Position" value={`${group.pos.q}:${group.pos.r}`} />
         <InfoRow
           label="Status"

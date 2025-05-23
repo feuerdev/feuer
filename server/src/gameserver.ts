@@ -341,7 +341,7 @@ export default class GameServer {
       this.world.buildings[initialBuilding.id] = initialBuilding
 
       // Create initial group
-      let initialGroup = createGroup(++this.world.idCounter, player.uid, 'Scout', pos)
+      let initialGroup = createGroup(++this.world.idCounter, player.uid, "Group", pos)
       this.world.groups[initialGroup.id] = initialGroup
 
       //Register player in Gamesever
@@ -369,8 +369,6 @@ export default class GameServer {
     socket.on("request relation", (data) => this.onRequestRelation(socket, data))
     socket.on("request disband", (data) => this.onRequestDisband(socket, data))
     socket.on("request transfer", (data) => this.onRequestTransfer(socket, data))
-    socket.on("request unit add", (data) => this.onRequestUnitAdd(socket, data))
-    socket.on("request unit remove", (data) => this.onRequestUnitRemove(socket, data))
     socket.on("request demolish", (data) => this.onRequestDemolish(socket, data))
     socket.on("request assign group", (data) => this.onRequestAssignGroup(socket, data))
     socket.on("request unassign group", (data) => this.onRequestUnassignGroup(socket, data))
@@ -454,16 +452,6 @@ export default class GameServer {
       this.world.playerRelations[hash] = playerRelation
     }
     socket.emit("gamestate relation", playerRelation)
-  }
-
-  onRequestUnitAdd(socket: Socket, data) {
-    // This function is no longer needed with simplified groups
-    console.warn("onRequestUnitAdd is deprecated with simplified group structure")
-  }
-  
-  onRequestUnitRemove(socket: Socket, data) {
-    // This function is no longer needed with simplified groups
-    console.warn("onRequestUnitRemove is deprecated with simplified group structure")
   }
 
   onRequestTransfer(socket: Socket, data) {
@@ -680,7 +668,7 @@ export default class GameServer {
     const uid = this.getPlayerUid(socket.id)
     if (!uid) return
     
-    const { buildingId, groupType } = data
+    const { buildingId } = data
     const building = this.world.buildings[buildingId]
     
     // Validate ownership and existence
@@ -689,11 +677,11 @@ export default class GameServer {
       return
     }
     
-    // Get the template for the group type
-    const groupTemplate = Rules.units[groupType]
-    if (!groupTemplate) {
-      console.warn(`Invalid group type: ${groupType}`)
-      return
+    // Define standard cost for hiring a group
+    const cost: Partial<Resources> = {
+      berries: 15,
+      wood: 5,
+      stone: 5
     }
     
     // Check if player has enough resources to hire the group
@@ -701,16 +689,16 @@ export default class GameServer {
     if (!tile) return
     
     // Check if the required resources are available
-    if (!this.hasResources(tile, groupTemplate.cost)) {
-      console.warn(`Not enough resources to hire group of type ${groupType}`)
+    if (!this.hasResources(tile, cost)) {
+      console.warn(`Not enough resources to hire a group`)
       return
     }
     
     // Subtract resources
-    subtractResources(tile, groupTemplate.cost)
+    subtractResources(tile, cost)
     
-    // Create the new group
-    const newGroup = createGroup(++this.world.idCounter, uid, groupType, building.position)
+    // Create the new group with random attributes
+    const newGroup = createGroup(++this.world.idCounter, uid, "Group", building.position)
     this.world.groups[newGroup.id] = newGroup
     
     // Notify the client
@@ -896,7 +884,7 @@ export default class GameServer {
   }
 
   /**
-   * Checks if the object (building or unit) can be created on tile
+   * Checks if the object (building or group) can be created on tile
    * @param tile
    * @param object
    */
@@ -941,7 +929,7 @@ export default class GameServer {
     let uid = this.getPlayerUid(socket.id)
     const groupToDisband = this.world.groups[data.groupId]
     if (groupToDisband.owner !== uid) {
-      console.warn(`Player '${uid}' tried to disband unit to group he doesn't own`)
+      console.warn(`Player '${uid}' tried to disband group that they don't own`)
       return
     }
 

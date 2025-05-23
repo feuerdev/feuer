@@ -35,7 +35,6 @@ export const useStore = create<AppState>((set) => ({
     playerRelations: {},
     idCounter: 0,
     players: {},
-    units: [],
   },
   setWorld: (world) => set({ world }),
 }));

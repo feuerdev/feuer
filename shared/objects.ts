@@ -101,7 +101,7 @@ export type Group = GameObject &
       gold: number
     }
 
-    // Stats that were previously in Unit
+    // Stats
     morale: number
     strength: number
     endurance: number
