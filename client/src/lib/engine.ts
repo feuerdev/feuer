@@ -420,6 +420,69 @@ export class Engine {
     return Vector2.create(randX, randY);
   }
 
+  /**
+   * Find a non-colliding position within a hex
+   * @param hexPos The hex position to find a position within
+   * @param useTopHalf Whether to use the top half (true) or bottom half (false) of the hex
+   * @param label Sprite label prefix to check against for collisions (e.g., 'g_' for groups)
+   * @param excludeSprite Optional sprite to exclude from collision checks
+   * @returns A Vector2 position with no collisions
+   */
+  private findNonCollidingPositionInHex(
+    hexPos: Hex,
+    useTopHalf: boolean,
+    label: string,
+    excludeSprite?: Sprite
+  ): Vector2.Vector2 {
+    let randomPos = this.getRandomPositionInHex(hexPos, useTopHalf);
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    // Create a temporary hitArea for collision testing
+    const hitRadius = 10;
+    const collisionBounds = new Rectangle(
+      randomPos.x - hitRadius,
+      randomPos.y - hitRadius,
+      hitRadius * 2,
+      hitRadius * 2
+    );
+
+    while (attempts < maxAttempts) {
+      let collision = false;
+
+      for (const child of this.viewport.children) {
+        if (
+          child !== excludeSprite &&
+          child.label &&
+          child.label.toString().startsWith(label.replace("_", ""))
+        ) {
+          // Use PixiJS's built-in bounds checking
+          const childBounds = child.getBounds(false);
+          if (
+            childBounds.x < collisionBounds.x + collisionBounds.width &&
+            childBounds.x + childBounds.width > collisionBounds.x &&
+            childBounds.y < collisionBounds.y + collisionBounds.height &&
+            childBounds.y + childBounds.height > collisionBounds.y
+          ) {
+            collision = true;
+            break;
+          }
+        }
+      }
+
+      if (!collision) break;
+
+      // Try another position
+      randomPos = this.getRandomPositionInHex(hexPos, useTopHalf);
+      // Update collision bounds for the new position
+      collisionBounds.x = randomPos.x - hitRadius;
+      collisionBounds.y = randomPos.y - hitRadius;
+      attempts++;
+    }
+
+    return randomPos;
+  }
+
   async updateScenegraphGroup(group: Group, uid?: string): Promise<void> {
     const { selection, world } = useStore.getState();
 
@@ -471,50 +534,13 @@ export class Engine {
     });
     this.viewport.addChild(object);
 
-    // Position at a random point in the bottom half of the hex
-    // Try to find a position that doesn't collide with other group sprites
-    let randomPos = this.getRandomPositionInHex(group.pos, false);
-    let attempts = 0;
-    const maxAttempts = 5;
-
-    // Create a temporary hitArea for collision testing
-    const hitRadius = 15;
-    const collisionBounds = new Rectangle(
-      randomPos.x - hitRadius,
-      randomPos.y - hitRadius,
-      hitRadius * 2,
-      hitRadius * 2
+    // Find a non-colliding position in the bottom half of the hex
+    const randomPos = this.findNonCollidingPositionInHex(
+      group.pos,
+      false,
+      "g",
+      object
     );
-
-    while (attempts < maxAttempts) {
-      let collision = false;
-
-      // Check for collision with other group sprites
-      for (const child of this.viewport.children) {
-        if (child !== object && child.label?.toString().startsWith("g_")) {
-          // Use PixiJS's built-in bounds checking
-          const childBounds = child.getBounds(false);
-          if (
-            childBounds.x < collisionBounds.x + collisionBounds.width &&
-            childBounds.x + childBounds.width > collisionBounds.x &&
-            childBounds.y < collisionBounds.y + collisionBounds.height &&
-            childBounds.y + childBounds.height > collisionBounds.y
-          ) {
-            collision = true;
-            break;
-          }
-        }
-      }
-
-      if (!collision) break;
-
-      // Try another position
-      randomPos = this.getRandomPositionInHex(group.pos, false);
-      // Update collision bounds for the new position
-      collisionBounds.x = randomPos.x - hitRadius;
-      collisionBounds.y = randomPos.y - hitRadius;
-      attempts++;
-    }
 
     // Update the sprite position
     object.x = randomPos.x;
@@ -677,8 +703,13 @@ export class Engine {
         }
       });
 
-      // For new sprites, set a random position in the top half of the hex
-      const randomPos = this.getRandomPositionInHex(building.position, true);
+      // Find a non-colliding position in the top half of the hex
+      const randomPos = this.findNonCollidingPositionInHex(
+        building.position,
+        true,
+        "b",
+        object
+      );
       object.x = randomPos.x;
       object.y = randomPos.y;
 
