@@ -4,8 +4,9 @@ import ResourceInfo from "./ResourceInfo";
 import { InfoBox, InfoRow, InfoDivider } from "./InfoBox";
 import { Button } from "./ui/Button";
 import { useStore } from "@/lib/state";
+import { Engine } from "@/lib/engine";
 
-const GroupInfo = ({ group }: { group: Group }) => {
+const GroupInfo = ({ group, engine }: { group: Group; engine: Engine }) => {
   const world = useStore((state) => state.world);
   const socket = useStore((state) => state.socket);
 
@@ -19,6 +20,17 @@ const GroupInfo = ({ group }: { group: Group }) => {
     return <div>Group is not on a tile?</div>;
   }
 
+  // Get assigned building info if applicable
+  const assignedBuilding =
+    group.assignedToBuilding !== undefined
+      ? world.buildings[group.assignedToBuilding]
+      : undefined;
+
+  const assignedSlot =
+    assignedBuilding && group.assignedToSlot !== undefined
+      ? assignedBuilding.slots[group.assignedToSlot]
+      : undefined;
+
   return (
     <div className="flex gap-2 p-2 h-full">
       <InfoBox title="Group Details" className="h-full max-w-[250px]">
@@ -28,11 +40,63 @@ const GroupInfo = ({ group }: { group: Group }) => {
           value={
             group.targetHexes?.length > 0
               ? `Moving (${group.movementStatus.toFixed()} %)`
+              : assignedBuilding
+              ? `Working at ${assignedBuilding.key}`
               : "Waiting"
           }
         />
         <InfoRow label="Spotting" value={group.spotting} />
         <InfoRow label="Units" value={group.units.length} />
+
+        {assignedBuilding && assignedSlot && (
+          <>
+            <InfoDivider />
+            <div className="mt-2">
+              <h3 className="text-sm font-semibold mb-1">Assignment</h3>
+              <InfoRow label="Building" value={assignedBuilding.key} />
+              <InfoRow
+                label="Slot"
+                value={`${assignedSlot.resourceType} (${(
+                  assignedSlot.efficiency * 100
+                ).toFixed(0)}%)`}
+              />
+              <div className="mt-2">
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => engine.requestGroupUnassignment(group.id)}
+                >
+                  Unassign from Building
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+
+        <InfoDivider />
+        <div className="mt-2">
+          <h3 className="text-sm font-semibold mb-1">Gathering Efficiency</h3>
+          <InfoRow
+            label="Wood"
+            value={`${(group.gatheringEfficiency.wood * 100).toFixed(0)}%`}
+          />
+          <InfoRow
+            label="Stone"
+            value={`${(group.gatheringEfficiency.stone * 100).toFixed(0)}%`}
+          />
+          <InfoRow
+            label="Food"
+            value={`${(group.gatheringEfficiency.food * 100).toFixed(0)}%`}
+          />
+          <InfoRow
+            label="Iron"
+            value={`${(group.gatheringEfficiency.iron * 100).toFixed(0)}%`}
+          />
+          <InfoRow
+            label="Gold"
+            value={`${(group.gatheringEfficiency.gold * 100).toFixed(0)}%`}
+          />
+        </div>
       </InfoBox>
 
       <InfoBox title="Units" className="h-full flex-1">
@@ -46,8 +110,15 @@ const GroupInfo = ({ group }: { group: Group }) => {
               <div key={unit.id} className="mb-1">
                 {index > 0 && <InfoDivider />}
                 <InfoRow label="ID" value={unit.id} />
-                <InfoRow label="Owner" value={unit.owner} />
-                <InfoRow label="Leadership" value={unit.leadership} />
+                <InfoRow label="Name" value={unit.name || "Unnamed"} />
+
+                <div className="grid grid-cols-2 gap-x-2 mt-1">
+                  <InfoRow label="Strength" value={unit.strength} />
+                  <InfoRow label="Endurance" value={unit.endurance} />
+                  <InfoRow label="Leadership" value={unit.leadership} />
+                  <InfoRow label="Courage" value={unit.courage} />
+                </div>
+
                 <div className="mt-1">
                   <Button
                     variant="danger"

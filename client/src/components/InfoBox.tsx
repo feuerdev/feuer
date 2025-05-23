@@ -29,13 +29,19 @@ interface InfoRowProps {
   label: string;
   value: React.ReactNode;
   className?: string;
+  valueClassName?: string;
 }
 
-export function InfoRow({ label, value, className }: InfoRowProps) {
+export function InfoRow({
+  label,
+  value,
+  className,
+  valueClassName,
+}: InfoRowProps) {
   return (
     <div className={cn("flex justify-between py-0.5 text-sm", className)}>
       <div className="font-medium text-gray-400">{label}</div>
-      <div className="text-white">{value}</div>
+      <div className={cn("text-white", valueClassName)}>{value}</div>
     </div>
   );
 }

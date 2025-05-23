@@ -15,7 +15,7 @@ import * as PlayerRelation from "../../shared/relation.js"
 import { Battle } from "../../shared/objects.js"
 import * as Battles from "./battle.js"
 import { createGroup } from "./group.js"
-import { createBuilding } from "./building.js"
+import { createBuilding, upgradeBuilding } from "./building.js"
 import { EnumRelationType } from "../../shared/relation.js"
 import {
   applyAttackResult,
@@ -364,6 +364,7 @@ export default class GameServer {
     socket.on("request demolish", (data) => this.onRequestDemolish(socket, data))
     socket.on("request assign group", (data) => this.onRequestAssignGroup(socket, data))
     socket.on("request unassign group", (data) => this.onRequestUnassignGroup(socket, data))
+    socket.on("request upgrade building", (data) => this.onRequestUpgradeBuilding(socket, data))
   }
 
   onRequestTiles(socket: Socket, data: Hex[]) {
@@ -523,33 +524,66 @@ export default class GameServer {
     }
   }
 
-  // onRequestUpgrade(socket: Socket, data) {
-  //   const uid = this.getPlayerUid(socket.id)
-  //   if (!uid) {
-  //     return
-  //   }
-  //   let buildingToUpgrade = this.world.buildings.find((building) => {
-  //     return building.id === data.buildingId && building.owner === uid
-  //   })
-  //   if (buildingToUpgrade) {
-  //     //TODO: Check if has enogh money here and reduct money
-  //     upgradeBuilding(buildingToUpgrade)
-  //     this.updatePlayerVisibilities(uid)
-  //   }
-  // }
-
-  onRequestDisband(socket: Socket, data) {
-    let uid = this.getPlayerUid(socket.id)
-    const groupToDisband = this.world.groups[data.groupId]
-    if (groupToDisband.owner !== uid) {
-      console.warn(`Player '${uid}' tried to disband unit to group he doesn't own`)
+  /**
+   * Handles a request to upgrade a building
+   */
+  onRequestUpgradeBuilding(socket: Socket, data: any) {
+    const uid = this.getPlayerUid(socket.id)
+    if (!uid) return
+    
+    const buildingId = data.buildingId
+    const building = this.world.buildings[buildingId]
+    
+    // Validate ownership and existence
+    if (!building || building.owner !== uid) {
+      console.warn(`Invalid building upgrade request from player ${uid}`)
       return
     }
-
-    if (groupToDisband) {
-      delete this.world.groups[groupToDisband.id]
-      this.updatePlayerVisibilities(uid)
+    
+    // Check if building can be upgraded
+    if (building.level >= building.maxLevel) {
+      console.warn(`Building ${buildingId} is already at max level`)
+      return
     }
+    
+    // Check if we have upgrade requirements defined
+    if (!building.upgradeRequirements) {
+      console.warn(`Building ${buildingId} has no upgrade requirements defined`)
+      return
+    }
+    
+    // Get the tile where the building is located
+    const tile = this.world.tiles[hash(building.position)]
+    if (!tile) {
+      console.warn(`Building ${buildingId} is not on a valid tile`)
+      return
+    }
+    
+    // Check if there are enough resources on the tile
+    if (!this.hasResources(tile, building.upgradeRequirements)) {
+      console.warn(`Not enough resources on tile for upgrading building ${buildingId}`)
+      return
+    }
+    
+    // Subtract resources from the tile
+    subtractResources(tile, building.upgradeRequirements)
+    
+    // Upgrade the building
+    const upgradedBuilding = upgradeBuilding(building)
+    if (!upgradedBuilding) {
+      console.warn(`Failed to upgrade building ${buildingId}`)
+      return
+    }
+    
+    // Update the building in the world
+    this.world.buildings[buildingId] = upgradedBuilding
+    
+    // Notify the client
+    socket.emit("gamestate building", upgradedBuilding)
+    socket.emit("gamestate tiles", { [hash(tile.hex)]: tile })
+    
+    // Update player visibilities as spotting might have changed
+    this.updatePlayerVisibilities(uid)
   }
 
   /**
@@ -866,6 +900,20 @@ export default class GameServer {
   public setWorld(world: World) {
     this.world = world
     this.updateNet(1)
+  }
+
+  onRequestDisband(socket: Socket, data) {
+    let uid = this.getPlayerUid(socket.id)
+    const groupToDisband = this.world.groups[data.groupId]
+    if (groupToDisband.owner !== uid) {
+      console.warn(`Player '${uid}' tried to disband unit to group he doesn't own`)
+      return
+    }
+
+    if (groupToDisband) {
+      delete this.world.groups[groupToDisband.id]
+      this.updatePlayerVisibilities(uid)
+    }
   }
 }
 

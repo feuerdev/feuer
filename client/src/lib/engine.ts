@@ -98,6 +98,7 @@ export class Engine {
     this.socket.on("gamestate group", this.handleGroupUpdate);
     this.socket.on("gamestate groups", this.handleGroupsUpdate);
     this.socket.on("gamestate buildings", this.handleBuildingsUpdate);
+    this.socket.on("gamestate building", this.handleBuildingUpdate);
 
     this.requestTiles(this.socket);
     if (import.meta.env.DEV) {
@@ -130,6 +131,7 @@ export class Engine {
     this.socket.off("gamestate group", this.handleGroupUpdate);
     this.socket.off("gamestate groups", this.handleGroupsUpdate);
     this.socket.off("gamestate buildings", this.handleBuildingsUpdate);
+    this.socket.off("gamestate building", this.handleBuildingUpdate);
 
     // Clean up viewport and its listeners
     if (this.viewport) {
@@ -742,6 +744,193 @@ export class Engine {
       object.filters = [this.GLOW_FILTER];
       this.selectedSprite = object;
     }
+
+    // Add visual indicator for assigned groups
+    this.updateBuildingAssignmentIndicator(building);
+  }
+
+  /**
+   * Updates visual indicators for groups assigned to a building
+   * @param building The building to update indicators for
+   */
+  private updateBuildingAssignmentIndicator(building: Building): void {
+    const { world } = useStore.getState();
+
+    // Remove any existing assignment indicators
+    const indicatorName = `assignment_${building.id}`;
+    const oldIndicator = this.viewport.getChildByName(indicatorName);
+    if (oldIndicator) {
+      this.viewport.removeChild(oldIndicator);
+    }
+
+    // Check if any slots have assigned groups
+    const hasAssignedGroups = building.slots.some(
+      (slot) => slot.assignedGroupId !== undefined
+    );
+
+    if (!hasAssignedGroups) {
+      return;
+    }
+
+    // Create a new container for assignment indicators
+    const container = new Container();
+    container.name = indicatorName;
+    container.zIndex = ZIndices.Buildings + 1;
+
+    // Get building position
+    const hexCenter = this.layout.hexToPixel(building.position);
+
+    // For each assigned slot, add an indicator
+    building.slots.forEach((slot, index) => {
+      if (slot.assignedGroupId) {
+        const group = world.groups[slot.assignedGroupId];
+        if (group) {
+          // Create indicator showing assignment
+          const indicator = new Graphics();
+
+          // Draw different colored dot based on resource type
+          let color = 0xffffff;
+          switch (slot.resourceType) {
+            case "wood":
+              color = 0x8b4513;
+              break;
+            case "stone":
+              color = 0x808080;
+              break;
+            case "iron":
+              color = 0xa19d94;
+              break;
+            case "gold":
+              color = 0xffd700;
+              break;
+            case "berries":
+            case "fish":
+            case "meat":
+            case "wheat":
+              color = 0x00ff00;
+              break;
+          }
+
+          indicator.beginFill(color);
+          indicator.drawCircle(0, 0, 5);
+          indicator.endFill();
+
+          // Position indicators in a semicircle above the building
+          const angle =
+            Math.PI * (0.75 + 0.5 * (index / building.slots.length));
+          const radius = 20;
+          indicator.x = hexCenter.x + Math.cos(angle) * radius;
+          indicator.y = hexCenter.y + Math.sin(angle) * radius;
+
+          container.addChild(indicator);
+        }
+      }
+    });
+
+    this.viewport.addChild(container);
+  }
+
+  /**
+   * Request a group to be assigned to a building slot
+   * @param groupId The ID of the group to assign
+   * @param buildingId The ID of the building to assign to
+   * @param slotIndex The index of the slot in the building
+   */
+  requestGroupAssignment(
+    groupId: number,
+    buildingId: number,
+    slotIndex: number
+  ): void {
+    const { world } = useStore.getState();
+    const group = world.groups[groupId];
+    const building = world.buildings[buildingId];
+
+    if (!group || !building) {
+      console.warn(`Cannot assign: group or building not found`);
+      return;
+    }
+
+    if (group.owner !== this.uid) {
+      console.warn(`Cannot assign group ${groupId}: not owned by ${this.uid}`);
+      return;
+    }
+
+    if (building.owner !== this.uid) {
+      console.warn(
+        `Cannot assign to building ${buildingId}: not owned by ${this.uid}`
+      );
+      return;
+    }
+
+    // Check if group is at the same position as the building
+    if (!equals(group.pos, building.position)) {
+      console.warn(`Group must be at the same position as the building`);
+      return;
+    }
+
+    // Send assignment request to server
+    this.socket.emit("request assign group", {
+      groupId: groupId,
+      buildingId: buildingId,
+      slotIndex: slotIndex,
+    });
+  }
+
+  /**
+   * Request a group to be unassigned from its current building
+   * @param groupId The ID of the group to unassign
+   */
+  requestGroupUnassignment(groupId: number): void {
+    const { world } = useStore.getState();
+    const group = world.groups[groupId];
+
+    if (!group) {
+      console.warn(`Cannot unassign: group not found`);
+      return;
+    }
+
+    if (group.owner !== this.uid) {
+      console.warn(
+        `Cannot unassign group ${groupId}: not owned by ${this.uid}`
+      );
+      return;
+    }
+
+    if (group.assignedToBuilding === undefined) {
+      console.warn(`Group ${groupId} is not assigned to any building`);
+      return;
+    }
+
+    // Send unassignment request to server
+    this.socket.emit("request unassign group", {
+      groupId: groupId,
+    });
+  }
+
+  /**
+   * Request a building to be upgraded
+   * @param buildingId The ID of the building to upgrade
+   */
+  requestBuildingUpgrade(buildingId: number): void {
+    const { world } = useStore.getState();
+    const building = world.buildings[buildingId];
+
+    if (!building) {
+      console.warn(`Cannot upgrade: building not found`);
+      return;
+    }
+
+    if (building.owner !== this.uid) {
+      console.warn(
+        `Cannot upgrade building ${buildingId}: not owned by ${this.uid}`
+      );
+      return;
+    }
+
+    // Send upgrade request to server
+    this.socket.emit("request upgrade building", {
+      buildingId: buildingId,
+    });
   }
 
   async updateScenegraphTile(tile: ClientTile): Promise<void> {
@@ -956,4 +1145,23 @@ export class Engine {
       this.startMovementAnimation(spriteName, sprite);
     }
   }
+
+  private handleBuildingUpdate = (building: Building) => {
+    const { world, setWorld } = useStore.getState();
+
+    // Update the building in the world state
+    setWorld({
+      ...world,
+      buildings: {
+        ...world.buildings,
+        [building.id]: building,
+      },
+    });
+
+    // Update the building in the scene graph
+    this.updateScenegraphBuilding(building);
+
+    // Update selection if this building is selected
+    this.updateSelection();
+  };
 }

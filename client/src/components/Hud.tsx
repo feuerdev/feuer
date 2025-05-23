@@ -1,10 +1,16 @@
 import GroupInfo from "@/components/GroupInfo";
 import TileInfo from "@/components/TileInfo";
+import BuildingInfo from "@/components/BuildingInfo";
 import { getTileById } from "@shared/objectutil";
 import { SelectionType } from "@/lib/types";
 import { useStore } from "@/lib/state";
+import { Engine } from "@/lib/engine";
 
-const Hud = () => {
+interface HudProps {
+  engine: Engine;
+}
+
+const Hud = ({ engine }: HudProps) => {
   const world = useStore((state) => state.world);
   const selection = useStore((state) => state.selection);
   const { type, id } = selection;
@@ -21,7 +27,10 @@ const Hud = () => {
       >
         {/* Show different info based on selection type */}
         {type === SelectionType.Group && (
-          <GroupInfo group={world.groups[id!]} />
+          <GroupInfo group={world.groups[id!]} engine={engine} />
+        )}
+        {type === SelectionType.Building && (
+          <BuildingInfo building={world.buildings[id!]} engine={engine} />
         )}
         {type === SelectionType.Tile && (
           <TileInfo tile={getTileById(id!, world.tiles)!} />
