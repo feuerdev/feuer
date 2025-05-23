@@ -17,7 +17,7 @@ const Hud = () => {
       {/* Bottom info panel */}
       <div
         id="bottom-panel"
-        className="absolute bottom-0 left-0 right-0 z-10 h-[20%] bg-slate-900 bg-opacity-90 overflow-hidden"
+        className="absolute bottom-0 left-0 right-0 z-10 h-[30%] bg-slate-900 bg-opacity-90 overflow-hidden"
       >
         {/* Show different info based on selection type */}
         {type === SelectionType.Group && (

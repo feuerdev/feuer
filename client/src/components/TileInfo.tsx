@@ -8,6 +8,7 @@ import { InfoBox, InfoRow } from "./InfoBox";
 
 const TileInfo = ({ tile }: { tile: Tile }) => {
   const world = useStore((state) => state.world);
+  const userId = useStore((state) => state.userId);
 
   if (!tile) {
     return <div>No tile selected</div>;
@@ -15,16 +16,16 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
 
   // TODO: What to do if there are multiple groups on the same tile?
   const group = Object.values(world.groups).find((group) => {
-    return equals(group.pos, tile.hex);
+    return equals(group.pos, tile.hex) && group.owner === userId;
+  });
+
+  const building = Object.values(world.buildings).find((building) => {
+    return equals(building.position, tile.hex) && building.owner === userId;
   });
 
   return (
-    <div
-      className={`grid ${
-        group ? "grid-cols-3" : "grid-cols-2"
-      } gap-2 p-2 h-full`}
-    >
-      <InfoBox title="Tile Details" className="h-full">
+    <div className="flex gap-2 p-2 h-full">
+      <InfoBox title="Tile Details" className="h-full max-w-[250px]">
         <InfoRow label="Position" value={`${tile.hex.q}, ${tile.hex.r}`} />
         <InfoRow label="Biome" value={getBiomeName(tile.biome)} />
         <InfoRow label="Height" value={tile.height.toFixed(2)} />
@@ -32,8 +33,8 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
         <InfoRow label="Temperature" value={tile.temperature.toFixed(2)} />
       </InfoBox>
 
-      <InfoBox title="Available Buildings" className="h-full">
-        <div className="max-h-48 overflow-auto pr-1">
+      {(building || group) && (
+        <InfoBox title="Available Buildings" className="h-full flex-1">
           {Object.keys(Buildings).length === 0 ? (
             <p className="text-gray-400 italic text-xs">
               No building templates available
@@ -51,10 +52,12 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
               />
             ))
           )}
-        </div>
-      </InfoBox>
+        </InfoBox>
+      )}
 
-      {group && <ResourceInfo group={group} tile={tile} className="h-full" />}
+      {group && (
+        <ResourceInfo group={group} tile={tile} className="h-full flex-1" />
+      )}
     </div>
   );
 };
