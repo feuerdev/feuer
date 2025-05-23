@@ -70,12 +70,23 @@ export type Duel = {
   over: boolean
 }
 
+// Resource slot for a building
+export type ResourceSlot = {
+  resourceType: keyof Resources
+  assignedGroupId?: number
+  efficiency: number // Base efficiency of this slot (1.0 = 100%)
+}
+
 export type Building = GameObject &
   Ownable & {
     position: Hex
     key: string
     spotting: number
     production: Resources
+    level: number
+    slots: ResourceSlot[] // Slots for group assignment
+    maxLevel: number // Maximum level this building can be upgraded to
+    upgradeRequirements?: Partial<Resources> // Resources needed for next upgrade
   }
 
 export type Group = GameObject &
@@ -86,6 +97,16 @@ export type Group = GameObject &
     movementStatus: number
     units: Unit[]
     resources: Partial<Resources>
+    assignedToBuilding?: number // ID of building this group is assigned to
+    assignedToSlot?: number // Index of the slot in the building
+    // Resource gathering stats
+    gatheringEfficiency: {
+      wood: number
+      stone: number
+      food: number
+      iron: number
+      gold: number
+    }
   }
 
 export type Unit = GameObject &
@@ -164,4 +185,14 @@ export type TBuildingTemplate = {
   cost: Partial<Resources>
   spotting: number
   production: Partial<Resources>
+  slots?: ResourceSlot[]
+  maxLevel?: number
+  upgrades?: {
+    [level: number]: {
+      cost: Partial<Resources>
+      production: Partial<Resources>
+      slots: ResourceSlot[]
+      spotting: number
+    }
+  }
 }

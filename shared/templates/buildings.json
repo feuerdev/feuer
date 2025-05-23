@@ -9,8 +9,77 @@
     },
     "spotting": 20,
     "production": {
-      "Berries": 1,
+      "berries": 1,
       "wood": 1
+    },
+    "slots": [
+      {
+        "resourceType": "berries",
+        "efficiency": 1.0
+      },
+      {
+        "resourceType": "wood",
+        "efficiency": 1.0
+      }
+    ],
+    "maxLevel": 3,
+    "upgrades": {
+      "2": {
+        "cost": {
+          "wood": 200,
+          "stone": 50
+        },
+        "production": {
+          "berries": 2,
+          "wood": 2
+        },
+        "slots": [
+          {
+            "resourceType": "berries",
+            "efficiency": 1.2
+          },
+          {
+            "resourceType": "wood",
+            "efficiency": 1.2
+          },
+          {
+            "resourceType": "fish",
+            "efficiency": 1.0
+          }
+        ],
+        "spotting": 25
+      },
+      "3": {
+        "cost": {
+          "wood": 400,
+          "stone": 100,
+          "iron": 50
+        },
+        "production": {
+          "berries": 3,
+          "wood": 3,
+          "fish": 2
+        },
+        "slots": [
+          {
+            "resourceType": "berries",
+            "efficiency": 1.5
+          },
+          {
+            "resourceType": "wood",
+            "efficiency": 1.5
+          },
+          {
+            "resourceType": "fish",
+            "efficiency": 1.2
+          },
+          {
+            "resourceType": "meat",
+            "efficiency": 1.0
+          }
+        ],
+        "spotting": 30
+      }
     }
   },
   "towncenter": {
@@ -23,8 +92,91 @@
       "wood": 300
     },
     "production": {
-      "Berries": 10,
+      "berries": 10,
       "wood": 10
+    },
+    "slots": [
+      {
+        "resourceType": "berries",
+        "efficiency": 1.2
+      },
+      {
+        "resourceType": "wood",
+        "efficiency": 1.2
+      },
+      {
+        "resourceType": "stone",
+        "efficiency": 1.0
+      }
+    ],
+    "maxLevel": 3,
+    "upgrades": {
+      "2": {
+        "cost": {
+          "wood": 500,
+          "stone": 200
+        },
+        "production": {
+          "berries": 15,
+          "wood": 15,
+          "stone": 10
+        },
+        "slots": [
+          {
+            "resourceType": "berries",
+            "efficiency": 1.5
+          },
+          {
+            "resourceType": "wood",
+            "efficiency": 1.5
+          },
+          {
+            "resourceType": "stone",
+            "efficiency": 1.2
+          },
+          {
+            "resourceType": "iron",
+            "efficiency": 1.0
+          }
+        ],
+        "spotting": 3
+      },
+      "3": {
+        "cost": {
+          "wood": 1000,
+          "stone": 500,
+          "iron": 200
+        },
+        "production": {
+          "berries": 20,
+          "wood": 20,
+          "stone": 15,
+          "iron": 10
+        },
+        "slots": [
+          {
+            "resourceType": "berries",
+            "efficiency": 2.0
+          },
+          {
+            "resourceType": "wood",
+            "efficiency": 2.0
+          },
+          {
+            "resourceType": "stone",
+            "efficiency": 1.5
+          },
+          {
+            "resourceType": "iron",
+            "efficiency": 1.2
+          },
+          {
+            "resourceType": "gold",
+            "efficiency": 1.0
+          }
+        ],
+        "spotting": 4
+      }
     }
   },
   "wood": {
@@ -37,6 +189,43 @@
     },
     "production": {
       "wood": 100
+    },
+    "slots": [
+      {
+        "resourceType": "wood",
+        "efficiency": 1.5
+      },
+      {
+        "resourceType": "wood",
+        "efficiency": 1.3
+      }
+    ],
+    "maxLevel": 2,
+    "upgrades": {
+      "2": {
+        "cost": {
+          "wood": 200,
+          "stone": 50
+        },
+        "production": {
+          "wood": 150
+        },
+        "slots": [
+          {
+            "resourceType": "wood",
+            "efficiency": 2.0
+          },
+          {
+            "resourceType": "wood",
+            "efficiency": 1.8
+          },
+          {
+            "resourceType": "wood",
+            "efficiency": 1.5
+          }
+        ],
+        "spotting": 2
+      }
     }
   },
   "stone": {
@@ -50,6 +239,44 @@
     },
     "production": {
       "stone": 100
+    },
+    "slots": [
+      {
+        "resourceType": "stone",
+        "efficiency": 1.5
+      },
+      {
+        "resourceType": "stone",
+        "efficiency": 1.3
+      }
+    ],
+    "maxLevel": 2,
+    "upgrades": {
+      "2": {
+        "cost": {
+          "wood": 200,
+          "stone": 50,
+          "iron": 20
+        },
+        "production": {
+          "stone": 150
+        },
+        "slots": [
+          {
+            "resourceType": "stone",
+            "efficiency": 2.0
+          },
+          {
+            "resourceType": "stone",
+            "efficiency": 1.8
+          },
+          {
+            "resourceType": "stone",
+            "efficiency": 1.5
+          }
+        ],
+        "spotting": 2
+      }
     }
   },
   "iron": {
@@ -62,6 +289,43 @@
     },
     "production": {
       "iron": 100
+    },
+    "slots": [
+      {
+        "resourceType": "iron",
+        "efficiency": 1.5
+      },
+      {
+        "resourceType": "iron",
+        "efficiency": 1.3
+      }
+    ],
+    "maxLevel": 2,
+    "upgrades": {
+      "2": {
+        "cost": {
+          "wood": 200,
+          "stone": 100
+        },
+        "production": {
+          "iron": 150
+        },
+        "slots": [
+          {
+            "resourceType": "iron",
+            "efficiency": 2.0
+          },
+          {
+            "resourceType": "iron",
+            "efficiency": 1.8
+          },
+          {
+            "resourceType": "iron",
+            "efficiency": 1.5
+          }
+        ],
+        "spotting": 2
+      }
     }
   },
   "gold": {
@@ -74,6 +338,44 @@
     },
     "production": {
       "gold": 100
+    },
+    "slots": [
+      {
+        "resourceType": "gold",
+        "efficiency": 1.5
+      },
+      {
+        "resourceType": "gold",
+        "efficiency": 1.3
+      }
+    ],
+    "maxLevel": 2,
+    "upgrades": {
+      "2": {
+        "cost": {
+          "wood": 300,
+          "stone": 150,
+          "iron": 50
+        },
+        "production": {
+          "gold": 150
+        },
+        "slots": [
+          {
+            "resourceType": "gold",
+            "efficiency": 2.0
+          },
+          {
+            "resourceType": "gold",
+            "efficiency": 1.8
+          },
+          {
+            "resourceType": "gold",
+            "efficiency": 1.5
+          }
+        ],
+        "spotting": 2
+      }
     }
   }
 }

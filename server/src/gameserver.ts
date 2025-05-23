@@ -115,9 +115,66 @@ export default class GameServer {
     //Resource Gathering
     Object.values(this.world.buildings).forEach((building) => {
       let tile = this.world.tiles[hash(building.position)]
+      
+      // Handle passive resource generation (reduced without assigned groups)
       for (let res of Object.keys(building.production)) {
-        tile.resources[res] += building.production[res] * deltaFactor
+        // Passive generation is 10% of normal production
+        tile.resources[res] += building.production[res] * 0.1 * deltaFactor
       }
+      
+      // Handle resource generation from assigned groups
+      building.slots.forEach((slot, slotIndex) => {
+        if (slot.assignedGroupId) {
+          const assignedGroup = this.world.groups[slot.assignedGroupId]
+          
+          // Skip if group no longer exists or has been moved away from building
+          if (!assignedGroup || !equals(assignedGroup.pos, building.position)) {
+            // Clear the assignment
+            slot.assignedGroupId = undefined
+            return
+          }
+          
+          // Get the resource type for this slot
+          const resourceType = slot.resourceType
+          
+          // Calculate resource generation based on:
+          // 1. Base production rate of the building for this resource
+          // 2. Slot efficiency
+          // 3. Group's gathering efficiency for this resource type
+          // 4. Tile's resource availability factor
+          
+          // Get base production rate
+          const baseProduction = building.production[resourceType] || 0
+          
+          // Get group's efficiency for this resource category
+          let groupEfficiency = 1.0
+          if (resourceType === 'wood') {
+            groupEfficiency = assignedGroup.gatheringEfficiency.wood
+          } else if (resourceType === 'stone') {
+            groupEfficiency = assignedGroup.gatheringEfficiency.stone
+          } else if (resourceType === 'iron') {
+            groupEfficiency = assignedGroup.gatheringEfficiency.iron
+          } else if (resourceType === 'gold') {
+            groupEfficiency = assignedGroup.gatheringEfficiency.gold
+          } else if (['fish', 'wheat', 'meat', 'berries'].includes(resourceType)) {
+            groupEfficiency = assignedGroup.gatheringEfficiency.food
+          }
+          
+          // Calculate tile resource availability factor
+          // If the tile has less than 10 of the resource, efficiency drops
+          const tileResourceAmount = tile.resources[resourceType] || 0
+          const resourceAvailabilityFactor = tileResourceAmount < 10 ? tileResourceAmount / 10 : 1.0
+          
+          // Calculate final production rate
+          const productionRate = baseProduction * slot.efficiency * groupEfficiency * resourceAvailabilityFactor * deltaFactor
+          
+          // Add resources to the tile
+          if (!tile.resources[resourceType]) {
+            tile.resources[resourceType] = 0
+          }
+          tile.resources[resourceType] += productionRate
+        }
+      })
     })
 
     //Battles
@@ -305,6 +362,8 @@ export default class GameServer {
     socket.on("request unit add", (data) => this.onRequestUnitAdd(socket, data))
     socket.on("request unit remove", (data) => this.onRequestUnitRemove(socket, data))
     socket.on("request demolish", (data) => this.onRequestDemolish(socket, data))
+    socket.on("request assign group", (data) => this.onRequestAssignGroup(socket, data))
+    socket.on("request unassign group", (data) => this.onRequestUnassignGroup(socket, data))
   }
 
   onRequestTiles(socket: Socket, data: Hex[]) {
@@ -332,6 +391,19 @@ export default class GameServer {
     let target = create(data.target.q, data.target.r, data.target.s)
     const group = this.world.groups[selection]
     if (uid === group?.owner) {
+      // Unassign group from building if it's moving away
+      if (group.assignedToBuilding !== undefined) {
+        const building = this.world.buildings[group.assignedToBuilding]
+        if (building && group.assignedToSlot !== undefined) {
+          // Clear the assignment in the building slot
+          building.slots[group.assignedToSlot].assignedGroupId = undefined
+          
+          // Clear the assignment in the group
+          group.assignedToBuilding = undefined
+          group.assignedToSlot = undefined
+        }
+      }
+      
       let targetTile = this.world.tiles[hash(target)]
       if (targetTile && isNavigable(targetTile)) {
         group.movementStatus = 0
@@ -478,6 +550,106 @@ export default class GameServer {
       delete this.world.groups[groupToDisband.id]
       this.updatePlayerVisibilities(uid)
     }
+  }
+
+  /**
+   * Assigns a group to a building slot
+   */
+  onRequestAssignGroup(socket: Socket, data: any) {
+    const uid = this.getPlayerUid(socket.id)
+    if (!uid) return
+    
+    const groupId = data.groupId
+    const buildingId = data.buildingId
+    const slotIndex = data.slotIndex
+    
+    const group = this.world.groups[groupId]
+    const building = this.world.buildings[buildingId]
+    
+    // Validate ownership and existence
+    if (!group || !building || group.owner !== uid || building.owner !== uid) {
+      console.warn(`Invalid assignment request from player ${uid}`)
+      return
+    }
+    
+    // Check if group is at the same position as the building
+    if (!equals(group.pos, building.position)) {
+      console.warn(`Group ${groupId} is not at the same position as building ${buildingId}`)
+      return
+    }
+    
+    // Check if slot exists and is available
+    if (slotIndex < 0 || slotIndex >= building.slots.length) {
+      console.warn(`Invalid slot index ${slotIndex} for building ${buildingId}`)
+      return
+    }
+    
+    // If slot is already assigned to another group, unassign it
+    const slot = building.slots[slotIndex]
+    if (slot.assignedGroupId && slot.assignedGroupId !== groupId) {
+      const previousGroup = this.world.groups[slot.assignedGroupId]
+      if (previousGroup) {
+        previousGroup.assignedToBuilding = undefined
+        previousGroup.assignedToSlot = undefined
+      }
+    }
+    
+    // Unassign group from previous building if any
+    if (group.assignedToBuilding !== undefined && group.assignedToBuilding !== buildingId) {
+      const previousBuilding = this.world.buildings[group.assignedToBuilding]
+      if (previousBuilding && group.assignedToSlot !== undefined) {
+        previousBuilding.slots[group.assignedToSlot].assignedGroupId = undefined
+      }
+    }
+    
+    // Assign group to building slot
+    slot.assignedGroupId = groupId
+    group.assignedToBuilding = buildingId
+    group.assignedToSlot = slotIndex
+    
+    // Notify the client
+    socket.emit("gamestate group", group)
+    socket.emit("gamestate building", building)
+  }
+  
+  /**
+   * Unassigns a group from a building slot
+   */
+  onRequestUnassignGroup(socket: Socket, data: any) {
+    const uid = this.getPlayerUid(socket.id)
+    if (!uid) return
+    
+    const groupId = data.groupId
+    
+    const group = this.world.groups[groupId]
+    
+    // Validate ownership and existence
+    if (!group || group.owner !== uid) {
+      console.warn(`Invalid unassignment request from player ${uid}`)
+      return
+    }
+    
+    // Check if group is assigned to a building
+    if (group.assignedToBuilding === undefined || group.assignedToSlot === undefined) {
+      console.warn(`Group ${groupId} is not assigned to any building`)
+      return
+    }
+    
+    const building = this.world.buildings[group.assignedToBuilding]
+    if (building) {
+      // Clear the assignment in the building slot
+      building.slots[group.assignedToSlot].assignedGroupId = undefined
+      
+      // Notify about the building update
+      socket.emit("gamestate building", building)
+    }
+    
+    // Clear the assignment in the group
+    group.assignedToBuilding = undefined
+    group.assignedToSlot = undefined
+    
+    // Notify the client
+    socket.emit("gamestate group", group)
   }
 
   private getPlayerUid(socketId): string | null {

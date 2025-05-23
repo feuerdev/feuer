@@ -21,9 +21,66 @@ export function createGroup(
     units: [],
     resources: resources,
     id: id,
+    gatheringEfficiency: {
+      wood: 1.0,
+      stone: 1.0,
+      food: 1.0,
+      iron: 1.0,
+      gold: 1.0
+    }
   }
+  
   group.pos = pos
   group.spotting = template.spotting
-  group.units.push(generateUnit(owner))
+  
+  // Create initial unit
+  const unit = generateUnit(owner)
+  group.units.push(unit)
+  
+  // Adjust gathering efficiency based on unit stats
+  // Higher strength improves wood and stone gathering
+  // Higher endurance improves all gathering types slightly
+  if (unit.strength > 50) {
+    group.gatheringEfficiency.wood += (unit.strength - 50) / 100
+    group.gatheringEfficiency.stone += (unit.strength - 50) / 100
+  }
+  
+  if (unit.endurance > 50) {
+    Object.keys(group.gatheringEfficiency).forEach(key => {
+      group.gatheringEfficiency[key] += (unit.endurance - 50) / 200
+    })
+  }
+  
   return group
+}
+
+/**
+ * Assigns a group to a building slot
+ * @param group The group to assign
+ * @param buildingId The building ID to assign to
+ * @param slotIndex The slot index in the building
+ */
+export function assignGroupToBuilding(
+  group: Group,
+  buildingId: number,
+  slotIndex: number
+): void {
+  // Remove from previous assignment if any
+  if (group.assignedToBuilding !== undefined) {
+    group.assignedToBuilding = undefined
+    group.assignedToSlot = undefined
+  }
+  
+  // Assign to new building and slot
+  group.assignedToBuilding = buildingId
+  group.assignedToSlot = slotIndex
+}
+
+/**
+ * Unassigns a group from its current building
+ * @param group The group to unassign
+ */
+export function unassignGroupFromBuilding(group: Group): void {
+  group.assignedToBuilding = undefined
+  group.assignedToSlot = undefined
 }
