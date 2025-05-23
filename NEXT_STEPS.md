@@ -20,6 +20,7 @@ We have successfully implemented the core backend functionality for the resource
    - Socket handlers for group assignment/unassignment
    - Building upgrade functionality
    - Resource generation event emission
+   - Group hiring system
 
 ## Client-Side UI Implementation
 
@@ -30,12 +31,15 @@ We have successfully implemented the core backend functionality for the resource
 - ✅ Indicate which groups are assigned to which slots
 - ✅ Add buttons to upgrade building (if resources available)
 - ✅ Add buttons to assign/unassign groups
+- ✅ Add group hiring interface
 
 ### 2. Group Info Panel
 
 - ✅ Display gathering efficiency stats
 - ✅ Show if group is assigned to a building
 - ✅ Add button to unassign from current building
+- ✅ Display detailed unit information
+- ✅ Add unit selection interface
 
 ### 3. Resource Display
 
@@ -48,6 +52,7 @@ We have successfully implemented the core backend functionality for the resource
 - ✅ Add client-side handlers for building upgrade events
 - ✅ Implement handlers for group assignment/unassignment events
 - ✅ Update UI when resource generation occurs
+- ✅ Add handlers for group hiring events
 
 ### 5. Visual Improvements
 
@@ -70,8 +75,14 @@ We have successfully implemented the core backend functionality for the resource
    - Test assignment to new slots
 
 3. Test resource depletion:
+
    - Verify production decreases as resources are depleted
    - Ensure resource availability factor works correctly
+
+4. Test group hiring system:
+   - Hire different types of groups
+   - Verify specialized gathering efficiencies
+   - Test resource costs for hiring
 
 ## Next Immediate Steps
 
@@ -80,16 +91,17 @@ We have successfully implemented the core backend functionality for the resource
 3. ✅ Add building level indicators on the map
 4. ✅ Implement resource collection progress visualization
 5. ✅ Add animations for resource generation
+6. ✅ Implement group hiring system
 
 ## Future Enhancements
 
-Now that the basic resource gathering loop is working, we can focus on:
+Now that the basic resource gathering and group hiring systems are working, we can focus on:
 
-1. Group hiring system
-2. Group experience and training
-3. Enhanced combat mechanics
-4. Morale system implementation
-5. Player interaction features
+1. ✅ Group hiring system
+2. [ ] Group experience and training
+3. [ ] Enhanced combat mechanics
+4. [ ] Morale system implementation
+5. [ ] Player interaction features
 
 ## Potential Improvements
 
@@ -98,3 +110,5 @@ Now that the basic resource gathering loop is working, we can focus on:
 3. Add resource storage limits
 4. Create specialized buildings for specific resource types
 5. Implement tech tree for building upgrades
+6. Add group training facilities to improve unit stats
+7. Implement unit specialization and career paths

@@ -4,6 +4,7 @@ import { InfoBox, InfoRow, InfoDivider } from "./InfoBox";
 import { Button } from "./ui/Button";
 import { Engine } from "@/lib/engine";
 import { equals } from "@shared/hex";
+import GroupHiring from "./GroupHiring";
 
 interface BuildingInfoProps {
   building: Building;
@@ -194,6 +195,8 @@ const BuildingInfo = ({ building, engine }: BuildingInfoProps) => {
           </p>
         )}
       </InfoBox>
+
+      <GroupHiring building={building} engine={engine} />
     </div>
   );
 };

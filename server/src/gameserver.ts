@@ -31,6 +31,7 @@ import { create, equals, hash, neighborsRange } from "../../shared/hex.js"
 import { Resources } from "../../shared/resources.js"
 import Config from "./environment.js";
 import { Player } from "../../shared/player.js";
+import Rules from "../../shared/rules.json" with { type: "json" }
 
 export default class GameServer {
   private socketplayer: {} = {}
@@ -392,6 +393,7 @@ export default class GameServer {
     socket.on("request assign group", (data) => this.onRequestAssignGroup(socket, data))
     socket.on("request unassign group", (data) => this.onRequestUnassignGroup(socket, data))
     socket.on("request upgrade building", (data) => this.onRequestUpgradeBuilding(socket, data))
+    socket.on("request hire group", (data) => this.onRequestHireGroup(socket, data))
   }
 
   onRequestTiles(socket: Socket, data: Hex[]) {
@@ -711,6 +713,54 @@ export default class GameServer {
     
     // Notify the client
     socket.emit("gamestate group", group)
+  }
+
+  /**
+   * Handles a request to hire a new group
+   */
+  onRequestHireGroup(socket: Socket, data: { buildingId: number, groupType: string }) {
+    const uid = this.getPlayerUid(socket.id)
+    if (!uid) return
+    
+    const { buildingId, groupType } = data
+    const building = this.world.buildings[buildingId]
+    
+    // Validate ownership and existence
+    if (!building || building.owner !== uid) {
+      console.warn(`Invalid group hiring request from player ${uid}`)
+      return
+    }
+    
+    // Get the template for the group type
+    const groupTemplate = Rules.units[groupType]
+    if (!groupTemplate) {
+      console.warn(`Invalid group type: ${groupType}`)
+      return
+    }
+    
+    // Check if player has enough resources to hire the group
+    const tile = this.world.tiles[hash(building.position)]
+    if (!tile) return
+    
+    // Check if the required resources are available
+    if (!this.hasResources(tile, groupTemplate.cost)) {
+      console.warn(`Not enough resources to hire group of type ${groupType}`)
+      return
+    }
+    
+    // Subtract resources
+    subtractResources(tile, groupTemplate.cost)
+    
+    // Create the new group
+    const newGroup = createGroup(++this.world.idCounter, uid, groupType, building.position)
+    this.world.groups[newGroup.id] = newGroup
+    
+    // Notify the client
+    socket.emit("gamestate group", newGroup)
+    socket.emit("gamestate tile", tile)
+    
+    // Update visibilities
+    this.updatePlayerVisibilities(uid)
   }
 
   private getPlayerUid(socketId): string | null {

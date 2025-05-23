@@ -1061,6 +1061,34 @@ export class Engine {
     });
   }
 
+  /**
+   * Request to hire a new group at a building
+   * @param buildingId The ID of the building where the group will be hired
+   * @param groupType The type of group to hire
+   */
+  requestHireGroup(buildingId: number, groupType: string): void {
+    const { world } = useStore.getState();
+    const building = world.buildings[buildingId];
+
+    if (!building) {
+      console.warn(`Cannot hire group: building not found`);
+      return;
+    }
+
+    if (building.owner !== this.uid) {
+      console.warn(
+        `Cannot hire group at building ${buildingId}: not owned by ${this.uid}`
+      );
+      return;
+    }
+
+    // Send hire request to server
+    this.socket.emit("request hire group", {
+      buildingId: buildingId,
+      groupType: groupType,
+    });
+  }
+
   async updateScenegraphTile(tile: ClientTile): Promise<void> {
     const { setSelection } = useStore.getState();
     const spriteName = convertToSpriteName(tile.id, "t");

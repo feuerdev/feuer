@@ -23,7 +23,7 @@ This document outlines the core gameplay loop and implementation steps for Feuer
 ### Phase 2: Group Management
 
 - [x] Add group stats (gathering, combat, etc.)
-- [ ] Implement group hiring system
+- [x] Implement group hiring system
 - [ ] Create group experience and leveling system
 - [ ] Implement group training mechanics
 - [ ] Add UI for group management and stats
@@ -70,6 +70,7 @@ This document outlines the core gameplay loop and implementation steps for Feuer
    - Building upgrades
    - Resource gathering visualization
 6. ✅ Implement client-side socket handlers for the new group assignment events
+7. ✅ Implement group hiring system with specialized unit types
 
 ## Technical Implementation Notes
 
@@ -83,6 +84,10 @@ This document outlines the core gameplay loop and implementation steps for Feuer
   - Managing group assignments
   - Upgrading buildings
   - Showing resource generation rates
+- ✅ Implemented group hiring system with:
+  - Different unit types with specialized gathering skills
+  - Resource costs for hiring
+  - UI for hiring units at buildings
 
 ## Resource Generation Formula
 

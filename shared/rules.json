@@ -6,7 +6,7 @@
     "map_min": -0.3,
     "map_max": 1.2,
     "map_octaves": 4,
-    "map_persistence": 0.5, 
+    "map_persistence": 0.5,
     "map_precipitation_tundra": 0.5,
     "map_precipitation_desert": 0.4,
     "map_precipitation_forest": 0.5,
@@ -29,6 +29,8 @@
     "Scout": {
       "id": 1,
       "texture": "unit_scout_own",
+      "name": "Scout",
+      "description": "Fast unit with high spotting range",
       "hp": 100,
       "morale": 100,
       "attack": 5,
@@ -37,6 +39,95 @@
       "cost": {
         "food": 10,
         "gold": 10
+      }
+    },
+    "Woodcutter": {
+      "id": 2,
+      "texture": "unit_woodcutter_own",
+      "name": "Woodcutter",
+      "description": "Specialized in gathering wood resources",
+      "hp": 120,
+      "morale": 90,
+      "attack": 8,
+      "speed": 80,
+      "spotting": 2,
+      "cost": {
+        "food": 15,
+        "wood": 5
+      },
+      "gathering": {
+        "wood": 1.5,
+        "stone": 0.8,
+        "food": 0.9,
+        "iron": 0.8,
+        "gold": 0.7
+      }
+    },
+    "Miner": {
+      "id": 3,
+      "texture": "unit_miner_own",
+      "name": "Miner",
+      "description": "Specialized in gathering stone and iron resources",
+      "hp": 130,
+      "morale": 85,
+      "attack": 7,
+      "speed": 70,
+      "spotting": 1,
+      "cost": {
+        "food": 20,
+        "stone": 5
+      },
+      "gathering": {
+        "wood": 0.8,
+        "stone": 1.5,
+        "food": 0.7,
+        "iron": 1.4,
+        "gold": 1.2
+      }
+    },
+    "Hunter": {
+      "id": 4,
+      "texture": "unit_hunter_own",
+      "name": "Hunter",
+      "description": "Specialized in gathering food resources",
+      "hp": 110,
+      "morale": 95,
+      "attack": 10,
+      "speed": 90,
+      "spotting": 2,
+      "cost": {
+        "food": 10,
+        "wood": 10
+      },
+      "gathering": {
+        "wood": 0.9,
+        "stone": 0.7,
+        "food": 1.6,
+        "iron": 0.7,
+        "gold": 0.8
+      }
+    },
+    "Warrior": {
+      "id": 5,
+      "texture": "unit_warrior_own",
+      "name": "Warrior",
+      "description": "Combat unit with high attack power",
+      "hp": 150,
+      "morale": 100,
+      "attack": 15,
+      "speed": 85,
+      "spotting": 2,
+      "cost": {
+        "food": 20,
+        "iron": 10,
+        "gold": 5
+      },
+      "gathering": {
+        "wood": 0.7,
+        "stone": 0.7,
+        "food": 0.8,
+        "iron": 0.7,
+        "gold": 0.7
       }
     }
   }

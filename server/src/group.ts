@@ -37,18 +37,29 @@ export function createGroup(
   const unit = generateUnit(owner)
   group.units.push(unit)
   
-  // Adjust gathering efficiency based on unit stats
-  // Higher strength improves wood and stone gathering
-  // Higher endurance improves all gathering types slightly
-  if (unit.strength > 50) {
-    group.gatheringEfficiency.wood += (unit.strength - 50) / 100
-    group.gatheringEfficiency.stone += (unit.strength - 50) / 100
-  }
-  
-  if (unit.endurance > 50) {
-    Object.keys(group.gatheringEfficiency).forEach(key => {
-      group.gatheringEfficiency[key] += (unit.endurance - 50) / 200
-    })
+  // Apply gathering efficiency from template if available
+  if (template.gathering) {
+    group.gatheringEfficiency = {
+      wood: template.gathering.wood || 1.0,
+      stone: template.gathering.stone || 1.0,
+      food: template.gathering.food || 1.0,
+      iron: template.gathering.iron || 1.0,
+      gold: template.gathering.gold || 1.0
+    }
+  } else {
+    // Adjust gathering efficiency based on unit stats if no template gathering values
+    // Higher strength improves wood and stone gathering
+    // Higher endurance improves all gathering types slightly
+    if (unit.strength > 50) {
+      group.gatheringEfficiency.wood += (unit.strength - 50) / 100
+      group.gatheringEfficiency.stone += (unit.strength - 50) / 100
+    }
+    
+    if (unit.endurance > 50) {
+      Object.keys(group.gatheringEfficiency).forEach(key => {
+        group.gatheringEfficiency[key] += (unit.endurance - 50) / 200
+      })
+    }
   }
   
   return group
