@@ -40,24 +40,27 @@ const BuildingTemplate = ({
           </div>
         </div>
       </div>
-      <Button
-        variant="primary"
-        size="xs"
-        disabled={isBuildingLimitReached}
+      <div
         title={
           isBuildingLimitReached
             ? "Maximum of 3 buildings per tile reached"
             : ""
         }
-        onClick={() =>
-          socket?.emit("request construction", {
-            pos: tile.hex,
-            type: building.key,
-          })
-        }
       >
-        Build
-      </Button>
+        <Button
+          variant="primary"
+          size="xs"
+          disabled={isBuildingLimitReached}
+          onClick={() =>
+            socket?.emit("request construction", {
+              pos: tile.hex,
+              type: building.key,
+            })
+          }
+        >
+          Build
+        </Button>
+      </div>
     </div>
   );
 };
