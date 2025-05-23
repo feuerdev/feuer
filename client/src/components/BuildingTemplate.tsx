@@ -20,6 +20,23 @@ const BuildingTemplate = ({
 
   const isBuildingLimitReached = buildingsOnTile >= 3;
 
+  // Check if tile has enough resources for building
+  const hasEnoughResources = Object.entries(building.cost).every(
+    ([resource, amount]) =>
+      (tile.resources[resource as keyof typeof tile.resources] || 0) >= amount
+  );
+
+  // Determine if build button should be disabled
+  const buildDisabled = isBuildingLimitReached || !hasEnoughResources;
+
+  // Get tooltip message based on the reason for disabling
+  const getTooltipMessage = () => {
+    if (isBuildingLimitReached)
+      return "Maximum of 3 buildings per tile reached";
+    if (!hasEnoughResources) return "Not enough resources on tile";
+    return "";
+  };
+
   return (
     <div className="flex items-center gap-2 p-1 mb-1 bg-gray-800 bg-opacity-50 rounded">
       <div className="flex-1">
@@ -28,9 +45,22 @@ const BuildingTemplate = ({
           <div>Spotting: {building.spotting}</div>
           <div>
             Cost:{" "}
-            {Object.entries(building.cost)
-              .map(([key, value]) => `${key}: ${value}`)
-              .join(", ")}
+            {Object.entries(building.cost).map(([resource, amount], index) => {
+              // Check if this specific resource is insufficient on the tile
+              const isInsufficient =
+                (tile.resources[resource as keyof typeof tile.resources] || 0) <
+                amount;
+
+              return (
+                <span
+                  key={resource}
+                  className={isInsufficient ? "text-red-500" : ""}
+                >
+                  {index > 0 ? ", " : ""}
+                  {resource}: {amount}
+                </span>
+              );
+            })}
           </div>
           <div className="col-span-2">
             Production:{" "}
@@ -40,17 +70,11 @@ const BuildingTemplate = ({
           </div>
         </div>
       </div>
-      <div
-        title={
-          isBuildingLimitReached
-            ? "Maximum of 3 buildings per tile reached"
-            : ""
-        }
-      >
+      <div title={getTooltipMessage()}>
         <Button
           variant="primary"
           size="xs"
-          disabled={isBuildingLimitReached}
+          disabled={buildDisabled}
           onClick={() =>
             socket?.emit("request construction", {
               pos: tile.hex,
