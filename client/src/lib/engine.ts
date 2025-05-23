@@ -472,7 +472,49 @@ export class Engine {
     this.viewport.addChild(object);
 
     // Position at a random point in the bottom half of the hex
-    const randomPos = this.getRandomPositionInHex(group.pos, false);
+    // Try to find a position that doesn't collide with other group sprites
+    let randomPos = this.getRandomPositionInHex(group.pos, false);
+    let attempts = 0;
+    const maxAttempts = 5;
+
+    // Create a temporary hitArea for collision testing
+    const hitRadius = 15;
+    const collisionBounds = new Rectangle(
+      randomPos.x - hitRadius,
+      randomPos.y - hitRadius,
+      hitRadius * 2,
+      hitRadius * 2
+    );
+
+    while (attempts < maxAttempts) {
+      let collision = false;
+
+      // Check for collision with other group sprites
+      for (const child of this.viewport.children) {
+        if (child !== object && child.label?.toString().startsWith("g_")) {
+          // Use PixiJS's built-in bounds checking
+          const childBounds = child.getBounds(false);
+          if (
+            childBounds.x < collisionBounds.x + collisionBounds.width &&
+            childBounds.x + childBounds.width > collisionBounds.x &&
+            childBounds.y < collisionBounds.y + collisionBounds.height &&
+            childBounds.y + childBounds.height > collisionBounds.y
+          ) {
+            collision = true;
+            break;
+          }
+        }
+      }
+
+      if (!collision) break;
+
+      // Try another position
+      randomPos = this.getRandomPositionInHex(group.pos, false);
+      // Update collision bounds for the new position
+      collisionBounds.x = randomPos.x - hitRadius;
+      collisionBounds.y = randomPos.y - hitRadius;
+      attempts++;
+    }
 
     // Update the sprite position
     object.x = randomPos.x;
