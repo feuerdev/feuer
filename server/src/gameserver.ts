@@ -27,7 +27,7 @@ import {
   isNavigable,
   subtractResources,
 } from "../../shared/objectutil.js"
-import { create, equals, hash, Hex, neighborsRange } from "../../shared/hex.js"
+import { create, equals, hash, neighborsRange } from "../../shared/hex.js"
 import { Resources } from "../../shared/resources.js"
 import Config from "./environment.js";
 import { Player } from "../../shared/player.js";
@@ -119,7 +119,21 @@ export default class GameServer {
       // Handle passive resource generation (reduced without assigned groups)
       for (let res of Object.keys(building.production)) {
         // Passive generation is 10% of normal production
-        tile.resources[res] += building.production[res] * 0.1 * deltaFactor
+        const passiveAmount = building.production[res] * 0.1 * deltaFactor;
+        tile.resources[res] += passiveAmount
+        
+        // Emit resource generation event for passive generation
+        // Only emit if the amount is significant enough to show
+        if (passiveAmount >= 0.1) {
+          const socket = this.uidsockets[building.owner];
+          if (socket && socket.connected) {
+            socket.emit("gamestate resource generation", {
+              buildingId: building.id,
+              resourceType: res,
+              amount: passiveAmount
+            });
+          }
+        }
       }
       
       // Handle resource generation from assigned groups
@@ -173,6 +187,19 @@ export default class GameServer {
             tile.resources[resourceType] = 0
           }
           tile.resources[resourceType] += productionRate
+          
+          // Emit resource generation event
+          // Only emit if the amount is significant enough to show
+          if (productionRate >= 0.1) {
+            const socket = this.uidsockets[building.owner];
+            if (socket && socket.connected) {
+              socket.emit("gamestate resource generation", {
+                buildingId: building.id,
+                resourceType: resourceType,
+                amount: productionRate
+              });
+            }
+          }
         }
       })
     })

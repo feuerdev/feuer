@@ -19,6 +19,7 @@ We have successfully implemented the core backend functionality for the resource
    - Resource generation based on assigned groups
    - Socket handlers for group assignment/unassignment
    - Building upgrade functionality
+   - Resource generation event emission
 
 ## Client-Side UI Implementation
 
@@ -38,21 +39,21 @@ We have successfully implemented the core backend functionality for the resource
 
 ### 3. Resource Display
 
-- [ ] Show resource generation rates on tiles
-- [ ] Display resource collection progress
-- [ ] Add visual indicators for resource depletion
+- ✅ Show resource generation rates on tiles
+- ✅ Display resource collection progress
+- ✅ Add visual indicators for resource generation
 
 ### 4. Socket Handlers
 
 - ✅ Add client-side handlers for building upgrade events
 - ✅ Implement handlers for group assignment/unassignment events
-- [ ] Update UI when resource generation occurs
+- ✅ Update UI when resource generation occurs
 
 ### 5. Visual Improvements
 
 - ✅ Add visual indicators for buildings with assigned groups
-- [ ] Show building level on the map
-- [ ] Indicate resource generation with animations
+- ✅ Show building level on the map
+- ✅ Indicate resource generation with animations
 
 ## Testing Plan
 
@@ -74,18 +75,26 @@ We have successfully implemented the core backend functionality for the resource
 
 ## Next Immediate Steps
 
-1. Test the implemented features thoroughly
-2. Add resource generation rate visualization
-3. Add building level indicators on the map
-4. Implement resource collection progress visualization
-5. Add animations for resource generation
+1. ✅ Test the implemented features thoroughly
+2. ✅ Add resource generation rate visualization
+3. ✅ Add building level indicators on the map
+4. ✅ Implement resource collection progress visualization
+5. ✅ Add animations for resource generation
 
 ## Future Enhancements
 
-Once the basic resource gathering loop is working, we can focus on:
+Now that the basic resource gathering loop is working, we can focus on:
 
 1. Group hiring system
 2. Group experience and training
 3. Enhanced combat mechanics
 4. Morale system implementation
 5. Player interaction features
+
+## Potential Improvements
+
+1. Add resource depletion visualization
+2. Implement resource transfer between buildings
+3. Add resource storage limits
+4. Create specialized buildings for specific resource types
+5. Implement tech tree for building upgrades

@@ -17,8 +17,8 @@ This document outlines the core gameplay loop and implementation steps for Feuer
 - [x] Add resource gathering modifiers (tile type, group stats)
 - [x] Implement building upgrades system
 - [x] Add building slots for group assignment
-- [ ] Add UI for building upgrades
-- [ ] Add UI for group assignment to buildings
+- [x] Add UI for building upgrades
+- [x] Add UI for group assignment to buildings
 
 ### Phase 2: Group Management
 
@@ -65,11 +65,11 @@ This document outlines the core gameplay loop and implementation steps for Feuer
 2. ✅ Update the Group class to include resource gathering stats
 3. ✅ Implement resource generation based on assigned groups
 4. ✅ Add building upgrade system
-5. Create UI components for:
+5. ✅ Create UI components for:
    - Group assignment to buildings
    - Building upgrades
    - Resource gathering visualization
-6. Implement client-side socket handlers for the new group assignment events
+6. ✅ Implement client-side socket handlers for the new group assignment events
 
 ## Technical Implementation Notes
 
@@ -78,7 +78,7 @@ This document outlines the core gameplay loop and implementation steps for Feuer
 - ✅ Added gathering efficiency stats to Group class
 - ✅ Implemented server-side resource generation based on assigned groups
 - ✅ Added building upgrade system with levels and improved slots
-- Need to implement client-side UI for:
+- ✅ Implemented client-side UI for:
   - Displaying building slots and assigned groups
   - Managing group assignments
   - Upgrading buildings

@@ -15,6 +15,8 @@ import {
   drawTerrainGraphics,
   addBuildingText,
   BIOME_COLORS,
+  drawResourceGenerationIndicator,
+  RESOURCE_COLORS,
 } from "./sprites";
 import { Socket } from "socket.io-client";
 import {
@@ -99,6 +101,10 @@ export class Engine {
     this.socket.on("gamestate groups", this.handleGroupsUpdate);
     this.socket.on("gamestate buildings", this.handleBuildingsUpdate);
     this.socket.on("gamestate building", this.handleBuildingUpdate);
+    this.socket.on(
+      "gamestate resource generation",
+      this.handleResourceGeneration
+    );
 
     this.requestTiles(this.socket);
     if (import.meta.env.DEV) {
@@ -132,6 +138,10 @@ export class Engine {
     this.socket.off("gamestate groups", this.handleGroupsUpdate);
     this.socket.off("gamestate buildings", this.handleBuildingsUpdate);
     this.socket.off("gamestate building", this.handleBuildingUpdate);
+    this.socket.off(
+      "gamestate resource generation",
+      this.handleResourceGeneration
+    );
 
     // Clean up viewport and its listeners
     if (this.viewport) {
@@ -823,11 +833,129 @@ export class Engine {
           indicator.y = hexCenter.y + Math.sin(angle) * radius;
 
           container.addChild(indicator);
+
+          // Add resource generation rate visualization
+          this.addResourceGenerationRateIndicator(
+            container,
+            indicator.x,
+            indicator.y - 15,
+            slot.resourceType,
+            this.calculateResourceGenerationRate(building, slot, group)
+          );
         }
       }
     });
 
     this.viewport.addChild(container);
+  }
+
+  /**
+   * Calculate the resource generation rate for a building slot with assigned group
+   * @param building The building
+   * @param slot The resource slot
+   * @param group The assigned group
+   * @returns The calculated resource generation rate
+   */
+  private calculateResourceGenerationRate(
+    building: Building,
+    slot: { resourceType: string; efficiency: number },
+    group: Group
+  ): number {
+    // Get base production rate
+    const baseProduction = building.production[slot.resourceType] || 0;
+
+    // Get group's efficiency for this resource category
+    let groupEfficiency = 1.0;
+    if (slot.resourceType === "wood") {
+      groupEfficiency = group.gatheringEfficiency.wood;
+    } else if (slot.resourceType === "stone") {
+      groupEfficiency = group.gatheringEfficiency.stone;
+    } else if (slot.resourceType === "iron") {
+      groupEfficiency = group.gatheringEfficiency.iron;
+    } else if (slot.resourceType === "gold") {
+      groupEfficiency = group.gatheringEfficiency.gold;
+    } else if (
+      ["fish", "wheat", "meat", "berries"].includes(slot.resourceType)
+    ) {
+      groupEfficiency = group.gatheringEfficiency.food;
+    }
+
+    // Calculate final production rate (per second)
+    return baseProduction * slot.efficiency * groupEfficiency;
+  }
+
+  /**
+   * Add a resource generation rate indicator to the container
+   * @param container The container to add the indicator to
+   * @param x X position
+   * @param y Y position
+   * @param resourceType Type of resource
+   * @param rate Generation rate
+   */
+  private addResourceGenerationRateIndicator(
+    container: Container,
+    x: number,
+    y: number,
+    resourceType: string,
+    rate: number
+  ): void {
+    // Create text to show the rate
+    const text = new Text(`+${rate.toFixed(1)}/s`, {
+      fontSize: 10,
+      fill: RESOURCE_COLORS[resourceType] || 0xffffff,
+      stroke: {
+        color: 0x000000,
+        width: 2,
+      },
+      align: "center",
+    });
+
+    text.anchor.set(0.5);
+    text.x = x;
+    text.y = y;
+
+    container.addChild(text);
+
+    // Start a subtle animation for the text
+    this.animateResourceText(text);
+  }
+
+  /**
+   * Animate the resource generation text with a subtle pulsing effect
+   * @param text The text to animate
+   */
+  private animateResourceText(text: Text): void {
+    const animationName = `resource_text_${text.x}_${text.y}`;
+
+    // Cancel any existing animation
+    const frameId = this.animationFrameIds.get(animationName);
+    if (frameId) {
+      cancelAnimationFrame(frameId);
+    }
+
+    // Initialize animation parameters
+    let time = 0;
+    const animationSpeed = 0.03;
+    const scaleVariation = 0.15; // Scale will vary by ±15%
+
+    // Store original scale
+    const originalScale = text.scale.x;
+
+    // Animation function
+    const animate = () => {
+      time += animationSpeed;
+
+      // Pulsing scale effect
+      const scaleFactor = 1 + Math.sin(time) * scaleVariation;
+      text.scale.set(originalScale * scaleFactor);
+
+      // Request next frame
+      const frameId = requestAnimationFrame(animate);
+      this.animationFrameIds.set(animationName, frameId);
+    };
+
+    // Start the animation
+    animate();
   }
 
   /**
@@ -1163,5 +1291,101 @@ export class Engine {
 
     // Update selection if this building is selected
     this.updateSelection();
+  };
+
+  /**
+   * Updates the scene with resource generation particles
+   * @param building The building generating resources
+   * @param resourceType Type of resource being generated
+   * @param amount Amount being generated
+   */
+  showResourceGenerationEffect(
+    building: Building,
+    resourceType: string,
+    amount: number
+  ): void {
+    const hexCenter = this.layout.hexToPixel(building.position);
+
+    // Create container for the effect if it doesn't exist
+    const effectName = `resource_effect_${building.id}`;
+    let effectContainer = this.viewport.getChildByName(effectName) as Container;
+
+    if (!effectContainer) {
+      effectContainer = new Container();
+      effectContainer.name = effectName;
+      effectContainer.zIndex = ZIndices.Effects;
+      this.viewport.addChild(effectContainer);
+    }
+
+    // Create a particle
+    const particle = new Graphics();
+    drawResourceGenerationIndicator(particle, resourceType, amount, 0);
+
+    // Position particle near the building
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 15 + Math.random() * 10;
+    particle.x = hexCenter.x + Math.cos(angle) * distance;
+    particle.y = hexCenter.y + Math.sin(angle) * distance;
+
+    effectContainer.addChild(particle);
+
+    // Animate the particle floating upward
+    const animationName = `resource_particle_${Date.now()}_${Math.random()}`;
+    let progress = 0;
+
+    const animate = () => {
+      progress += 0.01;
+
+      // Move upward and slightly to the side
+      particle.y -= 0.5;
+      particle.x += Math.sin(progress * 5) * 0.3;
+
+      // Update the particle appearance
+      drawResourceGenerationIndicator(particle, resourceType, amount, progress);
+
+      // Remove when animation completes
+      if (progress >= 1) {
+        effectContainer.removeChild(particle);
+        particle.destroy();
+        return;
+      }
+
+      // Request next frame
+      const frameId = requestAnimationFrame(animate);
+      this.animationFrameIds.set(animationName, frameId);
+    };
+
+    // Start the animation
+    animate();
+  }
+
+  /**
+   * Handle resource generation events from the server
+   */
+  private handleResourceGeneration = (data: {
+    buildingId: number;
+    resourceType: string;
+    amount: number;
+  }) => {
+    const { world } = useStore.getState();
+    const building = world.buildings[data.buildingId];
+
+    if (building) {
+      // Show resource generation effect
+      this.showResourceGenerationEffect(
+        building,
+        data.resourceType,
+        data.amount
+      );
+
+      // Update the tile resources in the local state
+      const tile = world.tiles[hash(building.position)];
+      if (tile) {
+        if (!tile.resources[data.resourceType]) {
+          tile.resources[data.resourceType] = 0;
+        }
+        tile.resources[data.resourceType] += data.amount;
+      }
+    }
   };
 }

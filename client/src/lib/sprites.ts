@@ -48,6 +48,21 @@ export const BUILDING_COLORS: Record<string, number> = {
 };
 
 /**
+ * Resource type color mapping
+ */
+export const RESOURCE_COLORS: Record<string, number> = {
+  wood: 0x8b4513, // Brown
+  stone: 0x808080, // Gray
+  iron: 0xa19d94, // Silver
+  gold: 0xffd700, // Gold
+  berries: 0xcc3366, // Pink
+  fish: 0x66ccff, // Light blue
+  meat: 0xcc6633, // Orange-brown
+  wheat: 0xddcc55, // Yellow
+  default: 0xffffff, // White
+};
+
+/**
  * Draw terrain graphics onto the provided graphics object
  */
 export function drawTerrainGraphics(
@@ -103,8 +118,31 @@ export function drawBuildingGraphics(
   graphics.clear();
   graphics.beginFill(buildingColor);
   graphics.lineStyle(2, 0x000000, 0.7);
-  graphics.drawRect(-15, -15, 30, 30);
+
+  // Make the building slightly larger based on level
+  const size = 15 + (building.level - 1) * 3;
+  graphics.drawRect(-size, -size, size * 2, size * 2);
   graphics.endFill();
+
+  // Add level indicator dots at the bottom of the building
+  const dotRadius = 2;
+  const dotSpacing = 5;
+  const startX = -((building.level - 1) * dotSpacing) / 2;
+
+  graphics.beginFill(0xffffff); // White dots
+  for (let i = 0; i < building.level; i++) {
+    graphics.drawCircle(startX + i * dotSpacing, size + 5, dotRadius);
+  }
+  graphics.endFill();
+
+  // Add empty dots for remaining levels
+  if (building.level < building.maxLevel) {
+    graphics.beginFill(0x666666); // Gray dots for remaining levels
+    for (let i = building.level; i < building.maxLevel; i++) {
+      graphics.drawCircle(startX + i * dotSpacing, size + 5, dotRadius);
+    }
+    graphics.endFill();
+  }
 
   // Add a symbol or letter based on building type
   graphics.lineStyle(2, 0xffffff);
@@ -113,34 +151,34 @@ export function drawBuildingGraphics(
     case "towncenter":
     case "campsite":
       // Draw a simple house shape
-      graphics.moveTo(-8, 5);
-      graphics.lineTo(-8, -3);
-      graphics.lineTo(0, -10);
-      graphics.lineTo(8, -3);
-      graphics.lineTo(8, 5);
-      graphics.lineTo(-8, 5);
+      graphics.moveTo(-size * 0.6, size * 0.3);
+      graphics.lineTo(-size * 0.6, -size * 0.2);
+      graphics.lineTo(0, -size * 0.7);
+      graphics.lineTo(size * 0.6, -size * 0.2);
+      graphics.lineTo(size * 0.6, size * 0.3);
+      graphics.lineTo(-size * 0.6, size * 0.3);
       break;
     case "wood":
       // Draw a tree shape
-      graphics.moveTo(0, -10);
-      graphics.lineTo(5, 0);
-      graphics.lineTo(3, 0);
-      graphics.lineTo(6, 7);
-      graphics.lineTo(-6, 7);
-      graphics.lineTo(-3, 0);
-      graphics.lineTo(-5, 0);
-      graphics.lineTo(0, -10);
+      graphics.moveTo(0, -size * 0.7);
+      graphics.lineTo(size * 0.4, 0);
+      graphics.lineTo(size * 0.2, 0);
+      graphics.lineTo(size * 0.4, size * 0.5);
+      graphics.lineTo(-size * 0.4, size * 0.5);
+      graphics.lineTo(-size * 0.2, 0);
+      graphics.lineTo(-size * 0.4, 0);
+      graphics.lineTo(0, -size * 0.7);
       break;
     case "stone":
     case "iron":
     case "gold":
       // Draw a simple mine shape (mountain)
-      graphics.moveTo(-8, 5);
-      graphics.lineTo(-3, -5);
+      graphics.moveTo(-size * 0.6, size * 0.3);
+      graphics.lineTo(-size * 0.2, -size * 0.3);
       graphics.lineTo(0, 0);
-      graphics.lineTo(3, -7);
-      graphics.lineTo(8, 5);
-      graphics.lineTo(-8, 5);
+      graphics.lineTo(size * 0.2, -size * 0.5);
+      graphics.lineTo(size * 0.6, size * 0.3);
+      graphics.lineTo(-size * 0.6, size * 0.3);
       break;
     default:
       // Just add a visible letter B for the default case
@@ -156,23 +194,20 @@ export function drawBuildingGraphics(
  * Should be called after drawBuildingGraphics
  */
 export function addBuildingText(text: Text, building: Building): void {
-  if (
-    building.key !== "towncenter" &&
-    building.key !== "campsite" &&
-    building.key !== "wood" &&
-    building.key !== "stone" &&
-    building.key !== "iron" &&
-    building.key !== "gold"
-  ) {
-    // Set text for generic building
-    text.text = "B";
-    text.style.fontSize = 16;
-    text.style.fill = 0x000000;
-    text.anchor.set(0.5);
-    text.visible = true;
-  } else {
-    text.visible = false;
-  }
+  // Always show building level
+  text.text = `${building.key.charAt(0).toUpperCase()}${building.level}`;
+  text.style = {
+    fontSize: 12,
+    fill: 0xffffff,
+    stroke: {
+      color: 0x000000,
+      width: 2,
+    },
+    align: "center",
+  };
+  text.anchor.set(0.5);
+  text.y = -20; // Position above the building
+  text.visible = true;
 }
 
 /**
@@ -217,6 +252,73 @@ export function drawGroupGraphics(
   graphics.lineTo(-5, 15);
   graphics.moveTo(5, 10);
   graphics.lineTo(5, 15);
+}
+
+/**
+ * Create resource generation indicator
+ * @param graphics The graphics object to draw on
+ * @param resourceType The type of resource being generated
+ * @param amount The amount being generated (affects size)
+ * @param animationProgress Progress of the animation (0-1)
+ */
+export function drawResourceGenerationIndicator(
+  graphics: Graphics,
+  resourceType: string,
+  amount: number,
+  animationProgress: number
+): void {
+  const color = RESOURCE_COLORS[resourceType] || RESOURCE_COLORS.default;
+
+  // Clear previous graphics
+  graphics.clear();
+
+  // Calculate size based on amount (with minimum and maximum)
+  const baseSize = 3;
+  const sizeMultiplier = Math.min(5, Math.max(1, Math.log10(amount) + 1));
+  const size = baseSize * sizeMultiplier;
+
+  // Draw resource particle
+  graphics.beginFill(color);
+  graphics.lineStyle(1, 0x000000, 0.5);
+
+  // Different shapes for different resource types
+  switch (resourceType) {
+    case "wood":
+      // Rectangle for wood
+      graphics.drawRect(-size / 2, -size / 2, size, size);
+      break;
+    case "stone":
+    case "iron": {
+      // Pentagon for minerals
+      const points = [];
+      for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2 - Math.PI / 2;
+        points.push(Math.cos(angle) * size);
+        points.push(Math.sin(angle) * size);
+      }
+      graphics.drawPolygon(points);
+      break;
+    }
+    case "gold":
+      // Star for gold
+      graphics.drawStar(0, 0, 5, size, size / 2);
+      break;
+    case "berries":
+    case "fish":
+    case "meat":
+    case "wheat":
+      // Circle for food
+      graphics.drawCircle(0, 0, size);
+      break;
+    default:
+      // Default is a circle
+      graphics.drawCircle(0, 0, size);
+  }
+
+  graphics.endFill();
+
+  // Set alpha based on animation progress
+  graphics.alpha = 1 - animationProgress;
 }
 
 /**
