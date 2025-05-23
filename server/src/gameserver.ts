@@ -589,9 +589,30 @@ export default class GameServer {
       return false
     }
 
+    // Check if there are already 3 buildings on this tile
+    if (this.countBuildingsOnTile(tile.hex) >= 3) {
+      console.debug(`Cannot build more than 3 buildings on a single tile`)
+      return false
+    }
+
     return (
       this.hasResources(tile, object.cost) && this.hasPresence(tile.hex, uid)
     )
+  }
+
+  /**
+   * Counts the number of buildings on a specific tile
+   * @param pos Hex position
+   * @returns Number of buildings on the tile
+   */
+  private countBuildingsOnTile(pos: Hex): number {
+    let count = 0
+    Object.values(this.world.buildings).forEach((building) => {
+      if (equals(building.position, pos)) {
+        count++
+      }
+    })
+    return count
   }
 
   /**

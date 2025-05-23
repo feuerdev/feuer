@@ -31,10 +31,19 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
         <InfoRow label="Height" value={tile.height.toFixed(2)} />
         <InfoRow label="Precipitation" value={tile.precipitation.toFixed(2)} />
         <InfoRow label="Temperature" value={tile.temperature.toFixed(2)} />
+
+        <InfoRow
+          label="Buildings"
+          value={`${
+            Object.values(world.buildings).filter((b) =>
+              equals(b.position, tile.hex)
+            ).length
+          }/3`}
+        />
       </InfoBox>
 
       {(building || group) && (
-        <InfoBox title="Available Buildings" className="h-full flex-1">
+        <InfoBox title="Available Buildings (Max: 3)" className="h-full flex-1">
           {Object.keys(Buildings).length === 0 ? (
             <p className="text-gray-400 italic text-xs">
               No building templates available

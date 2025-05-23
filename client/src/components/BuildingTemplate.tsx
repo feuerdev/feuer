@@ -1,6 +1,7 @@
 import { TBuildingTemplate, Tile } from "@shared/objects";
 import { Button } from "./ui/Button";
 import { useStore } from "@/lib/state";
+import { equals } from "@shared/hex";
 
 const BuildingTemplate = ({
   building,
@@ -10,6 +11,14 @@ const BuildingTemplate = ({
   tile: Tile;
 }) => {
   const socket = useStore((state) => state.socket);
+  const world = useStore((state) => state.world);
+
+  // Count buildings on this tile
+  const buildingsOnTile = Object.values(world.buildings).filter((b) =>
+    equals(b.position, tile.hex)
+  ).length;
+
+  const isBuildingLimitReached = buildingsOnTile >= 3;
 
   return (
     <div className="flex items-center gap-2 p-1 mb-1 bg-gray-800 bg-opacity-50 rounded">
@@ -34,6 +43,12 @@ const BuildingTemplate = ({
       <Button
         variant="primary"
         size="xs"
+        disabled={isBuildingLimitReached}
+        title={
+          isBuildingLimitReached
+            ? "Maximum of 3 buildings per tile reached"
+            : ""
+        }
         onClick={() =>
           socket?.emit("request construction", {
             pos: tile.hex,
