@@ -1,9 +1,11 @@
 import { Building } from "@shared/objects";
 import { useStore } from "@/lib/state";
 import { Button } from "./ui/Button";
-import { InfoBox, InfoRow } from "./InfoBox";
+import { InfoBox } from "./InfoBox";
 import { Engine } from "@/lib/engine";
 import Rules from "@shared/rules.json";
+import { hash } from "@shared/hex";
+import { Resources } from "@shared/resources";
 
 interface GroupHiringProps {
   building: Building;
@@ -13,13 +15,24 @@ interface GroupHiringProps {
 interface GroupTemplate {
   name: string;
   description: string;
-  cost: Record<string, number>;
+  cost: Partial<Resources>;
   spotting: number;
+  strength?: number;
+  endurance?: number;
+  attack?: number;
+  defense?: number;
+  gathering?: {
+    wood: number;
+    stone: number;
+    food: number;
+    iron: number;
+    gold: number;
+  };
 }
 
 const GroupHiring = ({ building, engine }: GroupHiringProps) => {
   const world = useStore((state) => state.world);
-  const tile = world.tiles[building.position.q + "," + building.position.r];
+  const tile = world.tiles[hash(building.position)];
 
   if (!tile) {
     return null;
@@ -31,9 +44,10 @@ const GroupHiring = ({ building, engine }: GroupHiringProps) => {
   ).map(([key, template]) => [key, template as GroupTemplate]);
 
   // Check if there are enough resources for each group type
-  const canAfford = (cost: Record<string, number>) => {
+  const canAfford = (cost: Partial<Resources>) => {
     for (const [resource, amount] of Object.entries(cost)) {
-      if ((tile.resources[resource] || 0) < amount) {
+      const resourceKey = resource as keyof Resources;
+      if ((tile.resources[resourceKey] || 0) < amount) {
         return false;
       }
     }
@@ -66,21 +80,50 @@ const GroupHiring = ({ building, engine }: GroupHiringProps) => {
               {template.description || `A ${groupType} group`}
             </p>
 
-            <div className="mt-2">
-              <h4 className="text-xs font-medium">Cost:</h4>
-              <div className="grid grid-cols-2 gap-1 mt-1">
-                {Object.entries(template.cost).map(([resource, amount]) => (
-                  <div
-                    key={resource}
-                    className={`text-xs ${
-                      (tile.resources[resource] || 0) < amount
-                        ? "text-red-400"
-                        : "text-gray-300"
-                    }`}
-                  >
-                    {resource}: {amount} / {tile.resources[resource] || 0}
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <div>
+                <h4 className="text-xs font-medium">Cost:</h4>
+                <div className="grid grid-cols-2 gap-1 mt-1">
+                  {Object.entries(template.cost).map(([resource, amount]) => {
+                    const resourceKey = resource as keyof Resources;
+                    return (
+                      <div
+                        key={resource}
+                        className={`text-xs ${
+                          (tile.resources[resourceKey] || 0) < amount
+                            ? "text-red-400"
+                            : "text-gray-300"
+                        }`}
+                      >
+                        {resource}: {amount} /{" "}
+                        {tile.resources[resourceKey] || 0}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-medium">Stats:</h4>
+                <div className="grid grid-cols-2 gap-1 mt-1">
+                  <div className="text-xs text-gray-300">
+                    Attack: {template.attack || 5}
                   </div>
-                ))}
+                  <div className="text-xs text-gray-300">
+                    Defense: {template.defense || 5}
+                  </div>
+                  {template.gathering && (
+                    <div className="text-xs text-gray-300 col-span-2">
+                      {Object.entries(template.gathering)
+                        .filter(([_, value]) => value > 1.0)
+                        .map(([resource, value]) => (
+                          <span key={resource} className="mr-1">
+                            {resource}: {value.toFixed(1)}x
+                          </span>
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

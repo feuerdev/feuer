@@ -14,6 +14,7 @@ We have successfully implemented the core backend functionality for the resource
 
    - Resource gathering efficiency stats
    - Building assignment tracking
+   - Simplified structure by removing units and adding stats directly to groups
 
 3. ✅ Updated the GameServer with:
    - Resource generation based on assigned groups
@@ -21,6 +22,7 @@ We have successfully implemented the core backend functionality for the resource
    - Building upgrade functionality
    - Resource generation event emission
    - Group hiring system
+   - Simplified battle system
 
 ## Client-Side UI Implementation
 
@@ -38,8 +40,7 @@ We have successfully implemented the core backend functionality for the resource
 - ✅ Display gathering efficiency stats
 - ✅ Show if group is assigned to a building
 - ✅ Add button to unassign from current building
-- ✅ Display detailed unit information
-- ✅ Add unit selection interface
+- ✅ Display group stats directly (simplified from units)
 
 ### 3. Resource Display
 
@@ -92,13 +93,14 @@ We have successfully implemented the core backend functionality for the resource
 4. ✅ Implement resource collection progress visualization
 5. ✅ Add animations for resource generation
 6. ✅ Implement group hiring system
+7. ✅ Simplify code structure by removing units
 
 ## Future Enhancements
 
 Now that the basic resource gathering and group hiring systems are working, we can focus on:
 
 1. ✅ Group hiring system
-2. [ ] Group experience and training
+2. [ ] Group experience and leveling system
 3. [ ] Enhanced combat mechanics
 4. [ ] Morale system implementation
 5. [ ] Player interaction features
@@ -110,5 +112,4 @@ Now that the basic resource gathering and group hiring systems are working, we c
 3. Add resource storage limits
 4. Create specialized buildings for specific resource types
 5. Implement tech tree for building upgrades
-6. Add group training facilities to improve unit stats
-7. Implement unit specialization and career paths
+6. Add group training facilities to improve group stats

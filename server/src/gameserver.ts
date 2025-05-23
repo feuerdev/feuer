@@ -8,26 +8,19 @@ import {
   World,
   Tile,
   Biome,
-  FightingUnit,
   TBuildingTemplate,
+  Battle
 } from "../../shared/objects.js"
 import * as PlayerRelation from "../../shared/relation.js"
-import { Battle } from "../../shared/objects.js"
 import * as Battles from "./battle.js"
 import { createGroup } from "./group.js"
 import { createBuilding, upgradeBuilding } from "./building.js"
 import { EnumRelationType } from "../../shared/relation.js"
 import {
-  applyAttackResult,
-  calculateAttack,
-  calculateInitiative,
-  calculateMorale,
-  hasFled,
-  isDead,
   isNavigable,
   subtractResources,
 } from "../../shared/objectutil.js"
-import { create, equals, hash, neighborsRange } from "../../shared/hex.js"
+import { create, equals, hash, neighborsRange, Hex } from "../../shared/hex.js"
 import { Resources } from "../../shared/resources.js"
 import Config from "./environment.js";
 import { Player } from "../../shared/player.js";
@@ -210,66 +203,55 @@ export default class GameServer {
     while (i--) {
       let battle = this.world.battles[i]
 
-      // Populate duels
-      for (const unit of battle.attacker.units) {
-        // find random opponent
-        if ((unit as FightingUnit).inDuel) continue
-        if (isDead(unit as FightingUnit)) continue
-        if (hasFled(unit as FightingUnit)) continue
-
-        const opponent = battle.defender.units.find((opponent) => {
-          const unitInDuel = (opponent as FightingUnit).inDuel
-          const unitIsDead = isDead(opponent as FightingUnit)
-          const unitHasFled = hasFled(opponent as FightingUnit)
-          return !unitInDuel && !unitIsDead && !unitHasFled
-        })
-
-        battle.duels.push({
-          attacker: unit,
-          defender: opponent,
-          over: false,
-        })
-        ;(unit as FightingUnit).inDuel = true
-        ;(opponent as FightingUnit).inDuel = true
-      }
-
-      // Calculate duels
-      for (const duel of battle.duels) {
-        const attacker = duel.attacker as FightingUnit
-        const defender = duel.defender as FightingUnit
-
-        if (calculateInitiative(attacker) > calculateInitiative(defender)) {
-          const attackResult = calculateAttack(attacker, defender)
-          duel.defender = applyAttackResult(defender, attackResult)
-        } else {
-          const attackResult = calculateAttack(defender, attacker)
-          duel.attacker = applyAttackResult(attacker, attackResult)
-        }
-
-        if (
-          isDead(duel.attacker) ||
-          hasFled(duel.attacker) ||
-          isDead(duel.defender) ||
-          hasFled(duel.defender)
-        ) {
-          duel.over = true
-          duel.attacker.inDuel = false
-          duel.defender.inDuel = false
-        }
-      }
-
-      if (calculateMorale(battle.attacker) <= 0) {
-        delete this.world.groups[battle.attacker.id]
-        this.finishBattle(battle)
-      } else if (calculateMorale(battle.defender) <= 0) {
-        delete this.world.groups[battle.defender.id]
+      // Simplified battle resolution
+      this.resolveBattle(battle)
+      
+      // Check if battle is over
+      if (this.isBattleOver(battle)) {
         this.finishBattle(battle)
       }
     }
   }
 
+  /**
+   * Simple battle resolution between two groups
+   */
+  resolveBattle(battle: Battle): void {
+    // Calculate attack values
+    const attackerValue = battle.attacker.attack * (battle.attacker.morale / 100)
+    const defenderValue = battle.defender.defense * (battle.defender.morale / 100)
+    
+    // Calculate damage
+    const attackerDamage = Math.max(0, attackerValue - defenderValue/2)
+    const defenderDamage = Math.max(0, defenderValue - attackerValue/2)
+    
+    // Apply damage to morale
+    battle.defender.morale = Math.max(0, battle.defender.morale - attackerDamage)
+    battle.attacker.morale = Math.max(0, battle.attacker.morale - defenderDamage)
+  }
+  
+  /**
+   * Check if a battle is over (one side has 0 morale)
+   */
+  isBattleOver(battle: Battle): boolean {
+    return battle.attacker.morale <= 0 || battle.defender.morale <= 0
+  }
+
   finishBattle(battle: Battle) {
+    // If attacker lost, remove them
+    if (battle.attacker.morale <= 0) {
+      delete this.world.groups[battle.attacker.id]
+    }
+    
+    // If defender lost, remove them
+    if (battle.defender.morale <= 0) {
+      delete this.world.groups[battle.defender.id]
+    }
+    
+    // Remove battle from the list
     this.world.battles.splice(this.world.battles.indexOf(battle), 1)
+    
+    // Update visibilities
     this.updatePlayerVisibilities(battle.attacker.owner)
     this.updatePlayerVisibilities(battle.defender.owner)
   }
@@ -475,39 +457,15 @@ export default class GameServer {
   }
 
   onRequestUnitAdd(socket: Socket, data) {
-    let uid = this.getPlayerUid(socket.id)
-    const group = this.world.groups[data.groupId]
-
-    if (group.owner !== uid) {
-      console.warn(`Player '${uid}' tried to add unit to group he doesn't own`)
-      return
-    }
-
-    let unit = this.world.units.find((unit) => {
-      return unit.id === data.unitId
-    })
-    if (group && unit) {
-      group.units.push(unit)
-    }
+    // This function is no longer needed with simplified groups
+    console.warn("onRequestUnitAdd is deprecated with simplified group structure")
   }
+  
   onRequestUnitRemove(socket: Socket, data) {
-    let uid = this.getPlayerUid(socket.id)
-
-    const group = this.world.groups[data.groupId]
-    if (group.owner !== uid) {
-      console.warn(`Player '${uid}' tried to remove unit to group he doesn't own`)
-      return
-    }
-
-    if (group) {
-      let unit = group.units.find((unit) => {
-        return unit.id === data.unitId
-      })
-      if (unit) {
-        group.units.splice(group.units.indexOf(unit), 1)
-      }
-    }
+    // This function is no longer needed with simplified groups
+    console.warn("onRequestUnitRemove is deprecated with simplified group structure")
   }
+
   onRequestTransfer(socket: Socket, data) {
     let uid = this.getPlayerUid(socket.id)
     const group = this.world.groups[data.groupId]

@@ -1,0 +1,6 @@
+---
+description: Post implementation verification
+globs: 
+alwaysApply: false
+---
+Don't run the 'dev' command to test the application after changes as you won't gain meaningful feedback from it. Ask me to test the functionality instead.

@@ -27,14 +27,14 @@
   },
   "units": {
     "Scout": {
-      "id": 1,
       "texture": "unit_scout_own",
       "name": "Scout",
       "description": "Fast unit with high spotting range",
-      "hp": 100,
       "morale": 100,
+      "strength": 45,
+      "endurance": 60,
       "attack": 5,
-      "speed": 100,
+      "defense": 5,
       "spotting": 3,
       "cost": {
         "food": 10,
@@ -42,14 +42,14 @@
       }
     },
     "Woodcutter": {
-      "id": 2,
       "texture": "unit_woodcutter_own",
       "name": "Woodcutter",
       "description": "Specialized in gathering wood resources",
-      "hp": 120,
       "morale": 90,
+      "strength": 65,
+      "endurance": 55,
       "attack": 8,
-      "speed": 80,
+      "defense": 7,
       "spotting": 2,
       "cost": {
         "food": 15,
@@ -64,14 +64,14 @@
       }
     },
     "Miner": {
-      "id": 3,
       "texture": "unit_miner_own",
       "name": "Miner",
       "description": "Specialized in gathering stone and iron resources",
-      "hp": 130,
       "morale": 85,
+      "strength": 70,
+      "endurance": 60,
       "attack": 7,
-      "speed": 70,
+      "defense": 8,
       "spotting": 1,
       "cost": {
         "food": 20,
@@ -86,14 +86,14 @@
       }
     },
     "Hunter": {
-      "id": 4,
       "texture": "unit_hunter_own",
       "name": "Hunter",
       "description": "Specialized in gathering food resources",
-      "hp": 110,
       "morale": 95,
+      "strength": 50,
+      "endurance": 70,
       "attack": 10,
-      "speed": 90,
+      "defense": 6,
       "spotting": 2,
       "cost": {
         "food": 10,
@@ -108,14 +108,14 @@
       }
     },
     "Warrior": {
-      "id": 5,
       "texture": "unit_warrior_own",
       "name": "Warrior",
       "description": "Combat unit with high attack power",
-      "hp": 150,
       "morale": 100,
+      "strength": 75,
+      "endurance": 65,
       "attack": 15,
-      "speed": 85,
+      "defense": 12,
       "spotting": 2,
       "cost": {
         "food": 20,

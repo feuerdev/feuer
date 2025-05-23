@@ -557,7 +557,7 @@ export class Engine {
     // Update the sprite position
     object.x = randomPos.x;
     object.y = randomPos.y;
-    object.zIndex = ZIndices.Units;
+    object.zIndex = ZIndices.Groups;
 
     // Handle animation for moving groups
     const isMoving = group.targetHexes && group.targetHexes.length > 0;
@@ -585,7 +585,7 @@ export class Engine {
     if (uid && group.owner === uid) {
       const movementIndicatorContainer = new Container();
       movementIndicatorContainer.label = "MovementIndicator";
-      movementIndicatorContainer.zIndex = ZIndices.Units;
+      movementIndicatorContainer.zIndex = ZIndices.Groups;
 
       this.viewport.addChild(movementIndicatorContainer);
 

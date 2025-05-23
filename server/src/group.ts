@@ -1,26 +1,42 @@
 import { Group } from "../../shared/objects.js"
 import Rules from "../../shared/rules.json" with { type: "json" };
-import { generateUnit } from "./unit.js"
 import { Hex } from "../../shared/hex.js"
 import { Resources } from "../../shared/resources.js"
 
 export function createGroup(
   id: number,
   owner: string,
-  name: string,
+  groupType: string,
   pos: Hex,
   resources: Partial<Resources> = {}
 ): Group {
-  const template = Rules.units[name]
+  const template = Rules.units[groupType]
+  
+  if (!template) {
+    throw new Error(`Group template not found for type: ${groupType}`)
+  }
+  
   const group: Group = {
+    id: id,
     owner: owner,
-    spotting: 0,
+    name: template.name || groupType,
+    spotting: template.spotting || 2,
     targetHexes: [],
     pos: pos,
     movementStatus: 0,
-    units: [],
     resources: resources,
-    id: id,
+    groupType: groupType,
+    
+    // Combat stats
+    morale: template.morale || 100,
+    attack: template.attack || 10,
+    defense: template.defense || 10,
+    
+    // Physical stats
+    strength: template.strength || 50,
+    endurance: template.endurance || 50,
+    
+    // Resource gathering stats
     gatheringEfficiency: {
       wood: 1.0,
       stone: 1.0,
@@ -30,13 +46,6 @@ export function createGroup(
     }
   }
   
-  group.pos = pos
-  group.spotting = template.spotting
-  
-  // Create initial unit
-  const unit = generateUnit(owner)
-  group.units.push(unit)
-  
   // Apply gathering efficiency from template if available
   if (template.gathering) {
     group.gatheringEfficiency = {
@@ -45,20 +54,6 @@ export function createGroup(
       food: template.gathering.food || 1.0,
       iron: template.gathering.iron || 1.0,
       gold: template.gathering.gold || 1.0
-    }
-  } else {
-    // Adjust gathering efficiency based on unit stats if no template gathering values
-    // Higher strength improves wood and stone gathering
-    // Higher endurance improves all gathering types slightly
-    if (unit.strength > 50) {
-      group.gatheringEfficiency.wood += (unit.strength - 50) / 100
-      group.gatheringEfficiency.stone += (unit.strength - 50) / 100
-    }
-    
-    if (unit.endurance > 50) {
-      Object.keys(group.gatheringEfficiency).forEach(key => {
-        group.gatheringEfficiency[key] += (unit.endurance - 50) / 200
-      })
     }
   }
   

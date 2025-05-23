@@ -12,7 +12,6 @@ export type World = {
   players: Hashtable<Player>
   tiles: Hashtable<Tile>
   groups: Hashtable<Group>
-  units: Unit[]
   buildings: Hashtable<Building>
   playerRelations: Hashtable<PlayerRelation>
   battles: Battle[]
@@ -61,13 +60,6 @@ export type Battle = GameObject & {
   attacker: Group
   defender: Group
   position: Hex
-  duels: Duel[]
-}
-
-export type Duel = {
-  attacker: FightingUnit
-  defender: FightingUnit
-  over: boolean
 }
 
 // Resource slot for a building
@@ -91,14 +83,15 @@ export type Building = GameObject &
 
 export type Group = GameObject &
   Ownable & {
+    name: string
     spotting: number
     targetHexes: Hex[]
     pos: Hex
     movementStatus: number
-    units: Unit[]
     resources: Partial<Resources>
     assignedToBuilding?: number // ID of building this group is assigned to
     assignedToSlot?: number // Index of the slot in the building
+
     // Resource gathering stats
     gatheringEfficiency: {
       wood: number
@@ -107,76 +100,19 @@ export type Group = GameObject &
       iron: number
       gold: number
     }
-  }
 
-export type Unit = GameObject &
-  Ownable & {
-    name: string
-
-    //Status
+    // Stats that were previously in Unit
     morale: number
-    injuries: Injury[]
-    dead: boolean
-
-    //Character Traits (Can only slightly be altered):
-    //Leadership:
-    leadership: number
-    courage: number
-    tactics: number
-    teacher: number
-
-    //Personal:
-    agressiveness: number
-
-    //Physical:
-    height: number
-    weight: number
-
-    //Character Skills (Can be trained):
-    //Combat:
-    sword: number
-    spear: number
-    bow: number
-    dodging: number
-
-    //Physical:
     strength: number
     endurance: number
 
-    //Experience:
-    experience_theory: number
-    experience_combat: number
+    // Combat stats
+    attack: number
+    defense: number
+
+    // Type of group (for visual representation)
+    groupType: string
   }
-
-export type Injury = {
-  bodyPart: BodyPart
-  severity: InjurySeverity
-}
-
-export enum BodyPart {
-  Head,
-  Torso,
-  LeftArm,
-  RightArm,
-  LeftLeg,
-  RightLeg,
-  LeftHand,
-  RightHand,
-  LeftFoot,
-  RightFoot,
-  LeftEye,
-  RightEye,
-}
-
-export enum InjurySeverity {
-  Light,
-  Medium,
-  Extreme,
-}
-
-export type FightingUnit = Unit & {
-  inDuel?: boolean
-}
 
 export type TBuildingTemplate = {
   key: string

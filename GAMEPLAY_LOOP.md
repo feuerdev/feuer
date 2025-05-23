@@ -24,6 +24,7 @@ This document outlines the core gameplay loop and implementation steps for Feuer
 
 - [x] Add group stats (gathering, combat, etc.)
 - [x] Implement group hiring system
+- [x] Simplify code structure by removing units
 - [ ] Create group experience and leveling system
 - [ ] Implement group training mechanics
 - [ ] Add UI for group management and stats
@@ -32,7 +33,7 @@ This document outlines the core gameplay loop and implementation steps for Feuer
 
 - [ ] Enhance existing battle system with turn-based mechanics
 - [ ] Implement group behavior programming interface
-- [ ] Add permanent injuries and death mechanics
+- [ ] Add permanent injuries and morale impact mechanics
 - [ ] Create building vs group combat
 - [ ] Add defensive building modifiers
 - [ ] Add UI for combat behavior programming
@@ -70,7 +71,8 @@ This document outlines the core gameplay loop and implementation steps for Feuer
    - Building upgrades
    - Resource gathering visualization
 6. ✅ Implement client-side socket handlers for the new group assignment events
-7. ✅ Implement group hiring system with specialized unit types
+7. ✅ Implement group hiring system with specialized group types
+8. ✅ Simplify codebase by removing units and adding stats directly to groups
 
 ## Technical Implementation Notes
 
@@ -85,9 +87,13 @@ This document outlines the core gameplay loop and implementation steps for Feuer
   - Upgrading buildings
   - Showing resource generation rates
 - ✅ Implemented group hiring system with:
-  - Different unit types with specialized gathering skills
+  - Different group types with specialized gathering skills
   - Resource costs for hiring
-  - UI for hiring units at buildings
+  - UI for hiring groups at buildings
+- ✅ Simplified code structure by:
+  - Removing Unit type and related types
+  - Adding stats directly to Group
+  - Simplifying battle system
 
 ## Resource Generation Formula
 
@@ -108,6 +114,6 @@ Where:
 
 - `baseProduction` is the base production rate defined in the building template
 - `slotEfficiency` is the efficiency of the specific slot (1.0 = 100%)
-- `groupEfficiency` is the group's efficiency for that resource type (affected by unit stats)
+- `groupEfficiency` is the group's efficiency for that resource type (affected by group stats)
 - `resourceAvailabilityFactor` decreases as resources are depleted (< 10 units)
 - `deltaFactor` is the time factor for the update cycle
