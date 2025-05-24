@@ -4,16 +4,16 @@ import BuildingInfo from "@/components/BuildingInfo";
 import { getTileById } from "@shared/objectutil";
 import { SelectionType } from "@/lib/types";
 import { useStore } from "@/lib/state";
-import { Engine } from "@/lib/engine";
 
-interface HudProps {
-  engine: Engine;
-}
-
-const Hud = ({ engine }: HudProps) => {
+const Hud = () => {
   const world = useStore((state) => state.world);
   const selection = useStore((state) => state.selection);
+  const engine = useStore((state) => state.engine);
   const { type, id } = selection;
+
+  if (!engine) {
+    return null;
+  }
 
   return (
     <div
@@ -27,10 +27,10 @@ const Hud = ({ engine }: HudProps) => {
       >
         {/* Show different info based on selection type */}
         {type === SelectionType.Group && (
-          <GroupInfo group={world.groups[id!]} engine={engine} />
+          <GroupInfo group={world.groups[id!]} />
         )}
         {type === SelectionType.Building && (
-          <BuildingInfo building={world.buildings[id!]} engine={engine} />
+          <BuildingInfo building={world.buildings[id!]} />
         )}
         {type === SelectionType.Tile && (
           <TileInfo tile={getTileById(id!, world.tiles)!} />

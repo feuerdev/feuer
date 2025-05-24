@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Engine } from "@/lib/engine";
 import * as Pixi from "pixi.js";
-import Hud from "./Hud";
+import { useStore } from "@/lib/state";
 
 export const Canvas = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
-  const [engine, setEngine] = useState<Engine | null>(null);
+  const setEngine = useStore((state) => state.setEngine);
 
   useEffect(() => {
     const initCanvas = async () => {
@@ -37,7 +37,7 @@ export const Canvas = () => {
     };
 
     initCanvas();
-  }, []);
+  }, [setEngine]);
 
   return (
     <>
@@ -50,7 +50,6 @@ export const Canvas = () => {
           overflow: "hidden",
         }}
       ></div>
-      {engine && <Hud engine={engine} />}
     </>
   );
 };

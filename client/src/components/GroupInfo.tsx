@@ -4,10 +4,10 @@ import ResourceInfo from "./ResourceInfo";
 import { InfoBox, InfoRow, InfoDivider } from "./InfoBox";
 import { Button } from "./ui/Button";
 import { useStore } from "@/lib/state";
-import { Engine } from "@/lib/engine";
 
-const GroupInfo = ({ group, engine }: { group: Group; engine: Engine }) => {
+const GroupInfo = ({ group }: { group: Group }) => {
   const world = useStore((state) => state.world);
+  const engine = useStore((state) => state.engine);
 
   if (!group) {
     return <div>No group selected</div>;

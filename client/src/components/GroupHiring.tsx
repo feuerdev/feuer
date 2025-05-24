@@ -2,12 +2,10 @@ import { Building } from "@shared/objects";
 import { useStore } from "@/lib/state";
 import { Button } from "./ui/Button";
 import { InfoBox } from "./InfoBox";
-import { Engine } from "@/lib/engine";
 import { hash } from "@shared/hex";
 
 interface GroupHiringProps {
   building: Building;
-  engine: Engine;
 }
 
 // Define resource keys to ensure type safety
@@ -20,8 +18,9 @@ const GROUP_COST: Record<ResourceKey, number> = {
   stone: 5,
 };
 
-const GroupHiring = ({ building, engine }: GroupHiringProps) => {
+const GroupHiring = ({ building }: GroupHiringProps) => {
   const world = useStore((state) => state.world);
+  const engine = useStore((state) => state.engine);
   const tile = world.tiles[hash(building.position)];
 
   if (!tile) {

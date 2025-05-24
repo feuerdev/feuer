@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { Selection, SelectionType } from "./types";
 import { World } from "@shared/objects";
 import { Socket } from "socket.io-client";
+import { Engine } from "./engine";
 
 type AppState = {
   socket: Socket | null;
@@ -14,6 +15,8 @@ type AppState = {
   setSelection: (selection: Selection) => void;
   world: World;
   setWorld: (world: World) => void;
+  engine: Engine;
+  setEngine: (engine: Engine) => void;
 };
 
 export const useStore = create<AppState>((set) => ({
@@ -37,4 +40,6 @@ export const useStore = create<AppState>((set) => ({
     players: {},
   },
   setWorld: (world) => set({ world }),
+  engine: null as unknown as Engine, // This is fine :~)
+  setEngine: (engine) => set({ engine }),
 }));

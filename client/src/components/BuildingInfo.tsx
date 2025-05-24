@@ -1,19 +1,18 @@
-import { Building, Group } from "@shared/objects";
+import { Building } from "@shared/objects";
 import { useStore } from "@/lib/state";
 import { InfoBox, InfoRow, InfoDivider } from "./InfoBox";
 import { Button } from "./ui/Button";
-import { Engine } from "@/lib/engine";
 import { equals } from "@shared/hex";
 import GroupHiring from "./GroupHiring";
 
 interface BuildingInfoProps {
   building: Building;
-  engine: Engine;
 }
 
-const BuildingInfo = ({ building, engine }: BuildingInfoProps) => {
+const BuildingInfo = ({ building }: BuildingInfoProps) => {
   const world = useStore((state) => state.world);
   const userId = useStore((state) => state.userId);
+  const engine = useStore((state) => state.engine);
 
   if (!building) {
     return <div>No building selected</div>;
@@ -196,7 +195,7 @@ const BuildingInfo = ({ building, engine }: BuildingInfoProps) => {
         )}
       </InfoBox>
 
-      <GroupHiring building={building} engine={engine} />
+      <GroupHiring building={building} />
     </div>
   );
 };
