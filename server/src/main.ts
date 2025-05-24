@@ -18,18 +18,17 @@ export const getNextId = () => {
 let world: World;
 
 const worldName = Config.worldName;
+const worldPersistence = Config.worldPersistence && !!worldName;
 console.info(`Using world name: "${worldName}"`);
+console.info(`World persistence: ${worldPersistence}`);
 
-// Initialize database if connection string is provided
-if (Config.dbConnectionString) {
+if (worldPersistence && Config.dbConnectionString) {
   await initDatabase();
-  
   // List available worlds
   const worlds = await listWorlds();
   if (worlds.length > 0) {
     console.info(`Available worlds: ${worlds.join(', ')}`);
   }
-  
   // Try to load existing world with the specified name
   world = await loadWorld();
 }
@@ -47,9 +46,8 @@ if (!world) {
     Rules.settings.map_octaves,
     Rules.settings.map_persistence
   );
-  
-  // Save the newly created world if database is configured
-  if (Config.dbConnectionString) {
+  // Save the newly created world if persistence is enabled
+  if (worldPersistence && Config.dbConnectionString) {
     await saveWorld(world);
   }
 } else {
@@ -60,14 +58,13 @@ if (!world) {
 const game = new GameServer(world);
 game.run();
 
-// Set up periodic saving if database is configured
-if (Config.dbConnectionString) {
+// Set up periodic saving if persistence is enabled
+if (worldPersistence && Config.dbConnectionString) {
   // Save every 5 minutes and on process exit
   const SAVE_INTERVAL = 5 * 60 * 1000; // 5 minutes
   setInterval(() => {
     saveWorld(world);
   }, SAVE_INTERVAL);
-  
   // Save on graceful shutdown
   ['SIGINT', 'SIGTERM', 'SIGQUIT'].forEach(signal => {
     process.on(signal, async () => {
