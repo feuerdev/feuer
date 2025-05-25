@@ -64,6 +64,11 @@ const Config = yargs(process.argv.slice(2))
     type: "string",
     default: process.env.NODE_ENV || "development"
   })
+  .option("worldPersistence", {
+    description: "Enable world saving/loading to the database",
+    type: "boolean",
+    default: true,
+  })
   .parseSync()
 
 console.debug("Config loaded:", Config)

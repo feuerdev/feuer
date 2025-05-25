@@ -1,5 +1,5 @@
-import { Hex } from "../../shared/hex.js"
-import { Battle, Group } from "../../shared/objects.js"
+import { Hex } from "../../shared/hex.js";
+import { Battle, Group } from "../../shared/objects.js";
 
 export function create(
   id: number,
@@ -11,7 +11,6 @@ export function create(
     attacker: attacker,
     defender: defender,
     position: position,
-    duels: [],
     id: id,
-  }
+  };
 }

@@ -15,6 +15,8 @@ import {
   drawTerrainGraphics,
   addBuildingText,
   BIOME_COLORS,
+  drawResourceGenerationIndicator,
+  RESOURCE_COLORS,
 } from "./sprites";
 import { Socket } from "socket.io-client";
 import {
@@ -98,6 +100,11 @@ export class Engine {
     this.socket.on("gamestate group", this.handleGroupUpdate);
     this.socket.on("gamestate groups", this.handleGroupsUpdate);
     this.socket.on("gamestate buildings", this.handleBuildingsUpdate);
+    this.socket.on("gamestate building", this.handleBuildingUpdate);
+    this.socket.on(
+      "gamestate resource generation",
+      this.handleResourceGeneration
+    );
 
     this.requestTiles(this.socket);
     if (import.meta.env.DEV) {
@@ -130,6 +137,11 @@ export class Engine {
     this.socket.off("gamestate group", this.handleGroupUpdate);
     this.socket.off("gamestate groups", this.handleGroupsUpdate);
     this.socket.off("gamestate buildings", this.handleBuildingsUpdate);
+    this.socket.off("gamestate building", this.handleBuildingUpdate);
+    this.socket.off(
+      "gamestate resource generation",
+      this.handleResourceGeneration
+    );
 
     // Clean up viewport and its listeners
     if (this.viewport) {
@@ -545,7 +557,7 @@ export class Engine {
     // Update the sprite position
     object.x = randomPos.x;
     object.y = randomPos.y;
-    object.zIndex = ZIndices.Units;
+    object.zIndex = ZIndices.Groups;
 
     // Handle animation for moving groups
     const isMoving = group.targetHexes && group.targetHexes.length > 0;
@@ -573,7 +585,7 @@ export class Engine {
     if (uid && group.owner === uid) {
       const movementIndicatorContainer = new Container();
       movementIndicatorContainer.label = "MovementIndicator";
-      movementIndicatorContainer.zIndex = ZIndices.Units;
+      movementIndicatorContainer.zIndex = ZIndices.Groups;
 
       this.viewport.addChild(movementIndicatorContainer);
 
@@ -742,6 +754,339 @@ export class Engine {
       object.filters = [this.GLOW_FILTER];
       this.selectedSprite = object;
     }
+
+    // Add visual indicator for assigned groups
+    this.updateBuildingAssignmentIndicator(building);
+  }
+
+  /**
+   * Updates visual indicators for groups assigned to a building
+   * @param building The building to update indicators for
+   */
+  private updateBuildingAssignmentIndicator(building: Building): void {
+    const { world } = useStore.getState();
+
+    // Remove any existing assignment indicators
+    const indicatorName = `assignment_${building.id}`;
+    const oldIndicator = this.viewport.getChildByName(indicatorName);
+    if (oldIndicator) {
+      this.viewport.removeChild(oldIndicator);
+    }
+
+    // Check if any slots have assigned groups
+    const hasAssignedGroups = building.slots.some(
+      (slot) => slot.assignedGroupId !== undefined
+    );
+
+    if (!hasAssignedGroups) {
+      return;
+    }
+
+    // Create a new container for assignment indicators
+    const container = new Container();
+    container.name = indicatorName;
+    container.zIndex = ZIndices.Buildings + 1;
+
+    // Get building position
+    const hexCenter = this.layout.hexToPixel(building.position);
+
+    // For each assigned slot, add an indicator
+    building.slots.forEach((slot, index) => {
+      if (slot.assignedGroupId) {
+        const group = world.groups[slot.assignedGroupId];
+        if (group) {
+          // Create indicator showing assignment
+          const indicator = new Graphics();
+
+          // Draw different colored dot based on resource type
+          let color = 0xffffff;
+          switch (slot.resourceType) {
+            case "wood":
+              color = 0x8b4513;
+              break;
+            case "stone":
+              color = 0x808080;
+              break;
+            case "iron":
+              color = 0xa19d94;
+              break;
+            case "gold":
+              color = 0xffd700;
+              break;
+            case "berries":
+            case "fish":
+            case "meat":
+            case "wheat":
+              color = 0x00ff00;
+              break;
+          }
+
+          indicator.beginFill(color);
+          indicator.drawCircle(0, 0, 5);
+          indicator.endFill();
+
+          // Position indicators in a semicircle above the building
+          const angle =
+            Math.PI * (0.75 + 0.5 * (index / building.slots.length));
+          const radius = 20;
+          indicator.x = hexCenter.x + Math.cos(angle) * radius;
+          indicator.y = hexCenter.y + Math.sin(angle) * radius;
+
+          container.addChild(indicator);
+
+          // Add resource generation rate visualization
+          this.addResourceGenerationRateIndicator(
+            container,
+            indicator.x,
+            indicator.y - 15,
+            slot.resourceType,
+            this.calculateResourceGenerationRate(building, slot, group)
+          );
+        }
+      }
+    });
+
+    this.viewport.addChild(container);
+  }
+
+  /**
+   * Calculate the resource generation rate for a building slot with assigned group
+   * @param building The building
+   * @param slot The resource slot
+   * @param group The assigned group
+   * @returns The calculated resource generation rate
+   */
+  private calculateResourceGenerationRate(
+    building: Building,
+    slot: { resourceType: string; efficiency: number },
+    group: Group
+  ): number {
+    // Get base production rate
+    const baseProduction = building.production[slot.resourceType] || 0;
+
+    // Get group's efficiency for this resource category
+    let groupEfficiency = 1.0;
+    if (slot.resourceType === "wood") {
+      groupEfficiency = group.gatheringEfficiency.wood;
+    } else if (slot.resourceType === "stone") {
+      groupEfficiency = group.gatheringEfficiency.stone;
+    } else if (slot.resourceType === "iron") {
+      groupEfficiency = group.gatheringEfficiency.iron;
+    } else if (slot.resourceType === "gold") {
+      groupEfficiency = group.gatheringEfficiency.gold;
+    } else if (
+      ["fish", "wheat", "meat", "berries"].includes(slot.resourceType)
+    ) {
+      groupEfficiency = group.gatheringEfficiency.food;
+    }
+
+    // Calculate final production rate (per second)
+    return baseProduction * slot.efficiency * groupEfficiency;
+  }
+
+  /**
+   * Add a resource generation rate indicator to the container
+   * @param container The container to add the indicator to
+   * @param x X position
+   * @param y Y position
+   * @param resourceType Type of resource
+   * @param rate Generation rate
+   */
+  private addResourceGenerationRateIndicator(
+    container: Container,
+    x: number,
+    y: number,
+    resourceType: string,
+    rate: number
+  ): void {
+    // Create text to show the rate
+    const text = new Text(`+${rate.toFixed(1)}/s`, {
+      fontSize: 10,
+      fill: RESOURCE_COLORS[resourceType] || 0xffffff,
+      stroke: {
+        color: 0x000000,
+        width: 2,
+      },
+      align: "center",
+    });
+
+    text.anchor.set(0.5);
+    text.x = x;
+    text.y = y;
+
+    container.addChild(text);
+
+    // Start a subtle animation for the text
+    this.animateResourceText(text);
+  }
+
+  /**
+   * Animate the resource generation text with a subtle pulsing effect
+   * @param text The text to animate
+   */
+  private animateResourceText(text: Text): void {
+    const animationName = `resource_text_${text.x}_${text.y}`;
+
+    // Cancel any existing animation
+    const frameId = this.animationFrameIds.get(animationName);
+    if (frameId) {
+      cancelAnimationFrame(frameId);
+    }
+
+    // Initialize animation parameters
+    let time = 0;
+    const animationSpeed = 0.03;
+    const scaleVariation = 0.15; // Scale will vary by ±15%
+
+    // Store original scale
+    const originalScale = text.scale.x;
+
+    // Animation function
+    const animate = () => {
+      time += animationSpeed;
+
+      // Pulsing scale effect
+      const scaleFactor = 1 + Math.sin(time) * scaleVariation;
+      text.scale.set(originalScale * scaleFactor);
+
+      // Request next frame
+      const frameId = requestAnimationFrame(animate);
+      this.animationFrameIds.set(animationName, frameId);
+    };
+
+    // Start the animation
+    animate();
+  }
+
+  /**
+   * Request a group to be assigned to a building slot
+   * @param groupId The ID of the group to assign
+   * @param buildingId The ID of the building to assign to
+   * @param slotIndex The index of the slot in the building
+   */
+  requestGroupAssignment(
+    groupId: number,
+    buildingId: number,
+    slotIndex: number
+  ): void {
+    const { world } = useStore.getState();
+    const group = world.groups[groupId];
+    const building = world.buildings[buildingId];
+
+    if (!group || !building) {
+      console.warn(`Cannot assign: group or building not found`);
+      return;
+    }
+
+    if (group.owner !== this.uid) {
+      console.warn(`Cannot assign group ${groupId}: not owned by ${this.uid}`);
+      return;
+    }
+
+    if (building.owner !== this.uid) {
+      console.warn(
+        `Cannot assign to building ${buildingId}: not owned by ${this.uid}`
+      );
+      return;
+    }
+
+    // Check if group is at the same position as the building
+    if (!equals(group.pos, building.position)) {
+      console.warn(`Group must be at the same position as the building`);
+      return;
+    }
+
+    // Send assignment request to server
+    this.socket.emit("request assign group", {
+      groupId: groupId,
+      buildingId: buildingId,
+      slotIndex: slotIndex,
+    });
+  }
+
+  /**
+   * Request a group to be unassigned from its current building
+   * @param groupId The ID of the group to unassign
+   */
+  requestGroupUnassignment(groupId: number): void {
+    const { world } = useStore.getState();
+    const group = world.groups[groupId];
+
+    if (!group) {
+      console.warn(`Cannot unassign: group not found`);
+      return;
+    }
+
+    if (group.owner !== this.uid) {
+      console.warn(
+        `Cannot unassign group ${groupId}: not owned by ${this.uid}`
+      );
+      return;
+    }
+
+    if (group.assignedToBuilding === undefined) {
+      console.warn(`Group ${groupId} is not assigned to any building`);
+      return;
+    }
+
+    // Send unassignment request to server
+    this.socket.emit("request unassign group", {
+      groupId: groupId,
+    });
+  }
+
+  /**
+   * Request a building to be upgraded
+   * @param buildingId The ID of the building to upgrade
+   */
+  requestBuildingUpgrade(buildingId: number): void {
+    const { world } = useStore.getState();
+    const building = world.buildings[buildingId];
+
+    if (!building) {
+      console.warn(`Cannot upgrade: building not found`);
+      return;
+    }
+
+    if (building.owner !== this.uid) {
+      console.warn(
+        `Cannot upgrade building ${buildingId}: not owned by ${this.uid}`
+      );
+      return;
+    }
+
+    // Send upgrade request to server
+    this.socket.emit("request upgrade building", {
+      buildingId: buildingId,
+    });
+  }
+
+  /**
+   * Request to hire a new group at a building
+   * @param buildingId The ID of the building where the group will be hired
+   * @param groupType The type of group to hire
+   */
+  requestHireGroup(buildingId: number, groupType: string): void {
+    const { world } = useStore.getState();
+    const building = world.buildings[buildingId];
+
+    if (!building) {
+      console.warn(`Cannot hire group: building not found`);
+      return;
+    }
+
+    if (building.owner !== this.uid) {
+      console.warn(
+        `Cannot hire group at building ${buildingId}: not owned by ${this.uid}`
+      );
+      return;
+    }
+
+    // Send hire request to server
+    this.socket.emit("request hire group", {
+      buildingId: buildingId,
+      groupType: groupType,
+    });
   }
 
   async updateScenegraphTile(tile: ClientTile): Promise<void> {
@@ -956,4 +1301,119 @@ export class Engine {
       this.startMovementAnimation(spriteName, sprite);
     }
   }
+
+  private handleBuildingUpdate = (building: Building) => {
+    const { world, setWorld } = useStore.getState();
+
+    // Update the building in the world state
+    setWorld({
+      ...world,
+      buildings: {
+        ...world.buildings,
+        [building.id]: building,
+      },
+    });
+
+    // Update the building in the scene graph
+    this.updateScenegraphBuilding(building);
+
+    // Update selection if this building is selected
+    this.updateSelection();
+  };
+
+  /**
+   * Updates the scene with resource generation particles
+   * @param building The building generating resources
+   * @param resourceType Type of resource being generated
+   * @param amount Amount being generated
+   */
+  showResourceGenerationEffect(
+    building: Building,
+    resourceType: string,
+    amount: number
+  ): void {
+    const hexCenter = this.layout.hexToPixel(building.position);
+
+    // Create container for the effect if it doesn't exist
+    const effectName = `resource_effect_${building.id}`;
+    let effectContainer = this.viewport.getChildByName(effectName) as Container;
+
+    if (!effectContainer) {
+      effectContainer = new Container();
+      effectContainer.name = effectName;
+      effectContainer.zIndex = ZIndices.Effects;
+      this.viewport.addChild(effectContainer);
+    }
+
+    // Create a particle
+    const particle = new Graphics();
+    drawResourceGenerationIndicator(particle, resourceType, amount, 0);
+
+    // Position particle near the building
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 15 + Math.random() * 10;
+    particle.x = hexCenter.x + Math.cos(angle) * distance;
+    particle.y = hexCenter.y + Math.sin(angle) * distance;
+
+    effectContainer.addChild(particle);
+
+    // Animate the particle floating upward
+    const animationName = `resource_particle_${Date.now()}_${Math.random()}`;
+    let progress = 0;
+
+    const animate = () => {
+      progress += 0.01;
+
+      // Move upward and slightly to the side
+      particle.y -= 0.5;
+      particle.x += Math.sin(progress * 5) * 0.3;
+
+      // Update the particle appearance
+      drawResourceGenerationIndicator(particle, resourceType, amount, progress);
+
+      // Remove when animation completes
+      if (progress >= 1) {
+        effectContainer.removeChild(particle);
+        particle.destroy();
+        return;
+      }
+
+      // Request next frame
+      const frameId = requestAnimationFrame(animate);
+      this.animationFrameIds.set(animationName, frameId);
+    };
+
+    // Start the animation
+    animate();
+  }
+
+  /**
+   * Handle resource generation events from the server
+   */
+  private handleResourceGeneration = (data: {
+    buildingId: number;
+    resourceType: string;
+    amount: number;
+  }) => {
+    const { world } = useStore.getState();
+    const building = world.buildings[data.buildingId];
+
+    if (building) {
+      // Show resource generation effect
+      this.showResourceGenerationEffect(
+        building,
+        data.resourceType,
+        data.amount
+      );
+
+      // Update the tile resources in the local state
+      const tile = world.tiles[hash(building.position)];
+      if (tile) {
+        if (!tile.resources[data.resourceType]) {
+          tile.resources[data.resourceType] = 0;
+        }
+        tile.resources[data.resourceType] += data.amount;
+      }
+    }
+  };
 }

@@ -1,8 +1,11 @@
 import { useEffect, useRef } from "react";
 import { Engine } from "@/lib/engine";
 import * as Pixi from "pixi.js";
+import { useStore } from "@/lib/state";
+
 export const Canvas = () => {
   const canvasRef = useRef<HTMLDivElement | null>(null);
+  const setEngine = useStore((state) => state.setEngine);
 
   useEffect(() => {
     const initCanvas = async () => {
@@ -17,12 +20,14 @@ export const Canvas = () => {
         canvasRef.current.appendChild(app.canvas);
       }
 
-      const engine = new Engine(app);
+      const engineInstance = new Engine(app);
+      setEngine(engineInstance);
+
       if (import.meta.hot) {
         import.meta.hot.dispose(() => {
           try {
             canvasRef.current?.removeChild(app?.canvas);
-            engine.destroy();
+            engineInstance.destroy();
             app.destroy(true);
           } catch (error) {
             console.error("Error disposing of Pixi app:", error);
@@ -32,7 +37,7 @@ export const Canvas = () => {
     };
 
     initCanvas();
-  }, []);
+  }, [setEngine]);
 
   return (
     <div

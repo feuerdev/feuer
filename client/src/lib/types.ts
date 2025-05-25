@@ -24,12 +24,14 @@ export const enum SelectionType {
 
 export enum ZIndices {
   Background = 0,
-  Tiles = 1,
+  Tiles = 10,
   TileSelection = 2,
   Nature = 3,
-  Buildings = 4,
+  Buildings = 20,
   BuildingsSelection = 5,
-  Units = 6,
-  UnitsSelection = 7,
-  Debug = 9999,
+  Groups = 30,
+  GroupsSelection = 7,
+  Effects = 40,
+  UI = 50,
+  Debug = 100,
 }
