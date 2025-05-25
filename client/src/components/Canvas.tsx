@@ -40,16 +40,14 @@ export const Canvas = () => {
   }, [setEngine]);
 
   return (
-    <>
-      <div
-        ref={canvasRef}
-        style={{
-          width: "100%",
-          height: "100%",
-          position: "absolute",
-          overflow: "hidden",
-        }}
-      ></div>
-    </>
+    <div
+      ref={canvasRef}
+      style={{
+        width: "100%",
+        height: "100%",
+        position: "absolute",
+        overflow: "hidden",
+      }}
+    ></div>
   );
 };
