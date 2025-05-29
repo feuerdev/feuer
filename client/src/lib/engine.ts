@@ -740,7 +740,7 @@ export class Engine {
       this.centerOn(building.position);
     }
 
-    const { selection } = useStore.getState();
+    const { selection, world } = useStore.getState();
     const spriteName = convertToSpriteName(building.id, "b");
     const isCurrentlySelected =
       this.selectedSprite &&
@@ -766,7 +766,7 @@ export class Engine {
       // Create graphics for building shape
       const graphics = new Graphics();
       const relationHash = PlayerRelation.hash(building.owner, this.uid);
-      const relation = useStore.getState().world.playerRelations[relationHash];
+      const relation = world.playerRelations[relationHash];
       const relationType = relation?.relationType;
       drawBuildingGraphics(graphics, building, this.uid, relationType);
       object.addChild(graphics);
@@ -778,11 +778,51 @@ export class Engine {
         if (this.isDragging) {
           return;
         }
-        const { setSelection } = useStore.getState();
+        const { selection, setSelection, world } = useStore.getState();
         if (event.button === 0) {
           console.log(`clicked building ${building.id}`);
           setSelection({ type: SelectionType.Building, id: building.id });
           this.updateSelection();
+        } else if (event.button === 2) {
+          // Handle right-click for group assignment
+          if (
+            selection.type === SelectionType.Group &&
+            selection.id !== undefined
+          ) {
+            const selectedGroup = world.groups[selection.id];
+            const targetBuilding = world.buildings[building.id];
+
+            if (selectedGroup && targetBuilding) {
+              // Find the first available slot
+              let freeSlotIndex = -1;
+              if (targetBuilding.slots && targetBuilding.slots.length > 0) {
+                for (let i = 0; i < targetBuilding.slots.length; i++) {
+                  if (
+                    targetBuilding.slots[i].assignedGroupId === undefined ||
+                    targetBuilding.slots[i].assignedGroupId === null
+                  ) {
+                    freeSlotIndex = i;
+                    break;
+                  }
+                }
+              }
+
+              if (freeSlotIndex !== -1) {
+                console.log(
+                  `Right-clicked building ${building.id} with group ${selection.id} selected. Assigning to slot ${freeSlotIndex}.`
+                );
+                this.requestGroupAssignment(
+                  selection.id,
+                  building.id,
+                  freeSlotIndex
+                );
+              } else {
+                console.warn(
+                  `Building ${building.id} has no free slots for group ${selection.id}.`
+                );
+              }
+            }
+          }
         }
       });
 
@@ -801,7 +841,7 @@ export class Engine {
       // For existing sprites, update the graphics
       const graphics = object.getChildAt(0) as Graphics;
       const relationHash = PlayerRelation.hash(building.owner, this.uid);
-      const relation = useStore.getState().world.playerRelations[relationHash];
+      const relation = world.playerRelations[relationHash];
       const relationType = relation?.relationType;
       drawBuildingGraphics(graphics, building, this.uid, relationType);
 
