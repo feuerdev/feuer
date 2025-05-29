@@ -382,12 +382,10 @@ export default class GameServer {
         if (building && group.assignedToSlot !== undefined) {
           // Clear the assignment in the building slot
           building.slots[group.assignedToSlot].assignedGroupId = undefined
-          socket.emit("gamestate building", building)
           
           // Clear the assignment in the group
           group.assignedToBuilding = undefined
           group.assignedToSlot = undefined
-          socket.emit("gamestate group", group)
         }
       }
       

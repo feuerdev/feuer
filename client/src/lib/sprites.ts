@@ -120,7 +120,7 @@ export function drawBuildingGraphics(
   graphics.lineStyle(2, 0x000000, 0.7);
 
   // Make the building slightly larger based on level
-  const size = 15 + (building.level - 1) * 3;
+  const size = 20 + (building.level - 1) * 3;
   graphics.drawRect(-size, -size, size * 2, size * 2);
   graphics.endFill();
 
@@ -237,21 +237,21 @@ export function drawGroupGraphics(
   // Body
   graphics.beginFill(0x333333);
   graphics.lineStyle(1, 0x000000);
-  graphics.drawRect(-7, -5, 14, 15);
+  graphics.drawRect(-5, -4, 10, 12);
   graphics.endFill();
 
   // Head (colored based on relation)
   graphics.beginFill(color);
   graphics.lineStyle(1, 0x000000);
-  graphics.drawCircle(0, -10, 7);
+  graphics.drawCircle(0, -8, 5);
   graphics.endFill();
 
   // Add simple legs
   graphics.lineStyle(2, 0x333333);
-  graphics.moveTo(-5, 10);
-  graphics.lineTo(-5, 15);
-  graphics.moveTo(5, 10);
-  graphics.lineTo(5, 15);
+  graphics.moveTo(-3, 8);
+  graphics.lineTo(-3, 12);
+  graphics.moveTo(3, 8);
+  graphics.lineTo(3, 12);
 }
 
 /**
