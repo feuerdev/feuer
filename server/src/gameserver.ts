@@ -154,6 +154,9 @@ export default class GameServer {
           this.tryJoinOngoingBattle(group);
         }
       }
+      
+      // Process healing of injuries
+      this.processGroupHealing(group);
     })
 
     //Resource Gathering
@@ -417,6 +420,97 @@ export default class GameServer {
         this.updatePlayerVisibilities(battle.defender.owner);
         return; 
       }
+    }
+
+    // If no existing battle to join, check for multiple hostile groups on the tile
+    // This is our new multi-group battle system
+    this.checkForMultiGroupBattle(group);
+  }
+
+  /**
+   * Checks for multiple hostile groups on a tile and creates appropriate battles
+   * between them, implementing a more complex battle system than simple 1v1
+   */
+  checkForMultiGroupBattle(group: Group) {
+    // If the group is already in a battle, don't start a new one
+    if (this.world.battles.some(b => 
+      (b.attacker.id === group.id || b.defender.id === group.id) && 
+      equals(b.position, group.pos))
+    ) {
+      return;
+    }
+
+    // Find all other groups on this tile
+    const groupsOnTile = Object.values(this.world.groups).filter(g => 
+      g.id !== group.id && equals(g.pos, group.pos)
+    );
+
+    if (groupsOnTile.length === 0) return; // No other groups on this tile
+
+    // Group hostile groups by owner for more organized battles
+    const hostileGroupsByOwner: Record<string, Group[]> = {};
+
+    // Check which groups are hostile to the current group
+    groupsOnTile.forEach(otherGroup => {
+      const relation = this.world.playerRelations[
+        PlayerRelation.hash(group.owner, otherGroup.owner)
+      ];
+      const areHostile = !relation || relation.relationType === PlayerRelation.EnumRelationType.hostile;
+      
+      // Only consider hostile groups where at least one has aggressive behavior
+      if (areHostile && (group.behavior === GroupBehavior.Aggressive || otherGroup.behavior === GroupBehavior.Aggressive)) {
+        // Group by owner to organize battles
+        if (!hostileGroupsByOwner[otherGroup.owner]) {
+          hostileGroupsByOwner[otherGroup.owner] = [];
+        }
+        hostileGroupsByOwner[otherGroup.owner].push(otherGroup);
+      }
+    });
+
+    // If no hostile groups, no battles to create
+    if (Object.keys(hostileGroupsByOwner).length === 0) return;
+
+    // Now match this group against hostile groups in a way that distributes the battles
+    let battleCreated = false;
+
+    // First, check if any player has multiple groups that can team up
+    for (const [ownerKey, hostileGroups] of Object.entries(hostileGroupsByOwner)) {
+      if (hostileGroups.length > 0) {
+        // Sort hostile groups by strength to prioritize stronger opponents
+        hostileGroups.sort((a, b) => b.strength - a.strength);
+        
+        // Create a battle with the strongest hostile group
+        const opponent = hostileGroups[0];
+        
+        // Determine who attacks and who defends based on initiative
+        let attacker: Group, defender: Group;
+        if (group.initiative > opponent.initiative) {
+          attacker = group;
+          defender = opponent;
+        } else {
+          attacker = opponent;
+          defender = group;
+        }
+        
+        this.world.battles.push(
+          Battles.create(++this.world.idCounter, group.pos, attacker, defender)
+        );
+        
+        console.log(`Multi-group battle initiated between ${attacker.id} and ${defender.id}`);
+        battleCreated = true;
+        
+        // For now, just create one battle per movement tick to keep things manageable
+        // In the future, this could be expanded to create multiple battles
+        break;
+      }
+    }
+
+    if (battleCreated) {
+      // Update visibilities for all involved players
+      this.updatePlayerVisibilities(group.owner);
+      Object.keys(hostileGroupsByOwner).forEach(owner => {
+        this.updatePlayerVisibilities(owner);
+      });
     }
   }
 
@@ -1192,7 +1286,7 @@ export default class GameServer {
 
   /**
    * Applies a chance for a group to receive an injury.
-   * Placeholder for more complex injury mechanics.
+   * Generates different types of injuries based on damage and severity.
    */
   applyInjuryChance(group: Group, damageTaken: number) {
     if (damageTaken <= 0) return;
@@ -1201,20 +1295,160 @@ export default class GameServer {
     const injuryChance = (damageTaken / 20) - (group.painThreshold / 20); // Example: 10 damage = 50% base, 10 pain threshold reduces by 50%
 
     if (Math.random() < injuryChance) {
-      // Add a generic injury for now
+      // Determine injury severity based on damage taken
+      let severity = InjurySeverity.Minor;
+      let isPermanent = false;
+      let duration = 1000; // Default duration for minor injuries
+      
+      if (damageTaken > 30) {
+        severity = InjurySeverity.Critical;
+        // 25% chance of permanent injury at critical level
+        isPermanent = Math.random() < 0.25;
+        duration = isPermanent ? undefined : 5000;
+      } else if (damageTaken > 20) {
+        severity = InjurySeverity.Severe;
+        // 10% chance of permanent injury at severe level
+        isPermanent = Math.random() < 0.1;
+        duration = isPermanent ? undefined : 3000;
+      } else if (damageTaken > 10) {
+        severity = InjurySeverity.Moderate;
+        // 5% chance of permanent injury at moderate level
+        isPermanent = Math.random() < 0.05;
+        duration = isPermanent ? undefined : 2000;
+      }
+      
+      // Select an injury type based on severity
+      let injuryName = "Minor Laceration";
+      let injuryDescription = "A superficial cut.";
+      let effects: Array<{ effect: InjuryEffect; magnitude: number; duration?: number }> = [];
+      
+      switch (severity) {
+        case InjurySeverity.Minor:
+          // Choose from minor injuries
+          const minorInjuries = [
+            { name: "Minor Laceration", desc: "A superficial cut.", effect: InjuryEffect.MoraleDecrease, magnitude: 5 },
+            { name: "Bruised Arm", desc: "A painful bruise.", effect: InjuryEffect.StrengthDecrease, magnitude: 3 },
+            { name: "Sprained Ankle", desc: "Mild pain when walking.", effect: InjuryEffect.AgilityDecrease, magnitude: 3 }
+          ];
+          const minorChoice = minorInjuries[Math.floor(Math.random() * minorInjuries.length)];
+          injuryName = minorChoice.name;
+          injuryDescription = minorChoice.desc;
+          effects = [{ effect: minorChoice.effect, magnitude: minorChoice.magnitude, duration }];
+          break;
+          
+        case InjurySeverity.Moderate:
+          // Choose from moderate injuries
+          const moderateInjuries = [
+            { name: "Deep Cut", desc: "A painful gash that will take time to heal.", effect: InjuryEffect.StrengthDecrease, magnitude: 8 },
+            { name: "Concussion", desc: "Dizziness and headaches affect concentration.", effect: InjuryEffect.InitiativeDecrease, magnitude: 8 },
+            { name: "Twisted Knee", desc: "Mobility is reduced.", effect: InjuryEffect.AgilityDecrease, magnitude: 8 }
+          ];
+          const modChoice = moderateInjuries[Math.floor(Math.random() * moderateInjuries.length)];
+          injuryName = modChoice.name;
+          injuryDescription = modChoice.desc;
+          effects = [
+            { effect: modChoice.effect, magnitude: modChoice.magnitude, duration },
+            { effect: InjuryEffect.MoraleDecrease, magnitude: 5, duration }
+          ];
+          break;
+          
+        case InjurySeverity.Severe:
+          // Choose from severe injuries
+          const severeInjuries = [
+            { name: "Broken Bone", desc: "A fracture that severely limits function.", effect: InjuryEffect.StrengthDecrease, magnitude: 15 },
+            { name: "Severe Trauma", desc: "Physical and mental effects are significant.", effect: InjuryEffect.InitiativeDecrease, magnitude: 15 },
+            { name: "Deep Wound", desc: "Blood loss and pain affect overall capability.", effect: InjuryEffect.AgilityDecrease, magnitude: 15 }
+          ];
+          const sevChoice = severeInjuries[Math.floor(Math.random() * severeInjuries.length)];
+          injuryName = sevChoice.name;
+          injuryDescription = sevChoice.desc;
+          effects = [
+            { effect: sevChoice.effect, magnitude: sevChoice.magnitude, duration },
+            { effect: InjuryEffect.MoraleDecrease, magnitude: 10, duration }
+          ];
+          break;
+          
+        case InjurySeverity.Critical:
+          // Choose from critical injuries
+          const criticalInjuries = [
+            { name: "Severed Limb", desc: "Permanent loss of function.", effect: InjuryEffect.StrengthDecrease, magnitude: 25 },
+            { name: "Brain Damage", desc: "Cognitive abilities are permanently impaired.", effect: InjuryEffect.InitiativeDecrease, magnitude: 25 },
+            { name: "Crippling Wound", desc: "Movement is severely and permanently restricted.", effect: InjuryEffect.AgilityDecrease, magnitude: 25 }
+          ];
+          const critChoice = criticalInjuries[Math.floor(Math.random() * criticalInjuries.length)];
+          injuryName = critChoice.name;
+          injuryDescription = critChoice.desc;
+          effects = [
+            { effect: critChoice.effect, magnitude: critChoice.magnitude, duration },
+            { effect: InjuryEffect.MoraleDecrease, magnitude: 20, duration }
+          ];
+          break;
+      }
+      
+      // For permanent injuries, modify the description to indicate permanence
+      if (isPermanent) {
+        injuryDescription = "PERMANENT: " + injuryDescription;
+        // Remove duration for permanent injuries
+        effects.forEach(effect => {
+          effect.duration = undefined;
+        });
+      }
+      
+      // Create and add the injury
       const newInjury: Injury = {
         id: `inj_${this.world.idCounter++}_${Date.now()}`,
-        name: "Minor Laceration",
-        description: "A superficial cut.",
-        severity: InjurySeverity.Minor,
-        effects: [{ effect: InjuryEffect.MoraleDecrease, magnitude: 5, duration: 1000 }], // Lasts 1000 ticks
-        timeOfInjury: this.actualTicks, // Assuming actualTicks is available and represents game time
-        isPermanent: false,
-        healable: true,
+        name: injuryName,
+        description: injuryDescription,
+        severity,
+        effects,
+        timeOfInjury: this.actualTicks,
+        isPermanent,
+        healable: !isPermanent,
       };
+      
       group.injuries.push(newInjury);
-      console.log(`Group ${group.id} received injury: ${newInjury.name}`);
+      console.log(`Group ${group.id} received injury: ${newInjury.name} (${InjurySeverity[severity]}${isPermanent ? ", Permanent" : ""})`);
     }
+  }
+
+  // New method to process group healing
+  processGroupHealing(group: Group) {
+    if (group.injuries.length === 0) return;
+
+    // Create a copy of the injuries array since we'll be modifying it
+    const currentInjuries = [...group.injuries];
+    
+    // Check each injury for healing
+    currentInjuries.forEach((injury, index) => {
+      // Don't process permanent injuries for natural healing
+      if (injury.isPermanent) return;
+      
+      // Only process healable injuries
+      if (!injury.healable) return;
+      
+      // Check if the injury has a duration and if it's expired
+      const hasExpired = injury.effects.every(effect => {
+        if (effect.duration && this.actualTicks > injury.timeOfInjury + effect.duration) {
+          return true; // Effect has expired
+        }
+        return false; // Effect is still active
+      });
+      
+      if (hasExpired) {
+        // Remove the expired injury
+        const indexToRemove = group.injuries.findIndex(inj => inj.id === injury.id);
+        if (indexToRemove !== -1) {
+          group.injuries.splice(indexToRemove, 1);
+          console.log(`Group ${group.id} recovered from injury: ${injury.name}`);
+          
+          // Notify the player about the healing
+          const socket = this.uidsockets[group.owner];
+          if (socket && socket.connected) {
+            socket.emit("gamestate group", group);
+          }
+        }
+      }
+    });
   }
 }
 

@@ -34,7 +34,7 @@ This document outlines the core gameplay loop and implementation steps for Feuer
   - [x] It should update live with the battle
   - [x] It should be able to be closed
   - [x] It should show the battle result after it is over
-- [C] Enhance existing battle system with turn-based mechanics
+- [x] Enhance existing battle system with turn-based mechanics
   - [x] The logic should take into account the groups stats
   - [x] Add the following stats to the group that will affect the battle and are generated when the group is created:
     - [x] Strength
@@ -43,16 +43,16 @@ This document outlines the core gameplay loop and implementation steps for Feuer
     - [x] Agility
     - [x] Pain Threshold
     - [x] Intelligence
-  - [C] Add an injuries system
+  - [x] Add an injuries system
     - [x] Add a new hud element for the injuries
     - [x] Injuries should persist between battles
-    - [C] Some injuries should be able to be healed over time
-    - [C] Some injuries should be unable to be healed
+    - [x] Some injuries should be able to be healed over time
+    - [x] Some injuries should be unable to be healed
   - [x] The stats and the battle situation and injuries should affect the groups morale
   - [x] Allow for groups to flee from a battle when their morale is low
-- [C] Enable that every group joining a tile with an ongoing battle will join the battle
-  - [ ] implement a system for battles to match multiple groups in individual duels
-  - [C] a battle will continue until all groups are defeated or the battle is over
+- [x] Enable that every group joining a tile with an ongoing battle will join the battle
+  - [x] implement a system for battles to match multiple groups in individual duels
+  - [x] a battle will continue until all groups are defeated or the battle is over
 - [x] Implement group behavior programming interface
   - [x] Add a new hud element for the group behavior programming
   - [x] Start with simple aggressive and defensive behavior
