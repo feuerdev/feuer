@@ -55,9 +55,11 @@ const ResourceInfo = ({
       (tile.resources[key as keyof typeof tile.resources] || 0) > 0
   );
 
+  const effectiveClassName = `${className || ""} overflow-y-auto`.trim();
+
   if (resourceKeys.length === 0) {
     return (
-      <InfoBox title="Resources" className={className}>
+      <InfoBox title="Resources" className={effectiveClassName}>
         <p className="text-center text-gray-400 italic text-xs">
           No resources available
         </p>
@@ -66,15 +68,15 @@ const ResourceInfo = ({
   }
 
   return (
-    <InfoBox title="Resources" className={className}>
-      <div className="flex flex-col h-full overflow-hidden">
+    <InfoBox title="Resources" className={effectiveClassName}>
+      <div className="flex flex-col">
         <div className="grid grid-cols-3 gap-1 text-xs flex-shrink-0">
           <div className="font-semibold text-center text-xs">Group</div>
           <div className="font-semibold text-center text-xs">Transfer</div>
           <div className="font-semibold text-center text-xs">Tile</div>
         </div>
 
-        <div className="flex-1 overflow-auto pr-1 mt-1">
+        <div className="pr-1 mt-1">
           <div className="grid grid-cols-3 gap-1">
             {resourceKeys.map((resourceKey) => (
               <div key={resourceKey} className="contents">
