@@ -237,5 +237,42 @@
         "spotting": 1
       }
     }
+  },
+  "watchtower": {
+    "key": "watchtower",
+    "name": "Watchtower",
+    "cost": {
+      "wood": 150,
+      "stone": 100
+    },
+    "spotting": 4,
+    "attack": 10,
+    "range": 2,
+    "attackSpeed": 2,
+    "maxLevel": 3,
+    "upgrades": {
+      "2": {
+        "cost": {
+          "wood": 250,
+          "stone": 150,
+          "iron": 50
+        },
+        "spotting": 5,
+        "attack": 15,
+        "range": 3,
+        "attackSpeed": 1.5
+      },
+      "3": {
+        "cost": {
+          "wood": 400,
+          "stone": 250,
+          "iron": 100
+        },
+        "spotting": 6,
+        "attack": 20,
+        "range": 3,
+        "attackSpeed": 1
+      }
+    }
   }
 }

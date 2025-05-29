@@ -78,6 +78,11 @@ export type Building = GameObject &
     slots: ResourceSlot[] // Slots for group assignment
     maxLevel: number // Maximum level this building can be upgraded to
     upgradeRequirements?: Partial<Resources> // Resources needed for next upgrade
+    // Optional defensive stats
+    attack?: number
+    range?: number
+    attackSpeed?: number // Attacks per game update cycle (e.g., 1 = every update, 0.5 = every other update)
+    timeToNextAttack?: number // Internal cooldown counter
   }
 
 export type Group = GameObject &
@@ -166,11 +171,19 @@ export type TBuildingTemplate = {
   spotting: number
   slots?: ResourceSlot[]
   maxLevel?: number
+  // Optional defensive stats for templates
+  attack?: number
+  range?: number
+  attackSpeed?: number
   upgrades?: {
     [level: number]: {
       cost: Partial<Resources>
-      slots: ResourceSlot[]
+      slots?: ResourceSlot[] // Slots can be optional for some buildings like watchtowers
       spotting: number
+      // Optional defensive stats for upgrades
+      attack?: number
+      range?: number
+      attackSpeed?: number
     }
   }
 }

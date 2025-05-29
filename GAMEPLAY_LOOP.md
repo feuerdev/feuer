@@ -53,10 +53,10 @@ This document outlines the core gameplay loop and implementation steps for Feuer
 - [C] Enable that every group joining a tile with an ongoing battle will join the battle
   - [ ] implement a system for battles to match multiple groups in individual duels
   - [C] a battle will continue until all groups are defeated or the battle is over
-- [ ] Implement group behavior programming interface
-  - [ ] Add a new hud element for the group behavior programming
-  - [ ] Start with simple aggressive and defensive behavior
-  - [ ] Update the battle system to use the group behavior programming
+- [x] Implement group behavior programming interface
+  - [x] Add a new hud element for the group behavior programming
+  - [x] Start with simple aggressive and defensive behavior
+  - [x] Update the battle system to use the group behavior programming
 - [ ] Create defensive buildings
 - [ ] Create group vs tile combat
   - [ ] Defensive buildings should be able to defend the tile from attacks
