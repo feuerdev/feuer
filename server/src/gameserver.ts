@@ -378,7 +378,8 @@ export default class GameServer {
     if (uid === group?.owner) {
       // Unassign group from building if it's moving away
       if (group.assignedToBuilding !== undefined) {
-        const building = this.world.buildings[group.assignedToBuilding]
+        const buildingIdToUpdate = group.assignedToBuilding; // Store ID before clearing
+        const building = this.world.buildings[buildingIdToUpdate];
         if (building && group.assignedToSlot !== undefined) {
           // Clear the assignment in the building slot
           building.slots[group.assignedToSlot].assignedGroupId = undefined
@@ -386,6 +387,9 @@ export default class GameServer {
           // Clear the assignment in the group
           group.assignedToBuilding = undefined
           group.assignedToSlot = undefined
+
+          // Emit building update to the client
+          socket.emit("gamestate building", building);
         }
       }
       
