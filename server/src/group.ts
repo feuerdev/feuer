@@ -28,7 +28,7 @@ export function createGroup(
     id: id,
     owner: owner,
     name: `Group ${id}`,
-    spotting: 1,
+    spotting: 5,
     targetHexes: [],
     pos: pos,
     movementStatus: 0,
@@ -39,10 +39,17 @@ export function createGroup(
     morale: randomBetween(80, 100),
     attack: randomBetween(5, 15),
     defense: randomBetween(5, 15),
+    initiative: randomBetween(1, 10),
+    agility: randomBetween(1, 10),
+    painThreshold: randomBetween(1, 10),
+    intelligence: randomBetween(1, 10),
 
     // Physical stats
     strength: strength,
     endurance: endurance,
+
+    // Injuries
+    injuries: [],
 
     // Resource gathering stats with some randomization
     gatheringEfficiency: {

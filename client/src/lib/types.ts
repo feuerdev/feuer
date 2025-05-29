@@ -20,6 +20,7 @@ export const enum SelectionType {
   Group = 1,
   Tile = 2,
   Building = 3,
+  Battle = 4,
 }
 
 export enum ZIndices {

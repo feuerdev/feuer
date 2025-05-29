@@ -4,6 +4,7 @@ import ResourceInfo from "./ResourceInfo";
 import { InfoBox, InfoRow, InfoDivider } from "./InfoBox";
 import { Button } from "./ui/Button";
 import { useStore } from "@/lib/state";
+import InjuriesInfo from "./InjuriesInfo";
 
 const GroupInfo = ({ group }: { group: Group }) => {
   const world = useStore((state) => state.world);
@@ -105,15 +106,20 @@ const GroupInfo = ({ group }: { group: Group }) => {
             <h3 className="text-sm font-semibold mb-2">Combat Stats</h3>
             <InfoRow label="Attack" value={Math.floor(group.attack)} />
             <InfoRow label="Defense" value={Math.floor(group.defense)} />
-            <InfoRow label="Morale" value={`${group.morale}%`} />
+            <InfoRow label="Morale" value={`${group.morale.toFixed(1)}%`} />
+            <InfoRow label="Initiative" value={group.initiative} />
+            <InfoRow label="Agility" value={group.agility} />
+            <InfoRow label="Intelligence" value={group.intelligence} />
           </div>
 
           <div>
             <h3 className="text-sm font-semibold mb-2">Physical Stats</h3>
             <InfoRow label="Strength" value={Math.floor(group.strength)} />
             <InfoRow label="Endurance" value={Math.floor(group.endurance)} />
+            <InfoRow label="Pain Thresh." value={group.painThreshold} />
           </div>
         </div>
+        <InjuriesInfo injuries={group.injuries} />
       </InfoBox>
 
       <ResourceInfo group={group} tile={tile} className="h-full" />

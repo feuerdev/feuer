@@ -9,7 +9,10 @@ import {
   Tile,
   Biome,
   TBuildingTemplate,
-  Battle
+  Battle,
+  Injury,
+  InjurySeverity,
+  InjuryEffect,
 } from "../../shared/objects.js"
 import * as PlayerRelation from "../../shared/relation.js"
 import * as Battles from "./battle.js"
@@ -25,6 +28,51 @@ import { Resources } from "../../shared/resources.js"
 import Config from "./environment.js";
 import { Player } from "../../shared/player.js";
 import Rules from "../../shared/rules.json" with { type: "json" }
+
+// Helper function to get effective stats after applying injury effects
+function getEffectiveStats(group: Group, currentTick: number): Partial<Group> {
+  const effectiveStats: Partial<Group> = { ...group }; // Start with base stats
+
+  // Create a mutable copy of stats that can be modified
+  let modifiableStats = {
+    strength: group.strength,
+    agility: group.agility,
+    initiative: group.initiative,
+    morale: group.morale,
+    // Add other stats here if injuries can affect them
+  };
+
+  group.injuries.forEach(injury => {
+    injury.effects.forEach(effect => {
+      // Check if the injury is still active (if it has a duration)
+      if (effect.duration === undefined || (group.injuries.find(inj => inj.id === injury.id) && injury.timeOfInjury + effect.duration > currentTick)) {
+        switch (effect.effect) {
+          case InjuryEffect.StrengthDecrease:
+            modifiableStats.strength = Math.max(0, modifiableStats.strength - effect.magnitude);
+            break;
+          case InjuryEffect.AgilityDecrease:
+            modifiableStats.agility = Math.max(0, modifiableStats.agility - effect.magnitude);
+            break;
+          case InjuryEffect.InitiativeDecrease:
+            modifiableStats.initiative = Math.max(0, modifiableStats.initiative - effect.magnitude);
+            break;
+          case InjuryEffect.MoraleDecrease: // Directly affect morale for now
+            modifiableStats.morale = Math.max(0, modifiableStats.morale - effect.magnitude);
+            break;
+          // Add cases for other InjuryEffects if necessary
+        }
+      }
+    });
+  });
+
+  // Update effectiveStats with the modified values
+  effectiveStats.strength = modifiableStats.strength;
+  effectiveStats.agility = modifiableStats.agility;
+  effectiveStats.initiative = modifiableStats.initiative;
+  effectiveStats.morale = modifiableStats.morale;
+  
+  return effectiveStats;
+}
 
 export default class GameServer {
   private socketplayer: {} = {}
@@ -102,6 +150,7 @@ export default class GameServer {
           group.movementStatus = 0
           this.updatePlayerVisibilities(group.owner)
           this.checkForBattle(group)
+          this.tryJoinOngoingBattle(group);
         }
       }
     })
@@ -187,17 +236,81 @@ export default class GameServer {
    * Simple battle resolution between two groups
    */
   resolveBattle(battle: Battle): void {
-    // Calculate attack values
-    const attackerValue = battle.attacker.attack * (battle.attacker.morale / 100)
-    const defenderValue = battle.defender.defense * (battle.defender.morale / 100)
+    // Get effective stats for attacker and defender
+    const effectiveAttackerStats = getEffectiveStats(battle.attacker, this.actualTicks);
+    const effectiveDefenderStats = getEffectiveStats(battle.defender, this.actualTicks);
+
+    const attackerStrengthFactor = 1 + ((effectiveAttackerStats.strength ?? battle.attacker.strength) - 50) / 100;
+    const attackerAgilityFactor = 1 + ((effectiveAttackerStats.agility ?? battle.attacker.agility) - 5) / 20; 
+    const defenderStrengthFactor = 1 + ((effectiveDefenderStats.strength ?? battle.defender.strength) - 50) / 100;
+    const defenderAgilityFactor = 1 + ((effectiveDefenderStats.agility ?? battle.defender.agility) - 5) / 20;
+
+    const attackerEffectiveAttack = (effectiveAttackerStats.attack ?? battle.attacker.attack) * attackerStrengthFactor * ((effectiveAttackerStats.morale ?? battle.attacker.morale) / 100);
+    const defenderEffectiveDefense = (effectiveDefenderStats.defense ?? battle.defender.defense) * defenderStrengthFactor * ((effectiveDefenderStats.morale ?? battle.defender.morale) / 100);
     
-    // Calculate damage
-    const attackerDamage = Math.max(0, attackerValue - defenderValue/2)
-    const defenderDamage = Math.max(0, defenderValue - attackerValue/2)
+    // Calculate damage - agility gives a chance to reduce/avoid some damage
+    const attackerDamageRoll = Math.random(); // 0 to 1
+    const defenderDamageRoll = Math.random(); // 0 to 1
+
+    let attackerDamageMultiplier = 1;
+    if (defenderDamageRoll < defenderAgilityFactor * 0.1) { // e.g. 10 agility = 15% chance to reduce damage by half
+      attackerDamageMultiplier = 0.5; 
+    }
+
+    let defenderDamageMultiplier = 1;
+    if (attackerDamageRoll < attackerAgilityFactor * 0.1) { // e.g. 10 agility = 15% chance to reduce damage by half
+      defenderDamageMultiplier = 0.5;
+    }
+
+    const attackerRawDamage = Math.max(0, attackerEffectiveAttack - defenderEffectiveDefense / 2);
+    const defenderRawDamage = Math.max(0, defenderEffectiveDefense - attackerEffectiveAttack / 2);
+
+    const finalAttackerDamage = attackerRawDamage * attackerDamageMultiplier;
+    const finalDefenderDamage = defenderRawDamage * defenderDamageMultiplier;
     
     // Apply damage to morale
-    battle.defender.morale = Math.max(0, battle.defender.morale - attackerDamage)
-    battle.attacker.morale = Math.max(0, battle.attacker.morale - defenderDamage)
+    battle.defender.morale = Math.max(0, battle.defender.morale - finalAttackerDamage);
+    battle.attacker.morale = Math.max(0, battle.attacker.morale - finalDefenderDamage);
+
+    // Update group stats with the new morale values from effective stats (which included injury effects)
+    // This ensures the core group object reflects the post-injury, post-damage morale for flee checks
+    battle.attacker.morale = effectiveAttackerStats.morale ?? battle.attacker.morale;
+    battle.defender.morale = effectiveDefenderStats.morale ?? battle.defender.morale;
+
+    // Chance to inflict injuries based on damage taken and pain threshold
+    this.applyInjuryChance(battle.attacker, finalDefenderDamage);
+    this.applyInjuryChance(battle.defender, finalAttackerDamage);
+
+    // Check for fleeing conditions (e.g., morale < 10%)
+    const FLEE_THRESHOLD = 10;
+    let attackerFled = false;
+    let defenderFled = false;
+
+    if (battle.attacker.morale < FLEE_THRESHOLD && battle.attacker.morale > 0) { // Must have some morale to decide to flee
+      // Attacker attempts to flee. For now, auto-success.
+      console.log(`Group ${battle.attacker.id} attempts to flee!`);
+      // TODO: Implement flee success chance based on agility, terrain, etc.
+      // TODO: Mark group as fleeing, potentially move it to an adjacent tile.
+      attackerFled = true;
+      // For now, if flee, their morale is set to a very low non-zero value to signify they survived but fled.
+      battle.attacker.morale = 1;
+    }
+
+    if (!attackerFled && battle.defender.morale < FLEE_THRESHOLD && battle.defender.morale > 0) {
+      // Defender attempts to flee if attacker didn't already cause battle to end.
+      console.log(`Group ${battle.defender.id} attempts to flee!`);
+      defenderFled = true;
+      battle.defender.morale = 1;
+    }
+
+    // If either side fled, the battle might conclude differently or enter a pursuit phase (not implemented)
+    // For now, if someone flees, we consider the battle over for them.
+    // The isBattleOver check will handle if the other side is also at 0 morale.
+    if (attackerFled || defenderFled) {
+        console.log("A group has fled the battle.");
+        // The finishBattle logic will remove groups with 0 morale.
+        // Fleeing groups (morale 1) will remain for now.
+    }
   }
   
   /**
@@ -231,7 +344,13 @@ export default class GameServer {
       if (
         equals(group.pos, otherGroup.pos) &&
         group.owner !== otherGroup.owner &&
-        group.id !== otherGroup.id
+        group.id !== otherGroup.id &&
+        !this.world.battles.find(b => 
+          (b.attacker.id === group.id && b.defender.id === otherGroup.id) ||
+          (b.defender.id === group.id && b.attacker.id === otherGroup.id) ||
+          // Also check if the otherGroup is already in ANY battle on this tile, to avoid multiple 1v1s for same pair
+          ( (b.attacker.id === otherGroup.id || b.defender.id === otherGroup.id) && equals(b.position, group.pos) )
+        )
       ) {
         const relation =
           this.world.playerRelations[
@@ -247,6 +366,41 @@ export default class GameServer {
         }
       }
     })
+  }
+
+  tryJoinOngoingBattle(group: Group) {
+    // Find battles on the current tile
+    const battlesOnTile = this.world.battles.filter(b => equals(b.position, group.pos));
+
+    for (const battle of battlesOnTile) {
+      // Can't join your own battle or if you are already part of this battle
+      if (battle.attacker.id === group.id || battle.defender.id === group.id) continue;
+
+      const playerRelationWithAttacker = this.world.playerRelations[PlayerRelation.hash(group.owner, battle.attacker.owner)];
+      const hostileToAttacker = !playerRelationWithAttacker || playerRelationWithAttacker.relationType === PlayerRelation.EnumRelationType.hostile;
+
+      // Scenario 1: Original defender was defeated (morale 0), and new group is hostile to attacker
+      if (battle.defender.morale <= 0 && hostileToAttacker && battle.attacker.morale > 0) {
+        console.log(`Group ${group.id} joins ongoing battle against attacker ${battle.attacker.id}`);
+        battle.defender = group; // New group becomes the defender
+        // Optionally reset attacker's state if needed, or let combat continue
+        this.updatePlayerVisibilities(group.owner); 
+        this.updatePlayerVisibilities(battle.attacker.owner);
+        return; // Joined one battle, that's enough for this movement tick
+      }
+
+      // Scenario 2: Original attacker was defeated (morale 0), and new group is hostile to defender
+      // This is less common if battles are removed quickly, but included for completeness
+      const playerRelationWithDefender = this.world.playerRelations[PlayerRelation.hash(group.owner, battle.defender.owner)];
+      const hostileToDefender = !playerRelationWithDefender || playerRelationWithDefender.relationType === PlayerRelation.EnumRelationType.hostile;
+      if (battle.attacker.morale <= 0 && hostileToDefender && battle.defender.morale > 0) {
+        console.log(`Group ${group.id} joins ongoing battle against defender ${battle.defender.id}`);
+        battle.attacker = group; // New group becomes the attacker
+        this.updatePlayerVisibilities(group.owner);
+        this.updatePlayerVisibilities(battle.defender.owner);
+        return; 
+      }
+    }
   }
 
   updateNet(_delta) {
@@ -987,6 +1141,33 @@ export default class GameServer {
     if (groupToDisband) {
       delete this.world.groups[groupToDisband.id]
       this.updatePlayerVisibilities(uid)
+    }
+  }
+
+  /**
+   * Applies a chance for a group to receive an injury.
+   * Placeholder for more complex injury mechanics.
+   */
+  applyInjuryChance(group: Group, damageTaken: number) {
+    if (damageTaken <= 0) return;
+
+    // Higher damage and lower pain threshold increase injury chance
+    const injuryChance = (damageTaken / 20) - (group.painThreshold / 20); // Example: 10 damage = 50% base, 10 pain threshold reduces by 50%
+
+    if (Math.random() < injuryChance) {
+      // Add a generic injury for now
+      const newInjury: Injury = {
+        id: `inj_${this.world.idCounter++}_${Date.now()}`,
+        name: "Minor Laceration",
+        description: "A superficial cut.",
+        severity: InjurySeverity.Minor,
+        effects: [{ effect: InjuryEffect.MoraleDecrease, magnitude: 5, duration: 1000 }], // Lasts 1000 ticks
+        timeOfInjury: this.actualTicks, // Assuming actualTicks is available and represents game time
+        isPermanent: false,
+        healable: true,
+      };
+      group.injuries.push(newInjury);
+      console.log(`Group ${group.id} received injury: ${newInjury.name}`);
     }
   }
 }

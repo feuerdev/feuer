@@ -5,7 +5,7 @@ import * as Util from "@shared/util";
 import { Layout, equals, hash, neighborsRange, Hex } from "@shared/hex";
 import * as Vector2 from "@shared/vector2";
 import { ClientTile, SelectionType, ZIndices } from "./types";
-import { Building, Group, Tile } from "@shared/objects";
+import { Building, Group, Tile, Battle } from "@shared/objects";
 import { convertToSpriteName, Hashtable } from "@shared/util";
 import { useStore } from "@/lib/state";
 import * as PlayerRelation from "@shared/relation";
@@ -104,6 +104,7 @@ export class Engine {
       "gamestate resource generation",
       this.handleResourceGeneration
     );
+    this.socket.on("gamestate battles", this.handleBattlesUpdate);
 
     this.requestTiles(this.socket);
     if (import.meta.env.DEV) {
@@ -141,6 +142,7 @@ export class Engine {
       "gamestate resource generation",
       this.handleResourceGeneration
     );
+    this.socket.off("gamestate battles", this.handleBattlesUpdate);
 
     // Clean up viewport and its listeners
     if (this.viewport) {
@@ -408,6 +410,13 @@ export class Engine {
     if (buildingSprite) {
       this.viewport.removeChild(buildingSprite);
     }
+
+    // Also remove battle indicators if an item being removed had an associated battle
+    // const battleIndicatorName = convertToSpriteName(id, "battleindicator");
+    // const battleIndicator = this.viewport.getChildByName(battleIndicatorName) as Sprite;
+    // if (battleIndicator) {
+    //   this.viewport.removeChild(battleIndicator);
+    // }
   }
 
   /**
@@ -1338,6 +1347,74 @@ export class Engine {
         data.resourceType,
         data.amount
       );
+    }
+  };
+
+  private handleBattlesUpdate = (battles: Hashtable<Battle>) => {
+    const { world, setWorld } = useStore.getState();
+    const newBattles: Hashtable<Battle> = {};
+    const activeBattleIds: Set<number> = new Set();
+
+    Object.values(battles).forEach((battle) => {
+      newBattles[battle.id] = battle;
+      activeBattleIds.add(battle.id);
+      this.updateScenegraphBattleIndicator(battle);
+    });
+
+    // Remove indicators for battles that are no longer active
+    Object.values(world.battles).forEach((oldBattle) => {
+      if (!activeBattleIds.has(oldBattle.id)) {
+        this.removeBattleIndicator(oldBattle.id);
+      }
+    });
+
+    setWorld({
+      ...world,
+      battles: Object.values(newBattles),
+    });
+  };
+
+  private updateScenegraphBattleIndicator = (battle: Battle) => {
+    const spriteName = convertToSpriteName(battle.id, "battleindicator");
+    let indicator = this.viewport.getChildByName(spriteName) as Sprite;
+
+    if (!indicator) {
+      indicator = new Sprite();
+      indicator.label = spriteName;
+
+      const graphics = new Graphics();
+      graphics.beginFill(0xff0000, 0.7);
+      graphics.drawCircle(0, 0, 20);
+      graphics.endFill();
+      indicator.addChild(graphics);
+
+      indicator.interactive = true;
+      indicator.cursor = "pointer";
+      indicator.on("pointerup", (event: FederatedPointerEvent) => {
+        if (this.isDragging) return;
+        if (event.button === 0) {
+          console.log(`Clicked battle indicator ${battle.id}`);
+          const { setSelection } = useStore.getState();
+          setSelection({ type: SelectionType.Battle, id: battle.id });
+        }
+      });
+      this.viewport.addChild(indicator); // Add to viewport AFTER setup
+    }
+
+    const battlePosition = this.layout.hexToPixel(battle.position);
+    indicator.x = battlePosition.x;
+    indicator.y = battlePosition.y;
+    indicator.zIndex = ZIndices.Effects;
+
+    this.viewport.sortChildren();
+  };
+
+  private removeBattleIndicator = (battleId: number) => {
+    const spriteName = convertToSpriteName(battleId, "battleindicator");
+    const indicator = this.viewport.getChildByName(spriteName) as Sprite;
+    if (indicator) {
+      this.viewport.removeChild(indicator);
+      indicator.destroy();
     }
   };
 }
