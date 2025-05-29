@@ -29,6 +29,7 @@ import {
   Sprite,
   Text,
 } from "pixi.js";
+import { Resources } from "@shared/resources";
 
 export class Engine {
   private viewport: Viewport;
@@ -861,8 +862,9 @@ export class Engine {
     slot: { resourceType: string; efficiency: number },
     group: Group
   ): number {
-    // Get base production rate
-    const baseProduction = building.production[slot.resourceType] || 0;
+    // Calculate base production from building
+    const baseProduction =
+      building.production[slot.resourceType as keyof Resources] || 0;
 
     // Get group's efficiency for this resource category
     let groupEfficiency = 1.0;
@@ -1397,23 +1399,24 @@ export class Engine {
   }) => {
     const { world } = useStore.getState();
     const building = world.buildings[data.buildingId];
+    const tile = world.tiles[hash(building.position)] as ClientTile;
 
-    if (building) {
-      // Show resource generation effect
+    if (tile) {
+      // Ensure the resource type exists on the tile, initializing if necessary
+      // Cast to keyof Resources to ensure type safety
+      if (!tile.resources[data.resourceType as keyof Resources]) {
+        tile.resources[data.resourceType as keyof Resources] = 0;
+      }
+      // Add the generated amount to the tile's resources
+      // Cast to keyof Resources to ensure type safety
+      tile.resources[data.resourceType as keyof Resources]! += data.amount;
+
+      // Trigger visual effect if the tile is visible
       this.showResourceGenerationEffect(
         building,
         data.resourceType,
         data.amount
       );
-
-      // Update the tile resources in the local state
-      const tile = world.tiles[hash(building.position)];
-      if (tile) {
-        if (!tile.resources[data.resourceType]) {
-          tile.resources[data.resourceType] = 0;
-        }
-        tile.resources[data.resourceType] += data.amount;
-      }
     }
   };
 }
