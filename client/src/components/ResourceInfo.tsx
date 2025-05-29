@@ -69,7 +69,7 @@ const ResourceInfo = ({
   return (
     <InfoBox title="Resources" className={cn(className, "overflow-y-auto")}>
       {/* Sticky Header */}
-      <div className="sticky top-0 z-10 bg-slate-900 grid grid-cols-3 gap-1 text-xs flex-shrink-0 py-1 px-2 -mx-2">
+      <div className="sticky top-0 z-10 bg-slate-900 grid grid-cols-[80px_1fr_80px] gap-1 text-xs flex-shrink-0 py-1 px-2 -mx-2">
         <div className="font-semibold text-center text-xs">Group</div>
         <div className="font-semibold text-center text-xs">Transfer</div>
         <div className="font-semibold text-center text-xs">Tile</div>
@@ -79,7 +79,7 @@ const ResourceInfo = ({
       <div className="flex flex-col pt-1">
         {" "}
         {/* Adjusted to remove pr-1 as InfoBox has p-2 */}
-        <div className="grid grid-cols-3 gap-1 items-stretch">
+        <div className="grid grid-cols-[80px_1fr_80px] gap-1 items-stretch">
           {resourceKeys.map((resourceKey) => {
             const groupAmount = Math.floor(
               group.resources[resourceKey as keyof typeof group.resources] || 0
