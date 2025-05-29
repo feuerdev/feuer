@@ -393,10 +393,14 @@ export class Engine {
       this.clearSelection();
     }
 
-    const spriteName = convertToSpriteName(id, "g");
-    const oldSprite = this.viewport.getChildByName(spriteName) as Sprite;
-    if (oldSprite) {
-      this.viewport.removeChild(oldSprite);
+    const groupSpriteName = convertToSpriteName(id, "g");
+    const oldGroupSprite = this.viewport.getChildByName(
+      groupSpriteName
+    ) as Sprite;
+    if (oldGroupSprite) {
+      this.stopMovementAnimation(groupSpriteName);
+      this.stopWorkingAnimation(groupSpriteName);
+      this.viewport.removeChild(oldGroupSprite);
     }
 
     const buildingName = convertToSpriteName(id, "b");
@@ -560,12 +564,21 @@ export class Engine {
     object.y = randomPos.y;
     object.zIndex = ZIndices.Groups;
 
-    // Handle animation for moving groups
+    // Handle animation for moving groups or working groups
     const isMoving = group.targetHexes && group.targetHexes.length > 0;
+    // A group is working if it's assigned and not currently moving to a new hex
+    const isWorking = group.assignedToBuilding !== undefined && !isMoving;
+
     if (isMoving) {
+      this.stopWorkingAnimation(spriteName, object); // Stop working if it starts moving
       this.startMovementAnimation(spriteName, object);
+    } else if (isWorking) {
+      this.stopMovementAnimation(spriteName, object); // Stop moving if it starts working
+      this.startWorkingAnimation(spriteName, object);
     } else {
+      // Neither moving nor working: stop both animations
       this.stopMovementAnimation(spriteName, object);
+      this.stopWorkingAnimation(spriteName, object);
     }
 
     // Restore selection state if this was the selected group
@@ -659,6 +672,65 @@ export class Engine {
     // Reset sprite position and rotation if provided
     if (sprite) {
       sprite.angle = 0;
+    }
+  }
+
+  /**
+   * Start the pulsing animation for a working group
+   * @param spriteName The unique name of the sprite
+   * @param sprite The sprite to animate
+   */
+  private startWorkingAnimation(spriteName: string, sprite: Sprite): void {
+    // Cancel any existing animation for this sprite name
+    this.stopWorkingAnimation(spriteName);
+
+    // Initialize animation parameters
+    let time = 0;
+    const animationSpeed = 0.02; // Slower speed for working
+    const scaleVariation = 0.05; // Gentle 5% pulse
+
+    // Store sprite's original scale (assuming it's 1,1)
+    const originalScaleX = sprite.scale.x;
+    const originalScaleY = sprite.scale.y;
+
+    // Animation function
+    const animate = () => {
+      time += animationSpeed;
+
+      // Pulsing scale effect
+      const scaleFactor = 1 + Math.sin(time) * scaleVariation;
+      sprite.scale.set(
+        originalScaleX * scaleFactor,
+        originalScaleY * scaleFactor
+      );
+
+      // Request next frame
+      const frameId = requestAnimationFrame(animate);
+      this.animationFrameIds.set(spriteName, frameId);
+    };
+
+    // Start the animation
+    animate();
+  }
+
+  /**
+   * Stop the pulsing animation for a working group
+   * @param spriteName The unique name of the sprite
+   * @param sprite Optional sprite to reset scale
+   */
+  private stopWorkingAnimation(spriteName: string, sprite?: Sprite): void {
+    // Cancel the animation if it exists
+    const frameId = this.animationFrameIds.get(spriteName);
+    if (frameId) {
+      cancelAnimationFrame(frameId);
+      this.animationFrameIds.delete(spriteName);
+    }
+
+    // Reset sprite scale if provided
+    if (sprite) {
+      // Assuming default scale is 1. If sprites can have other base scales,
+      // this might need adjustment or storing original scale more robustly.
+      sprite.scale.set(1);
     }
   }
 
