@@ -515,6 +515,22 @@ export default class GameServer {
       return
     }
     
+    const assignmentsToRestore: Array<{ groupId: number; resourceType: string, originalSlotIndex: number }> = [];
+    const groupsToUpdateClient = new Set<number>();
+
+    building.slots.forEach((slot, slotIndex) => {
+      if (slot.assignedGroupId) {
+        const group = this.world.groups[slot.assignedGroupId];
+        if (group) {
+          assignmentsToRestore.push({ groupId: group.id, resourceType: slot.resourceType, originalSlotIndex: slotIndex });
+          // Proactively unassign group, its state will be updated after attempting re-assignment
+          group.assignedToBuilding = undefined;
+          group.assignedToSlot = undefined;
+          groupsToUpdateClient.add(group.id); // Mark for client update
+        }
+      }
+    });
+
     // Subtract resources from the tile
     subtractResources(tile, building.upgradeRequirements)
     
@@ -522,15 +538,49 @@ export default class GameServer {
     const upgradedBuilding = upgradeBuilding(building)
     if (!upgradedBuilding) {
       console.warn(`Failed to upgrade building ${buildingId}`)
+      // If upgrade fails, groups are unassigned. We should send their updated (unassigned) state.
+      assignmentsToRestore.forEach(assignment => {
+        const group = this.world.groups[assignment.groupId];
+        if (group) {
+          socket.emit("gamestate group", group);
+        }
+      });
       return
     }
     
     // Update the building in the world
     this.world.buildings[buildingId] = upgradedBuilding
     
+    // Re-assign groups to upgraded building
+    assignmentsToRestore.forEach(assignment => {
+      const group = this.world.groups[assignment.groupId];
+      if (group) {
+        // Try to find a suitable slot in the upgraded building
+        const newSlotIndex = upgradedBuilding.slots.findIndex(
+          (newSlot, index) => newSlot.resourceType === assignment.resourceType && newSlot.assignedGroupId === undefined
+        );
+
+        if (newSlotIndex !== -1) {
+          upgradedBuilding.slots[newSlotIndex].assignedGroupId = group.id;
+          group.assignedToBuilding = upgradedBuilding.id;
+          group.assignedToSlot = newSlotIndex;
+        }
+        // If no suitable slot is found, the group remains unassigned (already handled by proactive unassignment)
+        groupsToUpdateClient.add(group.id); // Ensure it's marked for update
+      }
+    });
+    
     // Notify the client
     socket.emit("gamestate building", upgradedBuilding)
     socket.emit("gamestate tiles", { [hash(tile.hex)]: tile })
+
+    // Notify client about updated groups
+    groupsToUpdateClient.forEach(groupId => {
+      const group = this.world.groups[groupId];
+      if (group) {
+        socket.emit("gamestate group", group);
+      }
+    });
     
     // Update player visibilities as spotting might have changed
     this.updatePlayerVisibilities(uid)
