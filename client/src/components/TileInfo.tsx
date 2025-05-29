@@ -43,7 +43,10 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
       </InfoBox>
 
       {(building || group) && (
-        <InfoBox title="Available Buildings (Max: 3)" className="h-full flex-1">
+        <InfoBox
+          title="Available Buildings (Max: 3)"
+          className="h-full flex-1 overflow-y-auto"
+        >
           {Object.keys(Buildings).length === 0 ? (
             <p className="text-gray-400 italic text-xs">
               No building templates available
