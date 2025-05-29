@@ -1,7 +1,7 @@
 import { Biome, Building } from "@shared/objects";
 import { ClientTile } from "./types";
 import { EnumRelationType } from "@shared/relation";
-import { Graphics, Text } from "pixi.js";
+import { Graphics } from "pixi.js";
 
 /**
  * Biome color mapping
@@ -108,16 +108,31 @@ export function drawTerrainGraphics(
  */
 export function drawBuildingGraphics(
   graphics: Graphics,
-  building: Building
+  building: Building,
+  ownerId?: string,
+  relationType?: number
 ): void {
   // Determine building color
   const buildingColor =
     BUILDING_COLORS[building.key] || BUILDING_COLORS.default;
 
+  // Determine outline color based on relation
+  let outlineColor = 0x000000; // Default black outline
+  if (ownerId && building.owner === ownerId) {
+    outlineColor = RELATION_COLORS["own"];
+  } else if (relationType !== undefined) {
+    outlineColor =
+      RELATION_COLORS[relationType] ||
+      RELATION_COLORS[EnumRelationType.neutral];
+  } else {
+    // If no ownerId or relationType, could be neutral or a generic color
+    outlineColor = RELATION_COLORS[EnumRelationType.neutral]; // Default to neutral if unknown
+  }
+
   // Draw building as a simple square with a symbol
   graphics.clear();
   graphics.beginFill(buildingColor);
-  graphics.lineStyle(2, 0x000000, 0.7);
+  graphics.lineStyle(2, outlineColor, 0.7); // Use relation-based outline color
 
   // Make the building slightly larger based on level
   const size = 20 + (building.level - 1) * 3;
@@ -187,27 +202,6 @@ export function drawBuildingGraphics(
       graphics.endFill();
       break;
   }
-}
-
-/**
- * Helper function to add text to a building if needed
- * Should be called after drawBuildingGraphics
- */
-export function addBuildingText(text: Text, building: Building): void {
-  // Always show building level
-  text.text = `${building.key.charAt(0).toUpperCase()}${building.level}`;
-  text.style = {
-    fontSize: 12,
-    fill: 0xffffff,
-    stroke: {
-      color: 0x000000,
-      width: 2,
-    },
-    align: "center",
-  };
-  text.anchor.set(0.5);
-  text.y = -20; // Position above the building
-  text.visible = true;
 }
 
 /**

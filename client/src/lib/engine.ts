@@ -13,10 +13,8 @@ import {
   drawBuildingGraphics,
   drawGroupGraphics,
   drawTerrainGraphics,
-  addBuildingText,
   BIOME_COLORS,
   drawResourceGenerationIndicator,
-  RESOURCE_COLORS,
 } from "./sprites";
 import { Socket } from "socket.io-client";
 import {
@@ -765,13 +763,11 @@ export class Engine {
 
       // Create graphics for building shape
       const graphics = new Graphics();
-      drawBuildingGraphics(graphics, building);
+      const relationHash = PlayerRelation.hash(building.owner, this.uid);
+      const relation = useStore.getState().world.playerRelations[relationHash];
+      const relationType = relation?.relationType;
+      drawBuildingGraphics(graphics, building, this.uid, relationType);
       object.addChild(graphics);
-
-      // Add text for building label if needed
-      const text = new Text("", { fontSize: 16, fill: 0x000000 });
-      addBuildingText(text, building);
-      object.addChild(text);
 
       object.interactive = true;
       object.cursor = "pointer";
@@ -802,22 +798,21 @@ export class Engine {
     } else {
       // For existing sprites, update the graphics
       const graphics = object.getChildAt(0) as Graphics;
-      drawBuildingGraphics(graphics, building);
-
-      // Update text if it exists
-      if (object.children.length > 1) {
-        const text = object.getChildAt(1) as Text;
-        addBuildingText(text, building);
-      }
+      const relationHash = PlayerRelation.hash(building.owner, this.uid);
+      const relation = useStore.getState().world.playerRelations[relationHash];
+      const relationType = relation?.relationType;
+      drawBuildingGraphics(graphics, building, this.uid, relationType);
 
       // Update position if needed based on the hex center
       const oldHexCenter = this.layout.hexToPixel(building.position);
-      const currentOffsetX = object.x - oldHexCenter.x;
-      const currentOffsetY = object.y - oldHexCenter.y;
-
       const newHexCenter = this.layout.hexToPixel(building.position);
-      object.x = newHexCenter.x + currentOffsetX;
-      object.y = newHexCenter.y + currentOffsetY;
+      if (
+        oldHexCenter.x !== newHexCenter.x ||
+        oldHexCenter.y !== newHexCenter.y
+      ) {
+        object.x = newHexCenter.x;
+        object.y = newHexCenter.y;
+      }
     }
 
     object.zIndex = ZIndices.Buildings;
@@ -906,15 +901,6 @@ export class Engine {
           indicator.y = hexCenter.y + Math.sin(angle) * radius;
 
           container.addChild(indicator);
-
-          // Add resource generation rate visualization
-          this.addResourceGenerationRateIndicator(
-            container,
-            indicator.x,
-            indicator.y - 15,
-            slot.resourceType,
-            this.calculateResourceGenerationRate(building, slot, group)
-          );
         }
       }
     });
@@ -956,80 +942,6 @@ export class Engine {
 
     // Calculate final production rate (per second)
     return baseProduction * slot.efficiency * groupEfficiency;
-  }
-
-  /**
-   * Add a resource generation rate indicator to the container
-   * @param container The container to add the indicator to
-   * @param x X position
-   * @param y Y position
-   * @param resourceType Type of resource
-   * @param rate Generation rate
-   */
-  private addResourceGenerationRateIndicator(
-    container: Container,
-    x: number,
-    y: number,
-    resourceType: string,
-    rate: number
-  ): void {
-    // Create text to show the rate
-    const text = new Text(`+${rate.toFixed(1)}/s`, {
-      fontSize: 10,
-      fill: RESOURCE_COLORS[resourceType] || 0xffffff,
-      stroke: {
-        color: 0x000000,
-        width: 2,
-      },
-      align: "center",
-    });
-
-    text.anchor.set(0.5);
-    text.x = x;
-    text.y = y;
-
-    container.addChild(text);
-
-    // Start a subtle animation for the text
-    this.animateResourceText(text);
-  }
-
-  /**
-   * Animate the resource generation text with a subtle pulsing effect
-   * @param text The text to animate
-   */
-  private animateResourceText(text: Text): void {
-    const animationName = `resource_text_${text.x}_${text.y}`;
-
-    // Cancel any existing animation
-    const frameId = this.animationFrameIds.get(animationName);
-    if (frameId) {
-      cancelAnimationFrame(frameId);
-    }
-
-    // Initialize animation parameters
-    let time = 0;
-    const animationSpeed = 0.03;
-    const scaleVariation = 0.15; // Scale will vary by ±15%
-
-    // Store original scale
-    const originalScale = text.scale.x;
-
-    // Animation function
-    const animate = () => {
-      time += animationSpeed;
-
-      // Pulsing scale effect
-      const scaleFactor = 1 + Math.sin(time) * scaleVariation;
-      text.scale.set(originalScale * scaleFactor);
-
-      // Request next frame
-      const frameId = requestAnimationFrame(animate);
-      this.animationFrameIds.set(animationName, frameId);
-    };
-
-    // Start the animation
-    animate();
   }
 
   /**
