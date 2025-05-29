@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { Group, Tile } from "@shared/objects";
-import { TransferDirection } from "@shared/objectutil";
 import { useStore } from "@/lib/state";
 import { InfoBox } from "./InfoBox";
 import { Button } from "./ui/Button";
@@ -21,18 +20,17 @@ const ResourceInfo = ({
   const socket = useStore((state) => state.socket);
 
   const requestResourceTransfer = (
-    group: Group,
+    currentGroup: Group,
     resource: string,
-    direction: TransferDirection,
-    amount: number = 5
+    socketAmount: number // Positive: Group to Tile, Negative: Tile to Group
   ) => {
     socket?.emit("request transfer", {
-      groupId: group.id,
+      groupId: currentGroup.id,
       resource: resource,
-      amount: direction === TransferDirection.group ? -amount : amount,
+      amount: socketAmount,
     });
-    socket?.emit("request tiles", [group.pos]);
-    socket?.emit("request group", group.id);
+    socket?.emit("request tiles", [currentGroup.pos]);
+    socket?.emit("request group", currentGroup.id);
   };
 
   useEffect(() => {
@@ -66,6 +64,8 @@ const ResourceInfo = ({
     );
   }
 
+  const transferButtonValues = [1, 10, 100];
+
   return (
     <InfoBox title="Resources" className={cn(className, "overflow-y-auto")}>
       {/* Sticky Header */}
@@ -77,67 +77,121 @@ const ResourceInfo = ({
 
       {/* Scrollable Content Area */}
       <div className="flex flex-col pt-1">
-        <div className="grid grid-cols-3 gap-1">
-          {resourceKeys.map((resourceKey) => (
-            <div key={resourceKey} className="contents">
-              <div className="bg-gray-800 p-0.5 rounded text-center h-9">
-                <div className="capitalize text-xs text-gray-400 truncate">
-                  {resourceKey}
-                </div>
-                <div className="font-medium text-xs">
-                  {Math.floor(
-                    group.resources[
-                      resourceKey as keyof typeof group.resources
-                    ] || 0
-                  )}
-                </div>
-              </div>
+        {" "}
+        {/* Adjusted to remove pr-1 as InfoBox has p-2 */}
+        <div className="grid grid-cols-3 gap-1 items-stretch">
+          {resourceKeys.map((resourceKey) => {
+            const groupAmount = Math.floor(
+              group.resources[resourceKey as keyof typeof group.resources] || 0
+            );
+            const tileAmount = Math.floor(
+              tile.resources[resourceKey as keyof typeof tile.resources] || 0
+            );
 
-              <div className="flex justify-center items-center gap-0.5 h-9">
-                <Button
-                  size="xs"
-                  variant="outline"
-                  onClick={() =>
-                    requestResourceTransfer(
-                      group,
-                      resourceKey,
-                      TransferDirection.group
-                    )
-                  }
-                  className="min-w-0 w-6 px-0"
-                >
-                  &larr;
-                </Button>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  onClick={() =>
-                    requestResourceTransfer(
-                      group,
-                      resourceKey,
-                      TransferDirection.tile
-                    )
-                  }
-                  className="min-w-0 w-6 px-0"
-                >
-                  &rarr;
-                </Button>
-              </div>
+            return (
+              <div key={resourceKey} className="contents">
+                {/* Group Resource Display */}
+                <div className="bg-gray-800 p-0.5 rounded text-center flex flex-col justify-center min-h-[36px]">
+                  <div className="capitalize text-xs text-gray-400 truncate">
+                    {resourceKey}
+                  </div>
+                  <div className="font-medium text-xs">{groupAmount}</div>
+                </div>
 
-              <div className="bg-gray-800 p-0.5 rounded text-center h-9">
-                <div className="capitalize text-xs text-gray-400 truncate">
-                  {resourceKey}
+                {/* Transfer Controls */}
+                <div className="flex flex-col items-center justify-center gap-1 py-1 px-0.5 border-x border-gray-700">
+                  {/* To Group (from Tile) */}
+                  <div className="flex flex-row items-center w-full">
+                    <span className="text-xs text-gray-400 pl-1 mr-1">
+                      To Group &larr;
+                    </span>
+                    <div className="flex justify-center gap-0.5 flex-wrap flex-1">
+                      {transferButtonValues.map((amount) => (
+                        <Button
+                          key={`toGroup-${resourceKey}-${amount}`}
+                          size="xs"
+                          variant="outline"
+                          className="min-w-0 px-1.5 py-0.5 text-xs"
+                          onClick={() =>
+                            requestResourceTransfer(group, resourceKey, -amount)
+                          }
+                          disabled={tileAmount < amount || amount <= 0}
+                        >
+                          {amount}
+                        </Button>
+                      ))}
+                      <Button
+                        key={`toGroup-${resourceKey}-all`}
+                        size="xs"
+                        variant="outline"
+                        className="min-w-0 px-1.5 py-0.5 text-xs"
+                        onClick={() =>
+                          requestResourceTransfer(
+                            group,
+                            resourceKey,
+                            -tileAmount
+                          )
+                        }
+                        disabled={tileAmount <= 0}
+                      >
+                        All
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="w-full h-px bg-gray-700 my-1"></div>
+
+                  {/* To Tile (from Group) */}
+                  <div className="flex flex-row items-center w-full">
+                    <div className="flex justify-center gap-0.5 flex-wrap flex-1">
+                      {transferButtonValues.map((amount) => (
+                        <Button
+                          key={`toTile-${resourceKey}-${amount}`}
+                          size="xs"
+                          variant="outline"
+                          className="min-w-0 px-1.5 py-0.5 text-xs"
+                          onClick={() =>
+                            requestResourceTransfer(group, resourceKey, amount)
+                          }
+                          disabled={groupAmount < amount || amount <= 0}
+                        >
+                          {amount}
+                        </Button>
+                      ))}
+                      <Button
+                        key={`toTile-${resourceKey}-all`}
+                        size="xs"
+                        variant="outline"
+                        className="min-w-0 px-1.5 py-0.5 text-xs"
+                        onClick={() =>
+                          requestResourceTransfer(
+                            group,
+                            resourceKey,
+                            groupAmount
+                          )
+                        }
+                        disabled={groupAmount <= 0}
+                      >
+                        All
+                      </Button>
+                    </div>
+                    <span className="text-xs text-gray-400 pr-1 ml-1">
+                      &rarr; To Tile
+                    </span>
+                  </div>
                 </div>
-                <div className="font-medium text-xs">
-                  {Math.floor(
-                    tile.resources[
-                      resourceKey as keyof typeof tile.resources
-                    ] || 0
-                  )}
+
+                {/* Tile Resource Display */}
+                <div className="bg-gray-800 p-0.5 rounded text-center flex flex-col justify-center min-h-[36px]">
+                  <div className="capitalize text-xs text-gray-400 truncate">
+                    {resourceKey}
+                  </div>
+                  <div className="font-medium text-xs">{tileAmount}</div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </InfoBox>
