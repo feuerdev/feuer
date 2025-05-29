@@ -52,7 +52,7 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
       : false;
 
   return (
-    <div className="inline-grid grid-cols-[minmax(250px,auto)_auto_auto] gap-2 p-2 h-full">
+    <div className="inline-grid grid-cols-[minmax(250px,auto)_minmax(350px,auto)_auto] gap-2 p-2 h-full">
       <InfoBox title="Building Details" className="h-full overflow-y-auto">
         <InfoRow label="Name" value={building.key} />
         <InfoRow
@@ -170,33 +170,45 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
                 )}
               </div>
 
-              {!assignedGroup && availableGroups.length > 0 && (
+              {!assignedGroup && (
                 <div className="mt-2">
                   <h5 className="text-xs text-gray-400 mb-1">Assign Group:</h5>
-                  <div className="flex flex-wrap gap-1">
-                    {availableGroups
-                      .filter(
-                        (group) =>
-                          !group.assignedToBuilding &&
-                          !assignedGroupIdsInCurrentBuilding.has(group.id)
-                      )
-                      .map((group) => (
-                        <Button
-                          key={group.id}
-                          variant="outline"
-                          size="xs"
-                          onClick={() =>
-                            engine.requestGroupAssignment(
-                              group.id,
-                              building.id,
-                              index
-                            )
-                          }
-                        >
-                          Group #{group.id}
-                        </Button>
-                      ))}
-                  </div>
+                  {(() => {
+                    const assignableGroupsForSlot = availableGroups.filter(
+                      (group) =>
+                        !group.assignedToBuilding &&
+                        !assignedGroupIdsInCurrentBuilding.has(group.id)
+                    );
+
+                    if (assignableGroupsForSlot.length > 0) {
+                      return (
+                        <div className="flex flex-wrap gap-1">
+                          {assignableGroupsForSlot.map((group) => (
+                            <Button
+                              key={group.id}
+                              variant="outline"
+                              size="xs"
+                              onClick={() =>
+                                engine.requestGroupAssignment(
+                                  group.id,
+                                  building.id,
+                                  index
+                                )
+                              }
+                            >
+                              Group #{group.id}
+                            </Button>
+                          ))}
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <p className="text-xs text-gray-500 italic">
+                          No groups available to assign.
+                        </p>
+                      );
+                    }
+                  })()}
                 </div>
               )}
             </div>
