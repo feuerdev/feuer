@@ -45,7 +45,7 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
       : false;
 
   return (
-    <div className="grid grid-cols-[minmax(250px,_auto)_1fr_1fr] gap-2 p-2 h-full">
+    <div className="inline-grid grid-cols-[minmax(250px,auto)_auto_auto] gap-2 p-2 h-full">
       <InfoBox title="Building Details" className="h-full">
         <InfoRow label="Name" value={building.key} />
         <InfoRow

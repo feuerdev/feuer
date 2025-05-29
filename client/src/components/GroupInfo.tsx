@@ -31,7 +31,7 @@ const GroupInfo = ({ group }: { group: Group }) => {
       : undefined;
 
   return (
-    <div className="grid grid-cols-[minmax(250px,_auto)_1fr_1fr] gap-2 p-2 h-full">
+    <div className="inline-grid grid-cols-[minmax(250px,auto)_auto_auto] gap-2 p-2 h-full">
       <InfoBox title="Group Details" className="h-full">
         <InfoRow label="Name" value={group.name} />
         <InfoRow label="Position" value={`${group.pos.q}:${group.pos.r}`} />

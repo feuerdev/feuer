@@ -24,7 +24,7 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
   });
 
   return (
-    <div className="grid grid-cols-[minmax(250px,_auto)_1fr_1fr] gap-2 p-2 h-full">
+    <div className="inline-grid grid-cols-[minmax(250px,auto)_auto_auto] gap-2 p-2 h-full">
       <InfoBox title="Tile Details" className="h-full">
         <InfoRow label="Position" value={`${tile.hex.q}, ${tile.hex.r}`} />
         <InfoRow label="Biome" value={getBiomeName(tile.biome)} />
