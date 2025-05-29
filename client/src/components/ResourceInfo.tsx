@@ -4,6 +4,7 @@ import { TransferDirection } from "@shared/objectutil";
 import { useStore } from "@/lib/state";
 import { InfoBox } from "./InfoBox";
 import { Button } from "./ui/Button";
+import { cn } from "@/lib/utils";
 
 /**
  * React Component to display resource information and display controls to transfer resources between tile and groups
@@ -55,11 +56,9 @@ const ResourceInfo = ({
       (tile.resources[key as keyof typeof tile.resources] || 0) > 0
   );
 
-  const effectiveClassName = `${className || ""} overflow-y-auto`.trim();
-
   if (resourceKeys.length === 0) {
     return (
-      <InfoBox title="Resources" className={effectiveClassName}>
+      <InfoBox title="Resources" className={cn(className, "overflow-y-auto")}>
         <p className="text-center text-gray-400 italic text-xs">
           No resources available
         </p>
@@ -68,7 +67,7 @@ const ResourceInfo = ({
   }
 
   return (
-    <InfoBox title="Resources" className={effectiveClassName}>
+    <InfoBox title="Resources" className={cn(className, "overflow-y-auto")}>
       {/* Sticky Header */}
       <div className="sticky top-0 z-10 bg-slate-900 grid grid-cols-3 gap-1 text-xs flex-shrink-0 py-1 px-2 -mx-2">
         <div className="font-semibold text-center text-xs">Group</div>
