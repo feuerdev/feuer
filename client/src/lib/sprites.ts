@@ -1,5 +1,5 @@
 import { Biome, Building } from "@shared/objects";
-import { ClientTile } from "./types";
+import { ClientTile, ZIndices } from "./types";
 import { EnumRelationType } from "@shared/relation";
 import { Graphics } from "pixi.js";
 
@@ -135,9 +135,12 @@ export function drawBuildingGraphics(
   graphics.lineStyle(2, outlineColor, 0.7); // Use relation-based outline color
 
   // Make the building slightly larger based on level
-  const size = 20 + (building.level - 1) * 3;
+  const size = 13 + (building.level - 1) * 3;
   graphics.drawRect(-size, -size, size * 2, size * 2);
   graphics.endFill();
+
+  const slotGraphics = new Graphics();
+  graphics.addChild(slotGraphics);
 
   // Add level indicator dots at the bottom of the building
   const dotRadius = 2;
@@ -154,63 +157,19 @@ export function drawBuildingGraphics(
   const dotY = size - dotRadius - dotSpacing; // Offset from bottom edge
 
   // Draw filled dots for used slots
-  graphics.beginFill(0xffffff); // White dots for used slots
+  slotGraphics.beginFill(0xffffff); // White dots for used slots
   for (let i = 0; i < usedSlots; i++) {
-    graphics.drawCircle(startX + i * dotSpacing, dotY, dotRadius);
+    slotGraphics.drawCircle(startX + i * dotSpacing, dotY, dotRadius);
   }
-  graphics.endFill();
+  slotGraphics.endFill();
 
   // Draw empty dots for remaining available slots
   if (usedSlots < totalSlots) {
-    graphics.beginFill(0x666666); // Gray dots for available slots
+    slotGraphics.beginFill(0x666666); // Gray dots for available slots
     for (let i = usedSlots; i < totalSlots; i++) {
-      graphics.drawCircle(startX + i * dotSpacing, dotY, dotRadius);
+      slotGraphics.drawCircle(startX + i * dotSpacing, dotY, dotRadius);
     }
-    graphics.endFill();
-  }
-
-  // Add a symbol or letter based on building type
-  graphics.lineStyle(2, 0xffffff);
-
-  switch (building.key) {
-    case "towncenter":
-    case "campsite":
-      // Draw a simple house shape
-      graphics.moveTo(-size * 0.6, size * 0.3);
-      graphics.lineTo(-size * 0.6, -size * 0.2);
-      graphics.lineTo(0, -size * 0.7);
-      graphics.lineTo(size * 0.6, -size * 0.2);
-      graphics.lineTo(size * 0.6, size * 0.3);
-      graphics.lineTo(-size * 0.6, size * 0.3);
-      break;
-    case "wood":
-      // Draw a tree shape
-      graphics.moveTo(0, -size * 0.7);
-      graphics.lineTo(size * 0.4, 0);
-      graphics.lineTo(size * 0.2, 0);
-      graphics.lineTo(size * 0.4, size * 0.5);
-      graphics.lineTo(-size * 0.4, size * 0.5);
-      graphics.lineTo(-size * 0.2, 0);
-      graphics.lineTo(-size * 0.4, 0);
-      graphics.lineTo(0, -size * 0.7);
-      break;
-    case "stone":
-    case "iron":
-    case "gold":
-      // Draw a simple mine shape (mountain)
-      graphics.moveTo(-size * 0.6, size * 0.3);
-      graphics.lineTo(-size * 0.2, -size * 0.3);
-      graphics.lineTo(0, 0);
-      graphics.lineTo(size * 0.2, -size * 0.5);
-      graphics.lineTo(size * 0.6, size * 0.3);
-      graphics.lineTo(-size * 0.6, size * 0.3);
-      break;
-    default:
-      // Just add a visible letter B for the default case
-      graphics.beginFill(0xffffff);
-      graphics.drawCircle(0, 0, 5);
-      graphics.endFill();
-      break;
+    slotGraphics.endFill();
   }
 }
 
