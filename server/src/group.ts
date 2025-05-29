@@ -28,7 +28,7 @@ export function createGroup(
     id: id,
     owner: owner,
     name: `Group ${id}`,
-    spotting: randomBetween(1, 3),
+    spotting: 1,
     targetHexes: [],
     pos: pos,
     movementStatus: 0,

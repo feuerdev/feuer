@@ -5,7 +5,7 @@
     "cost": {
       "wood": 100
     },
-    "spotting": 3,
+    "spotting": 1,
     "slots": [
       {
         "resourceType": "berries",
@@ -37,7 +37,7 @@
             "efficiency": 1.0
           }
         ],
-        "spotting": 4
+        "spotting": 2
       },
       "3": {
         "cost": {
@@ -63,7 +63,7 @@
             "efficiency": 1.0
           }
         ],
-        "spotting": 5
+        "spotting": 3
       }
     }
   },
