@@ -118,7 +118,18 @@ export type Group = GameObject &
 
     // Type of group (for visual representation)
     groupType: string
+
+    // Behavior
+    behavior: GroupBehavior
   }
+
+export enum GroupBehavior {
+  Aggressive,
+  Defensive,
+  StandGround,
+  FleeIfAttacked, // Renamed from Evasive for clarity
+  Neutral, // Default, no specific combat behavior, relies on direct orders
+}
 
 export enum InjurySeverity {
   Minor,

@@ -13,6 +13,7 @@ import {
   Injury,
   InjurySeverity,
   InjuryEffect,
+  GroupBehavior,
 } from "../../shared/objects.js"
 import * as PlayerRelation from "../../shared/relation.js"
 import * as Battles from "./battle.js"
@@ -236,6 +237,19 @@ export default class GameServer {
    * Simple battle resolution between two groups
    */
   resolveBattle(battle: Battle): void {
+    // Check for immediate flee behaviors
+    if (battle.attacker.behavior === GroupBehavior.FleeIfAttacked) {
+      console.log(`Group ${battle.attacker.id} (Attacker) has FleeIfAttacked behavior and attempts to flee immediately.`);
+      battle.attacker.morale = 1; // Mark as fled
+      // Battle might end here if defender doesn't need to act, or could give defender a free hit (not implemented)
+      return; // Attacker flees, resolveBattle might terminate or be re-evaluated after this group is handled
+    }
+    if (battle.defender.behavior === GroupBehavior.FleeIfAttacked) {
+      console.log(`Group ${battle.defender.id} (Defender) has FleeIfAttacked behavior and attempts to flee immediately.`);
+      battle.defender.morale = 1; // Mark as fled
+      return; // Defender flees
+    }
+
     // Get effective stats for attacker and defender
     const effectiveAttackerStats = getEffectiveStats(battle.attacker, this.actualTicks);
     const effectiveDefenderStats = getEffectiveStats(battle.defender, this.actualTicks);
@@ -352,17 +366,20 @@ export default class GameServer {
           ( (b.attacker.id === otherGroup.id || b.defender.id === otherGroup.id) && equals(b.position, group.pos) )
         )
       ) {
+        // Check relation and behaviors
         const relation =
           this.world.playerRelations[
             PlayerRelation.hash(group.owner, otherGroup.owner)
-          ]
-        if (
-          !relation ||
-          relation.relationType === PlayerRelation.EnumRelationType.hostile
+          ];
+        const areHostile = !relation || relation.relationType === PlayerRelation.EnumRelationType.hostile;
+
+        if (areHostile && 
+            (group.behavior === GroupBehavior.Aggressive || otherGroup.behavior === GroupBehavior.Aggressive)
         ) {
           this.world.battles.push(
             Battles.create(++this.world.idCounter, group.pos, group, otherGroup)
-          )
+          );
+          console.log(`New battle initiated between ${group.id} and ${otherGroup.id} due to aggressive behavior.`);
         }
       }
     })

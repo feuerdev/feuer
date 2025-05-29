@@ -1,6 +1,7 @@
 import { Group } from "../../shared/objects.js";
 import { Hex } from "../../shared/hex.js";
 import { Resources } from "../../shared/resources.js";
+import { GroupBehavior } from "../../shared/objects.js";
 
 /**
  * Generates a random number between min and max (inclusive)
@@ -50,6 +51,9 @@ export function createGroup(
 
     // Injuries
     injuries: [],
+
+    // Behavior
+    behavior: GroupBehavior.Neutral,
 
     // Resource gathering stats with some randomization
     gatheringEfficiency: {
