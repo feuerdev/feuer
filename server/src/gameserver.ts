@@ -567,10 +567,16 @@ export default class GameServer {
       return
     }
     
-    // Check if slot exists and is available
+    // Check if slot exists
     if (slotIndex < 0 || slotIndex >= building.slots.length) {
       console.warn(`Invalid slot index ${slotIndex} for building ${buildingId}`)
       return
+    }
+
+    // Check if the group is already assigned to a different slot in the same building
+    if (group.assignedToBuilding === buildingId && group.assignedToSlot !== undefined && group.assignedToSlot !== slotIndex) {
+      console.warn(`Group ${groupId} is already assigned to slot ${group.assignedToSlot} in building ${buildingId}`)
+      return;
     }
     
     // If slot is already assigned to another group, unassign it
@@ -583,7 +589,7 @@ export default class GameServer {
       }
     }
     
-    // Unassign group from previous building if any
+    // Unassign group from previous building if any (and it's a different building)
     if (group.assignedToBuilding !== undefined && group.assignedToBuilding !== buildingId) {
       const previousBuilding = this.world.buildings[group.assignedToBuilding]
       if (previousBuilding && group.assignedToSlot !== undefined) {
