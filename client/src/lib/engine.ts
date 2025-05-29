@@ -342,9 +342,7 @@ export class Engine {
   private clearSelection(): void {
     if (this.selectedSprite) {
       this.selectedSprite.filters = [];
-      if (this.originalZIndex !== null) {
-        this.selectedSprite.zIndex = this.originalZIndex - 1;
-      }
+      this.selectedSprite.zIndex -= 1;
       this.selectedSprite = null;
     }
   }
