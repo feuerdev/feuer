@@ -934,10 +934,31 @@ export default class GameServer {
   /**
    * @returns a random hex that is not in a water or other extreme biome
    */
-  private getRandomSpawnHex(): Hex {
-    let hashes = Object.keys(this.world.tiles)
-    let index = Math.round(Math.random() * hashes.length)
-    let tile = this.world.tiles[hashes[index]]
+  private getRandomSpawnHex(attempt: number = 0): Hex {
+    const MAX_ATTEMPTS = 100; // Define a constant for max attempts
+    if (attempt >= MAX_ATTEMPTS) {
+        console.error(`Exceeded maximum attempts (${MAX_ATTEMPTS}) to find a suitable spawn hex.`);
+        throw new Error(`Could not find a suitable spawn hex after ${MAX_ATTEMPTS} attempts.`);
+    }
+
+    const hashes = Object.keys(this.world.tiles);
+
+    if (hashes.length === 0) {
+      console.error("No tiles available in the world to select a random spawn hex.");
+      throw new Error("Cannot select a random spawn hex: world has no tiles.");
+    }
+
+    const index = Math.floor(Math.random() * hashes.length);
+    const tileKey = hashes[index];
+    const tile = this.world.tiles[tileKey];
+
+    if (!tile) {
+      // This scenario should ideally not happen if hashes.length > 0 and index is valid.
+      // It might indicate a data integrity issue.
+      console.warn(`Tile not found for key '${tileKey}' in getRandomSpawnHex (attempt ${attempt + 1}). Retrying.`);
+      return this.getRandomSpawnHex(attempt + 1);
+    }
+
     switch (tile.biome) {
       case Biome.Ocean:
       case Biome.River:
@@ -946,9 +967,9 @@ export default class GameServer {
       case Biome.Desert:
       case Biome.Ice:
       case Biome.Mountain:
-        return this.getRandomSpawnHex()
+        return this.getRandomSpawnHex(attempt + 1);
     }
-    return tile.hex
+    return tile.hex;
   }
 
   public setWorld(world: World) {
