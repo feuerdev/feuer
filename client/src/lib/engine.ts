@@ -822,126 +822,6 @@ export class Engine {
       object.filters = [this.GLOW_FILTER];
       this.selectedSprite = object;
     }
-
-    // Add visual indicator for assigned groups
-    this.updateBuildingAssignmentIndicator(building);
-  }
-
-  /**
-   * Updates visual indicators for groups assigned to a building
-   * @param building The building to update indicators for
-   */
-  private updateBuildingAssignmentIndicator(building: Building): void {
-    const { world } = useStore.getState();
-
-    // Remove any existing assignment indicators
-    const indicatorName = `assignment_${building.id}`;
-    const oldIndicator = this.viewport.getChildByName(indicatorName);
-    if (oldIndicator) {
-      this.viewport.removeChild(oldIndicator);
-    }
-
-    // Check if any slots have assigned groups
-    const hasAssignedGroups = building.slots.some(
-      (slot) => slot.assignedGroupId !== undefined
-    );
-
-    if (!hasAssignedGroups) {
-      return;
-    }
-
-    // Create a new container for assignment indicators
-    const container = new Container();
-    container.name = indicatorName;
-    container.zIndex = ZIndices.Buildings + 1;
-
-    // Get building position
-    const hexCenter = this.layout.hexToPixel(building.position);
-
-    // For each assigned slot, add an indicator
-    building.slots.forEach((slot, index) => {
-      if (slot.assignedGroupId) {
-        const group = world.groups[slot.assignedGroupId];
-        if (group) {
-          // Create indicator showing assignment
-          const indicator = new Graphics();
-
-          // Draw different colored dot based on resource type
-          let color = 0xffffff;
-          switch (slot.resourceType) {
-            case "wood":
-              color = 0x8b4513;
-              break;
-            case "stone":
-              color = 0x808080;
-              break;
-            case "iron":
-              color = 0xa19d94;
-              break;
-            case "gold":
-              color = 0xffd700;
-              break;
-            case "berries":
-            case "fish":
-            case "meat":
-            case "wheat":
-              color = 0x00ff00;
-              break;
-          }
-
-          indicator.beginFill(color);
-          indicator.drawCircle(0, 0, 5);
-          indicator.endFill();
-
-          // Position indicators in a semicircle above the building
-          const angle =
-            Math.PI * (0.75 + 0.5 * (index / building.slots.length));
-          const radius = 20;
-          indicator.x = hexCenter.x + Math.cos(angle) * radius;
-          indicator.y = hexCenter.y + Math.sin(angle) * radius;
-
-          container.addChild(indicator);
-        }
-      }
-    });
-
-    this.viewport.addChild(container);
-  }
-
-  /**
-   * Calculate the resource generation rate for a building slot with assigned group
-   * @param building The building
-   * @param slot The resource slot
-   * @param group The assigned group
-   * @returns The calculated resource generation rate
-   */
-  private calculateResourceGenerationRate(
-    building: Building,
-    slot: { resourceType: string; efficiency: number },
-    group: Group
-  ): number {
-    // Calculate base production from building
-    const baseProduction =
-      building.production[slot.resourceType as keyof Resources] || 0;
-
-    // Get group's efficiency for this resource category
-    let groupEfficiency = 1.0;
-    if (slot.resourceType === "wood") {
-      groupEfficiency = group.gatheringEfficiency.wood;
-    } else if (slot.resourceType === "stone") {
-      groupEfficiency = group.gatheringEfficiency.stone;
-    } else if (slot.resourceType === "iron") {
-      groupEfficiency = group.gatheringEfficiency.iron;
-    } else if (slot.resourceType === "gold") {
-      groupEfficiency = group.gatheringEfficiency.gold;
-    } else if (
-      ["fish", "wheat", "meat", "berries"].includes(slot.resourceType)
-    ) {
-      groupEfficiency = group.gatheringEfficiency.food;
-    }
-
-    // Calculate final production rate (per second)
-    return baseProduction * slot.efficiency * groupEfficiency;
   }
 
   /**
@@ -1318,7 +1198,24 @@ export class Engine {
     resourceType: string,
     amount: number
   ): void {
-    const hexCenter = this.layout.hexToPixel(building.position);
+    const spriteName = convertToSpriteName(building.id, "b");
+    const buildingSprite = this.viewport.getChildByName(spriteName) as Sprite;
+
+    let originX: number;
+    let originY: number;
+
+    if (buildingSprite) {
+      originX = buildingSprite.x;
+      originY = buildingSprite.y;
+    } else {
+      // Fallback if sprite not found
+      console.warn(
+        `Building sprite ${spriteName} not found for resource effect. Falling back to hex center.`
+      );
+      const hexCenter = this.layout.hexToPixel(building.position);
+      originX = hexCenter.x;
+      originY = hexCenter.y;
+    }
 
     // Create container for the effect if it doesn't exist
     const effectName = `resource_effect_${building.id}`;
@@ -1335,11 +1232,9 @@ export class Engine {
     const particle = new Graphics();
     drawResourceGenerationIndicator(particle, resourceType, amount, 0);
 
-    // Position particle near the building
-    const angle = Math.random() * Math.PI * 2;
-    const distance = 15 + Math.random() * 10;
-    particle.x = hexCenter.x + Math.cos(angle) * distance;
-    particle.y = hexCenter.y + Math.sin(angle) * distance;
+    // Position particle at the building's sprite center
+    particle.x = originX;
+    particle.y = originY;
 
     effectContainer.addChild(particle);
 

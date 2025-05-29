@@ -142,19 +142,29 @@ export function drawBuildingGraphics(
   // Add level indicator dots at the bottom of the building
   const dotRadius = 2;
   const dotSpacing = 5;
-  const startX = -((building.level - 1) * dotSpacing) / 2;
 
-  graphics.beginFill(0xffffff); // White dots
-  for (let i = 0; i < building.level; i++) {
-    graphics.drawCircle(startX + i * dotSpacing, size + 5, dotRadius);
+  // Calculate used and total slots
+  const usedSlots = building.slots.filter(
+    (slot) => slot.assignedGroupId !== undefined
+  ).length;
+  const totalSlots = building.slots.length;
+
+  // Position dots in the bottom-left corner inside the building square
+  const startX = -size + dotRadius + dotSpacing; // Offset from left edge
+  const dotY = size - dotRadius - dotSpacing; // Offset from bottom edge
+
+  // Draw filled dots for used slots
+  graphics.beginFill(0xffffff); // White dots for used slots
+  for (let i = 0; i < usedSlots; i++) {
+    graphics.drawCircle(startX + i * dotSpacing, dotY, dotRadius);
   }
   graphics.endFill();
 
-  // Add empty dots for remaining levels
-  if (building.level < building.maxLevel) {
-    graphics.beginFill(0x666666); // Gray dots for remaining levels
-    for (let i = building.level; i < building.maxLevel; i++) {
-      graphics.drawCircle(startX + i * dotSpacing, size + 5, dotRadius);
+  // Draw empty dots for remaining available slots
+  if (usedSlots < totalSlots) {
+    graphics.beginFill(0x666666); // Gray dots for available slots
+    for (let i = usedSlots; i < totalSlots; i++) {
+      graphics.drawCircle(startX + i * dotSpacing, dotY, dotRadius);
     }
     graphics.endFill();
   }
