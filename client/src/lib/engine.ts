@@ -5,7 +5,7 @@ import * as Util from "@shared/util";
 import { Layout, equals, hash, neighborsRange, Hex } from "@shared/hex";
 import * as Vector2 from "@shared/vector2";
 import { ClientTile, SelectionType, ZIndices } from "./types";
-import { Building, Group, Tile, Battle } from "@shared/objects";
+import { Building, Group, Tile, Battle, GroupBehavior } from "@shared/objects";
 import { convertToSpriteName, Hashtable } from "@shared/util";
 import { useStore } from "@/lib/state";
 import * as PlayerRelation from "@shared/relation";
@@ -1417,4 +1417,22 @@ export class Engine {
       indicator.destroy();
     }
   };
+
+  requestSetGroupBehavior(groupId: number, behavior: GroupBehavior): void {
+    const { world } = useStore.getState();
+    const group = world.groups[groupId];
+
+    if (!group) {
+      console.warn(`Cannot set behavior for group ${groupId}: not found`);
+      return;
+    }
+    if (group.owner !== this.uid) {
+      console.warn(
+        `Cannot set behavior for group ${groupId}: not owned by ${this.uid}`
+      );
+      return;
+    }
+
+    this.socket.emit("request set group behavior", { groupId, behavior });
+  }
 }

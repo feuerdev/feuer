@@ -63,18 +63,7 @@ const GroupInfo = ({ group }: { group: Group }) => {
             value={group.behavior}
             onChange={(e) => {
               const newBehavior = parseInt(e.target.value) as GroupBehavior;
-              // TODO: Send update to server: engine.requestSetGroupBehavior(group.id, newBehavior);
-              console.log(
-                `Group ${group.id} behavior changed to: ${GroupBehavior[newBehavior]}`
-              );
-              // Optimistically update client state, server will send authoritative update
-              useStore.getState().setWorld({
-                ...world,
-                groups: {
-                  ...world.groups,
-                  [group.id]: { ...group, behavior: newBehavior },
-                },
-              });
+              engine.requestSetGroupBehavior(group.id, newBehavior);
             }}
             className="block w-full rounded-md border-slate-600 bg-slate-700 py-1.5 text-slate-200 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-xs"
           >

@@ -515,6 +515,7 @@ export default class GameServer {
     socket.on("request unassign group", (data) => this.onRequestUnassignGroup(socket, data))
     socket.on("request upgrade building", (data) => this.onRequestUpgradeBuilding(socket, data))
     socket.on("request hire group", (data) => this.onRequestHireGroup(socket, data))
+    socket.on("request set group behavior", (data) => this.onRequestSetGroupBehavior(socket, data));
   }
 
   onRequestTiles(socket: Socket, data: Hex[]) {
@@ -908,6 +909,34 @@ export default class GameServer {
     
     // Update visibilities
     this.updatePlayerVisibilities(uid)
+  }
+
+  onRequestSetGroupBehavior(socket: Socket, data: { groupId: number; behavior: GroupBehavior }) {
+    const uid = this.getPlayerUid(socket.id);
+    if (!uid) return;
+
+    const group = this.world.groups[data.groupId];
+    if (!group || group.owner !== uid) {
+      console.warn(`Player ${uid} cannot set behavior for group ${data.groupId}`);
+      return;
+    }
+
+    // Validate behavior value (optional, but good practice if values might be arbitrary)
+    if (!Object.values(GroupBehavior).includes(data.behavior)) {
+        console.warn(`Invalid behavior value received: ${data.behavior}`);
+        return;
+    }
+
+    group.behavior = data.behavior;
+    console.log(`Group ${group.id} behavior set to ${GroupBehavior[group.behavior]} by player ${uid}`);
+
+    // Notify the client who made the change, and potentially other clients if this group is visible to them.
+    // For simplicity, just sending to the owner for now. A broader update might be needed.
+    socket.emit("gamestate group", group);
+    
+    // If the group is visible to other players, they should also get an update.
+    // This can be handled by the general groups update in updateNet, or by a targeted emit here.
+    // For now, relying on existing updateNet which sends all visible groups.
   }
 
   private getPlayerUid(socketId): string | null {
