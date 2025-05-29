@@ -65,3 +65,28 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* For Webkit-based browsers (Chrome, Safari, Edge) */
+  ::-webkit-scrollbar {
+    @apply w-2 bg-transparent; /* Slimmer scrollbar, transparent background */
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent; /* Transparent track */
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground rounded-md;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-accent-foreground; /* Slightly darker on hover */
+  }
+
+  /* For Firefox */
+  * {
+    scrollbar-width: thin; /* "auto" or "thin" */
+    scrollbar-color: hsl(var(--muted-foreground)) transparent; /* thumb and transparent track color */
+  }
+}
