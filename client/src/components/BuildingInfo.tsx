@@ -45,8 +45,8 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
       : false;
 
   return (
-    <div className="flex gap-2 p-2 h-full">
-      <InfoBox title="Building Details" className="h-full max-w-[250px]">
+    <div className="grid grid-cols-[minmax(250px,_auto)_1fr_1fr] gap-2 p-2 h-full">
+      <InfoBox title="Building Details" className="h-full">
         <InfoRow label="Name" value={building.key} />
         <InfoRow
           label="Level"
@@ -120,7 +120,7 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
         )}
       </InfoBox>
 
-      <InfoBox title="Resource Slots" className="h-full flex-1">
+      <InfoBox title="Resource Slots" className="h-full">
         {building.slots.map((slot, index) => {
           const assignedGroup = slot.assignedGroupId
             ? world.groups[slot.assignedGroupId]

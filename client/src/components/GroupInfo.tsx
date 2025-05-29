@@ -31,8 +31,8 @@ const GroupInfo = ({ group }: { group: Group }) => {
       : undefined;
 
   return (
-    <div className="flex gap-2 p-2 h-full">
-      <InfoBox title="Group Details" className="h-full max-w-[250px]">
+    <div className="grid grid-cols-[minmax(250px,_auto)_1fr_1fr] gap-2 p-2 h-full">
+      <InfoBox title="Group Details" className="h-full">
         <InfoRow label="Name" value={group.name} />
         <InfoRow label="Position" value={`${group.pos.q}:${group.pos.r}`} />
         <InfoRow
@@ -99,7 +99,7 @@ const GroupInfo = ({ group }: { group: Group }) => {
         </div>
       </InfoBox>
 
-      <InfoBox title="Stats" className="h-full flex-1">
+      <InfoBox title="Stats" className="h-full">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <h3 className="text-sm font-semibold mb-2">Combat Stats</h3>
@@ -116,7 +116,7 @@ const GroupInfo = ({ group }: { group: Group }) => {
         </div>
       </InfoBox>
 
-      <ResourceInfo group={group} tile={tile} className="h-full flex-1" />
+      <ResourceInfo group={group} tile={tile} className="h-full" />
     </div>
   );
 };

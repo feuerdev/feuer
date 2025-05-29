@@ -24,8 +24,8 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
   });
 
   return (
-    <div className="flex gap-2 p-2 h-full">
-      <InfoBox title="Tile Details" className="h-full max-w-[250px]">
+    <div className="grid grid-cols-[minmax(250px,_auto)_1fr_1fr] gap-2 p-2 h-full">
+      <InfoBox title="Tile Details" className="h-full">
         <InfoRow label="Position" value={`${tile.hex.q}, ${tile.hex.r}`} />
         <InfoRow label="Biome" value={getBiomeName(tile.biome)} />
         <InfoRow label="Height" value={tile.height.toFixed(1)} />
@@ -45,7 +45,7 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
       {(building || group) && (
         <InfoBox
           title="Available Buildings (Max: 3)"
-          className="h-full flex-1 overflow-y-auto"
+          className="h-full overflow-y-auto"
         >
           {Object.keys(Buildings).length === 0 ? (
             <p className="text-gray-400 italic text-xs">
@@ -67,9 +67,7 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
         </InfoBox>
       )}
 
-      {group && (
-        <ResourceInfo group={group} tile={tile} className="h-full flex-1" />
-      )}
+      {group && <ResourceInfo group={group} tile={tile} className="h-full" />}
     </div>
   );
 };
