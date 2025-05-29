@@ -27,11 +27,42 @@ const BattleInfo: React.FC<BattleInfoProps> = ({ battle }) => {
     // TODO: Send request to engine to remove battle indicator
   };
 
+  // Determine battle type and title
+  const isTileDefenseBattle = battle.isTileDefenseBattle;
+  const battleTitle = isTileDefenseBattle
+    ? "Tile Defense Battle!"
+    : "Battle in Progress!";
+
+  // Calculate battle progress - how much damage each side has taken
+  const attackerHealth = Math.max(0, battle.attacker.morale);
+  const defenderHealth = Math.max(0, battle.defender.morale);
+  const attackerHealthPercent = attackerHealth;
+  const defenderHealthPercent = defenderHealth;
+
+  // Has either side fled?
+  const attackerFled = battle.attacker.morale === 1;
+  const defenderFled = battle.defender.morale === 1;
+
+  // Is battle over?
+  const isBattleOver =
+    battle.attacker.morale <= 0 ||
+    battle.defender.morale <= 0 ||
+    attackerFled ||
+    defenderFled;
+
+  // Get more detailed info for more informative battle display
+  const attacker = battle.attacker;
+  const defender = battle.defender;
+
   return (
-    <div className="absolute top-1/2 left-1/2 z-20 w-1/3 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-slate-800 bg-opacity-95 p-4 shadow-xl">
+    <div className="absolute top-1/2 left-1/2 z-20 w-2/5 -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-slate-800 bg-opacity-95 p-4 shadow-xl">
       <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-700">
-        <h3 className="text-lg font-semibold text-red-400">
-          Battle in Progress!
+        <h3
+          className={`text-lg font-semibold ${
+            isTileDefenseBattle ? "text-orange-400" : "text-red-400"
+          }`}
+        >
+          {battleTitle}
         </h3>
         <div className="flex items-center space-x-2">
           <button
@@ -79,26 +110,334 @@ const BattleInfo: React.FC<BattleInfoProps> = ({ battle }) => {
         </div>
       </div>
 
-      <div>
-        <p className="text-sm text-slate-300">
-          Attacker: {battle.attacker.id} (Morale:{" "}
-          {battle.attacker.morale.toFixed(1)})
-        </p>
-        <p className="text-sm text-slate-300">
-          Defender: {battle.defender.id} (Morale:{" "}
-          {battle.defender.morale.toFixed(1)})
-        </p>
-        {/* More battle details will go here */}
+      <div className="space-y-3">
+        {isTileDefenseBattle ? (
+          // Tile Defense Battle Info
+          <>
+            <div className="bg-slate-700/50 p-2 rounded">
+              <p className="text-sm text-amber-300 font-medium">
+                Group attacking defensive structures
+              </p>
+              <p className="text-xs text-slate-300 mt-1">
+                {battle.defenseOwner &&
+                  `Defending buildings owned by: ${battle.defenseOwner}`}
+              </p>
+              {battle.defensiveBuildings && (
+                <p className="text-xs text-slate-300">
+                  Defensive buildings: {battle.defensiveBuildings.length}
+                </p>
+              )}
+            </div>
+
+            {/* Attacker Section */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-slate-700/50 p-2 rounded">
+                <p className="text-sm text-blue-300 font-medium mb-1">
+                  Attacker
+                </p>
+                <p className="text-xs text-slate-300">ID: {attacker.id}</p>
+                <div className="mt-1">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-slate-400">Morale:</span>
+                    <span
+                      className={
+                        attackerFled
+                          ? "text-yellow-400"
+                          : attackerHealth < 30
+                          ? "text-red-400"
+                          : "text-green-400"
+                      }
+                    >
+                      {attackerFled ? "Fled!" : `${attackerHealth.toFixed(1)}%`}
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-800 rounded-full h-1.5">
+                    <div
+                      className={`h-1.5 rounded-full ${
+                        attackerFled
+                          ? "bg-yellow-500"
+                          : attackerHealth < 30
+                          ? "bg-red-500"
+                          : "bg-green-500"
+                      }`}
+                      style={{ width: `${attackerHealthPercent}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-2 mt-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Strength:</span>
+                    <span className="text-slate-300">{attacker.strength}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Attack:</span>
+                    <span className="text-slate-300">{attacker.attack}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Defense:</span>
+                    <span className="text-slate-300">{attacker.defense}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Agility:</span>
+                    <span className="text-slate-300">{attacker.agility}</span>
+                  </div>
+                </div>
+
+                {attacker.injuries && attacker.injuries.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs text-red-300">
+                      Injuries: {attacker.injuries.length}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Defender Section */}
+              <div className="bg-slate-700/50 p-2 rounded">
+                <p className="text-sm text-red-300 font-medium mb-1">
+                  {isTileDefenseBattle ? "Defenses" : "Defender"}
+                </p>
+                {isTileDefenseBattle && defender.isVirtual ? (
+                  <p className="text-xs text-slate-300">Defensive Structures</p>
+                ) : (
+                  <p className="text-xs text-slate-300">ID: {defender.id}</p>
+                )}
+                <div className="mt-1">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-slate-400">
+                      {isTileDefenseBattle ? "Integrity:" : "Morale:"}
+                    </span>
+                    <span
+                      className={
+                        defenderFled
+                          ? "text-yellow-400"
+                          : defenderHealth < 30
+                          ? "text-red-400"
+                          : "text-green-400"
+                      }
+                    >
+                      {defenderFled ? "Fled!" : `${defenderHealth.toFixed(1)}%`}
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-800 rounded-full h-1.5">
+                    <div
+                      className={`h-1.5 rounded-full ${
+                        defenderFled
+                          ? "bg-yellow-500"
+                          : defenderHealth < 30
+                          ? "bg-red-500"
+                          : "bg-green-500"
+                      }`}
+                      style={{ width: `${defenderHealthPercent}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-2 mt-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">
+                      {isTileDefenseBattle ? "Defense:" : "Strength:"}
+                    </span>
+                    <span className="text-slate-300">
+                      {isTileDefenseBattle
+                        ? defender.defense
+                        : defender.strength}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Attack:</span>
+                    <span className="text-slate-300">{defender.attack}</span>
+                  </div>
+                  {!isTileDefenseBattle && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Defense:</span>
+                        <span className="text-slate-300">
+                          {defender.defense}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Agility:</span>
+                        <span className="text-slate-300">
+                          {defender.agility}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {!isTileDefenseBattle &&
+                  defender.injuries &&
+                  defender.injuries.length > 0 && (
+                    <div className="mt-2">
+                      <p className="text-xs text-red-300">
+                        Injuries: {defender.injuries.length}
+                      </p>
+                    </div>
+                  )}
+              </div>
+            </div>
+          </>
+        ) : (
+          // Regular Battle Info
+          <>
+            {/* Attacker Section */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-slate-700/50 p-2 rounded">
+                <p className="text-sm text-blue-300 font-medium mb-1">
+                  Attacker
+                </p>
+                <p className="text-xs text-slate-300">ID: {attacker.id}</p>
+                <div className="mt-1">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-slate-400">Morale:</span>
+                    <span
+                      className={
+                        attackerFled
+                          ? "text-yellow-400"
+                          : attackerHealth < 30
+                          ? "text-red-400"
+                          : "text-green-400"
+                      }
+                    >
+                      {attackerFled ? "Fled!" : `${attackerHealth.toFixed(1)}%`}
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-800 rounded-full h-1.5">
+                    <div
+                      className={`h-1.5 rounded-full ${
+                        attackerFled
+                          ? "bg-yellow-500"
+                          : attackerHealth < 30
+                          ? "bg-red-500"
+                          : "bg-green-500"
+                      }`}
+                      style={{ width: `${attackerHealthPercent}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-2 mt-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Strength:</span>
+                    <span className="text-slate-300">{attacker.strength}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Attack:</span>
+                    <span className="text-slate-300">{attacker.attack}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Defense:</span>
+                    <span className="text-slate-300">{attacker.defense}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Agility:</span>
+                    <span className="text-slate-300">{attacker.agility}</span>
+                  </div>
+                </div>
+
+                {attacker.injuries && attacker.injuries.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs text-red-300">
+                      Injuries: {attacker.injuries.length}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Defender Section */}
+              <div className="bg-slate-700/50 p-2 rounded">
+                <p className="text-sm text-red-300 font-medium mb-1">
+                  Defender
+                </p>
+                <p className="text-xs text-slate-300">ID: {defender.id}</p>
+                <div className="mt-1">
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-slate-400">Morale:</span>
+                    <span
+                      className={
+                        defenderFled
+                          ? "text-yellow-400"
+                          : defenderHealth < 30
+                          ? "text-red-400"
+                          : "text-green-400"
+                      }
+                    >
+                      {defenderFled ? "Fled!" : `${defenderHealth.toFixed(1)}%`}
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-800 rounded-full h-1.5">
+                    <div
+                      className={`h-1.5 rounded-full ${
+                        defenderFled
+                          ? "bg-yellow-500"
+                          : defenderHealth < 30
+                          ? "bg-red-500"
+                          : "bg-green-500"
+                      }`}
+                      style={{ width: `${defenderHealthPercent}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-2 mt-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Strength:</span>
+                    <span className="text-slate-300">{defender.strength}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Attack:</span>
+                    <span className="text-slate-300">{defender.attack}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Defense:</span>
+                    <span className="text-slate-300">{defender.defense}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Agility:</span>
+                    <span className="text-slate-300">{defender.agility}</span>
+                  </div>
+                </div>
+
+                {defender.injuries && defender.injuries.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs text-red-300">
+                      Injuries: {defender.injuries.length}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
-      {(battle.attacker.morale <= 0 || battle.defender.morale <= 0) && (
+      {/* Battle result section */}
+      {isBattleOver && (
         <div className="mt-4 pt-2 border-t border-slate-700">
-          <h4 className="font-semibold text-amber-400">Battle Over!</h4>
+          <h4 className="font-semibold text-amber-400">
+            Battle {attackerFled || defenderFled ? "Ended" : "Over"}!
+          </h4>
           {battle.attacker.morale <= 0 && (
-            <p className="text-slate-300">Attacker has been defeated.</p>
+            <p className="text-slate-300">
+              {isTileDefenseBattle
+                ? "Attacker was defeated by defensive structures."
+                : "Attacker has been defeated."}
+            </p>
           )}
           {battle.defender.morale <= 0 && (
-            <p className="text-slate-300">Defender has been defeated.</p>
+            <p className="text-slate-300">
+              {isTileDefenseBattle
+                ? "Defensive structures were destroyed."
+                : "Defender has been defeated."}
+            </p>
+          )}
+          {attackerFled && (
+            <p className="text-slate-300">Attacker has fled the battle.</p>
+          )}
+          {defenderFled && !isTileDefenseBattle && (
+            <p className="text-slate-300">Defender has fled the battle.</p>
           )}
         </div>
       )}
