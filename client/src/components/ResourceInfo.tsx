@@ -69,76 +69,76 @@ const ResourceInfo = ({
 
   return (
     <InfoBox title="Resources" className={effectiveClassName}>
-      <div className="flex flex-col">
-        <div className="grid grid-cols-3 gap-1 text-xs flex-shrink-0">
-          <div className="font-semibold text-center text-xs">Group</div>
-          <div className="font-semibold text-center text-xs">Transfer</div>
-          <div className="font-semibold text-center text-xs">Tile</div>
-        </div>
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 bg-slate-900 grid grid-cols-3 gap-1 text-xs flex-shrink-0 py-1 px-2 -mx-2">
+        <div className="font-semibold text-center text-xs">Group</div>
+        <div className="font-semibold text-center text-xs">Transfer</div>
+        <div className="font-semibold text-center text-xs">Tile</div>
+      </div>
 
-        <div className="pr-1 mt-1">
-          <div className="grid grid-cols-3 gap-1">
-            {resourceKeys.map((resourceKey) => (
-              <div key={resourceKey} className="contents">
-                <div className="bg-gray-800 p-0.5 rounded text-center h-9">
-                  <div className="capitalize text-xs text-gray-400 truncate">
-                    {resourceKey}
-                  </div>
-                  <div className="font-medium text-xs">
-                    {Math.floor(
-                      group.resources[
-                        resourceKey as keyof typeof group.resources
-                      ] || 0
-                    )}
-                  </div>
+      {/* Scrollable Content Area */}
+      <div className="flex flex-col pt-1">
+        <div className="grid grid-cols-3 gap-1">
+          {resourceKeys.map((resourceKey) => (
+            <div key={resourceKey} className="contents">
+              <div className="bg-gray-800 p-0.5 rounded text-center h-9">
+                <div className="capitalize text-xs text-gray-400 truncate">
+                  {resourceKey}
                 </div>
-
-                <div className="flex justify-center items-center gap-0.5 h-9">
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    onClick={() =>
-                      requestResourceTransfer(
-                        group,
-                        resourceKey,
-                        TransferDirection.group
-                      )
-                    }
-                    className="min-w-0 w-6 px-0"
-                  >
-                    &larr;
-                  </Button>
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    onClick={() =>
-                      requestResourceTransfer(
-                        group,
-                        resourceKey,
-                        TransferDirection.tile
-                      )
-                    }
-                    className="min-w-0 w-6 px-0"
-                  >
-                    &rarr;
-                  </Button>
-                </div>
-
-                <div className="bg-gray-800 p-0.5 rounded text-center h-9">
-                  <div className="capitalize text-xs text-gray-400 truncate">
-                    {resourceKey}
-                  </div>
-                  <div className="font-medium text-xs">
-                    {Math.floor(
-                      tile.resources[
-                        resourceKey as keyof typeof tile.resources
-                      ] || 0
-                    )}
-                  </div>
+                <div className="font-medium text-xs">
+                  {Math.floor(
+                    group.resources[
+                      resourceKey as keyof typeof group.resources
+                    ] || 0
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
+
+              <div className="flex justify-center items-center gap-0.5 h-9">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  onClick={() =>
+                    requestResourceTransfer(
+                      group,
+                      resourceKey,
+                      TransferDirection.group
+                    )
+                  }
+                  className="min-w-0 w-6 px-0"
+                >
+                  &larr;
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  onClick={() =>
+                    requestResourceTransfer(
+                      group,
+                      resourceKey,
+                      TransferDirection.tile
+                    )
+                  }
+                  className="min-w-0 w-6 px-0"
+                >
+                  &rarr;
+                </Button>
+              </div>
+
+              <div className="bg-gray-800 p-0.5 rounded text-center h-9">
+                <div className="capitalize text-xs text-gray-400 truncate">
+                  {resourceKey}
+                </div>
+                <div className="font-medium text-xs">
+                  {Math.floor(
+                    tile.resources[
+                      resourceKey as keyof typeof tile.resources
+                    ] || 0
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </InfoBox>

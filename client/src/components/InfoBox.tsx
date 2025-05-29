@@ -20,7 +20,7 @@ export function InfoBox({ title, children, className, actions }: InfoBoxProps) {
         <h3 className="font-semibold text-white text-sm">{title}</h3>
         {actions && <div className="flex space-x-1">{actions}</div>}
       </div>
-      <div className="p-2 overflow-auto">{children}</div>
+      <div className="p-2">{children}</div>
     </div>
   );
 }
