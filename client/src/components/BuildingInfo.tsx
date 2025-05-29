@@ -23,6 +23,13 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
     (group) => equals(group.pos, building.position) && group.owner === userId
   );
 
+  // Get IDs of groups already assigned to any slot in THIS building
+  const assignedGroupIdsInCurrentBuilding = new Set(
+    building.slots
+      .map((slot) => slot.assignedGroupId)
+      .filter((id) => id != null)
+  );
+
   // Check if building can be upgraded
   const canUpgrade =
     building.level < building.maxLevel && building.upgradeRequirements;
@@ -168,7 +175,11 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
                   <h5 className="text-xs text-gray-400 mb-1">Assign Group:</h5>
                   <div className="flex flex-wrap gap-1">
                     {availableGroups
-                      .filter((group) => !group.assignedToBuilding)
+                      .filter(
+                        (group) =>
+                          !group.assignedToBuilding &&
+                          !assignedGroupIdsInCurrentBuilding.has(group.id)
+                      )
                       .map((group) => (
                         <Button
                           key={group.id}
