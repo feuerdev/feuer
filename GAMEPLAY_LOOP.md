@@ -57,9 +57,9 @@ This document outlines the core gameplay loop and implementation steps for Feuer
   - [x] Add a new hud element for the group behavior programming
   - [x] Start with simple aggressive and defensive behavior
   - [x] Update the battle system to use the group behavior programming
-- [ ] Create defensive buildings
-- [ ] Create group vs tile combat
-  - [ ] Defensive buildings should be able to defend the tile from attacks
+- [x] Create defensive buildings
+- [x] Create group vs tile combat
+  - [x] Defensive buildings should be able to defend the tile from attacks
 
 ### Phase 4: Morale & Advanced Mechanics
 

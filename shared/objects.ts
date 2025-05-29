@@ -60,6 +60,10 @@ export type Battle = GameObject & {
   attacker: Group
   defender: Group
   position: Hex
+  // Tile defense battle properties
+  isTileDefenseBattle?: boolean
+  defenseOwner?: string
+  defensiveBuildings?: Building[]
 }
 
 // Resource slot for a building
@@ -80,9 +84,11 @@ export type Building = GameObject &
     upgradeRequirements?: Partial<Resources> // Resources needed for next upgrade
     // Optional defensive stats
     attack?: number
+    defense?: number
     range?: number
     attackSpeed?: number // Attacks per game update cycle (e.g., 1 = every update, 0.5 = every other update)
     timeToNextAttack?: number // Internal cooldown counter
+    isDefensive?: boolean // Whether this building provides defense to the tile
   }
 
 export type Group = GameObject &
@@ -126,6 +132,9 @@ export type Group = GameObject &
 
     // Behavior
     behavior: GroupBehavior
+
+    // For virtual groups (like tile defenses)
+    isVirtual?: boolean
   }
 
 export enum GroupBehavior {
@@ -173,8 +182,10 @@ export type TBuildingTemplate = {
   maxLevel?: number
   // Optional defensive stats for templates
   attack?: number
+  defense?: number
   range?: number
   attackSpeed?: number
+  isDefensive?: boolean
   upgrades?: {
     [level: number]: {
       cost: Partial<Resources>
@@ -182,8 +193,10 @@ export type TBuildingTemplate = {
       spotting: number
       // Optional defensive stats for upgrades
       attack?: number
+      defense?: number
       range?: number
       attackSpeed?: number
+      name?: string // Optional name change on upgrade (e.g., "Wooden Palisade" -> "Stone Wall")
     }
   }
 }

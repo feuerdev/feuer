@@ -274,5 +274,37 @@
         "attackSpeed": 1
       }
     }
+  },
+  "palisade": {
+    "key": "palisade",
+    "name": "Wooden Palisade",
+    "cost": {
+      "wood": 200,
+      "stone": 50
+    },
+    "spotting": 1,
+    "defense": 30,
+    "maxLevel": 3,
+    "isDefensive": true,
+    "upgrades": {
+      "2": {
+        "cost": {
+          "wood": 300,
+          "stone": 150
+        },
+        "spotting": 1,
+        "defense": 50
+      },
+      "3": {
+        "cost": {
+          "wood": 200,
+          "stone": 300,
+          "iron": 100
+        },
+        "spotting": 2,
+        "defense": 80,
+        "name": "Stone Wall"
+      }
+    }
   }
 }

@@ -22,9 +22,11 @@ export function createBuilding(
     slots: slots,
     maxLevel: template.maxLevel || 3, // Default max level is 3 if not specified
     attack: template.attack,
+    defense: template.defense,
     range: template.range,
     attackSpeed: template.attackSpeed,
     timeToNextAttack: 0,
+    isDefensive: template.isDefensive
   }
   
   // Add upgrade requirements if available
@@ -58,6 +60,9 @@ export function upgradeBuilding(building: Building): Building | null {
   // Update defensive stats if present in upgrade
   if (upgrade.attack !== undefined) {
     building.attack = upgrade.attack;
+  }
+  if (upgrade.defense !== undefined) {
+    building.defense = upgrade.defense;
   }
   if (upgrade.range !== undefined) {
     building.range = upgrade.range;
