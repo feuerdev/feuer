@@ -39,7 +39,7 @@ const GroupHiring = ({ building }: GroupHiringProps) => {
   };
 
   return (
-    <InfoBox title="Hire Group" className="mt-4">
+    <InfoBox title="Hire Group">
       <div className="p-2 border border-gray-700 rounded-md bg-gray-800">
         <div className="flex justify-between items-center">
           <h3 className="text-sm font-semibold">New Group</h3>
