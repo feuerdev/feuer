@@ -74,7 +74,6 @@ export type Building = GameObject &
     position: Hex
     key: string
     spotting: number
-    production: Resources
     level: number
     slots: ResourceSlot[] // Slots for group assignment
     maxLevel: number // Maximum level this building can be upgraded to
@@ -119,13 +118,11 @@ export type TBuildingTemplate = {
   name: string
   cost: Partial<Resources>
   spotting: number
-  production: Partial<Resources>
   slots?: ResourceSlot[]
   maxLevel?: number
   upgrades?: {
     [level: number]: {
       cost: Partial<Resources>
-      production: Partial<Resources>
       slots: ResourceSlot[]
       spotting: number
     }

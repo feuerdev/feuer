@@ -62,12 +62,6 @@ const BuildingTemplate = ({
               );
             })}
           </div>
-          <div className="col-span-2">
-            Production:{" "}
-            {Object.entries(building.production)
-              .map(([key, value]) => `${key}: ${Math.floor(value)}`)
-              .join(", ")}
-          </div>
         </div>
       </div>
       <div title={getTooltipMessage()}>

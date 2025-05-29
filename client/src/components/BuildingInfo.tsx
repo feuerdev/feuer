@@ -68,21 +68,8 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
 
         <InfoDivider />
 
-        <div className="mt-2">
-          <h3 className="text-sm font-semibold mb-1">Production</h3>
-          {Object.entries(building.production).map(([resource, amount]) => (
-            <InfoRow
-              key={resource}
-              label={resource}
-              value={Math.floor(amount)}
-            />
-          ))}
-        </div>
-
         {canUpgrade && (
           <>
-            <InfoDivider />
-
             <div className="mt-2">
               <h3 className="text-sm font-semibold mb-1">
                 Upgrade Requirements

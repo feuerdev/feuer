@@ -6,10 +6,6 @@
       "wood": 100
     },
     "spotting": 3,
-    "production": {
-      "berries": 1,
-      "wood": 1
-    },
     "slots": [
       {
         "resourceType": "berries",
@@ -26,10 +22,6 @@
         "cost": {
           "wood": 200,
           "stone": 50
-        },
-        "production": {
-          "berries": 2,
-          "wood": 2
         },
         "slots": [
           {
@@ -52,11 +44,6 @@
           "wood": 400,
           "stone": 100,
           "iron": 50
-        },
-        "production": {
-          "berries": 3,
-          "wood": 3,
-          "fish": 2
         },
         "slots": [
           {
@@ -87,9 +74,6 @@
     "cost": {
       "wood": 100
     },
-    "production": {
-      "wood": 100
-    },
     "slots": [
       {
         "resourceType": "wood",
@@ -106,9 +90,6 @@
         "cost": {
           "wood": 200,
           "stone": 50
-        },
-        "production": {
-          "wood": 150
         },
         "slots": [
           {
@@ -136,9 +117,6 @@
       "wood": 100,
       "gold": 100
     },
-    "production": {
-      "stone": 100
-    },
     "slots": [
       {
         "resourceType": "stone",
@@ -156,9 +134,6 @@
           "wood": 200,
           "stone": 50,
           "iron": 20
-        },
-        "production": {
-          "stone": 150
         },
         "slots": [
           {
@@ -185,9 +160,6 @@
     "cost": {
       "wood": 100
     },
-    "production": {
-      "iron": 100
-    },
     "slots": [
       {
         "resourceType": "iron",
@@ -204,9 +176,6 @@
         "cost": {
           "wood": 200,
           "stone": 100
-        },
-        "production": {
-          "iron": 150
         },
         "slots": [
           {
@@ -233,9 +202,6 @@
     "cost": {
       "wood": 100
     },
-    "production": {
-      "gold": 100
-    },
     "slots": [
       {
         "resourceType": "gold",
@@ -253,9 +219,6 @@
           "wood": 300,
           "stone": 150,
           "iron": 50
-        },
-        "production": {
-          "gold": 150
         },
         "slots": [
           {

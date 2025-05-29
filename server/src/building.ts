@@ -1,6 +1,5 @@
 import { Hex } from "../../shared/hex.js"
 import { Building, ResourceSlot } from "../../shared/objects.js"
-import { Resources } from "../../shared/resources.js"
 import Buildings from "../../shared/templates/buildings.json" with { type: "json" }
 
 export function createBuilding(
@@ -11,28 +10,13 @@ export function createBuilding(
 ): Building {
   const template = Buildings[key]
   
-  // Default slots based on building type
-  const defaultSlots: ResourceSlot[] = []
-  
-  // Create default slots based on production
-  if (template.production) {
-    Object.keys(template.production).forEach(resource => {
-      defaultSlots.push({
-        resourceType: resource as keyof Resources,
-        efficiency: 1.0
-      })
-    })
-  }
-  
-  // Use template slots if defined, otherwise use default slots
-  const slots = template.slots || defaultSlots
+  const slots = template.slots || []
   
   const building: Building = {
     owner: owner,
     position: pos,
     key: key,
     spotting: template.spotting,
-    production: loadResourceObject(template.production),
     id: id,
     level: 1,
     slots: slots,
@@ -64,7 +48,6 @@ export function upgradeBuilding(building: Building): Building | null {
   
   // Apply upgrade
   building.level = nextLevel
-  building.production = loadResourceObject(upgrade.production)
   building.spotting = upgrade.spotting
   building.slots = upgrade.slots
   
@@ -76,12 +59,4 @@ export function upgradeBuilding(building: Building): Building | null {
   }
   
   return building
-}
-
-function loadResourceObject(template): Resources {
-  let result = {}
-  for (let res of Object.keys(template)) {
-    result[res] = template[res]
-  }
-  return result as Resources
 }

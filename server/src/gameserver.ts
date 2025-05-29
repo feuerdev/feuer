@@ -126,13 +126,8 @@ export default class GameServer {
           const resourceType = slot.resourceType
           
           // Calculate resource generation based on:
-          // 1. Base production rate of the building for this resource
-          // 2. Slot efficiency
-          // 3. Group's gathering efficiency for this resource type
-          // 4. Tile's resource availability factor
-          
-          // Get base production rate
-          const baseProduction = building.production[resourceType] || 0
+          // 1. Slot efficiency
+          // 2. Group's gathering efficiency for this resource type
           
           // Get group's efficiency for this resource category
           let groupEfficiency = 1.0
@@ -149,7 +144,7 @@ export default class GameServer {
           }
           
           // Calculate final production rate
-          const productionRate = baseProduction * slot.efficiency * groupEfficiency * /*resourceAvailabilityFactor * */ deltaFactor
+          const productionRate = slot.efficiency * groupEfficiency * /*resourceAvailabilityFactor * */ deltaFactor
           
           // Add resources to the tile
           if (!tile.resources[resourceType]) {
