@@ -25,18 +25,42 @@ This document outlines the core gameplay loop and implementation steps for Feuer
 - [x] Add group stats (gathering, combat, etc.)
 - [x] Implement group hiring system
 - [x] Simplify code structure by removing units
-- [ ] Create group experience and leveling system
-- [ ] Implement group training mechanics
-- [ ] Add UI for group management and stats
 
 ### Phase 3: Combat System
 
+- [ ] Add battle UI to display a live battle
+  - [ ] Draw an indicator on the tile where the battle is happening
+  - [ ] Implement a new floating hud element for the battle
+  - [ ] It should update live with the battle
+  - [ ] It should be able to be closed
+  - [ ] It should show the battle result after it is over
 - [ ] Enhance existing battle system with turn-based mechanics
+  - [ ] The logic should take into account the groups stats
+  - [ ] Add the following stats to the group that will affect the battle and are generated when the group is created:
+    - [ ] Strength
+    - [ ] Fortitude
+    - [ ] Initiative
+    - [ ] Agility
+    - [ ] Pain Threshold
+    - [ ] Intelligence
+  - [ ] Add an injuries system
+    - [ ] Add a new hud element for the injuries
+    - [ ] Injuries should persist between battles
+    - [ ] Some injuries should be able to be healed over time
+    - [ ] Some injuries should be unable to be healed
+  - [ ] The stats and the battle situation and injuries should affect the groups morale
+  - [ ] Allow for groups to flee from a battle when their morale is low
+- [ ] Enable that every group joining a tile with an ongoing battle will join the battle
+    - [ ] implement a system for battles to match multiple groups in individual duels
+    - [ ] a battle will continue until all groups are defeated or the battle is over
 - [ ] Implement group behavior programming interface
-- [ ] Add permanent injuries and morale impact mechanics
-- [ ] Create building vs group combat
-- [ ] Add defensive building modifiers
-- [ ] Add UI for combat behavior programming
+  - [ ] Add a new hud element for the group behavior programming
+  - [ ] Start with simple aggressive and defensive behavior
+  - [ ] Update the battle system to use the group behavior programming
+- [ ] Create defensive buildings
+- [ ] Create group vs tile combat
+  - [ ] Defensive buildings should be able to defend the tile from attacks
+
 
 ### Phase 4: Morale & Advanced Mechanics
 
@@ -57,8 +81,10 @@ This document outlines the core gameplay loop and implementation steps for Feuer
 ### Phase 6: Long-term Goals
 
 - [ ] Implement leaderboards
-- [ ] Add achievement system
-- [ ] Create endgame content
+- [ ] Create group experience and leveling system
+- [ ] Implement group training mechanics
+- [ ] Add UI for group management and stats
+
 
 ## Immediate Next Steps
 
