@@ -32,7 +32,7 @@ const GroupInfo = ({ group }: { group: Group }) => {
 
   return (
     <div className="inline-grid grid-cols-[minmax(250px,auto)_auto_auto] gap-2 p-2 h-full">
-      <InfoBox title="Group Details" className="h-full">
+      <InfoBox title="Group Details" className="h-full overflow-y-auto">
         <InfoRow label="Name" value={group.name} />
         <InfoRow label="Position" value={`${group.pos.q}:${group.pos.r}`} />
         <InfoRow
@@ -99,7 +99,7 @@ const GroupInfo = ({ group }: { group: Group }) => {
         </div>
       </InfoBox>
 
-      <InfoBox title="Stats" className="h-full">
+      <InfoBox title="Stats" className="h-full overflow-y-auto">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <h3 className="text-sm font-semibold mb-2">Combat Stats</h3>
