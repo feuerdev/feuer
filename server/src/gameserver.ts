@@ -110,26 +110,6 @@ export default class GameServer {
     Object.values(this.world.buildings).forEach((building) => {
       let tile = this.world.tiles[hash(building.position)]
       
-      // Handle passive resource generation (reduced without assigned groups)
-      for (let res of Object.keys(building.production)) {
-        // Passive generation is 10% of normal production
-        const passiveAmount = building.production[res] * 0.1 * deltaFactor;
-        tile.resources[res] += passiveAmount
-        
-        // Emit resource generation event for passive generation
-        // Only emit if the amount is significant enough to show
-        if (passiveAmount >= 0.1) {
-          const socket = this.uidsockets[building.owner];
-          if (socket && socket.connected) {
-            socket.emit("gamestate resource generation", {
-              buildingId: building.id,
-              resourceType: res,
-              amount: passiveAmount
-            });
-          }
-        }
-      }
-      
       // Handle resource generation from assigned groups
       building.slots.forEach((slot, slotIndex) => {
         if (slot.assignedGroupId) {
