@@ -65,7 +65,7 @@ const BuildingTemplate = ({
           <div className="col-span-2">
             Production:{" "}
             {Object.entries(building.production)
-              .map(([key, value]) => `${key}: ${value}`)
+              .map(([key, value]) => `${key}: ${Math.floor(value)}`)
               .join(", ")}
           </div>
         </div>

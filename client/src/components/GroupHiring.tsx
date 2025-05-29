@@ -71,7 +71,8 @@ const GroupHiring = ({ building }: GroupHiringProps) => {
                       : "text-gray-300"
                   }`}
                 >
-                  {resource}: {amount} / {tile.resources[resourceKey] || 0}
+                  {resource}: {amount} /{" "}
+                  {Math.floor(tile.resources[resourceKey] || 0)}
                 </div>
               );
             })}

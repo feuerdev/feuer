@@ -64,7 +64,11 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
         <div className="mt-2">
           <h3 className="text-sm font-semibold mb-1">Production</h3>
           {Object.entries(building.production).map(([resource, amount]) => (
-            <InfoRow key={resource} label={resource} value={amount} />
+            <InfoRow
+              key={resource}
+              label={resource}
+              value={Math.floor(amount)}
+            />
           ))}
         </div>
 
@@ -92,7 +96,7 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
                     <InfoRow
                       key={resource}
                       label={resource}
-                      value={`${available}/${amount}`}
+                      value={`${Math.floor(available)}/${Math.floor(amount)}`}
                       valueClassName={
                         isInsufficient ? "text-red-500" : "text-green-500"
                       }

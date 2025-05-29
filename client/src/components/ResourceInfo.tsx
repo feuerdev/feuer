@@ -83,9 +83,11 @@ const ResourceInfo = ({
                     {resourceKey}
                   </div>
                   <div className="font-medium text-xs">
-                    {group.resources[
-                      resourceKey as keyof typeof group.resources
-                    ] || 0}
+                    {Math.floor(
+                      group.resources[
+                        resourceKey as keyof typeof group.resources
+                      ] || 0
+                    )}
                   </div>
                 </div>
 
@@ -125,9 +127,11 @@ const ResourceInfo = ({
                     {resourceKey}
                   </div>
                   <div className="font-medium text-xs">
-                    {tile.resources[
-                      resourceKey as keyof typeof tile.resources
-                    ] || 0}
+                    {Math.floor(
+                      tile.resources[
+                        resourceKey as keyof typeof tile.resources
+                      ] || 0
+                    )}
                   </div>
                 </div>
               </div>

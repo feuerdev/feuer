@@ -39,7 +39,7 @@ const GroupInfo = ({ group }: { group: Group }) => {
           label="Status"
           value={
             group.targetHexes?.length > 0
-              ? `Moving (${group.movementStatus.toFixed()} %)`
+              ? `Moving (${group.movementStatus.toFixed(0)} %)`
               : assignedBuilding
               ? `Working at ${assignedBuilding.key}`
               : "Waiting"
@@ -103,15 +103,15 @@ const GroupInfo = ({ group }: { group: Group }) => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <h3 className="text-sm font-semibold mb-2">Combat Stats</h3>
-            <InfoRow label="Attack" value={group.attack} />
-            <InfoRow label="Defense" value={group.defense} />
+            <InfoRow label="Attack" value={Math.floor(group.attack)} />
+            <InfoRow label="Defense" value={Math.floor(group.defense)} />
             <InfoRow label="Morale" value={`${group.morale}%`} />
           </div>
 
           <div>
             <h3 className="text-sm font-semibold mb-2">Physical Stats</h3>
-            <InfoRow label="Strength" value={group.strength} />
-            <InfoRow label="Endurance" value={group.endurance} />
+            <InfoRow label="Strength" value={Math.floor(group.strength)} />
+            <InfoRow label="Endurance" value={Math.floor(group.endurance)} />
           </div>
         </div>
       </InfoBox>

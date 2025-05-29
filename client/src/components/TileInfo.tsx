@@ -28,9 +28,9 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
       <InfoBox title="Tile Details" className="h-full max-w-[250px]">
         <InfoRow label="Position" value={`${tile.hex.q}, ${tile.hex.r}`} />
         <InfoRow label="Biome" value={getBiomeName(tile.biome)} />
-        <InfoRow label="Height" value={tile.height.toFixed(2)} />
-        <InfoRow label="Precipitation" value={tile.precipitation.toFixed(2)} />
-        <InfoRow label="Temperature" value={tile.temperature.toFixed(2)} />
+        <InfoRow label="Height" value={tile.height.toFixed(1)} />
+        <InfoRow label="Precipitation" value={tile.precipitation.toFixed(1)} />
+        <InfoRow label="Temperature" value={tile.temperature.toFixed(1)} />
 
         <InfoRow
           label="Buildings"
