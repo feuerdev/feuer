@@ -148,13 +148,8 @@ export default class GameServer {
             groupEfficiency = assignedGroup.gatheringEfficiency.food
           }
           
-          // Calculate tile resource availability factor
-          // If the tile has less than 10 of the resource, efficiency drops
-          const tileResourceAmount = tile.resources[resourceType] || 0
-          const resourceAvailabilityFactor = tileResourceAmount < 10 ? tileResourceAmount / 10 : 1.0
-          
           // Calculate final production rate
-          const productionRate = baseProduction * slot.efficiency * groupEfficiency * resourceAvailabilityFactor * deltaFactor
+          const productionRate = baseProduction * slot.efficiency * groupEfficiency * /*resourceAvailabilityFactor * */ deltaFactor
           
           // Add resources to the tile
           if (!tile.resources[resourceType]) {
