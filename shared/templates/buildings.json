@@ -2,12 +2,10 @@
   "campsite": {
     "key": "campsite",
     "name": "Campsite",
-    "texture": "town_center",
-    "hp": 100,
     "cost": {
       "wood": 100
     },
-    "spotting": 20,
+    "spotting": 3,
     "production": {
       "berries": 1,
       "wood": 1
@@ -47,7 +45,7 @@
             "efficiency": 1.0
           }
         ],
-        "spotting": 25
+        "spotting": 4
       },
       "3": {
         "cost": {
@@ -78,112 +76,14 @@
             "efficiency": 1.0
           }
         ],
-        "spotting": 30
-      }
-    }
-  },
-  "towncenter": {
-    "key": "towncenter",
-    "name": "Town Center",
-    "texture": "town_center",
-    "hp": 500,
-    "spotting": 2,
-    "cost": {
-      "wood": 300
-    },
-    "production": {
-      "berries": 10,
-      "wood": 10
-    },
-    "slots": [
-      {
-        "resourceType": "berries",
-        "efficiency": 1.2
-      },
-      {
-        "resourceType": "wood",
-        "efficiency": 1.2
-      },
-      {
-        "resourceType": "stone",
-        "efficiency": 1.0
-      }
-    ],
-    "maxLevel": 3,
-    "upgrades": {
-      "2": {
-        "cost": {
-          "wood": 500,
-          "stone": 200
-        },
-        "production": {
-          "berries": 15,
-          "wood": 15,
-          "stone": 10
-        },
-        "slots": [
-          {
-            "resourceType": "berries",
-            "efficiency": 1.5
-          },
-          {
-            "resourceType": "wood",
-            "efficiency": 1.5
-          },
-          {
-            "resourceType": "stone",
-            "efficiency": 1.2
-          },
-          {
-            "resourceType": "iron",
-            "efficiency": 1.0
-          }
-        ],
-        "spotting": 3
-      },
-      "3": {
-        "cost": {
-          "wood": 1000,
-          "stone": 500,
-          "iron": 200
-        },
-        "production": {
-          "berries": 20,
-          "wood": 20,
-          "stone": 15,
-          "iron": 10
-        },
-        "slots": [
-          {
-            "resourceType": "berries",
-            "efficiency": 2.0
-          },
-          {
-            "resourceType": "wood",
-            "efficiency": 2.0
-          },
-          {
-            "resourceType": "stone",
-            "efficiency": 1.5
-          },
-          {
-            "resourceType": "iron",
-            "efficiency": 1.2
-          },
-          {
-            "resourceType": "gold",
-            "efficiency": 1.0
-          }
-        ],
-        "spotting": 4
+        "spotting": 5
       }
     }
   },
   "wood": {
     "key": "wood",
     "name": "Forester Hut",
-    "texture": "forester_hut",
-    "hp": 100,
+    "spotting": 1,
     "cost": {
       "wood": 100
     },
@@ -224,15 +124,14 @@
             "efficiency": 1.5
           }
         ],
-        "spotting": 2
+        "spotting": 1
       }
     }
   },
   "stone": {
     "key": "stone",
     "name": "Quarry Hut",
-    "texture": "mine",
-    "hp": 100,
+    "spotting": 1,
     "cost": {
       "wood": 100,
       "gold": 100
@@ -275,15 +174,14 @@
             "efficiency": 1.5
           }
         ],
-        "spotting": 2
+        "spotting": 1
       }
     }
   },
   "iron": {
     "key": "iron",
     "name": "Iron Hut",
-    "texture": "mine",
-    "hp": 100,
+    "spotting": 1,
     "cost": {
       "wood": 100
     },
@@ -324,15 +222,14 @@
             "efficiency": 1.5
           }
         ],
-        "spotting": 2
+        "spotting": 1
       }
     }
   },
   "gold": {
     "key": "gold",
     "name": "Gold Hut",
-    "texture": "mine",
-    "hp": 100,
+    "spotting": 1,
     "cost": {
       "wood": 100
     },
@@ -374,7 +271,7 @@
             "efficiency": 1.5
           }
         ],
-        "spotting": 2
+        "spotting": 1
       }
     }
   }

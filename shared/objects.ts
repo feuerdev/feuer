@@ -117,7 +117,6 @@ export type Group = GameObject &
 export type TBuildingTemplate = {
   key: string
   name: string
-  texture: string
   cost: Partial<Resources>
   spotting: number
   production: Partial<Resources>
