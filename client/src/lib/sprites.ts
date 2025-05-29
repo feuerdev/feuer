@@ -1,5 +1,5 @@
 import { Biome, Building } from "@shared/objects";
-import { ClientTile, ZIndices } from "./types";
+import { ClientTile } from "./types";
 import { EnumRelationType } from "@shared/relation";
 import { Graphics } from "pixi.js";
 

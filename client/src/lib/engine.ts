@@ -342,6 +342,9 @@ export class Engine {
   private clearSelection(): void {
     if (this.selectedSprite) {
       this.selectedSprite.filters = [];
+      if (this.originalZIndex !== null) {
+        this.selectedSprite.zIndex = this.originalZIndex - 1;
+      }
       this.selectedSprite = null;
     }
   }
@@ -376,6 +379,7 @@ export class Engine {
     }
 
     // Apply glow filter to the original sprite
+    sprite.zIndex = sprite.zIndex + 1;
     sprite.filters = [this.GLOW_FILTER];
     this.selectedSprite = sprite;
   }
