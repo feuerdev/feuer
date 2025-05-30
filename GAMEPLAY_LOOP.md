@@ -43,11 +43,6 @@ This document outlines the core gameplay loop and implementation steps for Feuer
     - [x] Agility
     - [x] Pain Threshold
     - [x] Intelligence
-  - [x] Add an injuries system
-    - [x] Add a new hud element for the injuries
-    - [x] Injuries should persist between battles
-    - [x] Some injuries should be able to be healed over time
-    - [x] Some injuries should be unable to be healed
   - [x] The stats and the battle situation and injuries should affect the groups morale
   - [x] Allow for groups to flee from a battle when their morale is low
 - [x] Enable that every group joining a tile with an ongoing battle will join the battle
@@ -57,9 +52,25 @@ This document outlines the core gameplay loop and implementation steps for Feuer
   - [x] Add a new hud element for the group behavior programming
   - [x] Start with simple aggressive and defensive behavior
   - [x] Update the battle system to use the group behavior programming
-- [x] Create defensive buildings
-- [x] Create group vs tile combat
-  - [x] Defensive buildings should be able to defend the tile from attacks
+- [ ] Fix the check for battle system
+  - [ ] It should create a battle if the group joins a tile with an enemy group
+  - [ ] It should join a group to an ongoing battle if the group joins a tile with an ongoing battle and the group is hostile to the other group in the battle
+  - [ ] If possible it shouldn't need to do a O(n^2) lookup to check for battles
+  - [ ] It should be able to handle multiple battles on the same tile
+- [ ] Add defensive buildings that can be built on tiles
+  - [ ] The defensive buildings should not be able to attack
+  - [ ] The defensive buildings should give bonuses to the group that is defending the tile
+- [ ] Add a loot system for the battle winner
+  - [ ] The winning team should get a percentage of the resources of the losing team
+- [ ] Add system to change the relation between two players
+  - [ ] Add a new hud element for the relation between two players
+  - [ ] The relation should be able to be changed by the players
+- [ ] Add a limb health and injuries system
+  - [ ] Add a new hud element for the injuries
+  - [ ] Injuries should persist between battles
+  - [ ] Some injuries should be able to be healed over time
+  - [ ] Some injuries should be unable to be healed
+
 
 ### Phase 4: Morale & Advanced Mechanics
 
