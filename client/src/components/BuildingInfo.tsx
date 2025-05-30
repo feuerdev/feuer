@@ -4,6 +4,7 @@ import { InfoBox, InfoRow, InfoDivider } from "./InfoBox";
 import { Button } from "./ui/Button";
 import { equals } from "@shared/hex";
 import GroupHiring from "./GroupHiring";
+import PlayerRelation from "./ui/PlayerRelation";
 
 interface BuildingInfoProps {
   building: Building;
@@ -13,6 +14,7 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
   const world = useStore((state) => state.world);
   const userId = useStore((state) => state.userId);
   const engine = useStore((state) => state.engine);
+  const isOwnBuilding = building.owner === userId;
 
   if (!building) {
     return <div>No building selected</div>;
@@ -50,6 +52,29 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
           }
         )
       : false;
+
+  // If it's not our building, show a simplified view
+  if (!isOwnBuilding) {
+    return (
+      <div className="inline-grid grid-cols-1 gap-2 p-2 h-full">
+        <InfoBox title="Building Details" className="h-full overflow-y-auto">
+          <InfoRow label="Name" value={building.key} />
+          <InfoRow
+            label="Level"
+            value={`${building.level}/${building.maxLevel}`}
+          />
+          <InfoRow
+            label="Position"
+            value={`${building.position.q}, ${building.position.r}`}
+          />
+          <InfoRow label="Owner" value={building.owner} />
+          <InfoRow label="Spotting" value={building.spotting} />
+
+          <PlayerRelation playerId={building.owner} />
+        </InfoBox>
+      </div>
+    );
+  }
 
   return (
     <div className="inline-grid grid-cols-[minmax(250px,auto)_minmax(350px,auto)_auto] gap-2 p-2 h-full">

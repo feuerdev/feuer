@@ -1435,4 +1435,18 @@ export class Engine {
 
     this.socket.emit("request set group behavior", { groupId, behavior });
   }
+
+  /**
+   * Request to change relation with another player
+   */
+  requestChangeRelation(
+    targetPlayerId: string,
+    relationType: PlayerRelation.EnumRelationType
+  ): void {
+    if (!this.socket) return;
+    this.socket.emit("request change relation", {
+      targetPlayerId,
+      relationType,
+    });
+  }
 }
