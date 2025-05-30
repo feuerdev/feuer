@@ -11,11 +11,17 @@ const GroupInfo = ({ group }: { group: Group }) => {
   const world = useStore((state) => state.world);
   const engine = useStore((state) => state.engine);
   const userId = useStore((state) => state.userId);
-  const isOwnGroup = group.owner === userId;
 
+  // Early return if group is undefined or null
   if (!group) {
-    return <div>No group selected</div>;
+    return (
+      <div className="p-4 text-slate-300">
+        No group selected or group no longer exists
+      </div>
+    );
   }
+
+  const isOwnGroup = group.owner === userId;
 
   const tile = getTileByPos(group.pos, world.tiles);
 

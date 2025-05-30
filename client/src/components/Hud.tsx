@@ -25,9 +25,7 @@ const Hud = () => {
       {type === SelectionType.Battle &&
         id !== undefined &&
         world.battles.find((b) => b.id === id) && (
-          <BattleInfo
-            battle={world.battles.find((b) => b.id === id)}
-          />
+          <BattleInfo battle={world.battles.find((b) => b.id === id)} />
         )}
 
       {/* Bottom info panel */}

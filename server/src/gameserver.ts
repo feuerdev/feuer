@@ -158,138 +158,158 @@ export default class GameServer {
     let i = this.world.battles.length
     while (i--) {
       let battle = this.world.battles[i]
-
-      // Simplified battle resolution
+      // Process battle and potentially resolve it
       this.resolveBattle(battle)
-      
-      // Check if battle is over
-      if (this.isBattleOver(battle)) {
-        this.finishBattle(battle)
-      }
     }
   }
 
   /**
-   * Simple battle resolution between two groups
+   * Battle resolution between two groups with integrated finish logic
    */
   resolveBattle(battle: Battle): void {
-    // Regular battle logic (existing code)
     // Check for immediate flee behaviors
     if (battle.attacker.behavior === GroupBehavior.FleeIfAttacked) {
       console.log(`Group ${battle.attacker.id} (Attacker) has FleeIfAttacked behavior and attempts to flee immediately.`);
       battle.attacker.morale = 1; // Mark as fled
       // Battle might end here if defender doesn't need to act, or could give defender a free hit (not implemented)
-      return; // Attacker flees, resolveBattle might terminate or be re-evaluated after this group is handled
+      // Skip the rest of battle processing and go directly to finish logic
     }
-    if (battle.defender.behavior === GroupBehavior.FleeIfAttacked) {
+    else if (battle.defender.behavior === GroupBehavior.FleeIfAttacked) {
       console.log(`Group ${battle.defender.id} (Defender) has FleeIfAttacked behavior and attempts to flee immediately.`);
       battle.defender.morale = 1; // Mark as fled
-      return; // Defender flees
+      // Skip the rest of battle processing and go directly to finish logic
     }
+    else {
+      // Regular battle logic for groups that aren't immediately fleeing
+      const attackerStrengthFactor = 1 + ((battle.attacker.strength - 50) / 100);
+      const attackerAgilityFactor = 1 + ((battle.attacker.agility - 5) / 20); 
+      const defenderStrengthFactor = 1 + ((battle.defender.strength - 50) / 100);
+      const defenderAgilityFactor = 1 + ((battle.defender.agility - 5) / 20);
 
-    const attackerStrengthFactor = 1 + ((battle.attacker.strength - 50) / 100);
-    const attackerAgilityFactor = 1 + ((battle.attacker.agility - 5) / 20); 
-    const defenderStrengthFactor = 1 + ((battle.defender.strength - 50) / 100);
-    const defenderAgilityFactor = 1 + ((battle.defender.agility - 5) / 20);
+      const attackerEffectiveAttack = (battle.attacker.attack) * attackerStrengthFactor * ((battle.attacker.morale) / 100);
+      const defenderEffectiveDefense = (battle.defender.defense) * defenderStrengthFactor * ((battle.defender.morale) / 100);
+      
+      // Calculate damage - agility gives a chance to reduce/avoid some damage
+      const attackerDamageRoll = Math.random(); // 0 to 1
+      const defenderDamageRoll = Math.random(); // 0 to 1
 
-    const attackerEffectiveAttack = (battle.attacker.attack) * attackerStrengthFactor * ((battle.attacker.morale) / 100);
-    const defenderEffectiveDefense = (battle.defender.defense) * defenderStrengthFactor * ((battle.defender.morale) / 100);
-    
-    // Calculate damage - agility gives a chance to reduce/avoid some damage
-    const attackerDamageRoll = Math.random(); // 0 to 1
-    const defenderDamageRoll = Math.random(); // 0 to 1
+      let attackerDamageMultiplier = 1;
+      if (defenderDamageRoll < defenderAgilityFactor * 0.1) { // e.g. 10 agility = 15% chance to reduce damage by half
+        attackerDamageMultiplier = 0.5; 
+      }
 
-    let attackerDamageMultiplier = 1;
-    if (defenderDamageRoll < defenderAgilityFactor * 0.1) { // e.g. 10 agility = 15% chance to reduce damage by half
-      attackerDamageMultiplier = 0.5; 
-    }
+      let defenderDamageMultiplier = 1;
+      if (attackerDamageRoll < attackerAgilityFactor * 0.1) { // e.g. 10 agility = 15% chance to reduce damage by half
+        defenderDamageMultiplier = 0.5;
+      }
 
-    let defenderDamageMultiplier = 1;
-    if (attackerDamageRoll < attackerAgilityFactor * 0.1) { // e.g. 10 agility = 15% chance to reduce damage by half
-      defenderDamageMultiplier = 0.5;
-    }
+      const attackerRawDamage = Math.max(0, attackerEffectiveAttack - defenderEffectiveDefense / 2);
+      const defenderRawDamage = Math.max(0, defenderEffectiveDefense - attackerEffectiveAttack / 2);
 
-    const attackerRawDamage = Math.max(0, attackerEffectiveAttack - defenderEffectiveDefense / 2);
-    const defenderRawDamage = Math.max(0, defenderEffectiveDefense - attackerEffectiveAttack / 2);
+      const finalAttackerDamage = attackerRawDamage * attackerDamageMultiplier;
+      const finalDefenderDamage = defenderRawDamage * defenderDamageMultiplier;
+      
+      // Apply damage to morale
+      battle.defender.morale = Math.max(0, battle.defender.morale - finalAttackerDamage);
+      battle.attacker.morale = Math.max(0, battle.attacker.morale - finalDefenderDamage);
 
-    const finalAttackerDamage = attackerRawDamage * attackerDamageMultiplier;
-    const finalDefenderDamage = defenderRawDamage * defenderDamageMultiplier;
-    
-    // Apply damage to morale
-    battle.defender.morale = Math.max(0, battle.defender.morale - finalAttackerDamage);
-    battle.attacker.morale = Math.max(0, battle.attacker.morale - finalDefenderDamage);
+      // Check for fleeing conditions (e.g., morale < 10%)
+      const FLEE_THRESHOLD = 10;
+      let attackerFled = false;
+      let defenderFled = false;
 
-    // Check for fleeing conditions (e.g., morale < 10%)
-    const FLEE_THRESHOLD = 10;
-    let attackerFled = false;
-    let defenderFled = false;
+      if (battle.attacker.morale < FLEE_THRESHOLD && battle.attacker.morale > 0) { // Must have some morale to decide to flee
+        // Attacker attempts to flee. For now, auto-success.
+        console.log(`Group ${battle.attacker.id} attempts to flee!`);
+        attackerFled = true;
+        // For now, if flee, their morale is set to a very low non-zero value to signify they survived but fled.
+        battle.attacker.morale = 1;
+      }
 
-    if (battle.attacker.morale < FLEE_THRESHOLD && battle.attacker.morale > 0) { // Must have some morale to decide to flee
-      // Attacker attempts to flee. For now, auto-success.
-      console.log(`Group ${battle.attacker.id} attempts to flee!`);
-      // TODO: Implement flee success chance based on agility, terrain, etc.
-      // TODO: Mark group as fleeing, potentially move it to an adjacent tile.
-      attackerFled = true;
-      // For now, if flee, their morale is set to a very low non-zero value to signify they survived but fled.
-      battle.attacker.morale = 1;
-    }
+      if (!attackerFled && battle.defender.morale < FLEE_THRESHOLD && battle.defender.morale > 0) {
+        // Defender attempts to flee if attacker didn't already cause battle to end.
+        console.log(`Group ${battle.defender.id} attempts to flee!`);
+        defenderFled = true;
+        battle.defender.morale = 1;
+      }
 
-    if (!attackerFled && battle.defender.morale < FLEE_THRESHOLD && battle.defender.morale > 0) {
-      // Defender attempts to flee if attacker didn't already cause battle to end.
-      console.log(`Group ${battle.defender.id} attempts to flee!`);
-      defenderFled = true;
-      battle.defender.morale = 1;
-    }
-
-    // If either side fled, the battle might conclude differently or enter a pursuit phase (not implemented)
-    // For now, if someone flees, we consider the battle over for them.
-    // The isBattleOver check will handle if the other side is also at 0 morale.
-    if (attackerFled || defenderFled) {
-      console.log("A group has fled the battle.");
-      // The finishBattle logic will remove groups with 0 morale.
-      // Fleeing groups (morale 1) will remain for now.
-    }
-  }
-  
-  
-  
-  /**
-   * Check if a battle is over (one side has 0 morale)
-   */
-  isBattleOver(battle: Battle): boolean {
-    // Regular battles end when either participant has 0 morale
-    return battle.attacker.morale <= 0 || battle.defender.morale <= 0;
-  }
-
-  finishBattle(battle: Battle) {
-    const battlePosition = {...battle.position}; // Store position before removing groups
-    let remainingGroups = [];
-    
-    // If attacker lost, remove them
-    if (battle.attacker.morale <= 0) {
-      delete this.world.groups[battle.attacker.id];
-    } else {
-      // Attacker survived (possibly fled)
-      remainingGroups.push(battle.attacker);
+      if (attackerFled || defenderFled) {
+        console.log("A group has fled the battle.");
+      }
     }
     
-    // If defender lost, remove them
-    if (battle.defender.morale <= 0) {
-      delete this.world.groups[battle.defender.id];
-    } else {
-      // Defender survived (possibly fled)
-      remainingGroups.push(battle.defender);
+    // Check if battle is over
+    if (battle.attacker.morale <= 0 || battle.defender.morale <= 0) {
+      // Store position and prepare tracking of remaining groups
+      const battlePosition = {...battle.position};
+      let remainingGroups = [];
+      
+      // Handle defeated attacker
+      if (battle.attacker.morale <= 0) {
+        // Find closest friendly building for retreat
+        const closestBuilding = this.findClosestFriendlyBuilding(battle.attacker);
+        
+        if (closestBuilding) {
+          // Reset morale to minimum viable value
+          battle.attacker.morale = 10;
+          
+          // Set retreat path to closest building
+          battle.attacker.targetHexes = astar(this.world.tiles, battle.attacker.pos, closestBuilding.position);
+          battle.attacker.movementStatus = 0;
+          
+          // Change behavior to fleeing
+          battle.attacker.behavior = GroupBehavior.FleeIfAttacked;
+          
+          console.log(`Group ${battle.attacker.id} is retreating to building at ${JSON.stringify(closestBuilding.position)}`);
+          remainingGroups.push(battle.attacker);
+        } else {
+          // No friendly building to retreat to, group is lost
+          console.log(`Group ${battle.attacker.id} has nowhere to retreat to and is disbanded`);
+          delete this.world.groups[battle.attacker.id];
+        }
+      } else {
+        // Attacker survived (possibly fled)
+        remainingGroups.push(battle.attacker);
+      }
+      
+      // Handle defeated defender
+      if (battle.defender.morale <= 0) {
+        // Find closest friendly building for retreat
+        const closestBuilding = this.findClosestFriendlyBuilding(battle.defender);
+        
+        if (closestBuilding) {
+          // Reset morale to minimum viable value
+          battle.defender.morale = 10;
+          
+          // Set retreat path to closest building
+          battle.defender.targetHexes = astar(this.world.tiles, battle.defender.pos, closestBuilding.position);
+          battle.defender.movementStatus = 0;
+          
+          // Change behavior to fleeing
+          battle.defender.behavior = GroupBehavior.FleeIfAttacked;
+          
+          console.log(`Group ${battle.defender.id} is retreating to building at ${JSON.stringify(closestBuilding.position)}`);
+          remainingGroups.push(battle.defender);
+        } else {
+          // No friendly building to retreat to, group is lost
+          console.log(`Group ${battle.defender.id} has nowhere to retreat to and is disbanded`);
+          delete this.world.groups[battle.defender.id];
+        }
+      } else {
+        // Defender survived (possibly fled)
+        remainingGroups.push(battle.defender);
+      }
+      
+      // Remove battle from the list
+      this.world.battles.splice(this.world.battles.indexOf(battle), 1);
+      
+      // Update visibilities
+      this.updatePlayerVisibilities(battle.attacker.owner);
+      this.updatePlayerVisibilities(battle.defender.owner);
+      
+      // Check for new potential battles between remaining groups and other groups on the same tile
+      this.checkForBattlesAtPosition(battlePosition, remainingGroups);
     }
-    
-    // Remove battle from the list
-    this.world.battles.splice(this.world.battles.indexOf(battle), 1);
-    
-    // Update visibilities
-    this.updatePlayerVisibilities(battle.attacker.owner);
-    this.updatePlayerVisibilities(battle.defender.owner);
-    
-    // Check for new potential battles between remaining groups and other groups on the same tile
-    this.checkForBattlesAtPosition(battlePosition, remainingGroups);
   }
   
   /**
@@ -312,6 +332,47 @@ export default class GameServer {
       // Check this group for battles
       this.checkForBattle(group);
     }
+  }
+  
+  /**
+   * Find the closest friendly building for a group
+   * @param group The group looking for a friendly building
+   * @returns The closest friendly building or null if none found
+   */
+  private findClosestFriendlyBuilding(group: Group): Building | null {
+    let closestBuilding: Building | null = null;
+    let shortestDistance = Number.MAX_SAFE_INTEGER;
+    
+    // Check all buildings owned by the same player
+    Object.values(this.world.buildings).forEach(building => {
+      if (building.owner === group.owner) {
+        // Skip buildings at the current position (as they don't provide safety)
+        if (equals(building.position, group.pos)) {
+          return;
+        }
+        
+        // Calculate simple distance (for now, a more accurate pathfinding distance could be used)
+        const distance = this.calculateHexDistance(group.pos, building.position);
+        
+        if (distance < shortestDistance) {
+          shortestDistance = distance;
+          closestBuilding = building;
+        }
+      }
+    });
+    
+    return closestBuilding;
+  }
+  
+  /**
+   * Calculate straight-line hex distance between two hexes
+   */
+  private calculateHexDistance(a: Hex, b: Hex): number {
+    return Math.max(
+      Math.abs(a.q - b.q),
+      Math.abs(a.r - b.r),
+      Math.abs(a.s - b.s)
+    );
   }
 
   checkForBattle(group: Group) {
