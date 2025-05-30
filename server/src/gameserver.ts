@@ -28,7 +28,6 @@ import { create, equals, hash, neighborsRange, Hex } from "../../shared/hex.js"
 import { Resources } from "../../shared/resources.js"
 import Config from "./environment.js";
 import { Player } from "../../shared/player.js";
-import Rules from "../../shared/rules.json" with { type: "json" }
 
 // Helper function to get effective stats after applying injury effects
 function getEffectiveStats(group: Group, currentTick: number): Partial<Group> {
@@ -577,6 +576,7 @@ export default class GameServer {
     socket.on("request movement", (data) => this.onRequestMovement(socket, data))
     socket.on("request construction", (data) => this.onRequestConstruction(socket, data))
     socket.on("request relation", (data) => this.onRequestRelation(socket, data))
+    socket.on("request change relation", (data) => this.onRequestChangeRelation(socket, data))
     socket.on("request disband", (data) => this.onRequestDisband(socket, data))
     socket.on("request transfer", (data) => this.onRequestTransfer(socket, data))
     socket.on("request demolish", (data) => this.onRequestDemolish(socket, data))
@@ -655,17 +655,33 @@ export default class GameServer {
     }
   }
 
+  /**
+   * Get current relation between two players
+   */
   onRequestRelation(socket: Socket, data) {
-    let hash = PlayerRelation.hash(data.id1, data.id2)
+    const uid = this.getPlayerUid(socket.id)
+    if (!uid) return
+    
+    // Ensure that at least one of the players is the requesting player
+    if (uid !== data.id1 && uid !== data.id2) {
+      console.warn(`Player ${uid} tried to request relation between ${data.id1} and ${data.id2}`)
+      return
+    }
+    
+    const hash = PlayerRelation.hash(data.id1, data.id2)
     let playerRelation = this.world.playerRelations[hash]
+    
     if (!playerRelation) {
+      // Create default neutral relation if none exists
       playerRelation = PlayerRelation.create(
         data.id1,
         data.id2,
-        EnumRelationType.hostile
+        EnumRelationType.neutral
       )
       this.world.playerRelations[hash] = playerRelation
     }
+    
+    // Send the relation info to the requesting player
     socket.emit("gamestate relation", playerRelation)
   }
 
@@ -1383,6 +1399,50 @@ export default class GameServer {
       
       console.log(`Group ${group.id} received injury: ${newInjury.name} (${InjurySeverity[severity]}${isPermanent ? ", Permanent" : ""})`);
     }
+  }
+
+  /**
+   * Handle request to change relation with another player
+   */
+  onRequestChangeRelation(socket: Socket, data: { targetPlayerId: string, relationType: EnumRelationType }) {
+    const uid = this.getPlayerUid(socket.id)
+    if (!uid) return
+    
+    const { targetPlayerId, relationType } = data
+    
+    // Validate relation type
+    if (!Object.values(EnumRelationType).includes(relationType)) {
+      console.warn(`Invalid relation type: ${relationType}`)
+      return
+    }
+    
+    // Can't change relation with yourself
+    if (uid === targetPlayerId) {
+      console.warn(`Player ${uid} tried to change relation with self`)
+      return
+    }
+    
+    // Create or update the relation
+    const hash = PlayerRelation.hash(uid, targetPlayerId)
+    let playerRelation = this.world.playerRelations[hash]
+    
+    if (!playerRelation) {
+      playerRelation = PlayerRelation.create(uid, targetPlayerId, relationType)
+      this.world.playerRelations[hash] = playerRelation
+    } else {
+      playerRelation.relationType = relationType
+    }
+    
+    // Notify both players
+    socket.emit("gamestate relation", playerRelation)
+    
+    // Notify the other player
+    const otherPlayerSocket = this.uidsockets[targetPlayerId]
+    if (otherPlayerSocket && otherPlayerSocket.connected) {
+      otherPlayerSocket.emit("gamestate relation", playerRelation)
+    }
+    
+    console.log(`Player ${uid} changed relation with ${targetPlayerId} to ${EnumRelationType[relationType]}`)
   }
 }
 
