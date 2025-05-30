@@ -62,9 +62,9 @@ This document outlines the core gameplay loop and implementation steps for Feuer
   - [ ] The defensive buildings should give bonuses to the group that is defending the tile
 - [ ] Add a loot system for the battle winner
   - [ ] The winning team should get a percentage of the resources of the losing team
-- [ ] Add system to change the relation between two players
-  - [ ] Add a new hud element for the relation between two players
-  - [ ] The relation should be able to be changed by the players
+- [x] Add system to change the relation between two players
+  - [x] Add a new hud element for the relation between two players
+  - [x] The relation should be able to be changed by the players
 - [ ] Add a limb health and injuries system
   - [ ] Add a new hud element for the injuries
   - [ ] Injuries should persist between battles
