@@ -1060,9 +1060,16 @@ export class Engine {
       // Get hex corners
       const corners = this.layout.polygonCorners(tile.hex);
 
+      // Add padding by scaling down the corners from the center
+      const paddingScale = 0.98; // Reduced padding (was 0.95)
+      const scaledCorners = corners.map((corner) => ({
+        x: hexCenter.x + (corner.x - hexCenter.x) * paddingScale,
+        y: hexCenter.y + (corner.y - hexCenter.y) * paddingScale,
+      }));
+
       // Convert corners to array of points for drawPolygon
       const points: number[] = [];
-      for (const corner of corners) {
+      for (const corner of scaledCorners) {
         points.push(corner.x - hexCenter.x);
         points.push(corner.y - hexCenter.y);
       }
@@ -1071,7 +1078,6 @@ export class Engine {
       const biomeColor = BIOME_COLORS[tile.biome];
       hexGraphics.clear();
       hexGraphics.beginFill(biomeColor);
-      hexGraphics.lineStyle(1, 0x000000, 0.5);
       hexGraphics.drawPolygon(points);
       hexGraphics.endFill();
     }
