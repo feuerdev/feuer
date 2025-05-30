@@ -262,15 +262,23 @@ export default class GameServer {
   }
 
   finishBattle(battle: Battle) {
-    // Regular battle resolution
+    const battlePosition = {...battle.position}; // Store position before removing groups
+    let remainingGroups = [];
+    
     // If attacker lost, remove them
     if (battle.attacker.morale <= 0) {
       delete this.world.groups[battle.attacker.id];
+    } else {
+      // Attacker survived (possibly fled)
+      remainingGroups.push(battle.attacker);
     }
     
     // If defender lost, remove them
     if (battle.defender.morale <= 0) {
       delete this.world.groups[battle.defender.id];
+    } else {
+      // Defender survived (possibly fled)
+      remainingGroups.push(battle.defender);
     }
     
     // Remove battle from the list
@@ -279,8 +287,33 @@ export default class GameServer {
     // Update visibilities
     this.updatePlayerVisibilities(battle.attacker.owner);
     this.updatePlayerVisibilities(battle.defender.owner);
+    
+    // Check for new potential battles between remaining groups and other groups on the same tile
+    this.checkForBattlesAtPosition(battlePosition, remainingGroups);
   }
   
+  /**
+   * Check for potential battles at a specific position, typically after a battle has concluded
+   */
+  private checkForBattlesAtPosition(position: Hex, excludeGroups: Group[] = []) {
+    // Find all groups at this position
+    const groupsAtPosition = Object.values(this.world.groups).filter(group => 
+      equals(group.pos, position)
+    );
+    
+    // Ignore groups that were just in battle (to prevent immediate re-engagement)
+    const excludeIds = excludeGroups.map(g => g.id);
+    
+    // Check each group against others for potential battles
+    for (const group of groupsAtPosition) {
+      // Skip groups that were just in battle
+      if (excludeIds.includes(group.id)) continue;
+      
+      // Check this group for battles
+      this.checkForBattle(group);
+    }
+  }
+
   checkForBattle(group: Group) {
     // Check if the group is already in a battle
     const isAlreadyInBattle = this.world.battles.some(battle => 
