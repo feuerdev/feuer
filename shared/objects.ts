@@ -132,38 +132,8 @@ export type Group = GameObject &
 
 export enum GroupBehavior {
   Aggressive,
-  Defensive,
-  StandGround,
   FleeIfAttacked, // Renamed from Evasive for clarity
   Neutral, // Default, no specific combat behavior, relies on direct orders
-}
-
-export enum InjurySeverity {
-  Minor,
-  Moderate,
-  Severe,
-  Critical,
-}
-
-export enum InjuryEffect {
-  StrengthDecrease,
-  AgilityDecrease,
-  InitiativeDecrease,
-  MoraleDecrease,
-  GatheringDecrease,
-  MovementDecrease,
-}
-
-export type Injury = {
-  id: string // Unique ID for the injury instance
-  name: string // e.g., "Broken Arm", "Concussion", "Sprained Ankle"
-  description: string
-  severity: InjurySeverity
-  effects: Array<{ effect: InjuryEffect; magnitude: number; duration?: number }> // duration in game ticks, undefined for permanent
-  affectedStat?: keyof Group // The primary stat this injury affects, for UI grouping or specific logic
-  timeOfInjury: number // Game tick when injury occurred
-  isPermanent: boolean
-  healable: boolean // Can this injury be healed by specific actions/items (even if permanent without intervention)
 }
 
 export type TBuildingTemplate = {
