@@ -7,21 +7,21 @@ import { Graphics } from "pixi.js";
  * Biome color mapping
  */
 export const BIOME_COLORS: Record<number, number> = {
-  [Biome.None]: 0x999999, // Gray
-  [Biome.Ice]: 0xeeffff, // White/light blue
-  [Biome.Tundra]: 0xdddddd, // Light gray
-  [Biome.Boreal]: 0x557755, // Dark green
-  [Biome.Grassland]: 0x88aa55, // Light green
-  [Biome.Temperate]: 0x338833, // Medium green
-  [Biome.Tropical]: 0x227722, // Dark saturated green
-  [Biome.Desert]: 0xddcc77, // Sand yellow
-  [Biome.Ocean]: 0x3388cc, // Medium blue
-  [Biome.Shore]: 0x66aadd, // Light blue
-  [Biome.Treeline]: 0x667755, // Gray-green
-  [Biome.Mountain]: 0x777777, // Medium gray
-  [Biome.Beach]: 0xeedd88, // Light sand
-  [Biome.Peaks]: 0xffffff, // White
-  [Biome.River]: 0x44aaff, // Light blue
+  [Biome.None]: 0xdad7cd, // Timberwolf
+  [Biome.Ice]: 0xf0efeb, // Timberwolf-800 (whitish)
+  [Biome.Tundra]: 0xe9e7e1, // Timberwolf-700 (light gray with beige tone)
+  [Biome.Boreal]: 0x3a5a40, // Hunter Green
+  [Biome.Grassland]: 0xa3b18a, // Sage
+  [Biome.Temperate]: 0x588157, // Fern Green
+  [Biome.Tropical]: 0x344e41, // Brunswick Green
+  [Biome.Desert]: 0xe6be8a, // Warmer sand color (less blue)
+  [Biome.Ocean]: 0x2c7da0, // Blue Sapphire (deeper, more saturated blue)
+  [Biome.Shore]: 0x61a5c2, // Air Superiority Blue (distinct mid-blue)
+  [Biome.Treeline]: 0x527a66, // Brunswick Green-600 (gray-green)
+  [Biome.Mountain]: 0x8a817c, // Taupe (medium gray with warm undertone)
+  [Biome.Beach]: 0xf4d8a8, // Warmer light sand color (less blue)
+  [Biome.Peaks]: 0xb6b09c, // Timberwolf-400 (lighter beige-gray)
+  [Biome.River]: 0x3d85a8, // A slightly lighter variation of the ocean color
 };
 
 /**
