@@ -40,31 +40,7 @@ function getEffectiveStats(group: Group, currentTick: number): Partial<Group> {
     agility: group.agility,
     initiative: group.initiative,
     morale: group.morale,
-    // Add other stats here if injuries can affect them
   };
-
-  group.injuries.forEach(injury => {
-    injury.effects.forEach(effect => {
-      // Check if the injury is still active (if it has a duration)
-      if (effect.duration === undefined || (group.injuries.find(inj => inj.id === injury.id) && injury.timeOfInjury + effect.duration > currentTick)) {
-        switch (effect.effect) {
-          case InjuryEffect.StrengthDecrease:
-            modifiableStats.strength = Math.max(0, modifiableStats.strength - effect.magnitude);
-            break;
-          case InjuryEffect.AgilityDecrease:
-            modifiableStats.agility = Math.max(0, modifiableStats.agility - effect.magnitude);
-            break;
-          case InjuryEffect.InitiativeDecrease:
-            modifiableStats.initiative = Math.max(0, modifiableStats.initiative - effect.magnitude);
-            break;
-          case InjuryEffect.MoraleDecrease: // Directly affect morale for now
-            modifiableStats.morale = Math.max(0, modifiableStats.morale - effect.magnitude);
-            break;
-          // Add cases for other InjuryEffects if necessary
-        }
-      }
-    });
-  });
 
   // Update effectiveStats with the modified values
   effectiveStats.strength = modifiableStats.strength;
@@ -154,9 +130,6 @@ export default class GameServer {
           this.tryJoinOngoingBattle(group);
         }
       }
-      
-      // Process healing of injuries
-      this.processGroupHealing(group);
     })
 
     //Resource Gathering
@@ -240,12 +213,6 @@ export default class GameServer {
    * Simple battle resolution between two groups
    */
   resolveBattle(battle: Battle): void {
-    // Special handling for tile defense battles
-    if (battle.isTileDefenseBattle) {
-      this.resolveTileDefenseBattle(battle);
-      return;
-    }
-    
     // Regular battle logic (existing code)
     // Check for immediate flee behaviors
     if (battle.attacker.behavior === GroupBehavior.FleeIfAttacked) {
@@ -301,10 +268,6 @@ export default class GameServer {
     battle.attacker.morale = effectiveAttackerStats.morale ?? battle.attacker.morale;
     battle.defender.morale = effectiveDefenderStats.morale ?? battle.defender.morale;
 
-    // Chance to inflict injuries based on damage taken and pain threshold
-    this.applyInjuryChance(battle.attacker, finalDefenderDamage);
-    this.applyInjuryChance(battle.defender, finalAttackerDamage);
-
     // Check for fleeing conditions (e.g., morale < 10%)
     const FLEE_THRESHOLD = 10;
     let attackerFled = false;
@@ -337,81 +300,17 @@ export default class GameServer {
     }
   }
   
-  /**
-   * Resolves a battle between a group and tile defenses
-   */
-  resolveTileDefenseBattle(battle: Battle): void {
-    if (!battle.isTileDefenseBattle || !battle.defensiveBuildings) {
-      return;
-    }
-    
-    // Get the attacker (the real group)
-    const attacker = battle.attacker;
-    
-    // Virtual defender represents the defensive buildings
-    const defender = battle.defender;
-    
-    // Calculate effective attack based on attacker's stats
-    const effectiveAttackerStats = getEffectiveStats(attacker, this.actualTicks);
-    
-    const attackerStrengthFactor = 1 + ((effectiveAttackerStats.strength ?? attacker.strength) - 50) / 100;
-    const attackerEffectiveAttack = (effectiveAttackerStats.attack ?? attacker.attack) * 
-                                   attackerStrengthFactor * 
-                                   ((effectiveAttackerStats.morale ?? attacker.morale) / 100);
-    
-    // Get the total defense value from all defensive buildings
-    const totalDefense = battle.defensiveBuildings.reduce((sum, building) => sum + (building.defense || 0), 0);
-    
-    // Buildings deal less damage to groups than groups do to each other
-    const defenderEffectiveAttack = totalDefense * 0.5;
-    
-    // Calculate damage
-    // Buildings are less affected by group attacks (representing their durability)
-    const attackerDamage = Math.max(0, attackerEffectiveAttack - totalDefense * 0.7) * 0.5;
-    
-    // Buildings deal consistent damage to attackers
-    const defenderDamage = Math.max(0, defenderEffectiveAttack - attacker.defense * 0.3);
-    
-    // Apply damage
-    defender.morale = Math.max(0, defender.morale - attackerDamage);
-    attacker.morale = Math.max(0, attacker.morale - defenderDamage);
-    
-    // Apply injuries to the attacker (buildings don't get injured)
-    this.applyInjuryChance(attacker, defenderDamage);
-    
-    // Check if attacker flees
-    const FLEE_THRESHOLD = 10;
-    if (attacker.morale < FLEE_THRESHOLD && attacker.morale > 0) {
-      console.log(`Group ${attacker.id} attempts to flee from tile defenses!`);
-      attacker.morale = 1; // Mark as fled
-    }
-    
-    // Update the virtual defender to reflect battle progress
-    battle.defender = defender;
-  }
+  
   
   /**
    * Check if a battle is over (one side has 0 morale)
    */
   isBattleOver(battle: Battle): boolean {
-    if (battle.isTileDefenseBattle) {
-      // Tile defense battles end when either:
-      // 1. The attacker's morale is 0 (attacker is defeated)
-      // 2. The defender's morale (representing building health) is 0 (buildings destroyed)
-      // 3. The attacker has fled (morale = 1)
-      return battle.attacker.morale <= 0 || battle.defender.morale <= 0 || battle.attacker.morale === 1;
-    }
-    
     // Regular battles end when either participant has 0 morale
     return battle.attacker.morale <= 0 || battle.defender.morale <= 0;
   }
 
   finishBattle(battle: Battle) {
-    if (battle.isTileDefenseBattle) {
-      this.finishTileDefenseBattle(battle);
-      return;
-    }
-    
     // Regular battle resolution
     // If attacker lost, remove them
     if (battle.attacker.morale <= 0) {
@@ -431,64 +330,7 @@ export default class GameServer {
     this.updatePlayerVisibilities(battle.defender.owner);
   }
   
-  /**
-   * Finishes a tile defense battle and handles the consequences
-   */
-  finishTileDefenseBattle(battle: Battle): void {
-    if (!battle.isTileDefenseBattle || !battle.defensiveBuildings || !battle.defenseOwner) {
-      return;
-    }
-    
-    // If attacker won (defender's morale <= 0), destroy defensive buildings
-    if (battle.defender.morale <= 0) {
-      console.log(`Group ${battle.attacker.id} destroyed defensive buildings on tile ${hash(battle.position)}`);
-      
-      // Find and remove all defensive buildings of this owner on the tile
-      battle.defensiveBuildings.forEach(building => {
-        delete this.world.buildings[building.id];
-      });
-      
-      // Notify the building owner
-      const socket = this.uidsockets[battle.defenseOwner];
-      if (socket && socket.connected) {
-        socket.emit("notification", {
-          type: "buildings-destroyed",
-          message: `Your defensive buildings on a tile were destroyed by an enemy group!`,
-          position: battle.position
-        });
-      }
-    }
-    
-    // If attacker lost (attacker's morale <= 0), remove them
-    if (battle.attacker.morale <= 0) {
-      delete this.world.groups[battle.attacker.id];
-      
-      // Notify the defense owner of their success
-      const socket = this.uidsockets[battle.defenseOwner];
-      if (socket && socket.connected) {
-        socket.emit("notification", {
-          type: "defense-success",
-          message: `Your defensive buildings successfully repelled an enemy attack!`,
-          position: battle.position
-        });
-      }
-    }
-    
-    // Remove the battle
-    this.world.battles.splice(this.world.battles.indexOf(battle), 1);
-    
-    // Update visibilities
-    this.updatePlayerVisibilities(battle.attacker.owner);
-    this.updatePlayerVisibilities(battle.defenseOwner);
-  }
-
   checkForBattle(group: Group) {
-    // First check if this group is attacking a defended tile
-    if (this.checkForTileDefense(group)) {
-      // If a tile defense battle was initiated, don't check for group battles
-      return;
-    }
-    
     // Continue with normal group vs group battle checks
     Object.values(this.world.groups).forEach((otherGroup) => {
       if (
@@ -519,123 +361,6 @@ export default class GameServer {
         }
       }
     })
-  }
-
-  /**
-   * Checks if a group is entering a tile that has defensive buildings
-   * owned by another player, and initiates a defense battle if appropriate
-   * @param group The group potentially attacking a defended tile
-   * @returns true if a tile defense battle was initiated, false otherwise
-   */
-  checkForTileDefense(group: Group): boolean {
-    // Skip if the group isn't aggressive
-    if (group.behavior !== GroupBehavior.Aggressive) {
-      return false;
-    }
-    
-    const tile = this.world.tiles[hash(group.pos)];
-    if (!tile) return false;
-    
-    // Get all defensive buildings on this tile
-    const defensiveBuildings = Object.values(this.world.buildings).filter(building => 
-      equals(building.position, group.pos) && 
-      building.owner !== group.owner && 
-      building.isDefensive
-    );
-    
-    if (defensiveBuildings.length === 0) {
-      return false; // No defensive buildings to fight against
-    }
-    
-    // Group defensive buildings by owner
-    const buildingsByOwner: Record<string, Building[]> = {};
-    defensiveBuildings.forEach(building => {
-      if (!buildingsByOwner[building.owner]) {
-        buildingsByOwner[building.owner] = [];
-      }
-      buildingsByOwner[building.owner].push(building);
-    });
-    
-    // For each owner, check if we should initiate a battle against their defenses
-    for (const [ownerKey, buildings] of Object.entries(buildingsByOwner)) {
-      // Check relationship with the owner
-      const relation = this.world.playerRelations[
-        PlayerRelation.hash(group.owner, ownerKey)
-      ];
-      
-      const areHostile = !relation || relation.relationType === PlayerRelation.EnumRelationType.hostile;
-      
-      if (areHostile) {
-        // Check if there's already a group vs. tile battle for this group
-        const existingBattle = this.world.battles.find(b => 
-          b.attacker.id === group.id && 
-          b.isTileDefenseBattle && 
-          equals(b.position, group.pos) &&
-          b.defenseOwner === ownerKey
-        );
-        
-        if (!existingBattle) {
-          // Create a virtual defender for the buildings
-          // Calculate total defense value from all buildings
-          const totalDefense = buildings.reduce((sum, building) => sum + (building.defense || 0), 0);
-          
-          // Create a new battle with special properties
-          const battle: Battle = {
-            id: ++this.world.idCounter,
-            attacker: group,
-            defender: this.createVirtualDefender(ownerKey, totalDefense),
-            position: group.pos,
-            isTileDefenseBattle: true,
-            defenseOwner: ownerKey,
-            defensiveBuildings: buildings
-          };
-          
-          this.world.battles.push(battle);
-          console.log(`Tile defense battle initiated with group ${group.id} attacking ${buildings.length} defensive buildings owned by ${ownerKey}`);
-          
-          return true; // Battle initiated
-        }
-      }
-    }
-    
-    return false;
-  }
-  
-  /**
-   * Creates a virtual defender group for tile defense battles
-   */
-  createVirtualDefender(owner: string, defenseValue: number): Group {
-    // Create a simple virtual group with properties based on defense value
-    return {
-      id: -1, // Negative ID to indicate it's virtual
-      owner: owner,
-      name: "Tile Defense",
-      spotting: 0,
-      targetHexes: [],
-      pos: create(0, 0, 0), // Will be updated by the battle
-      movementStatus: 0,
-      resources: {},
-      morale: 100,
-      strength: defenseValue,
-      endurance: defenseValue,
-      attack: defenseValue / 2,
-      defense: defenseValue,
-      initiative: 1,
-      agility: 1,
-      painThreshold: 100, // High pain threshold as buildings don't feel pain
-      intelligence: 1,
-      injuries: [],
-      groupType: "Virtual",
-      behavior: GroupBehavior.Defensive,
-      gatheringEfficiency: {
-        wood: 0,
-        stone: 0,
-        food: 0,
-        iron: 0,
-        gold: 0
-      },
-      isVirtual: true
-    };
   }
 
   tryJoinOngoingBattle(group: Group) {
@@ -1656,49 +1381,8 @@ export default class GameServer {
         healable: !isPermanent,
       };
       
-      group.injuries.push(newInjury);
       console.log(`Group ${group.id} received injury: ${newInjury.name} (${InjurySeverity[severity]}${isPermanent ? ", Permanent" : ""})`);
     }
-  }
-
-  // New method to process group healing
-  processGroupHealing(group: Group) {
-    if (group.injuries.length === 0) return;
-
-    // Create a copy of the injuries array since we'll be modifying it
-    const currentInjuries = [...group.injuries];
-    
-    // Check each injury for healing
-    currentInjuries.forEach((injury, index) => {
-      // Don't process permanent injuries for natural healing
-      if (injury.isPermanent) return;
-      
-      // Only process healable injuries
-      if (!injury.healable) return;
-      
-      // Check if the injury has a duration and if it's expired
-      const hasExpired = injury.effects.every(effect => {
-        if (effect.duration && this.actualTicks > injury.timeOfInjury + effect.duration) {
-          return true; // Effect has expired
-        }
-        return false; // Effect is still active
-      });
-      
-      if (hasExpired) {
-        // Remove the expired injury
-        const indexToRemove = group.injuries.findIndex(inj => inj.id === injury.id);
-        if (indexToRemove !== -1) {
-          group.injuries.splice(indexToRemove, 1);
-          console.log(`Group ${group.id} recovered from injury: ${injury.name}`);
-          
-          // Notify the player about the healing
-          const socket = this.uidsockets[group.owner];
-          if (socket && socket.connected) {
-            socket.emit("gamestate group", group);
-          }
-        }
-      }
-    });
   }
 }
 

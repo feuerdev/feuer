@@ -4,7 +4,6 @@ import ResourceInfo from "./ResourceInfo";
 import { InfoBox, InfoRow, InfoDivider } from "./InfoBox";
 import { Button } from "./ui/Button";
 import { useStore } from "@/lib/state";
-import InjuriesInfo from "./InjuriesInfo";
 import { GroupBehavior } from "@shared/objects";
 
 const GroupInfo = ({ group }: { group: Group }) => {
@@ -147,7 +146,6 @@ const GroupInfo = ({ group }: { group: Group }) => {
             <InfoRow label="Pain Thresh." value={group.painThreshold} />
           </div>
         </div>
-        <InjuriesInfo injuries={group.injuries} />
       </InfoBox>
 
       <ResourceInfo group={group} tile={tile} className="h-full" />

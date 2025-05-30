@@ -49,9 +49,6 @@ export function createGroup(
     strength: strength,
     endurance: endurance,
 
-    // Injuries
-    injuries: [],
-
     // Behavior
     behavior: GroupBehavior.Neutral,
 

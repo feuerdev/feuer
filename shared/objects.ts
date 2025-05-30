@@ -60,10 +60,6 @@ export type Battle = GameObject & {
   attacker: Group
   defender: Group
   position: Hex
-  // Tile defense battle properties
-  isTileDefenseBattle?: boolean
-  defenseOwner?: string
-  defensiveBuildings?: Building[]
 }
 
 // Resource slot for a building
@@ -123,9 +119,6 @@ export type Group = GameObject &
     agility: number
     painThreshold: number
     intelligence: number
-
-    // Injuries
-    injuries: Injury[]
 
     // Type of group (for visual representation)
     groupType: string
