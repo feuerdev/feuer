@@ -9,7 +9,8 @@ import {
   Tile,
   Biome,
   TBuildingTemplate,
-  Battle
+  Battle,
+  GroupBehavior,
 } from "../../shared/objects.js"
 import * as PlayerRelation from "../../shared/relation.js"
 import * as Battles from "./battle.js"
@@ -24,7 +25,7 @@ import { create, equals, hash, neighborsRange, Hex } from "../../shared/hex.js"
 import { Resources } from "../../shared/resources.js"
 import Config from "./environment.js";
 import { Player } from "../../shared/player.js";
-import Rules from "../../shared/rules.json" with { type: "json" }
+
 
 export default class GameServer {
   private socketplayer: {} = {}
@@ -49,29 +50,14 @@ export default class GameServer {
       let timeSincelastFrame = Date.now() - this.previousTick
       this.previousTick = Date.now()
       this.actualTicks++
-      let dbgStart = Date.now()
       this.update(this.updaterate / this.defaultDelta)
-      let dbgAfterUpdate = Date.now()
       this.updateNet(this.updaterate / this.defaultDelta)
-      let dbgAfterSend = Date.now()
       if (
         this.actualTicks > 5 &&
         Math.abs(timeSincelastFrame - this.updaterate) > 30
       ) {
         console.warn("Warning something is fucky with the gameloop")
       }
-      // console.debug(
-      //   "Update took:" +
-      //     (dbgAfterUpdate - dbgStart) +
-      //     " Sending Data to clients took:" +
-      //     (dbgAfterSend - dbgAfterUpdate) +
-      //     " Time since last Frame:" +
-      //     timeSincelastFrame +
-      //     " Gesamtticks:" +
-      //     this.actualTicks +
-      //     " Abweichung:" +
-      //     (timeSincelastFrame - this.updaterate)
-      // )
     }
     setInterval(gameloop, this.updaterate)
   }
@@ -172,81 +158,261 @@ export default class GameServer {
     let i = this.world.battles.length
     while (i--) {
       let battle = this.world.battles[i]
-
-      // Simplified battle resolution
+      // Process battle and potentially resolve it
       this.resolveBattle(battle)
-      
-      // Check if battle is over
-      if (this.isBattleOver(battle)) {
-        this.finishBattle(battle)
-      }
     }
   }
 
   /**
-   * Simple battle resolution between two groups
+   * Battle resolution between two groups with integrated finish logic
    */
   resolveBattle(battle: Battle): void {
-    // Calculate attack values
-    const attackerValue = battle.attacker.attack * (battle.attacker.morale / 100)
-    const defenderValue = battle.defender.defense * (battle.defender.morale / 100)
+    // Check for immediate flee behaviors
+    if (battle.attacker.behavior === GroupBehavior.FleeIfAttacked) {
+      console.log(`Group ${battle.attacker.id} (Attacker) has FleeIfAttacked behavior and attempts to flee immediately.`);
+      battle.attacker.morale = 1; // Mark as fled
+      // Battle might end here if defender doesn't need to act, or could give defender a free hit (not implemented)
+      // Skip the rest of battle processing and go directly to finish logic
+    }
+    else if (battle.defender.behavior === GroupBehavior.FleeIfAttacked) {
+      console.log(`Group ${battle.defender.id} (Defender) has FleeIfAttacked behavior and attempts to flee immediately.`);
+      battle.defender.morale = 1; // Mark as fled
+      // Skip the rest of battle processing and go directly to finish logic
+    }
+    else {
+      // Regular battle logic for groups that aren't immediately fleeing
+      const attackerStrengthFactor = 1 + ((battle.attacker.strength - 50) / 100);
+      const attackerAgilityFactor = 1 + ((battle.attacker.agility - 5) / 20); 
+      const defenderStrengthFactor = 1 + ((battle.defender.strength - 50) / 100);
+      const defenderAgilityFactor = 1 + ((battle.defender.agility - 5) / 20);
+
+      const attackerEffectiveAttack = (battle.attacker.attack) * attackerStrengthFactor * ((battle.attacker.morale) / 100);
+      const defenderEffectiveDefense = (battle.defender.defense) * defenderStrengthFactor * ((battle.defender.morale) / 100);
+      
+      // Calculate damage - agility gives a chance to reduce/avoid some damage
+      const attackerDamageRoll = Math.random(); // 0 to 1
+      const defenderDamageRoll = Math.random(); // 0 to 1
+
+      let attackerDamageMultiplier = 1;
+      if (defenderDamageRoll < defenderAgilityFactor * 0.1) { // e.g. 10 agility = 15% chance to reduce damage by half
+        attackerDamageMultiplier = 0.5; 
+      }
+
+      let defenderDamageMultiplier = 1;
+      if (attackerDamageRoll < attackerAgilityFactor * 0.1) { // e.g. 10 agility = 15% chance to reduce damage by half
+        defenderDamageMultiplier = 0.5;
+      }
+
+      const attackerRawDamage = Math.max(0, attackerEffectiveAttack - defenderEffectiveDefense / 2);
+      const defenderRawDamage = Math.max(0, defenderEffectiveDefense - attackerEffectiveAttack / 2);
+
+      const finalAttackerDamage = attackerRawDamage * attackerDamageMultiplier;
+      const finalDefenderDamage = defenderRawDamage * defenderDamageMultiplier;
+      
+      // Apply damage to morale
+      battle.defender.morale = Math.max(0, battle.defender.morale - finalAttackerDamage);
+      battle.attacker.morale = Math.max(0, battle.attacker.morale - finalDefenderDamage);
+
+      // Check for fleeing conditions (e.g., morale < 10%)
+      const FLEE_THRESHOLD = 10;
+      let attackerFled = false;
+      let defenderFled = false;
+
+      if (battle.attacker.morale < FLEE_THRESHOLD && battle.attacker.morale > 0) { // Must have some morale to decide to flee
+        // Attacker attempts to flee. For now, auto-success.
+        console.log(`Group ${battle.attacker.id} attempts to flee!`);
+        attackerFled = true;
+        // For now, if flee, their morale is set to a very low non-zero value to signify they survived but fled.
+        battle.attacker.morale = 1;
+      }
+
+      if (!attackerFled && battle.defender.morale < FLEE_THRESHOLD && battle.defender.morale > 0) {
+        // Defender attempts to flee if attacker didn't already cause battle to end.
+        console.log(`Group ${battle.defender.id} attempts to flee!`);
+        defenderFled = true;
+        battle.defender.morale = 1;
+      }
+
+      if (attackerFled || defenderFled) {
+        console.log("A group has fled the battle.");
+      }
+    }
     
-    // Calculate damage
-    const attackerDamage = Math.max(0, attackerValue - defenderValue/2)
-    const defenderDamage = Math.max(0, defenderValue - attackerValue/2)
-    
-    // Apply damage to morale
-    battle.defender.morale = Math.max(0, battle.defender.morale - attackerDamage)
-    battle.attacker.morale = Math.max(0, battle.attacker.morale - defenderDamage)
+    // Check if battle is over
+    if (battle.attacker.morale <= 0 || battle.defender.morale <= 0) {
+      // Store position and prepare tracking of remaining groups
+      const battlePosition = {...battle.position};
+      let remainingGroups = [];
+      
+      // Handle defeated attacker
+      if (battle.attacker.morale <= 0) {
+        // Find closest friendly building for retreat
+        const closestBuilding = this.findClosestFriendlyBuilding(battle.attacker);
+        
+        if (closestBuilding) {
+          // Reset morale to minimum viable value
+          battle.attacker.morale = 10;
+          
+          // Set retreat path to closest building
+          battle.attacker.targetHexes = astar(this.world.tiles, battle.attacker.pos, closestBuilding.position);
+          battle.attacker.movementStatus = 0;
+          
+          // Change behavior to fleeing
+          battle.attacker.behavior = GroupBehavior.FleeIfAttacked;
+          
+          console.log(`Group ${battle.attacker.id} is retreating to building at ${JSON.stringify(closestBuilding.position)}`);
+          remainingGroups.push(battle.attacker);
+        } else {
+          // No friendly building to retreat to, group is lost
+          console.log(`Group ${battle.attacker.id} has nowhere to retreat to and is disbanded`);
+          delete this.world.groups[battle.attacker.id];
+        }
+      } else {
+        // Attacker survived (possibly fled)
+        remainingGroups.push(battle.attacker);
+      }
+      
+      // Handle defeated defender
+      if (battle.defender.morale <= 0) {
+        // Find closest friendly building for retreat
+        const closestBuilding = this.findClosestFriendlyBuilding(battle.defender);
+        
+        if (closestBuilding) {
+          // Reset morale to minimum viable value
+          battle.defender.morale = 10;
+          
+          // Set retreat path to closest building
+          battle.defender.targetHexes = astar(this.world.tiles, battle.defender.pos, closestBuilding.position);
+          battle.defender.movementStatus = 0;
+          
+          // Change behavior to fleeing
+          battle.defender.behavior = GroupBehavior.FleeIfAttacked;
+          
+          console.log(`Group ${battle.defender.id} is retreating to building at ${JSON.stringify(closestBuilding.position)}`);
+          remainingGroups.push(battle.defender);
+        } else {
+          // No friendly building to retreat to, group is lost
+          console.log(`Group ${battle.defender.id} has nowhere to retreat to and is disbanded`);
+          delete this.world.groups[battle.defender.id];
+        }
+      } else {
+        // Defender survived (possibly fled)
+        remainingGroups.push(battle.defender);
+      }
+      
+      // Remove battle from the list
+      this.world.battles.splice(this.world.battles.indexOf(battle), 1);
+      
+      // Update visibilities
+      this.updatePlayerVisibilities(battle.attacker.owner);
+      this.updatePlayerVisibilities(battle.defender.owner);
+      
+      // Check for new potential battles between remaining groups and other groups on the same tile
+      this.checkForBattlesAtPosition(battlePosition, remainingGroups);
+    }
   }
   
   /**
-   * Check if a battle is over (one side has 0 morale)
+   * Check for potential battles at a specific position, typically after a battle has concluded
    */
-  isBattleOver(battle: Battle): boolean {
-    return battle.attacker.morale <= 0 || battle.defender.morale <= 0
+  private checkForBattlesAtPosition(position: Hex, excludeGroups: Group[] = []) {
+    // Find all groups at this position
+    const groupsAtPosition = Object.values(this.world.groups).filter(group => 
+      equals(group.pos, position)
+    );
+    
+    // Ignore groups that were just in battle (to prevent immediate re-engagement)
+    const excludeIds = excludeGroups.map(g => g.id);
+    
+    // Check each group against others for potential battles
+    for (const group of groupsAtPosition) {
+      // Skip groups that were just in battle
+      if (excludeIds.includes(group.id)) continue;
+      
+      // Check this group for battles
+      this.checkForBattle(group);
+    }
   }
-
-  finishBattle(battle: Battle) {
-    // If attacker lost, remove them
-    if (battle.attacker.morale <= 0) {
-      delete this.world.groups[battle.attacker.id]
-    }
+  
+  /**
+   * Find the closest friendly building for a group
+   * @param group The group looking for a friendly building
+   * @returns The closest friendly building or null if none found
+   */
+  private findClosestFriendlyBuilding(group: Group): Building | null {
+    let closestBuilding: Building | null = null;
+    let shortestDistance = Number.MAX_SAFE_INTEGER;
     
-    // If defender lost, remove them
-    if (battle.defender.morale <= 0) {
-      delete this.world.groups[battle.defender.id]
-    }
+    // Check all buildings owned by the same player
+    Object.values(this.world.buildings).forEach(building => {
+      if (building.owner === group.owner) {
+        // Skip buildings at the current position (as they don't provide safety)
+        if (equals(building.position, group.pos)) {
+          return;
+        }
+        
+        // Calculate simple distance (for now, a more accurate pathfinding distance could be used)
+        const distance = this.calculateHexDistance(group.pos, building.position);
+        
+        if (distance < shortestDistance) {
+          shortestDistance = distance;
+          closestBuilding = building;
+        }
+      }
+    });
     
-    // Remove battle from the list
-    this.world.battles.splice(this.world.battles.indexOf(battle), 1)
-    
-    // Update visibilities
-    this.updatePlayerVisibilities(battle.attacker.owner)
-    this.updatePlayerVisibilities(battle.defender.owner)
+    return closestBuilding;
+  }
+  
+  /**
+   * Calculate straight-line hex distance between two hexes
+   */
+  private calculateHexDistance(a: Hex, b: Hex): number {
+    return Math.max(
+      Math.abs(a.q - b.q),
+      Math.abs(a.r - b.r),
+      Math.abs(a.s - b.s)
+    );
   }
 
   checkForBattle(group: Group) {
+    // Check if the group is already in a battle
+    const isAlreadyInBattle = this.world.battles.some(battle => 
+      battle.attacker.id === group.id || battle.defender.id === group.id
+    );
+    
+    if (isAlreadyInBattle) return;
+    
+    // Look for other groups on the same hex that could be fought
     Object.values(this.world.groups).forEach((otherGroup) => {
-      if (
-        equals(group.pos, otherGroup.pos) &&
-        group.owner !== otherGroup.owner &&
-        group.id !== otherGroup.id
+      // Skip if it's the same group or not on the same hex
+      if (group.id === otherGroup.id || !equals(group.pos, otherGroup.pos)) return;
+      
+      // Skip if same owner
+      if (group.owner === otherGroup.owner) return;
+      
+      // Skip if there's already a battle between these groups
+      if (this.world.battles.some(b => 
+        (b.attacker.id === group.id && b.defender.id === otherGroup.id) ||
+        (b.defender.id === group.id && b.attacker.id === otherGroup.id)
+      )) return;
+      
+      // Check relation and behaviors
+      const relation = this.world.playerRelations[
+        PlayerRelation.hash(group.owner, otherGroup.owner)
+      ];
+      const areHostile = !relation || relation.relationType === PlayerRelation.EnumRelationType.hostile;
+      
+      // Start battle if hostile and at least one group is aggressive
+      if (areHostile && 
+          (group.behavior === GroupBehavior.Aggressive || otherGroup.behavior === GroupBehavior.Aggressive)
       ) {
-        const relation =
-          this.world.playerRelations[
-            PlayerRelation.hash(group.owner, otherGroup.owner)
-          ]
-        if (
-          !relation ||
-          relation.relationType === PlayerRelation.EnumRelationType.hostile
-        ) {
-          this.world.battles.push(
-            Battles.create(++this.world.idCounter, group.pos, group, otherGroup)
-          )
-        }
+        this.world.battles.push(
+          Battles.create(++this.world.idCounter, group.pos, group, otherGroup)
+        );
+        console.log(`New battle initiated between ${group.id} and ${otherGroup.id}`);
       }
-    })
+    });
   }
 
   updateNet(_delta) {
@@ -337,6 +503,7 @@ export default class GameServer {
     socket.on("request movement", (data) => this.onRequestMovement(socket, data))
     socket.on("request construction", (data) => this.onRequestConstruction(socket, data))
     socket.on("request relation", (data) => this.onRequestRelation(socket, data))
+    socket.on("request change relation", (data) => this.onRequestChangeRelation(socket, data))
     socket.on("request disband", (data) => this.onRequestDisband(socket, data))
     socket.on("request transfer", (data) => this.onRequestTransfer(socket, data))
     socket.on("request demolish", (data) => this.onRequestDemolish(socket, data))
@@ -344,6 +511,7 @@ export default class GameServer {
     socket.on("request unassign group", (data) => this.onRequestUnassignGroup(socket, data))
     socket.on("request upgrade building", (data) => this.onRequestUpgradeBuilding(socket, data))
     socket.on("request hire group", (data) => this.onRequestHireGroup(socket, data))
+    socket.on("request set group behavior", (data) => this.onRequestSetGroupBehavior(socket, data));
   }
 
   onRequestTiles(socket: Socket, data: Hex[]) {
@@ -414,17 +582,33 @@ export default class GameServer {
     }
   }
 
+  /**
+   * Get current relation between two players
+   */
   onRequestRelation(socket: Socket, data) {
-    let hash = PlayerRelation.hash(data.id1, data.id2)
+    const uid = this.getPlayerUid(socket.id)
+    if (!uid) return
+    
+    // Ensure that at least one of the players is the requesting player
+    if (uid !== data.id1 && uid !== data.id2) {
+      console.warn(`Player ${uid} tried to request relation between ${data.id1} and ${data.id2}`)
+      return
+    }
+    
+    const hash = PlayerRelation.hash(data.id1, data.id2)
     let playerRelation = this.world.playerRelations[hash]
+    
     if (!playerRelation) {
+      // Create default neutral relation if none exists
       playerRelation = PlayerRelation.create(
         data.id1,
         data.id2,
-        EnumRelationType.hostile
+        EnumRelationType.neutral
       )
       this.world.playerRelations[hash] = playerRelation
     }
+    
+    // Send the relation info to the requesting player
     socket.emit("gamestate relation", playerRelation)
   }
 
@@ -739,6 +923,34 @@ export default class GameServer {
     this.updatePlayerVisibilities(uid)
   }
 
+  onRequestSetGroupBehavior(socket: Socket, data: { groupId: number; behavior: GroupBehavior }) {
+    const uid = this.getPlayerUid(socket.id);
+    if (!uid) return;
+
+    const group = this.world.groups[data.groupId];
+    if (!group || group.owner !== uid) {
+      console.warn(`Player ${uid} cannot set behavior for group ${data.groupId}`);
+      return;
+    }
+
+    // Validate behavior value (optional, but good practice if values might be arbitrary)
+    if (!Object.values(GroupBehavior).includes(data.behavior)) {
+        console.warn(`Invalid behavior value received: ${data.behavior}`);
+        return;
+    }
+
+    group.behavior = data.behavior;
+    console.log(`Group ${group.id} behavior set to ${GroupBehavior[group.behavior]} by player ${uid}`);
+
+    // Notify the client who made the change, and potentially other clients if this group is visible to them.
+    // For simplicity, just sending to the owner for now. A broader update might be needed.
+    socket.emit("gamestate group", group);
+    
+    // If the group is visible to other players, they should also get an update.
+    // This can be handled by the general groups update in updateNet, or by a targeted emit here.
+    // For now, relying on existing updateNet which sends all visible groups.
+  }
+
   private getPlayerUid(socketId): string | null {
     const player: Player = this.getPlayerBySocketId(socketId)
     if (player) {
@@ -988,6 +1200,50 @@ export default class GameServer {
       delete this.world.groups[groupToDisband.id]
       this.updatePlayerVisibilities(uid)
     }
+  }
+
+  /**
+   * Handle request to change relation with another player
+   */
+  onRequestChangeRelation(socket: Socket, data: { targetPlayerId: string, relationType: EnumRelationType }) {
+    const uid = this.getPlayerUid(socket.id)
+    if (!uid) return
+    
+    const { targetPlayerId, relationType } = data
+    
+    // Validate relation type
+    if (!Object.values(EnumRelationType).includes(relationType)) {
+      console.warn(`Invalid relation type: ${relationType}`)
+      return
+    }
+    
+    // Can't change relation with yourself
+    if (uid === targetPlayerId) {
+      console.warn(`Player ${uid} tried to change relation with self`)
+      return
+    }
+    
+    // Create or update the relation
+    const hash = PlayerRelation.hash(uid, targetPlayerId)
+    let playerRelation = this.world.playerRelations[hash]
+    
+    if (!playerRelation) {
+      playerRelation = PlayerRelation.create(uid, targetPlayerId, relationType)
+      this.world.playerRelations[hash] = playerRelation
+    } else {
+      playerRelation.relationType = relationType
+    }
+    
+    // Notify both players
+    socket.emit("gamestate relation", playerRelation)
+    
+    // Notify the other player
+    const otherPlayerSocket = this.uidsockets[targetPlayerId]
+    if (otherPlayerSocket && otherPlayerSocket.connected) {
+      otherPlayerSocket.emit("gamestate relation", playerRelation)
+    }
+    
+    console.log(`Player ${uid} changed relation with ${targetPlayerId} to ${EnumRelationType[relationType]}`)
   }
 }
 

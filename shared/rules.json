@@ -1,6 +1,6 @@
 {
   "settings": {
-    "map_size": 6,
+    "map_size": 3,
     "map_frequency": 0.023,
     "map_amplitude": 1,
     "map_min": -0.3,

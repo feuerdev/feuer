@@ -78,6 +78,13 @@ export type Building = GameObject &
     slots: ResourceSlot[] // Slots for group assignment
     maxLevel: number // Maximum level this building can be upgraded to
     upgradeRequirements?: Partial<Resources> // Resources needed for next upgrade
+    // Optional defensive stats
+    attack?: number
+    defense?: number
+    range?: number
+    attackSpeed?: number // Attacks per game update cycle (e.g., 1 = every update, 0.5 = every other update)
+    timeToNextAttack?: number // Internal cooldown counter
+    isDefensive?: boolean // Whether this building provides defense to the tile
   }
 
 export type Group = GameObject &
@@ -108,10 +115,26 @@ export type Group = GameObject &
     // Combat stats
     attack: number
     defense: number
+    initiative: number
+    agility: number
+    painThreshold: number
+    intelligence: number
 
     // Type of group (for visual representation)
     groupType: string
+
+    // Behavior
+    behavior: GroupBehavior
+
+    // For virtual groups (like tile defenses)
+    isVirtual?: boolean
   }
+
+export enum GroupBehavior {
+  Aggressive,
+  FleeIfAttacked, // Renamed from Evasive for clarity
+  Neutral, // Default, no specific combat behavior, relies on direct orders
+}
 
 export type TBuildingTemplate = {
   key: string
@@ -120,11 +143,23 @@ export type TBuildingTemplate = {
   spotting: number
   slots?: ResourceSlot[]
   maxLevel?: number
+  // Optional defensive stats for templates
+  attack?: number
+  defense?: number
+  range?: number
+  attackSpeed?: number
+  isDefensive?: boolean
   upgrades?: {
     [level: number]: {
       cost: Partial<Resources>
-      slots: ResourceSlot[]
+      slots?: ResourceSlot[] // Slots can be optional for some buildings like watchtowers
       spotting: number
+      // Optional defensive stats for upgrades
+      attack?: number
+      defense?: number
+      range?: number
+      attackSpeed?: number
+      name?: string // Optional name change on upgrade (e.g., "Wooden Palisade" -> "Stone Wall")
     }
   }
 }
