@@ -71,7 +71,6 @@ This document outlines the core gameplay loop and implementation steps for Feuer
   - [ ] Some injuries should be able to be healed over time
   - [ ] Some injuries should be unable to be healed
 
-
 ### Phase 4: Morale & Advanced Mechanics
 
 - [ ] Implement morale system
@@ -94,6 +93,29 @@ This document outlines the core gameplay loop and implementation steps for Feuer
 - [ ] Create group experience and leveling system
 - [ ] Implement group training mechanics
 - [ ] Add UI for group management and stats
+
+### Phase 7: Debug Menu
+
+- [ ] Create a new UI component for the debug menu.
+  - [ ] The menu should be hidden by default.
+  - [ ] Add a key combination to toggle the menu's visibility.
+  - [ ] The menu should only be accessible when the game is running in a development environment.
+- [ ] Implement functionality to add resources:
+  - [ ] Add UI elements (e.g., input fields for resource type and amount, buttons).
+  - [ ] Add button to add resources to the currently selected tile or group.
+  - [ ] Add a button that adds 1000 resources of all types to the currently selected tile or group.
+  - [ ] Handle the server-side logic for adding resources to a tile or group.
+- [ ] Implement functionality to spawn buildings:
+  - [ ] Add UI elements (e.g., a dropdown or list to select building type).
+  - [ ] Add a button to spawn the selected building on the currently selected tile.
+  - [ ] Ensure this action correctly triggers server-side building placement logic.
+  - [ ] Handle the server-side logic for spawning a building on a tile.
+- [ ] Implement functionality to spawn new groups:
+  - [ ] Add UI elements
+  - [ ] Add a button to spawn the selected group(s) on the currently selected tile or a default spawn location.
+  - [ ] Handle the server-side logic for spawning a group on a tile.
+- [ ] Document the debug menu:
+  - [ ] Add notes for developers on how to access and use the debug menu's features.
 
 ## Immediate Next Steps
 
