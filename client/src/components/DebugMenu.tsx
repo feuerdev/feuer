@@ -212,60 +212,58 @@ const DebugMenu: React.FC = () => {
     return null;
   }
 
+  // Derived state for conditional rendering and styling
+  const hasSelection = selection && selection.id !== undefined;
+  const isTileSelected = hasSelection && selection.type === SelectionType.Tile;
+  const isGroupSelected =
+    hasSelection && selection.type === SelectionType.Group;
+  const isTileOrGroupSelected = isTileSelected || isGroupSelected;
+
+  const canDeleteSelected =
+    hasSelection &&
+    selection.type !== SelectionType.Tile &&
+    selection.type !== SelectionType.None &&
+    selection.type !== SelectionType.Battle;
+
+  const getButtonClasses = (
+    baseColor: string,
+    hoverColor: string,
+    disabled: boolean,
+    textColor: string = "text-white"
+  ) => {
+    return `w-full px-3 py-2 rounded-md text-sm font-medium ${textColor} ${
+      disabled
+        ? "bg-gray-500 cursor-not-allowed"
+        : `${baseColor} hover:${hoverColor} cursor-pointer`
+    }`;
+  };
+
+  const selectionText = hasSelection
+    ? `${getSelectionTypeName(selection.type)} ID: ${selection.id}`
+    : "N/A";
+  const tileSelectionText = isTileSelected ? `ID: ${selection.id}` : "N/A";
+
   return (
-    <div
-      style={{
-        position: "absolute",
-        top: "10px",
-        right: "10px",
-        backgroundColor: "rgba(50, 50, 50, 0.9)",
-        color: "white",
-        padding: "15px",
-        borderRadius: "8px",
-        zIndex: 1000,
-        minWidth: "350px",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "10px",
-        }}
-      >
-        <h3 style={{ margin: 0, fontSize: "1.2em" }}>Debug Menu</h3>
+    <div className="absolute top-2.5 right-2.5 bg-gray-800 bg-opacity-90 text-white p-4 rounded-lg shadow-lg z-[1000] min-w-[350px] max-h-[90vh] overflow-y-auto">
+      <div className="flex justify-between items-center mb-2.5">
+        <h3 className="text-lg font-semibold">Debug Menu</h3>
         <button
           onClick={toggleVisibility}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: "white",
-            fontSize: "1.5em",
-            cursor: "pointer",
-          }}
+          className="bg-transparent border-none text-white text-2xl cursor-pointer"
         >
           &times;
         </button>
       </div>
-      <p style={{ fontSize: "0.9em", color: "#ccc", marginTop: 0 }}>
+      <p className="text-xs text-gray-400 mt-0">
         Press Ctrl+M (or Cmd+M) to toggle.
       </p>
 
-      <div style={{ borderTop: "1px solid #666", margin: "15px 0" }} />
+      <hr className="border-gray-600 my-4" />
 
       <div>
-        <h4 style={{ marginTop: 0, marginBottom: "10px", fontSize: "1.1em" }}>
-          Add Resources
-        </h4>
-        <div style={{ marginBottom: "10px" }}>
-          <label
-            htmlFor="resourceType"
-            style={{ marginRight: "5px", fontSize: "0.9em" }}
-          >
+        <h4 className="text-base font-semibold mt-0 mb-2.5">Add Resources</h4>
+        <div className="mb-2.5">
+          <label htmlFor="resourceType" className="mr-1.5 text-sm">
             Resource:
           </label>
           <select
@@ -274,13 +272,7 @@ const DebugMenu: React.FC = () => {
             onChange={(e) =>
               setSelectedResource(e.target.value as ResourceKeyType)
             }
-            style={{
-              padding: "5px",
-              borderRadius: "4px",
-              background: "#333",
-              color: "white",
-              border: "1px solid #555",
-            }}
+            className="p-1.5 rounded bg-gray-700 text-white border border-gray-600"
           >
             {resourceKeys.map((type) => (
               <option key={type} value={type}>
@@ -289,11 +281,8 @@ const DebugMenu: React.FC = () => {
             ))}
           </select>
         </div>
-        <div style={{ marginBottom: "10px" }}>
-          <label
-            htmlFor="resourceAmount"
-            style={{ marginRight: "5px", fontSize: "0.9em" }}
-          >
+        <div className="mb-2.5">
+          <label htmlFor="resourceAmount" className="mr-1.5 text-sm">
             Amount:
           </label>
           <input
@@ -302,128 +291,53 @@ const DebugMenu: React.FC = () => {
             value={resourceAmount}
             onChange={(e) => setResourceAmount(parseInt(e.target.value, 10))}
             min="1"
-            style={{
-              padding: "5px",
-              borderRadius: "4px",
-              background: "#333",
-              color: "white",
-              border: "1px solid #555",
-              width: "80px",
-            }}
+            className="p-1.5 rounded bg-gray-700 text-white border border-gray-600 w-20"
           />
         </div>
         <button
           onClick={handleAddSpecificResource}
-          disabled={
-            !selection ||
-            selection.id === undefined ||
-            (selection.type !== SelectionType.Tile &&
-              selection.type !== SelectionType.Group)
-          }
-          style={{
-            padding: "8px 12px",
-            backgroundColor:
-              selection &&
-              selection.id !== undefined &&
-              (selection.type === SelectionType.Tile ||
-                selection.type === SelectionType.Group)
-                ? "#28a745"
-                : "#6c757d",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor:
-              selection &&
-              selection.id !== undefined &&
-              (selection.type === SelectionType.Tile ||
-                selection.type === SelectionType.Group)
-                ? "pointer"
-                : "not-allowed",
-            width: "100%",
-            marginBottom: "5px",
-            fontSize: "1em",
-          }}
+          disabled={!isTileOrGroupSelected}
+          className={`${getButtonClasses(
+            "bg-green-600",
+            "bg-green-700",
+            !isTileOrGroupSelected
+          )} mb-1.5`}
         >
-          Add Specific to Selected (
-          {selection?.type !== undefined
-            ? getSelectionTypeName(selection.type)
-            : "N/A"}{" "}
-          ID: {selection?.id ?? "N/A"})
+          Add Specific to Selected ({selectionText})
         </button>
         <button
           onClick={handleAddAllResources}
-          disabled={
-            !selection ||
-            selection.id === undefined ||
-            (selection.type !== SelectionType.Tile &&
-              selection.type !== SelectionType.Group)
-          }
-          style={{
-            padding: "8px 12px",
-            backgroundColor:
-              selection &&
-              selection.id !== undefined &&
-              (selection.type === SelectionType.Tile ||
-                selection.type === SelectionType.Group)
-                ? "#17a2b8"
-                : "#6c757d",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor:
-              selection &&
-              selection.id !== undefined &&
-              (selection.type === SelectionType.Tile ||
-                selection.type === SelectionType.Group)
-                ? "pointer"
-                : "not-allowed",
-            width: "100%",
-            fontSize: "1em",
-          }}
-        >
-          Add 1000 All to Selected (
-          {selection?.type !== undefined
-            ? getSelectionTypeName(selection.type)
-            : "N/A"}{" "}
-          ID: {selection?.id ?? "N/A"})
-        </button>
-        {selection &&
-          selection.id !== undefined &&
-          selection.type !== SelectionType.Tile &&
-          selection.type !== SelectionType.Group && (
-            <p
-              style={{ fontSize: "0.8em", color: "#ffc107", marginTop: "5px" }}
-            >
-              Select a Tile or Group to add resources.
-            </p>
+          disabled={!isTileOrGroupSelected}
+          className={getButtonClasses(
+            "bg-sky-600",
+            "bg-sky-700",
+            !isTileOrGroupSelected
           )}
+        >
+          Add 1000 All to Selected ({selectionText})
+        </button>
+        <p
+          className={`text-xs text-yellow-400 mt-1.5 ${
+            hasSelection && !isTileOrGroupSelected ? "visible" : "invisible"
+          }`}
+        >
+          Select a Tile or Group to add resources.
+        </p>
       </div>
 
-      <div style={{ borderTop: "1px solid #666", margin: "15px 0" }} />
+      <hr className="border-gray-600 my-4" />
 
       <div>
-        <h4 style={{ marginTop: 0, marginBottom: "10px", fontSize: "1.1em" }}>
-          Spawn Building
-        </h4>
-        <div style={{ marginBottom: "10px" }}>
-          <label
-            htmlFor="buildingType"
-            style={{ marginRight: "5px", fontSize: "0.9em" }}
-          >
+        <h4 className="text-base font-semibold mt-0 mb-2.5">Spawn Building</h4>
+        <div className="mb-2.5">
+          <label htmlFor="buildingType" className="mr-1.5 text-sm">
             Building:
           </label>
           <select
             id="buildingType"
             value={selectedBuildingKey}
             onChange={(e) => setSelectedBuildingKey(e.target.value)}
-            style={{
-              padding: "5px",
-              borderRadius: "4px",
-              background: "#333",
-              color: "white",
-              border: "1px solid #555",
-              width: "100%",
-            }}
+            className="p-1.5 rounded bg-gray-700 text-white border border-gray-600 w-full"
           >
             {buildingTemplates.map((template) => (
               <option key={template.key} value={template.key}>
@@ -434,130 +348,83 @@ const DebugMenu: React.FC = () => {
         </div>
         <button
           onClick={handleSpawnBuilding}
-          disabled={
-            !selection ||
-            selection.type !== SelectionType.Tile ||
-            !selectedBuildingKey
-          }
-          style={{
-            padding: "8px 12px",
-            backgroundColor:
-              selection &&
-              selection.type === SelectionType.Tile &&
-              selectedBuildingKey
-                ? "#007bff"
-                : "#6c757d",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor:
-              selection &&
-              selection.type === SelectionType.Tile &&
-              selectedBuildingKey
-                ? "pointer"
-                : "not-allowed",
-            width: "100%",
-            fontSize: "1em",
-          }}
+          disabled={!isTileSelected || !selectedBuildingKey}
+          className={getButtonClasses(
+            "bg-blue-600",
+            "bg-blue-700",
+            !isTileSelected || !selectedBuildingKey
+          )}
         >
-          Spawn Building on Selected Tile (ID:{" "}
-          {selection?.type === SelectionType.Tile ? selection.id : "N/A"})
+          Spawn Building on Selected Tile ({tileSelectionText})
         </button>
-        {selection && selection.type !== SelectionType.Tile && (
-          <p style={{ fontSize: "0.8em", color: "#ffc107", marginTop: "5px" }}>
-            Select a Tile to spawn a building.
-          </p>
-        )}
+        <p
+          className={`text-xs text-yellow-400 mt-1.5 ${
+            hasSelection && !isTileSelected ? "visible" : "invisible"
+          }`}
+        >
+          Select a Tile to spawn a building.
+        </p>
       </div>
 
-      <div style={{ borderTop: "1px solid #666", margin: "15px 0" }} />
+      <hr className="border-gray-600 my-4" />
 
       <div>
-        <h4 style={{ marginTop: 0, marginBottom: "10px", fontSize: "1.1em" }}>
-          Spawn Group
-        </h4>
+        <h4 className="text-base font-semibold mt-0 mb-2.5">Spawn Group</h4>
         <button
           onClick={handleSpawnGroup}
-          disabled={!selection || selection.type !== SelectionType.Tile}
-          style={{
-            padding: "8px 12px",
-            backgroundColor:
-              selection && selection.type === SelectionType.Tile
-                ? "#ffc107"
-                : "#6c757d",
-            color: "black",
-            border: "none",
-            borderRadius: "4px",
-            cursor:
-              selection && selection.type === SelectionType.Tile
-                ? "pointer"
-                : "not-allowed",
-            width: "100%",
-            fontSize: "1em",
-          }}
+          disabled={!isTileSelected}
+          className={getButtonClasses(
+            "bg-yellow-500",
+            "bg-yellow-600",
+            !isTileSelected,
+            "text-black"
+          )}
         >
-          Spawn Generic Group on Selected Tile (ID:{" "}
-          {selection?.type === SelectionType.Tile ? selection.id : "N/A"})
+          Spawn Generic Group on Selected Tile ({tileSelectionText})
         </button>
-        {selection && selection.type !== SelectionType.Tile && (
-          <p style={{ fontSize: "0.8em", color: "#ffc107", marginTop: "5px" }}>
-            Select a Tile to spawn a group.
-          </p>
-        )}
+        <p
+          className={`text-xs text-yellow-400 mt-1.5 ${
+            hasSelection && !isTileSelected ? "visible" : "invisible"
+          }`}
+        >
+          Select a Tile to spawn a group.
+        </p>
       </div>
 
-      <div style={{ borderTop: "1px solid #666", margin: "15px 0" }} />
+      <hr className="border-gray-600 my-4" />
 
-      <div style={{ marginTop: "15px" }}>
+      <div className="mt-4">
         <button
           onClick={handleDeleteSelectedEntity}
-          disabled={
-            !selection ||
-            selection.id === undefined ||
-            selection.type === SelectionType.Tile ||
-            selection.type === SelectionType.None ||
-            selection.type === SelectionType.Battle
-          }
-          style={{
-            padding: "8px 12px",
-            backgroundColor:
-              selection &&
-              selection.id !== undefined &&
-              selection.type !== SelectionType.Tile &&
-              selection.type !== SelectionType.None &&
-              selection.type !== SelectionType.Battle
-                ? "#dc3545"
-                : "#6c757d",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor:
-              selection &&
-              selection.id !== undefined &&
-              selection.type !== SelectionType.Tile &&
-              selection.type !== SelectionType.None &&
-              selection.type !== SelectionType.Battle
-                ? "pointer"
-                : "not-allowed",
-            width: "100%",
-            fontSize: "1em",
-          }}
-        >
-          Delete Selected Entity (ID: {selection?.id ?? "N/A"})
-        </button>
-        {(selection?.type === SelectionType.Tile ||
-          selection?.type === SelectionType.None ||
-          selection?.type === SelectionType.Battle) &&
-          selection?.id !== undefined && (
-            <p
-              style={{ fontSize: "0.8em", color: "#ffc107", marginTop: "5px" }}
-            >
-              Cannot delete selected {getSelectionTypeName(selection.type)}.
-              Please select a group or building.
-            </p>
+          disabled={!canDeleteSelected}
+          className={getButtonClasses(
+            "bg-red-600",
+            "bg-red-700",
+            !canDeleteSelected
           )}
+        >
+          Delete Selected Entity (ID: {hasSelection ? selection.id : "N/A"})
+        </button>
+        <p
+          className={`text-xs text-yellow-400 mt-1.5 ${
+            hasSelection &&
+            !canDeleteSelected &&
+            selection.type !== SelectionType.None
+              ? "visible"
+              : "invisible"
+          }`}
+        >
+          {/* Ensure text is available even when invisible to maintain height, or use a placeholder like &nbsp; if preferred */}
+          {hasSelection &&
+          !canDeleteSelected &&
+          selection.type !== SelectionType.None
+            ? `Cannot delete selected ${getSelectionTypeName(
+                selection.type
+              )}. Please select a group or building.`
+            : "\u00A0"}
+          {/* Using non-breaking space to maintain height */}
+        </p>
       </div>
-
     </div>
   );
 };
