@@ -38,8 +38,6 @@ export function createGroup(
 
     // Combat stats with randomization
     morale: randomBetween(80, 100),
-    attack: randomBetween(5, 15),
-    defense: randomBetween(5, 15),
     initiative: randomBetween(1, 10),
     agility: randomBetween(1, 10),
     painThreshold: randomBetween(1, 10),

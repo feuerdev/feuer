@@ -113,8 +113,6 @@ export type Group = GameObject &
     endurance: number
 
     // Combat stats
-    attack: number
-    defense: number
     initiative: number
     agility: number
     painThreshold: number

@@ -149,8 +149,6 @@ const GroupInfo = ({ group }: { group: Group }) => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <h3 className="text-sm font-semibold mb-2">Combat Stats</h3>
-            <InfoRow label="Attack" value={Math.floor(group.attack)} />
-            <InfoRow label="Defense" value={Math.floor(group.defense)} />
             <InfoRow label="Morale" value={`${group.morale.toFixed(1)}%`} />
             <InfoRow label="Initiative" value={group.initiative} />
             <InfoRow label="Agility" value={group.agility} />

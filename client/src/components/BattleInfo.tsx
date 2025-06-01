@@ -142,14 +142,6 @@ const BattleInfo: React.FC<BattleInfoProps> = ({ battle }) => {
                   <span className="text-slate-300">{attacker.strength}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Attack:</span>
-                  <span className="text-slate-300">{attacker.attack}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Defense:</span>
-                  <span className="text-slate-300">{attacker.defense}</span>
-                </div>
-                <div className="flex justify-between">
                   <span className="text-slate-400">Agility:</span>
                   <span className="text-slate-300">{attacker.agility}</span>
                 </div>
@@ -193,14 +185,6 @@ const BattleInfo: React.FC<BattleInfoProps> = ({ battle }) => {
                 <div className="flex justify-between">
                   <span className="text-slate-400">Strength:</span>
                   <span className="text-slate-300">{defender.strength}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Attack:</span>
-                  <span className="text-slate-300">{defender.attack}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Defense:</span>
-                  <span className="text-slate-300">{defender.defense}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Agility:</span>

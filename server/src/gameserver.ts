@@ -186,8 +186,8 @@ export default class GameServer {
       const defenderStrengthFactor = 1 + ((battle.defender.strength - 50) / 100);
       const defenderAgilityFactor = 1 + ((battle.defender.agility - 5) / 20);
 
-      const attackerEffectiveAttack = (battle.attacker.attack) * attackerStrengthFactor * ((battle.attacker.morale) / 100);
-      const defenderEffectiveDefense = (battle.defender.defense) * defenderStrengthFactor * ((battle.defender.morale) / 100);
+      const attackerEffectiveAttack = (battle.attacker.strength) * attackerStrengthFactor * ((battle.attacker.morale) / 100);
+      const defenderEffectiveDefense = (battle.defender.strength) * defenderStrengthFactor * ((battle.defender.morale) / 100);
       
       // Calculate damage - agility gives a chance to reduce/avoid some damage
       const attackerDamageRoll = Math.random(); // 0 to 1
