@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { useStore } from "@/lib/state"; // Import useStore
+import { SelectionType } from "@/lib/types"; // Import SelectionType
 
 const DebugMenu: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
   const isDevelopment = process.env.NODE_ENV === "development";
+
+  const selection = useStore((state) => state.selection); // Get selection from store
+  const socket = useStore((state) => state.socket); // Get socket from store
 
   // Handler to toggle visibility
   const toggleVisibility = () => {
@@ -26,6 +31,28 @@ const DebugMenu: React.FC = () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isDevelopment, toggleVisibility]); // Add toggleVisibility to dependencies
+
+  const handleDeleteSelectedEntity = () => {
+    if (!socket || !selection || selection.id === undefined) {
+      console.warn("DebugMenu: No entity selected or socket not available.");
+      return;
+    }
+    if (
+      selection.type === SelectionType.Tile ||
+      selection.type === SelectionType.None ||
+      selection.type === SelectionType.Battle
+    ) {
+      console.warn(
+        "DebugMenu: Cannot delete tiles, empty selections or battles."
+      );
+      return;
+    }
+
+    console.log(
+      `DebugMenu: Requesting deletion of ${selection.type} with ID ${selection.id}`
+    );
+    socket.emit("debug:killEntity", { type: selection.type, id: selection.id });
+  };
 
   if (!isDevelopment || !isVisible) {
     return null; // Don't render anything if not in development or not visible
@@ -70,10 +97,70 @@ const DebugMenu: React.FC = () => {
           &times;
         </button>
       </div>
-      <p>Press Ctrl+M (or Cmd+M on Mac) to toggle this menu.</p>
-      {/* Debug functionalities will be added here */}
-      <div>
-        <p>Debug options will go here...</p>
+      <p style={{ fontSize: "0.9em", color: "#ccc", marginTop: 0 }}>
+        Press Ctrl+M (or Cmd+M) to toggle.
+      </p>
+
+      {/* Delete Selected Entity Button */}
+      <div style={{ marginTop: "15px" }}>
+        <button
+          onClick={handleDeleteSelectedEntity}
+          disabled={
+            !selection ||
+            selection.id === undefined ||
+            selection.type === SelectionType.Tile ||
+            selection.type === SelectionType.None ||
+            selection.type === SelectionType.Battle
+          }
+          style={{
+            padding: "8px 12px",
+            backgroundColor:
+              selection &&
+              selection.id !== undefined &&
+              selection.type !== SelectionType.Tile &&
+              selection.type !== SelectionType.None &&
+              selection.type !== SelectionType.Battle
+                ? "#dc3545"
+                : "#6c757d",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor:
+              selection &&
+              selection.id !== undefined &&
+              selection.type !== SelectionType.Tile &&
+              selection.type !== SelectionType.None &&
+              selection.type !== SelectionType.Battle
+                ? "pointer"
+                : "not-allowed",
+            width: "100%",
+            fontSize: "1em",
+          }}
+        >
+          Delete Selected Entity (ID: {selection?.id ?? "N/A"})
+        </button>
+        {(selection?.type === SelectionType.Tile ||
+          selection?.type === SelectionType.None ||
+          selection?.type === SelectionType.Battle) &&
+          selection?.id !== undefined && (
+            <p
+              style={{ fontSize: "0.8em", color: "#ffc107", marginTop: "5px" }}
+            >
+              Cannot delete selected {selection.type}. Please select a group or
+              building.
+            </p>
+          )}
+      </div>
+
+      {/* More debug functionalities will be added below */}
+      <div
+        style={{
+          marginTop: "20px",
+          borderTop: "1px solid #444",
+          paddingTop: "10px",
+        }}
+      >
+        <p>More debug options will go here...</p>
       </div>
     </div>
   );

@@ -511,7 +511,13 @@ export default class GameServer {
     socket.on("request unassign group", (data) => this.onRequestUnassignGroup(socket, data))
     socket.on("request upgrade building", (data) => this.onRequestUpgradeBuilding(socket, data))
     socket.on("request hire group", (data) => this.onRequestHireGroup(socket, data))
-    socket.on("request set group behavior", (data) => this.onRequestSetGroupBehavior(socket, data));
+    socket.on("request set group behavior", (data) => this.onRequestSetGroupBehavior(socket, data))
+    // Debug listener
+    if (Config.nodeEnv === "development") { // Ensure this check matches your actual config
+      socket.on("debug:killEntity", (data: { type: string; id: number }) => {
+        this.handleDebugKillEntity(socket, data);
+      });
+    }
   }
 
   onRequestTiles(socket: Socket, data: Hex[]) {
@@ -949,6 +955,75 @@ export default class GameServer {
     // If the group is visible to other players, they should also get an update.
     // This can be handled by the general groups update in updateNet, or by a targeted emit here.
     // For now, relying on existing updateNet which sends all visible groups.
+  }
+
+  private handleDebugKillEntity(socket: Socket, data: { type: string; id: number }) {
+    const uid = this.getPlayerUid(socket.id);
+    if (!uid) {
+      console.warn("DebugKillEntity: UID not found for socket.");
+      return;
+    }
+
+    console.log(`DEBUG: Player ${uid} requested to delete entity type: ${data.type}, ID: ${data.id}`);
+
+    let ownerIdToUpdateVisibility: string | undefined;
+
+    if (data.type === "Group") { // Matches SelectionType.Group from client
+      const group = this.world.groups[data.id];
+      if (group) {
+        ownerIdToUpdateVisibility = group.owner;
+        // Before deleting, unassign from any building slot
+        if (group.assignedToBuilding !== undefined && group.assignedToSlot !== undefined) {
+            const building = this.world.buildings[group.assignedToBuilding];
+            if (building && building.slots[group.assignedToSlot]) {
+                building.slots[group.assignedToSlot].assignedGroupId = undefined;
+                // Send update for the affected building
+                const buildingOwnerSocket = this.uidsockets[building.owner];
+                if (buildingOwnerSocket && buildingOwnerSocket.connected) {
+                    buildingOwnerSocket.emit("gamestate building", building);
+                }
+            }
+        }
+        delete this.world.groups[data.id];
+        console.log(`DEBUG: Deleted group ${data.id}`);
+      } else {
+        console.warn(`DEBUG: Group ${data.id} not found for deletion.`);
+      }
+    } else if (data.type === "Building") { // Matches SelectionType.Building from client
+      const building = this.world.buildings[data.id];
+      if (building) {
+        ownerIdToUpdateVisibility = building.owner;
+        // Unassign any groups assigned to this building's slots
+        building.slots.forEach(slot => {
+            if (slot.assignedGroupId) {
+                const group = this.world.groups[slot.assignedGroupId];
+                if (group) {
+                    group.assignedToBuilding = undefined;
+                    group.assignedToSlot = undefined;
+                    // Send update for the affected group
+                    const groupOwnerSocket = this.uidsockets[group.owner];
+                    if (groupOwnerSocket && groupOwnerSocket.connected) {
+                        groupOwnerSocket.emit("gamestate group", group);
+                    }
+                }
+            }
+        });
+        delete this.world.buildings[data.id];
+        console.log(`DEBUG: Deleted building ${data.id}`);
+      } else {
+        console.warn(`DEBUG: Building ${data.id} not found for deletion.`);
+      }
+    } else {
+      console.warn(`DEBUG: Unknown entity type ${data.type} for deletion.`);
+      return; // Do nothing if type is unknown
+    }
+
+    // Update visibility for the owner of the deleted entity
+    // The general updateNet will handle broadcasting the removal to all relevant players.
+    if (ownerIdToUpdateVisibility) {
+        this.updatePlayerVisibilities(ownerIdToUpdateVisibility);
+    }
+    // No specific emit needed here as updateNet will take care of changed game state for all players
   }
 
   private getPlayerUid(socketId): string | null {
