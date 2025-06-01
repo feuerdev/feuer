@@ -11,6 +11,8 @@ import {
   TBuildingTemplate,
   Battle,
   GroupBehavior,
+  SelectionType,
+  getSelectionTypeName,
 } from "../../shared/objects.js"
 import * as PlayerRelation from "../../shared/relation.js"
 import * as Battles from "./battle.js"
@@ -513,8 +515,8 @@ export default class GameServer {
     socket.on("request hire group", (data) => this.onRequestHireGroup(socket, data))
     socket.on("request set group behavior", (data) => this.onRequestSetGroupBehavior(socket, data))
     // Debug listener
-    if (Config.nodeEnv === "development") { // Ensure this check matches your actual config
-      socket.on("debug:killEntity", (data: { type: string; id: number }) => {
+    if (Config.nodeEnv === "development") {
+      socket.on("debug:killEntity", (data: { type: SelectionType; id: number }) => {
         this.handleDebugKillEntity(socket, data);
       });
     }
@@ -957,18 +959,18 @@ export default class GameServer {
     // For now, relying on existing updateNet which sends all visible groups.
   }
 
-  private handleDebugKillEntity(socket: Socket, data: { type: string; id: number }) {
+  private handleDebugKillEntity(socket: Socket, data: { type: SelectionType; id: number }) {
     const uid = this.getPlayerUid(socket.id);
     if (!uid) {
       console.warn("DebugKillEntity: UID not found for socket.");
       return;
     }
 
-    console.log(`DEBUG: Player ${uid} requested to delete entity type: ${data.type}, ID: ${data.id}`);
+    console.log(`DEBUG: Player ${uid} requested to delete entity type: ${getSelectionTypeName(data.type)}, ID: ${data.id}`);
 
     let ownerIdToUpdateVisibility: string | undefined;
 
-    if (data.type === "Group") { // Matches SelectionType.Group from client
+    if (data.type === SelectionType.Group) {
       const group = this.world.groups[data.id];
       if (group) {
         ownerIdToUpdateVisibility = group.owner;
@@ -989,7 +991,7 @@ export default class GameServer {
       } else {
         console.warn(`DEBUG: Group ${data.id} not found for deletion.`);
       }
-    } else if (data.type === "Building") { // Matches SelectionType.Building from client
+    } else if (data.type === SelectionType.Building) {
       const building = this.world.buildings[data.id];
       if (building) {
         ownerIdToUpdateVisibility = building.owner;
@@ -1014,7 +1016,7 @@ export default class GameServer {
         console.warn(`DEBUG: Building ${data.id} not found for deletion.`);
       }
     } else {
-      console.warn(`DEBUG: Unknown entity type ${data.type} for deletion.`);
+      console.warn(`DEBUG: Unknown entity type ${getSelectionTypeName(data.type)} for deletion.`);
       return; // Do nothing if type is unknown
     }
 

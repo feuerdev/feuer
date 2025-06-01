@@ -1,7 +1,7 @@
 import React from "react";
 import { Battle } from "@shared/objects";
-import { useStore } from "@/lib/state"; // Import useStore
-import { SelectionType } from "@/lib/types"; // Import SelectionType
+import { useStore } from "@/lib/state";
+import { SelectionType } from "@shared/objects";
 
 interface BattleInfoProps {
   battle: Battle | undefined;

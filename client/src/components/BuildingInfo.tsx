@@ -14,11 +14,12 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
   const world = useStore((state) => state.world);
   const userId = useStore((state) => state.userId);
   const engine = useStore((state) => state.engine);
-  const isOwnBuilding = building.owner === userId;
 
   if (!building) {
     return <div>No building selected</div>;
   }
+  
+  const isOwnBuilding = building.owner === userId;
 
   // Get groups at the same position as the building
   const availableGroups = Object.values(world.groups).filter(

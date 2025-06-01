@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { useStore } from "@/lib/state"; // Import useStore
-import { SelectionType } from "@/lib/types"; // Import SelectionType
+import React, { useState, useEffect, useCallback } from "react";
+import { useStore } from "@/lib/state";
+import { SelectionType } from "@shared/objects";
 
 const DebugMenu: React.FC = () => {
-  const [isVisible, setIsVisible] = useState(false);
   const isDevelopment = process.env.NODE_ENV === "development";
+  const [isVisible, setIsVisible] = useState(isDevelopment);
 
-  const selection = useStore((state) => state.selection); // Get selection from store
-  const socket = useStore((state) => state.socket); // Get socket from store
+  const selection = useStore((state) => state.selection);
+  const socket = useStore((state) => state.socket);
 
   // Handler to toggle visibility
-  const toggleVisibility = () => {
+  const toggleVisibility = useCallback(() => {
     setIsVisible(!isVisible);
-  };
+  }, [isVisible]);
 
   // Effect to add/remove keydown listener for toggling the menu
   useEffect(() => {
@@ -37,21 +37,13 @@ const DebugMenu: React.FC = () => {
       console.warn("DebugMenu: No entity selected or socket not available.");
       return;
     }
-    if (
-      selection.type === SelectionType.Tile ||
-      selection.type === SelectionType.None ||
-      selection.type === SelectionType.Battle
-    ) {
-      console.warn(
-        "DebugMenu: Cannot delete tiles, empty selections or battles."
-      );
-      return;
-    }
-
     console.log(
       `DebugMenu: Requesting deletion of ${selection.type} with ID ${selection.id}`
     );
-    socket.emit("debug:killEntity", { type: selection.type, id: selection.id });
+    socket.emit("debug:killEntity", {
+      type: selection.type,
+      id: selection.id,
+    });
   };
 
   if (!isDevelopment || !isVisible) {

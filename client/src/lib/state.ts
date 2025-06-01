@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { Selection, SelectionType } from "./types";
+import { Selection } from "./types";
+import { SelectionType } from "@shared/objects";
 import { World } from "@shared/objects";
 import { Socket } from "socket.io-client";
 import { Engine } from "./engine";

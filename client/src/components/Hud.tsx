@@ -2,7 +2,7 @@ import GroupInfo from "@/components/GroupInfo";
 import TileInfo from "@/components/TileInfo";
 import BuildingInfo from "@/components/BuildingInfo";
 import { getTileById } from "@shared/objectutil";
-import { SelectionType } from "@/lib/types";
+import { SelectionType } from "@shared/objects";
 import { useStore } from "@/lib/state";
 import BattleInfo from "./BattleInfo";
 

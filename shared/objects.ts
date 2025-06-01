@@ -161,3 +161,29 @@ export type TBuildingTemplate = {
     }
   }
 }
+
+// Add the SelectionType enum here
+export const enum SelectionType {
+  None = 0,
+  Group = 1,
+  Tile = 2,
+  Building = 3,
+  Battle = 4,
+}
+
+export function getSelectionTypeName(selectionType: SelectionType): string {
+  switch (selectionType) {
+    case SelectionType.None:
+      return "None"
+    case SelectionType.Group:
+      return "Group"
+    case SelectionType.Tile:
+      return "Tile"
+    case SelectionType.Building:
+      return "Building"
+    case SelectionType.Battle:
+      return "Battle"
+    default:
+      return "Unknown"
+  }
+}
