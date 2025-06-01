@@ -114,6 +114,11 @@ This document outlines the core gameplay loop and implementation steps for Feuer
   - [ ] Add UI elements
   - [ ] Add a button to spawn the selected group(s) on the currently selected tile or a default spawn location.
   - [ ] Handle the server-side logic for spawning a group on a tile.
+- [ ] Implement functionality to kill/destroy the currently selected entity:
+  - [ ] Add a button (e.g., "Delete Selected Entity") to the debug menu.
+  - [ ] When clicked, it should identify the currently selected group or building.
+  - [ ] Implement server-side logic to safely remove the entity from the game state.
+  - [ ] Ensure the client UI updates correctly after deletion.
 - [ ] Document the debug menu:
   - [ ] Add notes for developers on how to access and use the debug menu's features.
 
