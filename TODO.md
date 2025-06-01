@@ -105,15 +105,15 @@ This document outlines the core gameplay loop and implementation steps
   - [x] Add button to add resources to the currently selected tile or group.
   - [x] Add a button that adds 1000 resources of all types to the currently selected tile or group.
   - [x] Handle the server-side logic for adding resources to a tile or group.
-- [ ] Implement functionality to spawn buildings:
-  - [ ] Add UI elements (e.g., a dropdown or list to select building type).
-  - [ ] Add a button to spawn the selected building on the currently selected tile.
-  - [ ] Ensure this action correctly triggers server-side building placement logic.
-  - [ ] Handle the server-side logic for spawning a building on a tile.
-- [ ] Implement functionality to spawn new groups:
-  - [ ] Add UI elements
-  - [ ] Add a button to spawn the selected group(s) on the currently selected tile or a default spawn location.
-  - [ ] Handle the server-side logic for spawning a group on a tile.
+- [x] Implement functionality to spawn buildings:
+  - [x] Add UI elements (e.g., a dropdown or list to select building type).
+  - [x] Add a button to spawn the selected building on the currently selected tile.
+  - [x] Ensure this action correctly triggers server-side building placement logic.
+  - [x] Handle the server-side logic for spawning a building on a tile.
+- [x] Implement functionality to spawn new groups:
+  - [x] Add UI elements
+  - [x] Add a button to spawn the selected group(s) on the currently selected tile or a default spawn location.
+  - [x] Handle the server-side logic for spawning a group on a tile.
 - [x] Implement functionality to kill/destroy the currently selected entity:
   - [x] Add a button (e.g., "Delete Selected Entity") to the debug menu.
   - [x] When clicked, it should identify the currently selected group or building.

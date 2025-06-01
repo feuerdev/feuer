@@ -522,6 +522,12 @@ export default class GameServer {
       socket.on("debug:addResources", (data: { targetType: SelectionType; targetId: number; resources: Partial<Resources> }) => {
         this.handleDebugAddResources(socket, data);
       });
+      socket.on("debug:spawnBuilding", (data: { buildingKey: string; position: Hex }) => {
+        this.handleDebugSpawnBuilding(socket, data);
+      });
+      socket.on("debug:spawnGroup", (data: { position: Hex }) => {
+        this.handleDebugSpawnGroup(socket, data);
+      });
     }
   }
 
@@ -1079,6 +1085,76 @@ export default class GameServer {
       }
     } else {
       console.warn(`DEBUG: Invalid target type ${getSelectionTypeName(data.targetType)} for adding resources.`);
+    }
+  }
+
+  private handleDebugSpawnBuilding(socket: Socket, data: { buildingKey: string; position: Hex }) {
+    const uid = this.getPlayerUid(socket.id);
+    if (!uid) {
+      console.warn("DebugSpawnBuilding: UID not found for socket.");
+      return;
+    }
+
+    const { buildingKey, position } = data;
+
+    // Check if building template exists
+    if (!(Buildings as any)[buildingKey]) {
+        console.warn(`DEBUG: Building template key "${buildingKey}" not found.`);
+        return;
+    }
+
+    console.log(`DEBUG: Player ${uid} requested to spawn building ${buildingKey} at H[${position.q},${position.r}]`);
+
+    // Use the existing createBuilding function
+    // For debug, we might want to spawn it for the requesting player, or a default/neutral owner.
+    // Assuming the debug action means the current player (UID from socket) owns it.
+    const newBuilding = createBuilding(++this.world.idCounter, uid, buildingKey, position);
+    
+    if (newBuilding) {
+      this.world.buildings[newBuilding.id] = newBuilding;
+      console.log(`DEBUG: Spawned building with key ${newBuilding.key} (ID: ${newBuilding.id}) for player ${uid} at H[${position.q},${position.r}]`);
+      
+      // Update visibility for the owner
+      this.updatePlayerVisibilities(uid);
+      
+      // Send an update for the new building to the owner
+      // The general updateNet will also broadcast it to other relevant players.
+      socket.emit("gamestate building", newBuilding);
+
+      // It might also be good to send an update for the tile if the building changes tile properties implicitly
+      // For now, just sending the building update.
+    } else {
+      console.warn(`DEBUG: Failed to create building ${buildingKey} for player ${uid}.`);
+    }
+  }
+
+  private handleDebugSpawnGroup(socket: Socket, data: { position: Hex }) {
+    const uid = this.getPlayerUid(socket.id);
+    if (!uid) {
+      console.warn("DebugSpawnGroup: UID not found for socket.");
+      return;
+    }
+
+    const { position } = data;
+    console.log(`DEBUG: Player ${uid} requested to spawn generic group at H[${position.q},${position.r}]`);
+
+    // Use the existing createGroup function. 
+    // The default name "Group" is used as per createGroup's current implementation.
+    // It will be owned by the requesting player (uid).
+    const newGroup = createGroup(++this.world.idCounter, uid, "Group", position);
+
+    if (newGroup) {
+      this.world.groups[newGroup.id] = newGroup;
+      console.log(`DEBUG: Spawned group ${newGroup.name} (ID: ${newGroup.id}) for player ${uid} at H[${position.q},${position.r}]`);
+      
+      // Update visibility for the owner
+      this.updatePlayerVisibilities(uid);
+
+      // Send an update for the new group to the owner
+      // The general updateNet will also broadcast it to other relevant players.
+      socket.emit("gamestate group", newGroup);
+    } else {
+      console.warn(`DEBUG: Failed to create generic group for player ${uid}.`);
     }
   }
 
