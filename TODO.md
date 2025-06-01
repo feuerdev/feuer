@@ -1,8 +1,8 @@
-# Feuer - Core Gameplay Loop
+# Feuer - TODO & Core Gameplay Loop
 
 ## Overview
 
-This document outlines the core gameplay loop and implementation steps for Feuer, a strategy game with resource management, building construction, and combat elements.
+This document outlines the core gameplay loop and implementation steps
 
 ## Core Gameplay Loop
 
@@ -96,15 +96,15 @@ This document outlines the core gameplay loop and implementation steps for Feuer
 
 ### Phase 7: Debug Menu
 
-- [ ] Create a new UI component for the debug menu.
-  - [ ] The menu should be hidden by default.
-  - [ ] Add a key combination to toggle the menu's visibility.
-  - [ ] The menu should only be accessible when the game is running in a development environment.
-- [ ] Implement functionality to add resources:
-  - [ ] Add UI elements (e.g., input fields for resource type and amount, buttons).
-  - [ ] Add button to add resources to the currently selected tile or group.
-  - [ ] Add a button that adds 1000 resources of all types to the currently selected tile or group.
-  - [ ] Handle the server-side logic for adding resources to a tile or group.
+- [x] Create a new UI component for the debug menu.
+  - [x] The menu should be hidden by default.
+  - [x] Add a key combination to toggle the menu's visibility.
+  - [x] The menu should only be accessible when the game is running in a development environment.
+- [x] Implement functionality to add resources:
+  - [x] Add UI elements (e.g., input fields for resource type and amount, buttons).
+  - [x] Add button to add resources to the currently selected tile or group.
+  - [x] Add a button that adds 1000 resources of all types to the currently selected tile or group.
+  - [x] Handle the server-side logic for adding resources to a tile or group.
 - [ ] Implement functionality to spawn buildings:
   - [ ] Add UI elements (e.g., a dropdown or list to select building type).
   - [ ] Add a button to spawn the selected building on the currently selected tile.
@@ -114,68 +114,8 @@ This document outlines the core gameplay loop and implementation steps for Feuer
   - [ ] Add UI elements
   - [ ] Add a button to spawn the selected group(s) on the currently selected tile or a default spawn location.
   - [ ] Handle the server-side logic for spawning a group on a tile.
-- [ ] Implement functionality to kill/destroy the currently selected entity:
-  - [ ] Add a button (e.g., "Delete Selected Entity") to the debug menu.
-  - [ ] When clicked, it should identify the currently selected group or building.
-  - [ ] Implement server-side logic to safely remove the entity from the game state.
-  - [ ] Ensure the client UI updates correctly after deletion.
-- [ ] Document the debug menu:
-  - [ ] Add notes for developers on how to access and use the debug menu's features.
-
-## Immediate Next Steps
-
-1. ✅ Modify the Building class to support group assignment slots
-2. ✅ Update the Group class to include resource gathering stats
-3. ✅ Implement resource generation based on assigned groups
-4. ✅ Add building upgrade system
-5. ✅ Create UI components for:
-   - Group assignment to buildings
-   - Building upgrades
-   - Resource gathering visualization
-6. ✅ Implement client-side socket handlers for the new group assignment events
-7. ✅ Implement group hiring system with specialized group types
-8. ✅ Simplify codebase by removing units and adding stats directly to groups
-
-## Technical Implementation Notes
-
-- ✅ Extended the Building class to support group assignment slots
-- ✅ Added ResourceSlot type for managing group assignments
-- ✅ Added gathering efficiency stats to Group class
-- ✅ Implemented server-side resource generation based on assigned groups
-- ✅ Added building upgrade system with levels and improved slots
-- ✅ Implemented client-side UI for:
-  - Displaying building slots and assigned groups
-  - Managing group assignments
-  - Upgrading buildings
-  - Showing resource generation rates
-- ✅ Implemented group hiring system with:
-  - Different group types with specialized gathering skills
-  - Resource costs for hiring
-  - UI for hiring groups at buildings
-- ✅ Simplified code structure by:
-  - Removing Unit type and related types
-  - Adding stats directly to Group
-  - Simplifying battle system
-
-## Resource Generation Formula
-
-Resource generation is now calculated using the following factors:
-
-1. Base production rate of the building for the resource
-2. Slot efficiency (varies by building level and slot)
-3. Group's gathering efficiency for the resource type
-4. Tile's resource availability factor
-
-The formula is:
-
-```
-productionRate = baseProduction * slotEfficiency * groupEfficiency * resourceAvailabilityFactor * deltaFactor
-```
-
-Where:
-
-- `baseProduction` is the base production rate defined in the building template
-- `slotEfficiency` is the efficiency of the specific slot (1.0 = 100%)
-- `groupEfficiency` is the group's efficiency for that resource type (affected by group stats)
-- `resourceAvailabilityFactor` decreases as resources are depleted (< 10 units)
-- `deltaFactor` is the time factor for the update cycle
+- [x] Implement functionality to kill/destroy the currently selected entity:
+  - [x] Add a button (e.g., "Delete Selected Entity") to the debug menu.
+  - [x] When clicked, it should identify the currently selected group or building.
+  - [x] Implement server-side logic to safely remove the entity from the game state.
+  - [x] Ensure the client UI updates correctly after deletion.

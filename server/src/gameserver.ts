@@ -519,6 +519,9 @@ export default class GameServer {
       socket.on("debug:killEntity", (data: { type: SelectionType; id: number }) => {
         this.handleDebugKillEntity(socket, data);
       });
+      socket.on("debug:addResources", (data: { targetType: SelectionType; targetId: number; resources: Partial<Resources> }) => {
+        this.handleDebugAddResources(socket, data);
+      });
     }
   }
 
@@ -1026,6 +1029,57 @@ export default class GameServer {
         this.updatePlayerVisibilities(ownerIdToUpdateVisibility);
     }
     // No specific emit needed here as updateNet will take care of changed game state for all players
+  }
+
+  private handleDebugAddResources(socket: Socket, data: { targetType: SelectionType; targetId: number; resources: Partial<Resources> }) {
+    const uid = this.getPlayerUid(socket.id);
+    if (!uid) {
+      console.warn("DebugAddResources: UID not found for socket.");
+      return;
+    }
+
+    console.log(`DEBUG: Player ${uid} requested to add resources to ${getSelectionTypeName(data.targetType)} ID ${data.targetId}`, data.resources);
+
+    if (data.targetType === SelectionType.Tile) {
+      const tile = Object.values(this.world.tiles).find(t => t.id === data.targetId);
+      if (tile) {
+        for (const resourceKey in data.resources) {
+          const key = resourceKey as keyof Resources;
+          if (tile.resources[key] === undefined) {
+            tile.resources[key] = 0;
+          }
+          tile.resources[key]! += data.resources[key]!;
+        }
+        // Emit tile update to all players who can see it (or just the requester for simplicity for now, though tile updates usually go broader)
+        // For now, relying on updateNet to eventually show this, or can send specific tile update.
+        // Let's send a specific update to the requester for immediate feedback.
+        socket.emit("gamestate tiles", { [hash(tile.hex)]: tile }); 
+        console.log(`DEBUG: Added resources to tile ${data.targetId}. New resources:`, tile.resources);
+      } else {
+        console.warn(`DEBUG: Tile ${data.targetId} not found for adding resources.`);
+      }
+    } else if (data.targetType === SelectionType.Group) {
+      const group = this.world.groups[data.targetId];
+      if (group) {
+        for (const resourceKey in data.resources) {
+          const key = resourceKey as keyof Resources;
+          if (group.resources[key] === undefined) {
+            group.resources[key] = 0;
+          }
+          group.resources[key]! += data.resources[key]!;
+        }
+        // Emit group update only to the owner
+        const groupOwnerSocket = this.uidsockets[group.owner];
+        if (groupOwnerSocket && groupOwnerSocket.connected) {
+            groupOwnerSocket.emit("gamestate group", group);
+        }
+        console.log(`DEBUG: Added resources to group ${data.targetId}. New resources:`, group.resources);
+      } else {
+        console.warn(`DEBUG: Group ${data.targetId} not found for adding resources.`);
+      }
+    } else {
+      console.warn(`DEBUG: Invalid target type ${getSelectionTypeName(data.targetType)} for adding resources.`);
+    }
   }
 
   private getPlayerUid(socketId): string | null {
