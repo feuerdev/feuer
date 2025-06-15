@@ -1,16 +1,6 @@
-# Feuer - TODO & Core Gameplay Loop
+# Feuer - TODO
 
-## Overview
-
-This document outlines the core gameplay loop and implementation steps
-
-## Core Gameplay Loop
-
-1. **Resource Collection** → **Building Construction** → **Group Management** → **Combat** → **Expansion** → **Resource Collection** (loop continues)
-
-## Implementation Priorities
-
-### Phase 1: Resource Gathering & Building System
+### Resource Gathering & Building System
 
 - [x] Implement group assignment to buildings
 - [x] Create resource generation based on assigned groups
@@ -20,13 +10,13 @@ This document outlines the core gameplay loop and implementation steps
 - [x] Add UI for building upgrades
 - [x] Add UI for group assignment to buildings
 
-### Phase 2: Group Management
+### Unit Management
 
 - [x] Add group stats (gathering, combat, etc.)
 - [x] Implement group hiring system
 - [x] Simplify code structure by removing units
 
-### Phase 3: Combat System
+### Combat System
 
 - [x] Add battle UI to display a live battle
   - [x] Draw an indicator on the tile where the battle is happening
@@ -71,7 +61,22 @@ This document outlines the core gameplay loop and implementation steps
   - [ ] Some injuries should be able to be healed over time
   - [ ] Some injuries should be unable to be healed
 
-### Phase 4: Morale & Advanced Mechanics
+
+### Groups
+
+- [ ] Rename groups to units
+- [ ] Add group entity
+- [ ] Add UI to create groups
+- [ ] Add UI to delete groups
+- [ ] Add UI to rename groups
+- [ ] Add UI to assign units to groups
+- [ ] Add UI to remove units from groups
+
+### UI, UX & HUD
+
+- [ ] Box select units
+
+### Morale & Advanced Mechanics
 
 - [ ] Implement morale system
 - [ ] Add food variety and regional food types
@@ -79,7 +84,7 @@ This document outlines the core gameplay loop and implementation steps
 - [ ] Implement gold as payment for morale boosts
 - [ ] Add UI for morale management
 
-### Phase 5: Player Interaction
+### Player Interaction
 
 - [ ] Add trading system
 - [ ] Implement guilds
@@ -87,14 +92,14 @@ This document outlines the core gameplay loop and implementation steps
 - [ ] Add cooperative defense mechanisms
 - [ ] Add UI for player interaction
 
-### Phase 6: Long-term Goals
+### Long-term Goals
 
 - [ ] Implement leaderboards
 - [ ] Create group experience and leveling system
 - [ ] Implement group training mechanics
 - [ ] Add UI for group management and stats
 
-### Phase 7: Debug Menu
+### Debug Menu
 
 - [x] Create a new UI component for the debug menu.
   - [x] The menu should be hidden by default.
