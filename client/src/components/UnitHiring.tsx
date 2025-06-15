@@ -11,8 +11,8 @@ interface UnitHiringProps {
 // Define resource keys to ensure type safety
 type ResourceKey = "berries" | "wood" | "stone";
 
-// Define group cost with proper typing
-const GROUP_COST: Record<ResourceKey, number> = {
+// Define unit cost with proper typing
+const UNIT_COST: Record<ResourceKey, number> = {
   berries: 15,
   wood: 5,
   stone: 5,
@@ -27,9 +27,9 @@ const UnitHiring = ({ building }: UnitHiringProps) => {
     return null;
   }
 
-  // Check if there are enough resources to hire a group
+  // Check if there are enough resources to hire a unit
   const canAfford = () => {
-    for (const [resource, amount] of Object.entries(GROUP_COST)) {
+    for (const [resource, amount] of Object.entries(UNIT_COST)) {
       const resourceKey = resource as ResourceKey;
       if ((tile.resources[resourceKey] || 0) < amount) {
         return false;
@@ -39,28 +39,28 @@ const UnitHiring = ({ building }: UnitHiringProps) => {
   };
 
   return (
-    <InfoBox title="Hire Group">
+    <InfoBox title="Hire Unit">
       <div className="p-2 border border-gray-700 rounded-md bg-gray-800">
         <div className="flex justify-between items-center">
-          <h3 className="text-sm font-semibold">New Group</h3>
+          <h3 className="text-sm font-semibold">New Unit</h3>
           <Button
             variant="primary"
             size="sm"
             disabled={!canAfford()}
-            onClick={() => engine.requestHireGroup(building.id, "Group")}
+            onClick={() => engine.requestHireUnit(building.id, "Unit")}
           >
             Hire
           </Button>
         </div>
 
         <p className="text-xs text-gray-400 mt-1">
-          Hire a new group with random attributes
+          Hire a new unit with random attributes
         </p>
 
         <div className="mt-2">
           <h4 className="text-xs font-medium">Cost:</h4>
           <div className="grid grid-cols-2 gap-1 mt-1">
-            {Object.entries(GROUP_COST).map(([resource, amount]) => {
+            {Object.entries(UNIT_COST).map(([resource, amount]) => {
               const resourceKey = resource as ResourceKey;
               return (
                 <div
