@@ -88,6 +88,30 @@ export default class GameServer {
         if (unit.movementStatus > 100) {
           unit.pos = unit.targetHexes.splice(0, 1)[0]!
           unit.movementStatus = 0
+
+          // Check for pending assignment after movement
+          if (unit.targetHexes.length === 0 && unit.assignmentIntent) {
+            const { buildingId, slotIndex } = unit.assignmentIntent
+            const building = this.world.buildings[buildingId]
+
+            if (building && equals(unit.pos, building.position)) {
+              const slot = building.slots[slotIndex]
+              // Check if slot is still available
+              if (slot && slot.assignedUnitId === undefined) {
+                slot.assignedUnitId = unit.id
+                unit.assignedToBuilding = building.id
+                unit.assignedToSlot = slotIndex
+
+                const ownerSocket = this.uidsockets[unit.owner]
+                if (ownerSocket) {
+                  ownerSocket.emit("gamestate unit", unit)
+                  ownerSocket.emit("gamestate building", building)
+                }
+              }
+            }
+            delete unit.assignmentIntent
+          }
+
           this.updatePlayerVisibilities(unit.owner)
           this.checkForBattle(unit)
         }
@@ -792,26 +816,44 @@ export default class GameServer {
   onRequestAssignUnit(socket: Socket, data: any) {
     const uid = this.getPlayerUid(socket.id)
     if (!uid) return
-    
-    const unitId = data.unitId
-    const buildingId = data.buildingId
-    const slotIndex = data.slotIndex
-    
+
+    const { unitId, buildingId, slotIndex } = data
+
     const unit = this.world.units[unitId]
     const building = this.world.buildings[buildingId]
-    
+
     // Validate ownership and existence
     if (!unit || !building || unit.owner !== uid || building.owner !== uid) {
       console.warn(`Invalid assignment request from player ${uid}`)
       return
     }
-    
-    // Check if unit is at the same position as the building
+
+    // If unit is not at the building, move it first.
     if (!equals(unit.pos, building.position)) {
-      console.warn(`Unit ${unitId} is not at the same position as building ${buildingId}`)
+      // Unassign from any previous building.
+      if (
+        unit.assignedToBuilding !== undefined &&
+        unit.assignedToSlot !== undefined
+      ) {
+        const oldBuilding = this.world.buildings[unit.assignedToBuilding]
+        if (oldBuilding) {
+          oldBuilding.slots[unit.assignedToSlot].assignedUnitId = undefined
+          const ownerSocket = this.uidsockets[oldBuilding.owner]
+          if (ownerSocket) ownerSocket.emit("gamestate building", oldBuilding)
+        }
+      }
+      unit.assignedToBuilding = undefined
+      unit.assignedToSlot = undefined
+
+      // Set movement path and assignment intent.
+      unit.targetHexes = astar(this.world.tiles, unit.pos, building.position)
+      unit.movementStatus = 0
+      unit.assignmentIntent = { buildingId, slotIndex }
+
+      socket.emit("gamestate unit", unit)
       return
     }
-    
+
     // Check if slot exists
     if (slotIndex < 0 || slotIndex >= building.slots.length) {
       console.warn(`Invalid slot index ${slotIndex} for building ${buildingId}`)
@@ -819,11 +861,14 @@ export default class GameServer {
     }
 
     // Check if the unit is already assigned to a different slot in the same building
-    if (unit.assignedToBuilding === buildingId && unit.assignedToSlot !== undefined && unit.assignedToSlot !== slotIndex) {
-      console.warn(`Unit ${unitId} is already assigned to slot ${unit.assignedToSlot} in building ${buildingId}`)
-      return;
+    if (
+      unit.assignedToBuilding === buildingId &&
+      unit.assignedToSlot !== undefined &&
+      unit.assignedToSlot !== slotIndex
+    ) {
+      building.slots[unit.assignedToSlot].assignedUnitId = undefined
     }
-    
+
     // If slot is already assigned to another unit, unassign it
     const slot = building.slots[slotIndex]
     if (slot.assignedUnitId && slot.assignedUnitId !== unitId) {
@@ -831,22 +876,29 @@ export default class GameServer {
       if (previousUnit) {
         previousUnit.assignedToBuilding = undefined
         previousUnit.assignedToSlot = undefined
+        const ownerSocket = this.uidsockets[previousUnit.owner]
+        if (ownerSocket) ownerSocket.emit("gamestate unit", previousUnit)
       }
     }
-    
+
     // Unassign unit from previous building if any (and it's a different building)
-    if (unit.assignedToBuilding !== undefined && unit.assignedToBuilding !== buildingId) {
+    if (
+      unit.assignedToBuilding !== undefined &&
+      unit.assignedToBuilding !== buildingId
+    ) {
       const previousBuilding = this.world.buildings[unit.assignedToBuilding]
       if (previousBuilding && unit.assignedToSlot !== undefined) {
         previousBuilding.slots[unit.assignedToSlot].assignedUnitId = undefined
+        const ownerSocket = this.uidsockets[previousBuilding.owner]
+        if (ownerSocket) ownerSocket.emit("gamestate building", previousBuilding)
       }
     }
-    
+
     // Assign unit to building slot
     slot.assignedUnitId = unitId
     unit.assignedToBuilding = buildingId
     unit.assignedToSlot = slotIndex
-    
+
     // Notify the client
     socket.emit("gamestate unit", unit)
     socket.emit("gamestate building", building)

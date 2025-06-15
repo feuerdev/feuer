@@ -79,7 +79,7 @@
 
 ### QOL
 
-- [ ] When right clicking a building with a unit selected, move the the unit to the building and assign it
+- [x] When right clicking a building with a unit selected, move the the unit to the building and assign it
 
 ### Morale & Advanced Mechanics
 

@@ -914,12 +914,6 @@ export class Engine {
       return;
     }
 
-    // Check if unit is at the same position as the building
-    if (!equals(unit.pos, building.position)) {
-      console.warn(`Unit must be at the same position as the building`);
-      return;
-    }
-
     // Send assignment request to server
     this.socket.emit("request assign unit", {
       unitId: unitId,
@@ -942,9 +936,7 @@ export class Engine {
     }
 
     if (unit.owner !== this.uid) {
-      console.warn(
-        `Cannot unassign unit ${unitId}: not owned by ${this.uid}`
-      );
+      console.warn(`Cannot unassign unit ${unitId}: not owned by ${this.uid}`);
       return;
     }
 

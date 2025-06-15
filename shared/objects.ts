@@ -95,6 +95,7 @@ export type Unit = GameObject &
     pos: Hex
     movementStatus: number
     resources: Partial<Resources>
+    assignmentIntent?: { buildingId: number; slotIndex: number }
     assignedToBuilding?: number // ID of building this Unit is assigned to
     assignedToSlot?: number // Index of the slot in the building
 
