@@ -1,5 +1,5 @@
 import { Hashtable } from "./util.js"
-import { Biome, Group, Tile } from "./objects.js"
+import { Biome, Unit, Tile } from "./objects.js"
 import { hash, Hex } from "./hex.js"
 import { Resources } from "./resources.js"
 
@@ -28,8 +28,8 @@ export function isNavigable(tile: Tile): boolean {
   }
 }
 
-export function canFight(group: Group): boolean {
-  return group.morale > 0
+export function canFight(unit: Unit): boolean {
+  return unit.morale > 0
 }
 
 export function subtractResources(tile: Tile, resources: Partial<Resources>) {
@@ -40,5 +40,5 @@ export function subtractResources(tile: Tile, resources: Partial<Resources>) {
 
 export enum TransferDirection {
   tile,
-  group,
+  unit,
 }

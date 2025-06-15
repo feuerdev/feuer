@@ -3,7 +3,7 @@ import { useStore } from "@/lib/state";
 import { InfoBox, InfoRow, InfoDivider } from "./InfoBox";
 import { Button } from "./ui/Button";
 import { equals } from "@shared/hex";
-import GroupHiring from "./GroupHiring";
+import UnitHiring from "./UnitHiring";
 import PlayerRelation from "./ui/PlayerRelation";
 
 interface BuildingInfoProps {
@@ -18,18 +18,18 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
   if (!building) {
     return <div>No building selected</div>;
   }
-  
+
   const isOwnBuilding = building.owner === userId;
 
-  // Get groups at the same position as the building
-  const availableGroups = Object.values(world.groups).filter(
-    (group) => equals(group.pos, building.position) && group.owner === userId
+  // Get units at the same position as the building
+  const availableUnits = Object.values(world.units).filter(
+    (unit) => equals(unit.pos, building.position) && unit.owner === userId
   );
 
-  // Get IDs of groups already assigned to any slot in THIS building
-  const assignedGroupIdsInCurrentBuilding = new Set(
+  // Get IDs of units already assigned to any slot in THIS building
+  const assignedUnitIdsInCurrentBuilding = new Set(
     building.slots
-      .map((slot) => slot.assignedGroupId)
+      .map((slot) => slot.assignedUnitId)
       .filter((id) => id != null)
   );
 
@@ -142,8 +142,8 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
 
       <InfoBox title="Resource Slots" className="h-full overflow-y-auto">
         {building.slots.map((slot, index) => {
-          const assignedGroup = slot.assignedGroupId
-            ? world.groups[slot.assignedGroupId]
+          const assignedUnit = slot.assignedUnitId
+            ? world.units[slot.assignedUnitId]
             : undefined;
 
           return (
@@ -161,16 +161,16 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
                   </p>
                 </div>
 
-                {assignedGroup ? (
+                {assignedUnit ? (
                   <div className="text-right">
                     <p className="text-xs">
-                      Assigned: Group #{assignedGroup.id}
+                      Assigned: Unit #{assignedUnit.id}
                     </p>
                     <Button
                       variant="danger"
                       size="xs"
                       onClick={() =>
-                        engine.requestGroupUnassignment(assignedGroup.id)
+                        engine.requestUnitUnassignment(assignedUnit.id)
                       }
                     >
                       Unassign
@@ -178,38 +178,38 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
                   </div>
                 ) : (
                   <div className="text-right">
-                    <p className="text-xs text-gray-400">No group assigned</p>
+                    <p className="text-xs text-gray-400">No unit assigned</p>
                   </div>
                 )}
               </div>
 
-              {!assignedGroup && (
+              {!assignedUnit && (
                 <div className="mt-2">
-                  <h5 className="text-xs text-gray-400 mb-1">Assign Group:</h5>
+                  <h5 className="text-xs text-gray-400 mb-1">Assign Unit:</h5>
                   {(() => {
-                    const assignableGroupsForSlot = availableGroups.filter(
-                      (group) =>
-                        !group.assignedToBuilding &&
-                        !assignedGroupIdsInCurrentBuilding.has(group.id)
+                    const assignableUnitsForSlot = availableUnits.filter(
+                      (unit) =>
+                        !unit.assignedToBuilding &&
+                        !assignedUnitIdsInCurrentBuilding.has(unit.id)
                     );
 
-                    if (assignableGroupsForSlot.length > 0) {
+                    if (assignableUnitsForSlot.length > 0) {
                       return (
                         <div className="flex flex-wrap gap-1">
-                          {assignableGroupsForSlot.map((group) => (
+                          {assignableUnitsForSlot.map((unit) => (
                             <Button
-                              key={group.id}
+                              key={unit.id}
                               variant="outline"
                               size="xs"
                               onClick={() =>
-                                engine.requestGroupAssignment(
-                                  group.id,
+                                engine.requestUnitAssignment(
+                                  unit.id,
                                   building.id,
                                   index
                                 )
                               }
                             >
-                              Group #{group.id}
+                              Unit #{unit.id}
                             </Button>
                           ))}
                         </div>
@@ -217,7 +217,7 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
                     } else {
                       return (
                         <p className="text-xs text-gray-500 italic">
-                          No groups available to assign.
+                          No units available to assign.
                         </p>
                       );
                     }
@@ -235,7 +235,7 @@ const BuildingInfo = ({ building }: BuildingInfoProps) => {
         )}
       </InfoBox>
 
-      <GroupHiring building={building} />
+      <UnitHiring building={building} />
     </div>
   );
 };

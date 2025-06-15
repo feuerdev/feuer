@@ -4,7 +4,7 @@ import { Button } from "./ui/Button";
 import { InfoBox } from "./InfoBox";
 import { hash } from "@shared/hex";
 
-interface GroupHiringProps {
+interface UnitHiringProps {
   building: Building;
 }
 
@@ -18,7 +18,7 @@ const GROUP_COST: Record<ResourceKey, number> = {
   stone: 5,
 };
 
-const GroupHiring = ({ building }: GroupHiringProps) => {
+const UnitHiring = ({ building }: UnitHiringProps) => {
   const world = useStore((state) => state.world);
   const engine = useStore((state) => state.engine);
   const tile = world.tiles[hash(building.position)];
@@ -83,4 +83,4 @@ const GroupHiring = ({ building }: GroupHiringProps) => {
   );
 };
 
-export default GroupHiring;
+export default UnitHiring;

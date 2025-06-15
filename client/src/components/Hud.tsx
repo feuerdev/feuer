@@ -1,4 +1,4 @@
-import GroupInfo from "@/components/GroupInfo";
+import UnitInfo from "@/components/UnitInfo";
 import TileInfo from "@/components/TileInfo";
 import BuildingInfo from "@/components/BuildingInfo";
 import { getTileById } from "@shared/objectutil";
@@ -34,9 +34,7 @@ const Hud = () => {
         className="absolute bottom-0 left-0 right-0 z-10 h-[30%] bg-slate-900 bg-opacity-90 overflow-hidden"
       >
         {/* Show different info based on selection type */}
-        {type === SelectionType.Group && (
-          <GroupInfo group={world.groups[id!]} />
-        )}
+        {type === SelectionType.Unit && <UnitInfo unit={world.units[id!]} />}
         {type === SelectionType.Building && (
           <BuildingInfo building={world.buildings[id!]} />
         )}

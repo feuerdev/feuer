@@ -7,10 +7,10 @@ import * as Vector2 from "@shared/vector2";
 import { ClientTile, ZIndices } from "./types";
 import {
   Building,
-  Group,
+  Unit,
   Tile,
   Battle,
-  GroupBehavior,
+  UnitBehavior,
   SelectionType,
 } from "@shared/objects";
 import { convertToSpriteName, Hashtable } from "@shared/util";
@@ -18,7 +18,7 @@ import { useStore } from "@/lib/state";
 import * as PlayerRelation from "@shared/relation";
 import {
   drawBuildingGraphics,
-  drawGroupGraphics,
+  drawUnitGraphics,
   drawTerrainGraphics,
   BIOME_COLORS,
   drawResourceGenerationIndicator,
@@ -103,8 +103,8 @@ export class Engine {
     window.addEventListener("keyup", this.handleKeyUp, false);
     window.addEventListener("resize", this.resize, false);
     this.socket.on("gamestate tiles", this.handleTilesUpdate);
-    this.socket.on("gamestate group", this.handleGroupUpdate);
-    this.socket.on("gamestate groups", this.handleGroupsUpdate);
+    this.socket.on("gamestate unit", this.handleUnitUpdate);
+    this.socket.on("gamestate units", this.handleUnitsUpdate);
     this.socket.on("gamestate buildings", this.handleBuildingsUpdate);
     this.socket.on("gamestate building", this.handleBuildingUpdate);
     this.socket.on(
@@ -141,8 +141,8 @@ export class Engine {
 
     // Remove socket listeners
     this.socket.off("gamestate tiles", this.handleTilesUpdate);
-    this.socket.off("gamestate group", this.handleGroupUpdate);
-    this.socket.off("gamestate groups", this.handleGroupsUpdate);
+    this.socket.off("gamestate unit", this.handleUnitUpdate);
+    this.socket.off("gamestate units", this.handleUnitsUpdate);
     this.socket.off("gamestate buildings", this.handleBuildingsUpdate);
     this.socket.off("gamestate building", this.handleBuildingUpdate);
     this.socket.off(
@@ -170,72 +170,72 @@ export class Engine {
     socket.emit("request tiles");
   };
 
-  private handleGroupUpdate = (group: Group) => {
+  private handleUnitUpdate = (unit: Unit) => {
     const { world, setWorld } = useStore.getState();
-    if (world.groups[group.id]) {
-      // Update existing group
+    if (world.units[unit.id]) {
+      // Update existing unit
       setWorld({
         ...world,
-        groups: {
-          ...world.groups,
-          [group.id]: group,
+        units: {
+          ...world.units,
+          [unit.id]: unit,
         },
       });
     } else {
-      // New group
+      // New unit
       setWorld({
         ...world,
-        groups: {
-          ...world.groups,
-          [group.id]: group,
+        units: {
+          ...world.units,
+          [unit.id]: unit,
         },
       });
     }
-    this.updateScenegraphGroup(group, this.uid);
+    this.updateScenegraphUnit(unit, this.uid);
     this.updateSelection();
   };
 
-  private handleGroupsUpdate = (groups: Hashtable<Group>) => {
+  private handleUnitsUpdate = (units: Hashtable<Unit>) => {
     const { world, setWorld } = useStore.getState();
-    const newGroups: Hashtable<Group> = {};
-    const visitedOldGroups: Hashtable<boolean> = {};
+    const newUnits: Hashtable<Unit> = {};
+    const visitedOldUnits: Hashtable<boolean> = {};
     let needsTileUpdate = false;
 
-    // We no longer need to worry about selection state since updateScenegraphGroup handles it
-    // Each group will maintain its own selection state properly
+    // We no longer need to worry about selection state since updateScenegraphUnit handles it
+    // Each unit will maintain its own selection state properly
 
-    Object.values(groups).forEach((receivedGroup) => {
-      const oldGroup = world.groups[receivedGroup.id];
-      visitedOldGroups[receivedGroup.id] = true;
+    Object.values(units).forEach((receivedUnit) => {
+      const oldUnit = world.units[receivedUnit.id];
+      visitedOldUnits[receivedUnit.id] = true;
 
       if (
-        !oldGroup ||
-        !equals(oldGroup.pos, receivedGroup.pos) ||
-        oldGroup.spotting !== receivedGroup.spotting
+        !oldUnit ||
+        !equals(oldUnit.pos, receivedUnit.pos) ||
+        oldUnit.spotting !== receivedUnit.spotting
       ) {
-        this.updateScenegraphGroup(receivedGroup, this.uid);
+        this.updateScenegraphUnit(receivedUnit, this.uid);
         needsTileUpdate = true;
       }
 
       if (
-        !oldGroup &&
-        receivedGroup.owner !== this.uid &&
+        !oldUnit &&
+        receivedUnit.owner !== this.uid &&
         world.playerRelations[
-          PlayerRelation.hash(receivedGroup.owner, this.uid)
+          PlayerRelation.hash(receivedUnit.owner, this.uid)
         ] === undefined
       ) {
         this.socket.emit("request relation", {
-          id1: receivedGroup.owner,
+          id1: receivedUnit.owner,
           id2: this.uid,
         });
       }
 
-      newGroups[receivedGroup.id] = receivedGroup;
+      newUnits[receivedUnit.id] = receivedUnit;
     });
 
-    // Handle groups that no longer exist
-    Object.keys(world.groups).forEach((id) => {
-      if (!visitedOldGroups[id]) {
+    // Handle units that no longer exist
+    Object.keys(world.units).forEach((id) => {
+      if (!visitedOldUnits[id]) {
         this.removeItem(parseInt(id));
         needsTileUpdate = true;
       }
@@ -243,7 +243,7 @@ export class Engine {
 
     setWorld({
       ...world,
-      groups: newGroups,
+      units: newUnits,
     });
 
     if (needsTileUpdate) {
@@ -283,9 +283,9 @@ export class Engine {
     const { world, setWorld } = useStore.getState();
     const visibleHexes: Hashtable<Hex> = {};
 
-    // Determine visible hexes based on groups and buildings
-    Object.values(world.groups).forEach((group) => {
-      neighborsRange(group.pos, group.spotting).forEach((hex) => {
+    // Determine visible hexes based on units and buildings
+    Object.values(world.units).forEach((unit) => {
+      neighborsRange(unit.pos, unit.spotting).forEach((hex) => {
         visibleHexes[hash(hex)] = hex;
       });
     });
@@ -368,8 +368,8 @@ export class Engine {
 
     let prefix = "";
     switch (selection.type) {
-      case SelectionType.Group:
-        prefix = "g";
+      case SelectionType.Unit:
+        prefix = "u";
         break;
       case SelectionType.Building:
         prefix = "b";
@@ -402,14 +402,14 @@ export class Engine {
       this.clearSelection();
     }
 
-    const groupSpriteName = convertToSpriteName(id, "g");
-    const oldGroupSprite = this.viewport.getChildByName(
-      groupSpriteName
+    const unitSpriteName = convertToSpriteName(id, "u");
+    const oldUnitSprite = this.viewport.getChildByName(
+      unitSpriteName
     ) as Sprite;
-    if (oldGroupSprite) {
-      this.stopMovementAnimation(groupSpriteName);
-      this.stopWorkingAnimation(groupSpriteName);
-      this.viewport.removeChild(oldGroupSprite);
+    if (oldUnitSprite) {
+      this.stopMovementAnimation(unitSpriteName);
+      this.stopWorkingAnimation(unitSpriteName);
+      this.viewport.removeChild(oldUnitSprite);
     }
 
     const buildingName = convertToSpriteName(id, "b");
@@ -457,7 +457,7 @@ export class Engine {
    * Find a non-colliding position within a hex
    * @param hexPos The hex position to find a position within
    * @param useTopHalf Whether to use the top half (true) or bottom half (false) of the hex
-   * @param label Sprite label prefix to check against for collisions (e.g., 'g_' for groups)
+   * @param label Sprite label prefix to check against for collisions (e.g., 'u_' for units)
    * @param excludeSprite Optional sprite to exclude from collision checks
    * @returns A Vector2 position with no collisions
    */
@@ -516,25 +516,25 @@ export class Engine {
     return randomPos;
   }
 
-  async updateScenegraphGroup(group: Group, uid?: string): Promise<void> {
+  async updateScenegraphUnit(unit: Unit, uid?: string): Promise<void> {
     const { selection, world } = useStore.getState();
 
-    const spriteName = convertToSpriteName(group.id, "g");
+    const spriteName = convertToSpriteName(unit.id, "u");
     const isCurrentlySelected =
       this.selectedSprite &&
-      selection.type === SelectionType.Group &&
-      selection.id === group.id;
+      selection.type === SelectionType.Unit &&
+      selection.id === unit.id;
 
-    // If this group is selected, clear selection before removing the sprite
+    // If this unit is selected, clear selection before removing the sprite
     if (isCurrentlySelected) {
       this.clearSelection();
     }
 
     // Remove existing sprite to prevent duplicates
-    this.removeItem(group.id);
+    this.removeItem(unit.id);
 
     // Get relation type for color
-    const relationHash = PlayerRelation.hash(group.owner, this.uid);
+    const relationHash = PlayerRelation.hash(unit.owner, this.uid);
     const relation = world.playerRelations[relationHash];
     const relationType = relation?.relationType;
 
@@ -543,7 +543,7 @@ export class Engine {
     object.label = spriteName;
 
     const graphics = new Graphics();
-    drawGroupGraphics(graphics, group.owner, this.uid, relationType);
+    drawUnitGraphics(graphics, unit.owner, this.uid, relationType);
     object.addChild(graphics);
 
     object.interactive = true;
@@ -554,14 +554,14 @@ export class Engine {
         return;
       }
       if (event.button === 0) {
-        console.log(`clicked group ${group.id}`);
+        console.log(`clicked unit ${unit.id}`);
         const { setSelection } = useStore.getState();
-        setSelection({ type: SelectionType.Group, id: group.id });
+        setSelection({ type: SelectionType.Unit, id: unit.id });
         this.updateSelection();
       } else if (event.button === 2) {
-        console.log(`right clicked group ${group.id}`);
+        console.log(`right clicked unit ${unit.id}`);
       } else if (event.button === 1) {
-        console.log(`middle clicked group ${group.id}`);
+        console.log(`middle clicked unit ${unit.id}`);
         this.viewport.follow(object);
       }
     });
@@ -569,21 +569,21 @@ export class Engine {
 
     // Find a non-colliding position in the bottom half of the hex
     const randomPos = this.findNonCollidingPositionInHex(
-      group.pos,
+      unit.pos,
       false,
-      "g",
+      "u",
       object
     );
 
     // Update the sprite position
     object.x = randomPos.x;
     object.y = randomPos.y;
-    object.zIndex = ZIndices.Groups;
+    object.zIndex = ZIndices.Units;
 
-    // Handle animation for moving groups or working groups
-    const isMoving = group.targetHexes && group.targetHexes.length > 0;
-    // A group is working if it's assigned and not currently moving to a new hex
-    const isWorking = group.assignedToBuilding !== undefined && !isMoving;
+    // Handle animation for moving units or working units
+    const isMoving = unit.targetHexes && unit.targetHexes.length > 0;
+    // A unit is working if it's assigned and not currently moving to a new hex
+    const isWorking = unit.assignedToBuilding !== undefined && !isMoving;
 
     if (isMoving) {
       this.stopWorkingAnimation(spriteName, object); // Stop working if it starts moving
@@ -597,7 +597,7 @@ export class Engine {
       this.stopWorkingAnimation(spriteName, object);
     }
 
-    // Restore selection state if this was the selected group
+    // Restore selection state if this was the selected unit
     if (isCurrentlySelected) {
       // Apply glow filter to the object
       object.filters = [this.GLOW_FILTER];
@@ -612,14 +612,14 @@ export class Engine {
       this.viewport.removeChild(oldSprite);
     }
 
-    if (uid && group.owner === uid) {
+    if (uid && unit.owner === uid) {
       const movementIndicatorContainer = new Container();
       movementIndicatorContainer.label = "MovementIndicator";
-      movementIndicatorContainer.zIndex = ZIndices.Groups;
+      movementIndicatorContainer.zIndex = ZIndices.Units;
 
       this.viewport.addChild(movementIndicatorContainer);
 
-      for (const hex of group.targetHexes) {
+      for (const hex of unit.targetHexes) {
         const indicator = new Graphics();
         indicator.beginFill(0x0000ff);
         indicator.drawCircle(5, 5, 5);
@@ -636,7 +636,7 @@ export class Engine {
   }
 
   /**
-   * Start the wobble animation for a moving group
+   * Start the wobble animation for a moving unit
    * @param spriteName The unique name of the sprite
    * @param sprite The sprite to animate
    */
@@ -673,7 +673,7 @@ export class Engine {
   }
 
   /**
-   * Stop the wobble animation for a group
+   * Stop the wobble animation for a unit
    * @param spriteName The unique name of the sprite
    * @param sprite Optional sprite to reset position and rotation
    */
@@ -692,7 +692,7 @@ export class Engine {
   }
 
   /**
-   * Start the pulsing animation for a working group
+   * Start the pulsing animation for a working unit
    * @param spriteName The unique name of the sprite
    * @param sprite The sprite to animate
    */
@@ -730,7 +730,7 @@ export class Engine {
   }
 
   /**
-   * Stop the pulsing animation for a working group
+   * Stop the pulsing animation for a working unit
    * @param spriteName The unique name of the sprite
    * @param sprite Optional sprite to reset scale
    */
@@ -800,22 +800,22 @@ export class Engine {
           setSelection({ type: SelectionType.Building, id: building.id });
           this.updateSelection();
         } else if (event.button === 2) {
-          // Handle right-click for group assignment
+          // Handle right-click for unit assignment
           if (
-            selection.type === SelectionType.Group &&
+            selection.type === SelectionType.Unit &&
             selection.id !== undefined
           ) {
-            const selectedGroup = world.groups[selection.id];
+            const selectedUnit = world.units[selection.id];
             const targetBuilding = world.buildings[building.id];
 
-            if (selectedGroup && targetBuilding) {
+            if (selectedUnit && targetBuilding) {
               // Find the first available slot
               let freeSlotIndex = -1;
               if (targetBuilding.slots && targetBuilding.slots.length > 0) {
                 for (let i = 0; i < targetBuilding.slots.length; i++) {
                   if (
-                    targetBuilding.slots[i].assignedGroupId === undefined ||
-                    targetBuilding.slots[i].assignedGroupId === null
+                    targetBuilding.slots[i].assignedUnitId === undefined ||
+                    targetBuilding.slots[i].assignedUnitId === null
                   ) {
                     freeSlotIndex = i;
                     break;
@@ -825,16 +825,16 @@ export class Engine {
 
               if (freeSlotIndex !== -1) {
                 console.log(
-                  `Right-clicked building ${building.id} with group ${selection.id} selected. Assigning to slot ${freeSlotIndex}.`
+                  `Right-clicked building ${building.id} with unit ${selection.id} selected. Assigning to slot ${freeSlotIndex}.`
                 );
-                this.requestGroupAssignment(
+                this.requestUnitAssignment(
                   selection.id,
                   building.id,
                   freeSlotIndex
                 );
               } else {
                 console.warn(
-                  `Building ${building.id} has no free slots for group ${selection.id}.`
+                  `Building ${building.id} has no free slots for unit ${selection.id}.`
                 );
               }
             }
@@ -883,27 +883,27 @@ export class Engine {
   }
 
   /**
-   * Request a group to be assigned to a building slot
-   * @param groupId The ID of the group to assign
+   * Request a unit to be assigned to a building slot
+   * @param unitId The ID of the unit to assign
    * @param buildingId The ID of the building to assign to
    * @param slotIndex The index of the slot in the building
    */
-  requestGroupAssignment(
-    groupId: number,
+  requestUnitAssignment(
+    unitId: number,
     buildingId: number,
     slotIndex: number
   ): void {
     const { world } = useStore.getState();
-    const group = world.groups[groupId];
+    const unit = world.units[unitId];
     const building = world.buildings[buildingId];
 
-    if (!group || !building) {
-      console.warn(`Cannot assign: group or building not found`);
+    if (!unit || !building) {
+      console.warn(`Cannot assign: unit or building not found`);
       return;
     }
 
-    if (group.owner !== this.uid) {
-      console.warn(`Cannot assign group ${groupId}: not owned by ${this.uid}`);
+    if (unit.owner !== this.uid) {
+      console.warn(`Cannot assign unit ${unitId}: not owned by ${this.uid}`);
       return;
     }
 
@@ -914,48 +914,48 @@ export class Engine {
       return;
     }
 
-    // Check if group is at the same position as the building
-    if (!equals(group.pos, building.position)) {
-      console.warn(`Group must be at the same position as the building`);
+    // Check if unit is at the same position as the building
+    if (!equals(unit.pos, building.position)) {
+      console.warn(`Unit must be at the same position as the building`);
       return;
     }
 
     // Send assignment request to server
-    this.socket.emit("request assign group", {
-      groupId: groupId,
+    this.socket.emit("request assign unit", {
+      unitId: unitId,
       buildingId: buildingId,
       slotIndex: slotIndex,
     });
   }
 
   /**
-   * Request a group to be unassigned from its current building
-   * @param groupId The ID of the group to unassign
+   * Request a unit to be unassigned from its current building
+   * @param unitId The ID of the unit to unassign
    */
-  requestGroupUnassignment(groupId: number): void {
+  requestUnitUnassignment(unitId: number): void {
     const { world } = useStore.getState();
-    const group = world.groups[groupId];
+    const unit = world.units[unitId];
 
-    if (!group) {
-      console.warn(`Cannot unassign: group not found`);
+    if (!unit) {
+      console.warn(`Cannot unassign: unit not found`);
       return;
     }
 
-    if (group.owner !== this.uid) {
+    if (unit.owner !== this.uid) {
       console.warn(
-        `Cannot unassign group ${groupId}: not owned by ${this.uid}`
+        `Cannot unassign unit ${unitId}: not owned by ${this.uid}`
       );
       return;
     }
 
-    if (group.assignedToBuilding === undefined) {
-      console.warn(`Group ${groupId} is not assigned to any building`);
+    if (unit.assignedToBuilding === undefined) {
+      console.warn(`Unit ${unitId} is not assigned to any building`);
       return;
     }
 
     // Send unassignment request to server
-    this.socket.emit("request unassign group", {
-      groupId: groupId,
+    this.socket.emit("request unassign unit", {
+      unitId: unitId,
     });
   }
 
@@ -986,30 +986,30 @@ export class Engine {
   }
 
   /**
-   * Request to hire a new group at a building
-   * @param buildingId The ID of the building where the group will be hired
-   * @param groupType The type of group to hire
+   * Request to hire a new unit at a building
+   * @param buildingId The ID of the building where the unit will be hired
+   * @param unitType The type of unit to hire
    */
-  requestHireGroup(buildingId: number, groupType: string): void {
+  requestHireUnit(buildingId: number, unitType: string): void {
     const { world } = useStore.getState();
     const building = world.buildings[buildingId];
 
     if (!building) {
-      console.warn(`Cannot hire group: building not found`);
+      console.warn(`Cannot hire unit: building not found`);
       return;
     }
 
     if (building.owner !== this.uid) {
       console.warn(
-        `Cannot hire group at building ${buildingId}: not owned by ${this.uid}`
+        `Cannot hire unit at building ${buildingId}: not owned by ${this.uid}`
       );
       return;
     }
 
     // Send hire request to server
-    this.socket.emit("request hire group", {
+    this.socket.emit("request hire unit", {
       buildingId: buildingId,
-      groupType: groupType,
+      unitType: unitType,
     });
   }
 
@@ -1041,10 +1041,10 @@ export class Engine {
         } else if (event.button === 2) {
           console.log(`right clicked tile ${tile.id}`);
           if (
-            selection.type === SelectionType.Group &&
+            selection.type === SelectionType.Unit &&
             selection.id !== undefined
           ) {
-            this.requestGroupMovement(selection.id, tile.hex);
+            this.requestUnitMovement(selection.id, tile.hex);
           }
         } else if (event.button === 1) {
           console.log(`middle clicked tile ${tile.id}`);
@@ -1195,36 +1195,36 @@ export class Engine {
   }
 
   /**
-   * Request a group to move to a target hex and start animation immediately
-   * @param groupId The ID of the group to move
+   * Request a unit to move to a target hex and start animation immediately
+   * @param unitId The ID of the unit to move
    * @param targetHex The destination hex
    */
-  private requestGroupMovement(groupId: number, targetHex: Hex): void {
+  private requestUnitMovement(unitId: number, targetHex: Hex): void {
     const { world } = useStore.getState();
-    const group = world.groups[groupId];
+    const unit = world.units[unitId];
 
-    if (!group) {
-      console.warn(`Cannot move group ${groupId}: not found`);
+    if (!unit) {
+      console.warn(`Cannot move unit ${unitId}: not found`);
       return;
     }
 
-    if (group.owner !== this.uid) {
-      console.warn(`Cannot move group ${groupId}: not owned by ${this.uid}`);
+    if (unit.owner !== this.uid) {
+      console.warn(`Cannot move unit ${unitId}: not owned by ${this.uid}`);
       return;
     }
 
     // Send movement request to server
     this.socket.emit("request movement", {
-      selection: groupId,
+      selection: unitId,
       target: targetHex,
     });
 
     // Set movement status to 1 so that in case the server cancels the movement,
-    // the animation is stopped because the movement status is reset to 0 and the group will be updated in the scenegraph.
-    group.movementStatus = 1;
+    // the animation is stopped because the movement status is reset to 0 and the unit will be updated in the scenegraph.
+    unit.movementStatus = 1;
 
     // Start animation immediately without waiting for server response
-    const spriteName = convertToSpriteName(groupId, "g");
+    const spriteName = convertToSpriteName(unitId, "u");
     const sprite = this.viewport.getChildByName(spriteName) as Sprite;
 
     if (sprite) {
@@ -1431,22 +1431,22 @@ export class Engine {
     }
   };
 
-  requestSetGroupBehavior(groupId: number, behavior: GroupBehavior): void {
+  requestSetUnitBehavior(unitId: number, behavior: UnitBehavior): void {
     const { world } = useStore.getState();
-    const group = world.groups[groupId];
+    const unit = world.units[unitId];
 
-    if (!group) {
-      console.warn(`Cannot set behavior for group ${groupId}: not found`);
+    if (!unit) {
+      console.warn(`Cannot set behavior for unit ${unitId}: not found`);
       return;
     }
-    if (group.owner !== this.uid) {
+    if (unit.owner !== this.uid) {
       console.warn(
-        `Cannot set behavior for group ${groupId}: not owned by ${this.uid}`
+        `Cannot set behavior for unit ${unitId}: not owned by ${this.uid}`
       );
       return;
     }
 
-    this.socket.emit("request set group behavior", { groupId, behavior });
+    this.socket.emit("request set unit behavior", { unitId, behavior });
   }
 
   /**

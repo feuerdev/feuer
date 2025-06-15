@@ -84,7 +84,7 @@ const DebugMenu: React.FC = () => {
       !selection ||
       selection.id === undefined ||
       (selection.type !== SelectionType.Tile &&
-        selection.type !== SelectionType.Group)
+        selection.type !== SelectionType.Unit)
     ) {
       console.warn(
         "DebugMenu: No target selected for adding resources or socket not available."
@@ -93,10 +93,10 @@ const DebugMenu: React.FC = () => {
     }
     if (
       selection.type !== SelectionType.Tile &&
-      selection.type !== SelectionType.Group
+      selection.type !== SelectionType.Unit
     ) {
       console.warn(
-        "DebugMenu: Resources can only be added to Tiles or Groups."
+        "DebugMenu: Resources can only be added to Tiles or Units."
       );
       return;
     }
@@ -118,7 +118,7 @@ const DebugMenu: React.FC = () => {
       !selection ||
       selection.id === undefined ||
       (selection.type !== SelectionType.Tile &&
-        selection.type !== SelectionType.Group)
+        selection.type !== SelectionType.Unit)
     ) {
       console.warn(
         "DebugMenu: No target selected for adding all resources or socket not available."
@@ -127,10 +127,10 @@ const DebugMenu: React.FC = () => {
     }
     if (
       selection.type !== SelectionType.Tile &&
-      selection.type !== SelectionType.Group
+      selection.type !== SelectionType.Unit
     ) {
       console.warn(
-        "DebugMenu: Resources can only be added to Tiles or Groups."
+        "DebugMenu: Resources can only be added to Tiles or Units."
       );
       return;
     }
@@ -183,7 +183,7 @@ const DebugMenu: React.FC = () => {
     });
   };
 
-  const handleSpawnGroup = () => {
+  const handleSpawnUnit = () => {
     if (
       !socket ||
       !selection ||
@@ -191,7 +191,7 @@ const DebugMenu: React.FC = () => {
       selection.type !== SelectionType.Tile
     ) {
       console.warn(
-        "DebugMenu: No tile selected for spawning group or socket not available."
+        "DebugMenu: No tile selected for spawning unit or socket not available."
       );
       return;
     }
@@ -200,12 +200,12 @@ const DebugMenu: React.FC = () => {
     );
     if (!selectedTile) {
       console.warn(
-        "DebugMenu: Selected tile data not found for spawning group."
+        "DebugMenu: Selected tile data not found for spawning unit."
       );
       return;
     }
-    console.log(`DebugMenu: Spawning generic group on tile ID ${selection.id}`);
-    socket.emit("debug:spawnGroup", { position: selectedTile.hex });
+    console.log(`DebugMenu: Spawning generic unit on tile ID ${selection.id}`);
+    socket.emit("debug:spawnUnit", { position: selectedTile.hex });
   };
 
   if (!isDevelopment || !isVisible) {
@@ -215,9 +215,8 @@ const DebugMenu: React.FC = () => {
   // Derived state for conditional rendering and styling
   const hasSelection = selection && selection.id !== undefined;
   const isTileSelected = hasSelection && selection.type === SelectionType.Tile;
-  const isGroupSelected =
-    hasSelection && selection.type === SelectionType.Group;
-  const isTileOrGroupSelected = isTileSelected || isGroupSelected;
+  const isUnitSelected = hasSelection && selection.type === SelectionType.Unit;
+  const isTileOrUnitSelected = isTileSelected || isUnitSelected;
 
   const canDeleteSelected =
     hasSelection &&
@@ -296,32 +295,32 @@ const DebugMenu: React.FC = () => {
         </div>
         <button
           onClick={handleAddSpecificResource}
-          disabled={!isTileOrGroupSelected}
+          disabled={!isTileOrUnitSelected}
           className={`${getButtonClasses(
             "bg-green-600",
             "bg-green-700",
-            !isTileOrGroupSelected
+            !isTileOrUnitSelected
           )} mb-1.5`}
         >
           Add Specific to Selected ({selectionText})
         </button>
         <button
           onClick={handleAddAllResources}
-          disabled={!isTileOrGroupSelected}
+          disabled={!isTileOrUnitSelected}
           className={getButtonClasses(
             "bg-sky-600",
             "bg-sky-700",
-            !isTileOrGroupSelected
+            !isTileOrUnitSelected
           )}
         >
           Add 1000 All to Selected ({selectionText})
         </button>
         <p
           className={`text-xs text-yellow-400 mt-1.5 ${
-            hasSelection && !isTileOrGroupSelected ? "visible" : "invisible"
+            hasSelection && !isTileOrUnitSelected ? "visible" : "invisible"
           }`}
         >
-          Select a Tile or Group to add resources.
+          Select a Tile or Unit to add resources.
         </p>
       </div>
 
@@ -369,9 +368,9 @@ const DebugMenu: React.FC = () => {
       <hr className="border-gray-600 my-4" />
 
       <div>
-        <h4 className="text-base font-semibold mt-0 mb-2.5">Spawn Group</h4>
+        <h4 className="text-base font-semibold mt-0 mb-2.5">Spawn Unit</h4>
         <button
-          onClick={handleSpawnGroup}
+          onClick={handleSpawnUnit}
           disabled={!isTileSelected}
           className={getButtonClasses(
             "bg-yellow-500",
@@ -380,14 +379,14 @@ const DebugMenu: React.FC = () => {
             "text-black"
           )}
         >
-          Spawn Generic Group on Selected Tile ({tileSelectionText})
+          Spawn Generic Unit on Selected Tile ({tileSelectionText})
         </button>
         <p
           className={`text-xs text-yellow-400 mt-1.5 ${
             hasSelection && !isTileSelected ? "visible" : "invisible"
           }`}
         >
-          Select a Tile to spawn a group.
+          Select a Tile to spawn a unit.
         </p>
       </div>
 
@@ -420,7 +419,7 @@ const DebugMenu: React.FC = () => {
           selection.type !== SelectionType.None
             ? `Cannot delete selected ${getSelectionTypeName(
                 selection.type
-              )}. Please select a group or building.`
+              )}. Please select a unit or building.`
             : "\u00A0"}
           {/* Using non-breaking space to maintain height */}
         </p>

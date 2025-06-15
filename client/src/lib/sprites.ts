@@ -148,7 +148,7 @@ export function drawBuildingGraphics(
 
   // Calculate used and total slots
   const usedSlots = building.slots.filter(
-    (slot) => slot.assignedGroupId !== undefined
+    (slot) => slot.assignedUnitId !== undefined
   ).length;
   const totalSlots = building.slots.length;
 
@@ -176,7 +176,7 @@ export function drawBuildingGraphics(
 /**
  * Draw unit graphics onto the provided graphics object
  */
-export function drawGroupGraphics(
+export function drawUnitGraphics(
   graphics: Graphics,
   owner: string,
   ownerId: string,

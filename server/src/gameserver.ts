@@ -4,19 +4,19 @@ import { Socket } from "socket.io"
 import { Hashtable } from "../../shared/util.js"
 import {
   Building,
-  Group,
+  Unit,
   World,
   Tile,
   Biome,
   TBuildingTemplate,
   Battle,
-  GroupBehavior,
+  UnitBehavior,
   SelectionType,
   getSelectionTypeName,
 } from "../../shared/objects.js"
 import * as PlayerRelation from "../../shared/relation.js"
 import * as Battles from "./battle.js"
-import { createGroup } from "./group.js"
+import { createUnit } from "./unit.js"
 import { createBuilding, upgradeBuilding } from "./building.js"
 import { EnumRelationType } from "../../shared/relation.js"
 import {
@@ -71,11 +71,11 @@ export default class GameServer {
 
   //Loops
   update(deltaFactor: number) {
-    //Group Movement
-    Object.values(this.world.groups).forEach((group) => {
-      if (group.targetHexes.length > 0) {
-        const currentTile = this.world.tiles[hash(group.pos)]
-        const nextHex = group.targetHexes[0]
+    //Unit Movement
+    Object.values(this.world.units).forEach((unit) => {
+      if (unit.targetHexes.length > 0) {
+        const currentTile = this.world.tiles[hash(unit.pos)]
+        const nextHex = unit.targetHexes[0]
 
         if (!nextHex || !currentTile) return
 
@@ -83,13 +83,13 @@ export default class GameServer {
 
         if (!nextTile) return
 
-        group.movementStatus +=
-          calculateMovementProgress(group, currentTile, nextTile) * deltaFactor
-        if (group.movementStatus > 100) {
-          group.pos = group.targetHexes.splice(0, 1)[0]!
-          group.movementStatus = 0
-          this.updatePlayerVisibilities(group.owner)
-          this.checkForBattle(group)
+        unit.movementStatus +=
+          calculateMovementProgress(unit, currentTile, nextTile) * deltaFactor
+        if (unit.movementStatus > 100) {
+          unit.pos = unit.targetHexes.splice(0, 1)[0]!
+          unit.movementStatus = 0
+          this.updatePlayerVisibilities(unit.owner)
+          this.checkForBattle(unit)
         }
       }
     })
@@ -98,15 +98,15 @@ export default class GameServer {
     Object.values(this.world.buildings).forEach((building) => {
       let tile = this.world.tiles[hash(building.position)]
       
-      // Handle resource generation from assigned groups
+      // Handle resource generation from assigned units
       building.slots.forEach((slot, slotIndex) => {
-        if (slot.assignedGroupId) {
-          const assignedGroup = this.world.groups[slot.assignedGroupId]
+        if (slot.assignedUnitId) {
+          const assignedUnit = this.world.units[slot.assignedUnitId]
           
-          // Skip if group no longer exists or has been moved away from building
-          if (!assignedGroup || !equals(assignedGroup.pos, building.position)) {
+          // Skip if unit no longer exists or has been moved away from building
+          if (!assignedUnit || !equals(assignedUnit.pos, building.position)) {
             // Clear the assignment
-            slot.assignedGroupId = undefined
+            slot.assignedUnitId = undefined
             return
           }
           
@@ -115,24 +115,24 @@ export default class GameServer {
           
           // Calculate resource generation based on:
           // 1. Slot efficiency
-          // 2. Group's gathering efficiency for this resource type
+          // 2. Unit's gathering efficiency for this resource type
           
-          // Get group's efficiency for this resource category
-          let groupEfficiency = 1.0
+          // Get unit's efficiency for this resource category
+          let unitEfficiency = 1.0
           if (resourceType === 'wood') {
-            groupEfficiency = assignedGroup.gatheringEfficiency.wood
+            unitEfficiency = assignedUnit.gatheringEfficiency.wood
           } else if (resourceType === 'stone') {
-            groupEfficiency = assignedGroup.gatheringEfficiency.stone
+            unitEfficiency = assignedUnit.gatheringEfficiency.stone
           } else if (resourceType === 'iron') {
-            groupEfficiency = assignedGroup.gatheringEfficiency.iron
+            unitEfficiency = assignedUnit.gatheringEfficiency.iron
           } else if (resourceType === 'gold') {
-            groupEfficiency = assignedGroup.gatheringEfficiency.gold
+            unitEfficiency = assignedUnit.gatheringEfficiency.gold
           } else if (['fish', 'wheat', 'meat', 'berries'].includes(resourceType)) {
-            groupEfficiency = assignedGroup.gatheringEfficiency.food
+            unitEfficiency = assignedUnit.gatheringEfficiency.food
           }
           
           // Calculate final production rate
-          const productionRate = slot.efficiency * groupEfficiency * /*resourceAvailabilityFactor * */ deltaFactor
+          const productionRate = slot.efficiency * unitEfficiency * /*resourceAvailabilityFactor * */ deltaFactor
           
           // Add resources to the tile
           if (!tile.resources[resourceType]) {
@@ -166,23 +166,23 @@ export default class GameServer {
   }
 
   /**
-   * Battle resolution between two groups with integrated finish logic
+   * Battle resolution between two units with integrated finish logic
    */
   resolveBattle(battle: Battle): void {
     // Check for immediate flee behaviors
-    if (battle.attacker.behavior === GroupBehavior.FleeIfAttacked) {
-      console.log(`Group ${battle.attacker.id} (Attacker) has FleeIfAttacked behavior and attempts to flee immediately.`);
+    if (battle.attacker.behavior === UnitBehavior.FleeIfAttacked) {
+      console.log(`Unit ${battle.attacker.id} (Attacker) has FleeIfAttacked behavior and attempts to flee immediately.`);
       battle.attacker.morale = 1; // Mark as fled
       // Battle might end here if defender doesn't need to act, or could give defender a free hit (not implemented)
       // Skip the rest of battle processing and go directly to finish logic
     }
-    else if (battle.defender.behavior === GroupBehavior.FleeIfAttacked) {
-      console.log(`Group ${battle.defender.id} (Defender) has FleeIfAttacked behavior and attempts to flee immediately.`);
+    else if (battle.defender.behavior === UnitBehavior.FleeIfAttacked) {
+      console.log(`Unit ${battle.defender.id} (Defender) has FleeIfAttacked behavior and attempts to flee immediately.`);
       battle.defender.morale = 1; // Mark as fled
       // Skip the rest of battle processing and go directly to finish logic
     }
     else {
-      // Regular battle logic for groups that aren't immediately fleeing
+      // Regular battle logic for units that aren't immediately fleeing
       const attackerStrengthFactor = 1 + ((battle.attacker.strength - 50) / 100);
       const attackerAgilityFactor = 1 + ((battle.attacker.agility - 5) / 20); 
       const defenderStrengthFactor = 1 + ((battle.defender.strength - 50) / 100);
@@ -222,7 +222,7 @@ export default class GameServer {
 
       if (battle.attacker.morale < FLEE_THRESHOLD && battle.attacker.morale > 0) { // Must have some morale to decide to flee
         // Attacker attempts to flee. For now, auto-success.
-        console.log(`Group ${battle.attacker.id} attempts to flee!`);
+        console.log(`Unit ${battle.attacker.id} attempts to flee!`);
         attackerFled = true;
         // For now, if flee, their morale is set to a very low non-zero value to signify they survived but fled.
         battle.attacker.morale = 1;
@@ -230,21 +230,21 @@ export default class GameServer {
 
       if (!attackerFled && battle.defender.morale < FLEE_THRESHOLD && battle.defender.morale > 0) {
         // Defender attempts to flee if attacker didn't already cause battle to end.
-        console.log(`Group ${battle.defender.id} attempts to flee!`);
+        console.log(`Unit ${battle.defender.id} attempts to flee!`);
         defenderFled = true;
         battle.defender.morale = 1;
       }
 
       if (attackerFled || defenderFled) {
-        console.log("A group has fled the battle.");
+        console.log("A unit has fled the battle.");
       }
     }
     
     // Check if battle is over
     if (battle.attacker.morale <= 0 || battle.defender.morale <= 0) {
-      // Store position and prepare tracking of remaining groups
+      // Store position and prepare tracking of remaining units
       const battlePosition = {...battle.position};
-      let remainingGroups = [];
+      let remainingUnits = [];
       
       // Handle defeated attacker
       if (battle.attacker.morale <= 0) {
@@ -260,18 +260,18 @@ export default class GameServer {
           battle.attacker.movementStatus = 0;
           
           // Change behavior to fleeing
-          battle.attacker.behavior = GroupBehavior.FleeIfAttacked;
+          battle.attacker.behavior = UnitBehavior.FleeIfAttacked;
           
-          console.log(`Group ${battle.attacker.id} is retreating to building at ${JSON.stringify(closestBuilding.position)}`);
-          remainingGroups.push(battle.attacker);
+          console.log(`Unit ${battle.attacker.id} is retreating to building at ${JSON.stringify(closestBuilding.position)}`);
+          remainingUnits.push(battle.attacker);
         } else {
-          // No friendly building to retreat to, group is lost
-          console.log(`Group ${battle.attacker.id} has nowhere to retreat to and is disbanded`);
-          delete this.world.groups[battle.attacker.id];
+          // No friendly building to retreat to, unit is lost
+          console.log(`Unit ${battle.attacker.id} has nowhere to retreat to and is disbanded`);
+          delete this.world.units[battle.attacker.id];
         }
       } else {
         // Attacker survived (possibly fled)
-        remainingGroups.push(battle.attacker);
+        remainingUnits.push(battle.attacker);
       }
       
       // Handle defeated defender
@@ -288,18 +288,18 @@ export default class GameServer {
           battle.defender.movementStatus = 0;
           
           // Change behavior to fleeing
-          battle.defender.behavior = GroupBehavior.FleeIfAttacked;
+          battle.defender.behavior = UnitBehavior.FleeIfAttacked;
           
-          console.log(`Group ${battle.defender.id} is retreating to building at ${JSON.stringify(closestBuilding.position)}`);
-          remainingGroups.push(battle.defender);
+          console.log(`Unit ${battle.defender.id} is retreating to building at ${JSON.stringify(closestBuilding.position)}`);
+          remainingUnits.push(battle.defender);
         } else {
-          // No friendly building to retreat to, group is lost
-          console.log(`Group ${battle.defender.id} has nowhere to retreat to and is disbanded`);
-          delete this.world.groups[battle.defender.id];
+          // No friendly building to retreat to, unit is lost
+          console.log(`Unit ${battle.defender.id} has nowhere to retreat to and is disbanded`);
+          delete this.world.units[battle.defender.id];
         }
       } else {
         // Defender survived (possibly fled)
-        remainingGroups.push(battle.defender);
+        remainingUnits.push(battle.defender);
       }
       
       // Remove battle from the list
@@ -309,52 +309,52 @@ export default class GameServer {
       this.updatePlayerVisibilities(battle.attacker.owner);
       this.updatePlayerVisibilities(battle.defender.owner);
       
-      // Check for new potential battles between remaining groups and other groups on the same tile
-      this.checkForBattlesAtPosition(battlePosition, remainingGroups);
+      // Check for new potential battles between remaining units and other units on the same tile
+      this.checkForBattlesAtPosition(battlePosition, remainingUnits);
     }
   }
   
   /**
    * Check for potential battles at a specific position, typically after a battle has concluded
    */
-  private checkForBattlesAtPosition(position: Hex, excludeGroups: Group[] = []) {
-    // Find all groups at this position
-    const groupsAtPosition = Object.values(this.world.groups).filter(group => 
-      equals(group.pos, position)
+  private checkForBattlesAtPosition(position: Hex, excludeUnits: Unit[] = []) {
+    // Find all units at this position
+    const unitsAtPosition = Object.values(this.world.units).filter(unit => 
+      equals(unit.pos, position)
     );
     
-    // Ignore groups that were just in battle (to prevent immediate re-engagement)
-    const excludeIds = excludeGroups.map(g => g.id);
+    // Ignore units that were just in battle (to prevent immediate re-engagement)
+    const excludeIds = excludeUnits.map(g => g.id);
     
-    // Check each group against others for potential battles
-    for (const group of groupsAtPosition) {
-      // Skip groups that were just in battle
-      if (excludeIds.includes(group.id)) continue;
+    // Check each unit against others for potential battles
+    for (const unit of unitsAtPosition) {
+      // Skip units that were just in battle
+      if (excludeIds.includes(unit.id)) continue;
       
-      // Check this group for battles
-      this.checkForBattle(group);
+      // Check this unit for battles
+      this.checkForBattle(unit);
     }
   }
   
   /**
-   * Find the closest friendly building for a group
-   * @param group The group looking for a friendly building
+   * Find the closest friendly building for a unit
+   * @param unit The unit looking for a friendly building
    * @returns The closest friendly building or null if none found
    */
-  private findClosestFriendlyBuilding(group: Group): Building | null {
+  private findClosestFriendlyBuilding(unit: Unit): Building | null {
     let closestBuilding: Building | null = null;
     let shortestDistance = Number.MAX_SAFE_INTEGER;
     
     // Check all buildings owned by the same player
     Object.values(this.world.buildings).forEach(building => {
-      if (building.owner === group.owner) {
+      if (building.owner === unit.owner) {
         // Skip buildings at the current position (as they don't provide safety)
-        if (equals(building.position, group.pos)) {
+        if (equals(building.position, unit.pos)) {
           return;
         }
         
         // Calculate simple distance (for now, a more accurate pathfinding distance could be used)
-        const distance = this.calculateHexDistance(group.pos, building.position);
+        const distance = this.calculateHexDistance(unit.pos, building.position);
         
         if (distance < shortestDistance) {
           shortestDistance = distance;
@@ -377,42 +377,42 @@ export default class GameServer {
     );
   }
 
-  checkForBattle(group: Group) {
-    // Check if the group is already in a battle
+  checkForBattle(unit: Unit) {
+    // Check if the unit is already in a battle
     const isAlreadyInBattle = this.world.battles.some(battle => 
-      battle.attacker.id === group.id || battle.defender.id === group.id
+      battle.attacker.id === unit.id || battle.defender.id === unit.id
     );
     
     if (isAlreadyInBattle) return;
     
-    // Look for other groups on the same hex that could be fought
-    Object.values(this.world.groups).forEach((otherGroup) => {
-      // Skip if it's the same group or not on the same hex
-      if (group.id === otherGroup.id || !equals(group.pos, otherGroup.pos)) return;
+    // Look for other units on the same hex that could be fought
+    Object.values(this.world.units).forEach((otherUnit) => {
+      // Skip if it's the same unit or not on the same hex
+      if (unit.id === otherUnit.id || !equals(unit.pos, otherUnit.pos)) return;
       
       // Skip if same owner
-      if (group.owner === otherGroup.owner) return;
+      if (unit.owner === otherUnit.owner) return;
       
-      // Skip if there's already a battle between these groups
+      // Skip if there's already a battle between these units
       if (this.world.battles.some(b => 
-        (b.attacker.id === group.id && b.defender.id === otherGroup.id) ||
-        (b.defender.id === group.id && b.attacker.id === otherGroup.id)
+        (b.attacker.id === unit.id && b.defender.id === otherUnit.id) ||
+        (b.defender.id === unit.id && b.attacker.id === otherUnit.id)
       )) return;
       
       // Check relation and behaviors
       const relation = this.world.playerRelations[
-        PlayerRelation.hash(group.owner, otherGroup.owner)
+        PlayerRelation.hash(unit.owner, otherUnit.owner)
       ];
       const areHostile = !relation || relation.relationType === PlayerRelation.EnumRelationType.hostile;
       
-      // Start battle if hostile and at least one group is aggressive
+      // Start battle if hostile and at least one unit is aggressive
       if (areHostile && 
-          (group.behavior === GroupBehavior.Aggressive || otherGroup.behavior === GroupBehavior.Aggressive)
+          (unit.behavior === UnitBehavior.Aggressive || otherUnit.behavior === UnitBehavior.Aggressive)
       ) {
         this.world.battles.push(
-          Battles.create(++this.world.idCounter, group.pos, group, otherGroup)
+          Battles.create(++this.world.idCounter, unit.pos, unit, otherUnit)
         );
-        console.log(`New battle initiated between ${group.id} and ${otherGroup.id}`);
+        console.log(`New battle initiated between ${unit.id} and ${otherUnit.id}`);
       }
     });
   }
@@ -422,10 +422,10 @@ export default class GameServer {
       if (player.initialized) {
         const socket: Socket = this.uidsockets[player.uid]
         if (socket && socket.connected) {
-          let groups = this.getVisibleGroups(player.visibleHexes)
+          let units = this.getVisibleUnits(player.visibleHexes)
           let battles = this.getVisibleBattles(player.visibleHexes)
           let buildings = this.getVisibleBuildings(player.visibleHexes)
-          socket.emit("gamestate groups", groups)
+          socket.emit("gamestate units", units)
           socket.emit("gamestate battles", battles)
           socket.emit("gamestate buildings", buildings)
         }
@@ -478,9 +478,9 @@ export default class GameServer {
       )
       this.world.buildings[initialBuilding.id] = initialBuilding
 
-      // Create initial group
-      let initialGroup = createGroup(++this.world.idCounter, player.uid, "Group", pos)
-      this.world.groups[initialGroup.id] = initialGroup
+      // Create initial unit
+      let initialUnit = createUnit(++this.world.idCounter, player.uid, pos)
+      this.world.units[initialUnit.id] = initialUnit
 
       //Register player in Gamesever
       this.world.players[uid] = player
@@ -501,7 +501,7 @@ export default class GameServer {
   private setupSocketListeners(socket: Socket) {
     socket.on("disconnect", () => this.onPlayerDisconnected(socket))
     socket.on("request tiles", (data: Hex[]) => this.onRequestTiles(socket, data))
-    socket.on("request group", (id: number) => this.onRequestGroup(socket, id))
+    socket.on("request unit", (id: number) => this.onRequestUnit(socket, id))
     socket.on("request movement", (data) => this.onRequestMovement(socket, data))
     socket.on("request construction", (data) => this.onRequestConstruction(socket, data))
     socket.on("request relation", (data) => this.onRequestRelation(socket, data))
@@ -509,11 +509,11 @@ export default class GameServer {
     socket.on("request disband", (data) => this.onRequestDisband(socket, data))
     socket.on("request transfer", (data) => this.onRequestTransfer(socket, data))
     socket.on("request demolish", (data) => this.onRequestDemolish(socket, data))
-    socket.on("request assign group", (data) => this.onRequestAssignGroup(socket, data))
-    socket.on("request unassign group", (data) => this.onRequestUnassignGroup(socket, data))
+    socket.on("request assign unit", (data) => this.onRequestAssignUnit(socket, data))
+    socket.on("request unassign unit", (data) => this.onRequestUnassignUnit(socket, data))
     socket.on("request upgrade building", (data) => this.onRequestUpgradeBuilding(socket, data))
-    socket.on("request hire group", (data) => this.onRequestHireGroup(socket, data))
-    socket.on("request set group behavior", (data) => this.onRequestSetGroupBehavior(socket, data))
+    socket.on("request hire unit", (data) => this.onRequestHireUnit(socket, data))
+    socket.on("request set unit behavior", (data) => this.onRequestSetUnitBehavior(socket, data))
     // Debug listener
     if (Config.nodeEnv === "development") {
       socket.on("debug:killEntity", (data: { type: SelectionType; id: number }) => {
@@ -525,8 +525,8 @@ export default class GameServer {
       socket.on("debug:spawnBuilding", (data: { buildingKey: string; position: Hex }) => {
         this.handleDebugSpawnBuilding(socket, data);
       });
-      socket.on("debug:spawnGroup", (data: { position: Hex }) => {
-        this.handleDebugSpawnGroup(socket, data);
+      socket.on("debug:spawnUnit", (data: { position: Hex }) => {
+        this.handleDebugSpawnUnit(socket, data);
       });
     }
   }
@@ -540,13 +540,13 @@ export default class GameServer {
   }
 
   /**
-   * Currently only used to request an update for your own group
+   * Currently only used to request an update for your own unit
    */
-  onRequestGroup(socket: Socket, data: number) {
+  onRequestUnit(socket: Socket, data: number) {
     const player: Player = this.socketplayer[socket.id]
-    const group = this.world.groups[data]
-    if (player && group && player.uid === group.owner) {
-      socket.emit("gamestate group", group)
+    const unit = this.world.units[data]
+    if (player && unit && player.uid === unit.owner) {
+      socket.emit("gamestate unit", unit)
     }
   }
 
@@ -554,19 +554,19 @@ export default class GameServer {
     let uid = this.getPlayerUid(socket.id)
     let selection: number = data.selection
     let target = create(data.target.q, data.target.r, data.target.s)
-    const group = this.world.groups[selection]
-    if (uid === group?.owner) {
-      // Unassign group from building if it's moving away
-      if (group.assignedToBuilding !== undefined) {
-        const buildingIdToUpdate = group.assignedToBuilding; // Store ID before clearing
+    const unit = this.world.units[selection]
+    if (uid === unit?.owner) {
+      // Unassign unit from building if it's moving away
+      if (unit.assignedToBuilding !== undefined) {
+        const buildingIdToUpdate = unit.assignedToBuilding; // Store ID before clearing
         const building = this.world.buildings[buildingIdToUpdate];
-        if (building && group.assignedToSlot !== undefined) {
+        if (building && unit.assignedToSlot !== undefined) {
           // Clear the assignment in the building slot
-          building.slots[group.assignedToSlot].assignedGroupId = undefined
+          building.slots[unit.assignedToSlot].assignedUnitId = undefined
           
-          // Clear the assignment in the group
-          group.assignedToBuilding = undefined
-          group.assignedToSlot = undefined
+          // Clear the assignment in the unit
+          unit.assignedToBuilding = undefined
+          unit.assignedToSlot = undefined
 
           // Emit building update to the client
           socket.emit("gamestate building", building);
@@ -575,8 +575,8 @@ export default class GameServer {
       
       let targetTile = this.world.tiles[hash(target)]
       if (targetTile && isNavigable(targetTile)) {
-        group.movementStatus = 0
-        group.targetHexes = astar(this.world.tiles, group.pos, target)
+        unit.movementStatus = 0
+        unit.targetHexes = astar(this.world.tiles, unit.pos, target)
         return
       }
     }
@@ -631,16 +631,16 @@ export default class GameServer {
 
   onRequestTransfer(socket: Socket, data) {
     let uid = this.getPlayerUid(socket.id)
-    const group = this.world.groups[data.groupId]
-    if (group.owner !== uid) {
+    const unit = this.world.units[data.unitId]
+    if (unit.owner !== uid) {
       console.warn(
-        `Player '${uid}' tried to transfer resources to group he doesn't own`
+        `Player '${uid}' tried to transfer resources to unit he doesn't own`
       )
       return
     }
 
-    if (group) {
-      let tile = this.world.tiles[hash(group.pos)]
+    if (unit) {
+      let tile = this.world.tiles[hash(unit.pos)]
       let amount = data.amount
       let resource = data.resource
 
@@ -648,16 +648,16 @@ export default class GameServer {
         tile.resources[resource] = 0
       }
 
-      if (!group.resources[resource]) {
-        group.resources[resource] = 0
+      if (!unit.resources[resource]) {
+        unit.resources[resource] = 0
       }
 
       if (
         tile.resources[resource] + amount >= 0 &&
-        group.resources[resource] - amount >= 0
+        unit.resources[resource] - amount >= 0
       ) {
         tile.resources[resource] += amount
-        group.resources[resource] -= amount //TODO: Check if allowed
+        unit.resources[resource] -= amount //TODO: Check if allowed
       }
     }
   }
@@ -715,18 +715,18 @@ export default class GameServer {
       return
     }
     
-    const assignmentsToRestore: Array<{ groupId: number; resourceType: string, originalSlotIndex: number }> = [];
-    const groupsToUpdateClient = new Set<number>();
+    const assignmentsToRestore: Array<{ unitId: number; resourceType: string, originalSlotIndex: number }> = [];
+    const unitsToUpdateClient = new Set<number>();
 
     building.slots.forEach((slot, slotIndex) => {
-      if (slot.assignedGroupId) {
-        const group = this.world.groups[slot.assignedGroupId];
-        if (group) {
-          assignmentsToRestore.push({ groupId: group.id, resourceType: slot.resourceType, originalSlotIndex: slotIndex });
-          // Proactively unassign group, its state will be updated after attempting re-assignment
-          group.assignedToBuilding = undefined;
-          group.assignedToSlot = undefined;
-          groupsToUpdateClient.add(group.id); // Mark for client update
+      if (slot.assignedUnitId) {
+        const unit = this.world.units[slot.assignedUnitId];
+        if (unit) {
+          assignmentsToRestore.push({ unitId: unit.id, resourceType: slot.resourceType, originalSlotIndex: slotIndex });
+          // Proactively unassign unit, its state will be updated after attempting re-assignment
+          unit.assignedToBuilding = undefined;
+          unit.assignedToSlot = undefined;
+          unitsToUpdateClient.add(unit.id); // Mark for client update
         }
       }
     });
@@ -738,11 +738,11 @@ export default class GameServer {
     const upgradedBuilding = upgradeBuilding(building)
     if (!upgradedBuilding) {
       console.warn(`Failed to upgrade building ${buildingId}`)
-      // If upgrade fails, groups are unassigned. We should send their updated (unassigned) state.
+      // If upgrade fails, units are unassigned. We should send their updated (unassigned) state.
       assignmentsToRestore.forEach(assignment => {
-        const group = this.world.groups[assignment.groupId];
-        if (group) {
-          socket.emit("gamestate group", group);
+        const unit = this.world.units[assignment.unitId];
+        if (unit) {
+          socket.emit("gamestate unit", unit);
         }
       });
       return
@@ -751,22 +751,22 @@ export default class GameServer {
     // Update the building in the world
     this.world.buildings[buildingId] = upgradedBuilding
     
-    // Re-assign groups to upgraded building
+    // Re-assign units to upgraded building
     assignmentsToRestore.forEach(assignment => {
-      const group = this.world.groups[assignment.groupId];
-      if (group) {
+      const unit = this.world.units[assignment.unitId];
+      if (unit) {
         // Try to find a suitable slot in the upgraded building
         const newSlotIndex = upgradedBuilding.slots.findIndex(
-          (newSlot, index) => newSlot.resourceType === assignment.resourceType && newSlot.assignedGroupId === undefined
+          (newSlot, index) => newSlot.resourceType === assignment.resourceType && newSlot.assignedUnitId === undefined
         );
 
         if (newSlotIndex !== -1) {
-          upgradedBuilding.slots[newSlotIndex].assignedGroupId = group.id;
-          group.assignedToBuilding = upgradedBuilding.id;
-          group.assignedToSlot = newSlotIndex;
+          upgradedBuilding.slots[newSlotIndex].assignedUnitId = unit.id;
+          unit.assignedToBuilding = upgradedBuilding.id;
+          unit.assignedToSlot = newSlotIndex;
         }
-        // If no suitable slot is found, the group remains unassigned (already handled by proactive unassignment)
-        groupsToUpdateClient.add(group.id); // Ensure it's marked for update
+        // If no suitable slot is found, the unit remains unassigned (already handled by proactive unassignment)
+        unitsToUpdateClient.add(unit.id); // Ensure it's marked for update
       }
     });
     
@@ -774,11 +774,11 @@ export default class GameServer {
     socket.emit("gamestate building", upgradedBuilding)
     socket.emit("gamestate tiles", { [hash(tile.hex)]: tile })
 
-    // Notify client about updated groups
-    groupsToUpdateClient.forEach(groupId => {
-      const group = this.world.groups[groupId];
-      if (group) {
-        socket.emit("gamestate group", group);
+    // Notify client about updated units
+    unitsToUpdateClient.forEach(unitId => {
+      const unit = this.world.units[unitId];
+      if (unit) {
+        socket.emit("gamestate unit", unit);
       }
     });
     
@@ -787,28 +787,28 @@ export default class GameServer {
   }
 
   /**
-   * Assigns a group to a building slot
+   * Assigns a unit to a building slot
    */
-  onRequestAssignGroup(socket: Socket, data: any) {
+  onRequestAssignUnit(socket: Socket, data: any) {
     const uid = this.getPlayerUid(socket.id)
     if (!uid) return
     
-    const groupId = data.groupId
+    const unitId = data.unitId
     const buildingId = data.buildingId
     const slotIndex = data.slotIndex
     
-    const group = this.world.groups[groupId]
+    const unit = this.world.units[unitId]
     const building = this.world.buildings[buildingId]
     
     // Validate ownership and existence
-    if (!group || !building || group.owner !== uid || building.owner !== uid) {
+    if (!unit || !building || unit.owner !== uid || building.owner !== uid) {
       console.warn(`Invalid assignment request from player ${uid}`)
       return
     }
     
-    // Check if group is at the same position as the building
-    if (!equals(group.pos, building.position)) {
-      console.warn(`Group ${groupId} is not at the same position as building ${buildingId}`)
+    // Check if unit is at the same position as the building
+    if (!equals(unit.pos, building.position)) {
+      console.warn(`Unit ${unitId} is not at the same position as building ${buildingId}`)
       return
     }
     
@@ -818,84 +818,84 @@ export default class GameServer {
       return
     }
 
-    // Check if the group is already assigned to a different slot in the same building
-    if (group.assignedToBuilding === buildingId && group.assignedToSlot !== undefined && group.assignedToSlot !== slotIndex) {
-      console.warn(`Group ${groupId} is already assigned to slot ${group.assignedToSlot} in building ${buildingId}`)
+    // Check if the unit is already assigned to a different slot in the same building
+    if (unit.assignedToBuilding === buildingId && unit.assignedToSlot !== undefined && unit.assignedToSlot !== slotIndex) {
+      console.warn(`Unit ${unitId} is already assigned to slot ${unit.assignedToSlot} in building ${buildingId}`)
       return;
     }
     
-    // If slot is already assigned to another group, unassign it
+    // If slot is already assigned to another unit, unassign it
     const slot = building.slots[slotIndex]
-    if (slot.assignedGroupId && slot.assignedGroupId !== groupId) {
-      const previousGroup = this.world.groups[slot.assignedGroupId]
-      if (previousGroup) {
-        previousGroup.assignedToBuilding = undefined
-        previousGroup.assignedToSlot = undefined
+    if (slot.assignedUnitId && slot.assignedUnitId !== unitId) {
+      const previousUnit = this.world.units[slot.assignedUnitId]
+      if (previousUnit) {
+        previousUnit.assignedToBuilding = undefined
+        previousUnit.assignedToSlot = undefined
       }
     }
     
-    // Unassign group from previous building if any (and it's a different building)
-    if (group.assignedToBuilding !== undefined && group.assignedToBuilding !== buildingId) {
-      const previousBuilding = this.world.buildings[group.assignedToBuilding]
-      if (previousBuilding && group.assignedToSlot !== undefined) {
-        previousBuilding.slots[group.assignedToSlot].assignedGroupId = undefined
+    // Unassign unit from previous building if any (and it's a different building)
+    if (unit.assignedToBuilding !== undefined && unit.assignedToBuilding !== buildingId) {
+      const previousBuilding = this.world.buildings[unit.assignedToBuilding]
+      if (previousBuilding && unit.assignedToSlot !== undefined) {
+        previousBuilding.slots[unit.assignedToSlot].assignedUnitId = undefined
       }
     }
     
-    // Assign group to building slot
-    slot.assignedGroupId = groupId
-    group.assignedToBuilding = buildingId
-    group.assignedToSlot = slotIndex
+    // Assign unit to building slot
+    slot.assignedUnitId = unitId
+    unit.assignedToBuilding = buildingId
+    unit.assignedToSlot = slotIndex
     
     // Notify the client
-    socket.emit("gamestate group", group)
+    socket.emit("gamestate unit", unit)
     socket.emit("gamestate building", building)
   }
   
   /**
-   * Unassigns a group from a building slot
+   * Unassigns a unit from a building slot
    */
-  onRequestUnassignGroup(socket: Socket, data: any) {
+  onRequestUnassignUnit(socket: Socket, data: any) {
     const uid = this.getPlayerUid(socket.id)
     if (!uid) return
     
-    const groupId = data.groupId
+    const unitId = data.unitId
     
-    const group = this.world.groups[groupId]
+    const unit = this.world.units[unitId]
     
     // Validate ownership and existence
-    if (!group || group.owner !== uid) {
+    if (!unit || unit.owner !== uid) {
       console.warn(`Invalid unassignment request from player ${uid}`)
       return
     }
     
-    // Check if group is assigned to a building
-    if (group.assignedToBuilding === undefined || group.assignedToSlot === undefined) {
-      console.warn(`Group ${groupId} is not assigned to any building`)
+    // Check if unit is assigned to a building
+    if (unit.assignedToBuilding === undefined || unit.assignedToSlot === undefined) {
+      console.warn(`Unit ${unitId} is not assigned to any building`)
       return
     }
     
-    const building = this.world.buildings[group.assignedToBuilding]
+    const building = this.world.buildings[unit.assignedToBuilding]
     if (building) {
       // Clear the assignment in the building slot
-      building.slots[group.assignedToSlot].assignedGroupId = undefined
+      building.slots[unit.assignedToSlot].assignedUnitId = undefined
       
       // Notify about the building update
       socket.emit("gamestate building", building)
     }
     
-    // Clear the assignment in the group
-    group.assignedToBuilding = undefined
-    group.assignedToSlot = undefined
+    // Clear the assignment in the unit
+    unit.assignedToBuilding = undefined
+    unit.assignedToSlot = undefined
     
     // Notify the client
-    socket.emit("gamestate group", group)
+    socket.emit("gamestate unit", unit)
   }
 
   /**
-   * Handles a request to hire a new group
+   * Handles a request to hire a new unit
    */
-  onRequestHireGroup(socket: Socket, data: { buildingId: number, groupType: string }) {
+  onRequestHireUnit(socket: Socket, data: { buildingId: number, unitType: string }) {
     const uid = this.getPlayerUid(socket.id)
     if (!uid) return
     
@@ -904,68 +904,68 @@ export default class GameServer {
     
     // Validate ownership and existence
     if (!building || building.owner !== uid) {
-      console.warn(`Invalid group hiring request from player ${uid}`)
+      console.warn(`Invalid unit hiring request from player ${uid}`)
       return
     }
     
-    // Define standard cost for hiring a group
+    // Define standard cost for hiring a unit
     const cost: Partial<Resources> = {
       berries: 15,
       wood: 5,
       stone: 5
     }
     
-    // Check if player has enough resources to hire the group
+    // Check if player has enough resources to hire the unit
     const tile = this.world.tiles[hash(building.position)]
     if (!tile) return
     
     // Check if the required resources are available
     if (!this.hasResources(tile, cost)) {
-      console.warn(`Not enough resources to hire a group`)
+      console.warn(`Not enough resources to hire a unit`)
       return
     }
     
     // Subtract resources
     subtractResources(tile, cost)
     
-    // Create the new group with random attributes
-    const newGroup = createGroup(++this.world.idCounter, uid, "Group", building.position)
-    this.world.groups[newGroup.id] = newGroup
+    // Create the new unit with random attributes
+    const newUnit = createUnit(++this.world.idCounter, uid, building.position)
+    this.world.units[newUnit.id] = newUnit
     
     // Notify the client
-    socket.emit("gamestate group", newGroup)
+    socket.emit("gamestate unit", newUnit)
     socket.emit("gamestate tile", tile)
     
     // Update visibilities
     this.updatePlayerVisibilities(uid)
   }
 
-  onRequestSetGroupBehavior(socket: Socket, data: { groupId: number; behavior: GroupBehavior }) {
+  onRequestSetUnitBehavior(socket: Socket, data: { unitId: number; behavior: UnitBehavior }) {
     const uid = this.getPlayerUid(socket.id);
     if (!uid) return;
 
-    const group = this.world.groups[data.groupId];
-    if (!group || group.owner !== uid) {
-      console.warn(`Player ${uid} cannot set behavior for group ${data.groupId}`);
+    const unit = this.world.units[data.unitId];
+    if (!unit || unit.owner !== uid) {
+      console.warn(`Player ${uid} cannot set behavior for unit ${data.unitId}`);
       return;
     }
 
     // Validate behavior value (optional, but good practice if values might be arbitrary)
-    if (!Object.values(GroupBehavior).includes(data.behavior)) {
+    if (!Object.values(UnitBehavior).includes(data.behavior)) {
         console.warn(`Invalid behavior value received: ${data.behavior}`);
         return;
     }
 
-    group.behavior = data.behavior;
-    console.log(`Group ${group.id} behavior set to ${GroupBehavior[group.behavior]} by player ${uid}`);
+    unit.behavior = data.behavior;
+    console.log(`Unit ${unit.id} behavior set to ${UnitBehavior[unit.behavior]} by player ${uid}`);
 
-    // Notify the client who made the change, and potentially other clients if this group is visible to them.
+    // Notify the client who made the change, and potentially other clients if this unit is visible to them.
     // For simplicity, just sending to the owner for now. A broader update might be needed.
-    socket.emit("gamestate group", group);
+    socket.emit("gamestate unit", unit);
     
-    // If the group is visible to other players, they should also get an update.
-    // This can be handled by the general groups update in updateNet, or by a targeted emit here.
-    // For now, relying on existing updateNet which sends all visible groups.
+    // If the unit is visible to other players, they should also get an update.
+    // This can be handled by the general units update in updateNet, or by a targeted emit here.
+    // For now, relying on existing updateNet which sends all visible units.
   }
 
   private handleDebugKillEntity(socket: Socket, data: { type: SelectionType; id: number }) {
@@ -979,15 +979,15 @@ export default class GameServer {
 
     let ownerIdToUpdateVisibility: string | undefined;
 
-    if (data.type === SelectionType.Group) {
-      const group = this.world.groups[data.id];
-      if (group) {
-        ownerIdToUpdateVisibility = group.owner;
+    if (data.type === SelectionType.Unit) {
+      const unit = this.world.units[data.id];
+      if (unit) {
+        ownerIdToUpdateVisibility = unit.owner;
         // Before deleting, unassign from any building slot
-        if (group.assignedToBuilding !== undefined && group.assignedToSlot !== undefined) {
-            const building = this.world.buildings[group.assignedToBuilding];
-            if (building && building.slots[group.assignedToSlot]) {
-                building.slots[group.assignedToSlot].assignedGroupId = undefined;
+        if (unit.assignedToBuilding !== undefined && unit.assignedToSlot !== undefined) {
+            const building = this.world.buildings[unit.assignedToBuilding];
+            if (building && building.slots[unit.assignedToSlot]) {
+                building.slots[unit.assignedToSlot].assignedUnitId = undefined;
                 // Send update for the affected building
                 const buildingOwnerSocket = this.uidsockets[building.owner];
                 if (buildingOwnerSocket && buildingOwnerSocket.connected) {
@@ -995,26 +995,26 @@ export default class GameServer {
                 }
             }
         }
-        delete this.world.groups[data.id];
-        console.log(`DEBUG: Deleted group ${data.id}`);
+        delete this.world.units[data.id];
+        console.log(`DEBUG: Deleted unit ${data.id}`);
       } else {
-        console.warn(`DEBUG: Group ${data.id} not found for deletion.`);
+        console.warn(`DEBUG: Unit ${data.id} not found for deletion.`);
       }
     } else if (data.type === SelectionType.Building) {
       const building = this.world.buildings[data.id];
       if (building) {
         ownerIdToUpdateVisibility = building.owner;
-        // Unassign any groups assigned to this building's slots
+        // Unassign any units assigned to this building's slots
         building.slots.forEach(slot => {
-            if (slot.assignedGroupId) {
-                const group = this.world.groups[slot.assignedGroupId];
-                if (group) {
-                    group.assignedToBuilding = undefined;
-                    group.assignedToSlot = undefined;
-                    // Send update for the affected group
-                    const groupOwnerSocket = this.uidsockets[group.owner];
-                    if (groupOwnerSocket && groupOwnerSocket.connected) {
-                        groupOwnerSocket.emit("gamestate group", group);
+            if (slot.assignedUnitId) {
+                const unit = this.world.units[slot.assignedUnitId];
+                if (unit) {
+                    unit.assignedToBuilding = undefined;
+                    unit.assignedToSlot = undefined;
+                    // Send update for the affected unit
+                    const unitOwnerSocket = this.uidsockets[unit.owner];
+                    if (unitOwnerSocket && unitOwnerSocket.connected) {
+                        unitOwnerSocket.emit("gamestate unit", unit);
                     }
                 }
             }
@@ -1064,24 +1064,24 @@ export default class GameServer {
       } else {
         console.warn(`DEBUG: Tile ${data.targetId} not found for adding resources.`);
       }
-    } else if (data.targetType === SelectionType.Group) {
-      const group = this.world.groups[data.targetId];
-      if (group) {
+    } else if (data.targetType === SelectionType.Unit) {
+      const unit = this.world.units[data.targetId];
+      if (unit) {
         for (const resourceKey in data.resources) {
           const key = resourceKey as keyof Resources;
-          if (group.resources[key] === undefined) {
-            group.resources[key] = 0;
+          if (unit.resources[key] === undefined) {
+            unit.resources[key] = 0;
           }
-          group.resources[key]! += data.resources[key]!;
+          unit.resources[key]! += data.resources[key]!;
         }
-        // Emit group update only to the owner
-        const groupOwnerSocket = this.uidsockets[group.owner];
-        if (groupOwnerSocket && groupOwnerSocket.connected) {
-            groupOwnerSocket.emit("gamestate group", group);
+        // Emit unit update only to the owner
+        const unitOwnerSocket = this.uidsockets[unit.owner];
+        if (unitOwnerSocket && unitOwnerSocket.connected) {
+            unitOwnerSocket.emit("gamestate unit", unit);
         }
-        console.log(`DEBUG: Added resources to group ${data.targetId}. New resources:`, group.resources);
+        console.log(`DEBUG: Added resources to unit ${data.targetId}. New resources:`, unit.resources);
       } else {
-        console.warn(`DEBUG: Group ${data.targetId} not found for adding resources.`);
+        console.warn(`DEBUG: Unit ${data.targetId} not found for adding resources.`);
       }
     } else {
       console.warn(`DEBUG: Invalid target type ${getSelectionTypeName(data.targetType)} for adding resources.`);
@@ -1128,33 +1128,33 @@ export default class GameServer {
     }
   }
 
-  private handleDebugSpawnGroup(socket: Socket, data: { position: Hex }) {
+  private handleDebugSpawnUnit(socket: Socket, data: { position: Hex }) {
     const uid = this.getPlayerUid(socket.id);
     if (!uid) {
-      console.warn("DebugSpawnGroup: UID not found for socket.");
+      console.warn("DebugSpawnUnit: UID not found for socket.");
       return;
     }
 
     const { position } = data;
-    console.log(`DEBUG: Player ${uid} requested to spawn generic group at H[${position.q},${position.r}]`);
+    console.log(`DEBUG: Player ${uid} requested to spawn generic unit at H[${position.q},${position.r}]`);
 
-    // Use the existing createGroup function. 
-    // The default name "Group" is used as per createGroup's current implementation.
+    // Use the existing createUnit function. 
+    // The default name "Unit" is used as per createUnit's current implementation.
     // It will be owned by the requesting player (uid).
-    const newGroup = createGroup(++this.world.idCounter, uid, "Group", position);
+    const newUnit = createUnit(++this.world.idCounter, uid, position);
 
-    if (newGroup) {
-      this.world.groups[newGroup.id] = newGroup;
-      console.log(`DEBUG: Spawned group ${newGroup.name} (ID: ${newGroup.id}) for player ${uid} at H[${position.q},${position.r}]`);
+    if (newUnit) {
+      this.world.units[newUnit.id] = newUnit;
+      console.log(`DEBUG: Spawned unit ${newUnit.name} (ID: ${newUnit.id}) for player ${uid} at H[${position.q},${position.r}]`);
       
       // Update visibility for the owner
       this.updatePlayerVisibilities(uid);
 
-      // Send an update for the new group to the owner
+      // Send an update for the new unit to the owner
       // The general updateNet will also broadcast it to other relevant players.
-      socket.emit("gamestate group", newGroup);
+      socket.emit("gamestate unit", newUnit);
     } else {
-      console.warn(`DEBUG: Failed to create generic group for player ${uid}.`);
+      console.warn(`DEBUG: Failed to create generic unit for player ${uid}.`);
     }
   }
 
@@ -1186,9 +1186,9 @@ export default class GameServer {
     player.visibleHexes = []
 
     if (player) {
-      Object.values(this.world.groups).forEach((group) => {
-        if (group.owner === uid) {
-          let visible = neighborsRange(group.pos, group.spotting)
+      Object.values(this.world.units).forEach((unit) => {
+        if (unit.owner === uid) {
+          let visible = neighborsRange(unit.pos, unit.spotting)
           this.addUniqueHexes(player.visibleHexes, visible)
           this.addUniqueHexes(player.discoveredHexes, visible)
         }
@@ -1225,11 +1225,11 @@ export default class GameServer {
     return result
   }
 
-  private getVisibleGroups(hexes: Hex[]): Hashtable<Group> {
-    let result: Hashtable<Group> = {}
+  private getVisibleUnits(hexes: Hex[]): Hashtable<Unit> {
+    let result: Hashtable<Unit> = {}
     for (let hex of hexes) {
-      Object.values(this.world.groups).forEach((group) => {
-        if (equals(group.pos, hex)) result[group.id] = group
+      Object.values(this.world.units).forEach((unit) => {
+        if (equals(unit.pos, hex)) result[unit.id] = unit
       })
     }
     return result
@@ -1294,14 +1294,14 @@ export default class GameServer {
   }
 
   /**
-   * Returns true if uid has group at pos
+   * Returns true if uid has unit at pos
    * @param pos
    * @param uid
    */
-  private hasGroupAt(pos: Hex, uid: string): boolean {
+  private hasUnitAt(pos: Hex, uid: string): boolean {
     let found = false
-    Object.values(this.world.groups).forEach((group) => {
-      if (equals(group.pos, pos) && group.owner === uid) {
+    Object.values(this.world.units).forEach((unit) => {
+      if (equals(unit.pos, pos) && unit.owner === uid) {
         found = true
       }
     })
@@ -1324,16 +1324,16 @@ export default class GameServer {
   }
 
   /**
-   * Returns true if uid has group or building at pos
+   * Returns true if uid has unit or building at pos
    * @param pos
    * @param uid
    */
   private hasPresence(pos: Hex, uid: string): boolean {
-    return this.hasGroupAt(pos, uid) || this.hasBuildingAt(pos, uid)
+    return this.hasUnitAt(pos, uid) || this.hasBuildingAt(pos, uid)
   }
 
   /**
-   * Checks if the object (building or group) can be created on tile
+   * Checks if the object (building or unit) can be created on tile
    * @param tile
    * @param object
    */
@@ -1397,14 +1397,14 @@ export default class GameServer {
 
   onRequestDisband(socket: Socket, data) {
     let uid = this.getPlayerUid(socket.id)
-    const groupToDisband = this.world.groups[data.groupId]
-    if (groupToDisband.owner !== uid) {
-      console.warn(`Player '${uid}' tried to disband group that they don't own`)
+    const unitToDisband = this.world.units[data.unitId]
+    if (unitToDisband.owner !== uid) {
+      console.warn(`Player '${uid}' tried to disband unit that they don't own`)
       return
     }
 
-    if (groupToDisband) {
-      delete this.world.groups[groupToDisband.id]
+    if (unitToDisband) {
+      delete this.world.units[unitToDisband.id]
       this.updatePlayerVisibilities(uid)
     }
   }
@@ -1455,7 +1455,7 @@ export default class GameServer {
 }
 
 function calculateMovementProgress(
-  _group: Group,
+  _unit: Unit,
   _currentTile: Tile,
   _nextTile: Tile
 ) {

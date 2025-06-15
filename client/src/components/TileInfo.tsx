@@ -14,9 +14,9 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
     return <div>No tile selected</div>;
   }
 
-  // TODO: What to do if there are multiple groups on the same tile?
-  const group = Object.values(world.groups).find((group) => {
-    return equals(group.pos, tile.hex) && group.owner === userId;
+  // TODO: What to do if there are multiple units on the same tile?
+  const unit = Object.values(world.units).find((unit) => {
+    return equals(unit.pos, tile.hex) && unit.owner === userId;
   });
 
   const building = Object.values(world.buildings).find((building) => {
@@ -42,7 +42,7 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
         />
       </InfoBox>
 
-      {(building || group) && (
+      {(building || unit) && (
         <InfoBox
           title="Available Buildings (Max: 3)"
           className="h-full overflow-y-auto"
@@ -67,7 +67,7 @@ const TileInfo = ({ tile }: { tile: Tile }) => {
         </InfoBox>
       )}
 
-      {group && <ResourceInfo group={group} tile={tile} className="h-full" />}
+      {unit && <ResourceInfo unit={unit} tile={tile} className="h-full" />}
     </div>
   );
 };

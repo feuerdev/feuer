@@ -11,7 +11,7 @@ export type World = {
   idCounter: number
   players: Hashtable<Player>
   tiles: Hashtable<Tile>
-  groups: Hashtable<Group>
+  units: Hashtable<Unit>
   buildings: Hashtable<Building>
   playerRelations: Hashtable<PlayerRelation>
   battles: Battle[]
@@ -57,15 +57,15 @@ export type Ownable = {
 }
 
 export type Battle = GameObject & {
-  attacker: Group
-  defender: Group
+  attacker: Unit
+  defender: Unit
   position: Hex
 }
 
 // Resource slot for a building
 export type ResourceSlot = {
   resourceType: keyof Resources
-  assignedGroupId?: number
+  assignedUnitId?: number
   efficiency: number // Base efficiency of this slot (1.0 = 100%)
 }
 
@@ -75,7 +75,7 @@ export type Building = GameObject &
     key: string
     spotting: number
     level: number
-    slots: ResourceSlot[] // Slots for group assignment
+    slots: ResourceSlot[] // Slots for Unit assignment
     maxLevel: number // Maximum level this building can be upgraded to
     upgradeRequirements?: Partial<Resources> // Resources needed for next upgrade
     // Optional defensive stats
@@ -87,7 +87,7 @@ export type Building = GameObject &
     isDefensive?: boolean // Whether this building provides defense to the tile
   }
 
-export type Group = GameObject &
+export type Unit = GameObject &
   Ownable & {
     name: string
     spotting: number
@@ -95,7 +95,7 @@ export type Group = GameObject &
     pos: Hex
     movementStatus: number
     resources: Partial<Resources>
-    assignedToBuilding?: number // ID of building this group is assigned to
+    assignedToBuilding?: number // ID of building this Unit is assigned to
     assignedToSlot?: number // Index of the slot in the building
 
     // Resource gathering stats
@@ -118,17 +118,11 @@ export type Group = GameObject &
     painThreshold: number
     intelligence: number
 
-    // Type of group (for visual representation)
-    groupType: string
-
     // Behavior
-    behavior: GroupBehavior
-
-    // For virtual groups (like tile defenses)
-    isVirtual?: boolean
+    behavior: UnitBehavior
   }
 
-export enum GroupBehavior {
+export enum UnitBehavior {
   Aggressive,
   FleeIfAttacked, // Renamed from Evasive for clarity
   Neutral, // Default, no specific combat behavior, relies on direct orders
@@ -165,7 +159,7 @@ export type TBuildingTemplate = {
 // Add the SelectionType enum here
 export const enum SelectionType {
   None = 0,
-  Group = 1,
+  Unit = 1,
   Tile = 2,
   Building = 3,
   Battle = 4,
@@ -175,8 +169,8 @@ export function getSelectionTypeName(selectionType: SelectionType): string {
   switch (selectionType) {
     case SelectionType.None:
       return "None"
-    case SelectionType.Group:
-      return "Group"
+    case SelectionType.Unit:
+      return "Unit"
     case SelectionType.Tile:
       return "Tile"
     case SelectionType.Building:

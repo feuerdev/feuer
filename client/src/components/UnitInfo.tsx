@@ -1,90 +1,89 @@
-import { Group } from "@shared/objects";
+import { Unit } from "@shared/objects";
 import { getTileByPos } from "@shared/objectutil";
 import ResourceInfo from "./ResourceInfo";
 import { InfoBox, InfoRow, InfoDivider } from "./InfoBox";
 import { Button } from "./ui/Button";
 import { useStore } from "@/lib/state";
-import { GroupBehavior } from "@shared/objects";
+import { UnitBehavior } from "@shared/objects";
 import PlayerRelation from "./ui/PlayerRelation";
 
-const GroupInfo = ({ group }: { group: Group }) => {
+const UnitInfo = ({ unit }: { unit: Unit }) => {
   const world = useStore((state) => state.world);
   const engine = useStore((state) => state.engine);
   const userId = useStore((state) => state.userId);
 
-  // Early return if group is undefined or null
-  if (!group) {
+  if (!unit) {
     return (
       <div className="p-4 text-slate-300">
-        No group selected or group no longer exists
+        No unit selected or unit no longer exists
       </div>
     );
   }
 
-  const isOwnGroup = group.owner === userId;
+  const isOwnUnit = unit.owner === userId;
 
-  const tile = getTileByPos(group.pos, world.tiles);
+  const tile = getTileByPos(unit.pos, world.tiles);
 
   if (!tile) {
-    return <div>Group is not on a tile?</div>;
+    return <div>Unit is not on a tile?</div>;
   }
 
   // Get assigned building info if applicable
   const assignedBuilding =
-    group.assignedToBuilding !== undefined
-      ? world.buildings[group.assignedToBuilding]
+    unit.assignedToBuilding !== undefined
+      ? world.buildings[unit.assignedToBuilding]
       : undefined;
 
   const assignedSlot =
-    assignedBuilding && group.assignedToSlot !== undefined
-      ? assignedBuilding.slots[group.assignedToSlot]
+    assignedBuilding && unit.assignedToSlot !== undefined
+      ? assignedBuilding.slots[unit.assignedToSlot]
       : undefined;
 
   return (
     <div className="inline-grid grid-cols-[minmax(250px,auto)_auto_auto] gap-2 p-2 h-full">
-      <InfoBox title="Group Details" className="h-full overflow-y-auto">
-        <InfoRow label="Name" value={group.name} />
-        <InfoRow label="Position" value={`${group.pos.q}:${group.pos.r}`} />
-        <InfoRow label="Owner" value={group.owner} />
+      <InfoBox title="Unit Details" className="h-full overflow-y-auto">
+        <InfoRow label="Name" value={unit.name} />
+        <InfoRow label="Position" value={`${unit.pos.q}:${unit.pos.r}`} />
+        <InfoRow label="Owner" value={unit.owner} />
         <InfoRow
           label="Status"
           value={
-            group.targetHexes?.length > 0
-              ? `Moving (${group.movementStatus.toFixed(0)} %)`
+            unit.targetHexes?.length > 0
+              ? `Moving (${unit.movementStatus.toFixed(0)} %)`
               : assignedBuilding
               ? `Working at ${assignedBuilding.key}`
               : "Waiting"
           }
         />
-        <InfoRow label="Spotting" value={group.spotting} />
-        <InfoRow label="Morale" value={`${group.morale}%`} />
+        <InfoRow label="Spotting" value={unit.spotting} />
+        <InfoRow label="Morale" value={`${unit.morale}%`} />
 
-        {!isOwnGroup && <PlayerRelation playerId={group.owner} />}
+        {!isOwnUnit && <PlayerRelation playerId={unit.owner} />}
 
-        {isOwnGroup && (
+        {isOwnUnit && (
           <>
             <InfoDivider />
             <div>
               <label
-                htmlFor={`behavior-select-${group.id}`}
+                htmlFor={`behavior-select-${unit.id}`}
                 className="block text-xs font-medium text-slate-400 mb-1"
               >
                 Behavior:
               </label>
               <select
-                id={`behavior-select-${group.id}`}
-                value={group.behavior}
+                id={`behavior-select-${unit.id}`}
+                value={unit.behavior}
                 onChange={(e) => {
-                  const newBehavior = parseInt(e.target.value) as GroupBehavior;
-                  engine.requestSetGroupBehavior(group.id, newBehavior);
+                  const newBehavior = parseInt(e.target.value) as UnitBehavior;
+                  engine.requestSetUnitBehavior(unit.id, newBehavior);
                 }}
                 className="block w-full rounded-md border-slate-600 bg-slate-700 py-1.5 text-slate-200 shadow-sm focus:border-sky-500 focus:ring-sky-500 sm:text-xs"
               >
-                {Object.values(GroupBehavior)
+                {Object.values(UnitBehavior)
                   .filter((value) => typeof value === "number")
                   .map((value) => (
                     <option key={value as number} value={value as number}>
-                      {GroupBehavior[value as number]}
+                      {UnitBehavior[value as number]}
                     </option>
                   ))}
               </select>
@@ -106,7 +105,7 @@ const GroupInfo = ({ group }: { group: Group }) => {
                     <Button
                       variant="danger"
                       size="sm"
-                      onClick={() => engine.requestGroupUnassignment(group.id)}
+                      onClick={() => engine.requestUnitUnassignment(unit.id)}
                     >
                       Unassign from Building
                     </Button>
@@ -122,23 +121,23 @@ const GroupInfo = ({ group }: { group: Group }) => {
               </h3>
               <InfoRow
                 label="Wood"
-                value={`${(group.gatheringEfficiency.wood * 100).toFixed(0)}%`}
+                value={`${(unit.gatheringEfficiency.wood * 100).toFixed(0)}%`}
               />
               <InfoRow
                 label="Stone"
-                value={`${(group.gatheringEfficiency.stone * 100).toFixed(0)}%`}
+                value={`${(unit.gatheringEfficiency.stone * 100).toFixed(0)}%`}
               />
               <InfoRow
                 label="Food"
-                value={`${(group.gatheringEfficiency.food * 100).toFixed(0)}%`}
+                value={`${(unit.gatheringEfficiency.food * 100).toFixed(0)}%`}
               />
               <InfoRow
                 label="Iron"
-                value={`${(group.gatheringEfficiency.iron * 100).toFixed(0)}%`}
+                value={`${(unit.gatheringEfficiency.iron * 100).toFixed(0)}%`}
               />
               <InfoRow
                 label="Gold"
-                value={`${(group.gatheringEfficiency.gold * 100).toFixed(0)}%`}
+                value={`${(unit.gatheringEfficiency.gold * 100).toFixed(0)}%`}
               />
             </div>
           </>
@@ -149,26 +148,26 @@ const GroupInfo = ({ group }: { group: Group }) => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <h3 className="text-sm font-semibold mb-2">Combat Stats</h3>
-            <InfoRow label="Morale" value={`${group.morale.toFixed(1)}%`} />
-            <InfoRow label="Initiative" value={group.initiative} />
-            <InfoRow label="Agility" value={group.agility} />
-            <InfoRow label="Intelligence" value={group.intelligence} />
+            <InfoRow label="Morale" value={`${unit.morale.toFixed(1)}%`} />
+            <InfoRow label="Initiative" value={unit.initiative} />
+            <InfoRow label="Agility" value={unit.agility} />
+            <InfoRow label="Intelligence" value={unit.intelligence} />
           </div>
 
           <div>
             <h3 className="text-sm font-semibold mb-2">Physical Stats</h3>
-            <InfoRow label="Strength" value={Math.floor(group.strength)} />
-            <InfoRow label="Endurance" value={Math.floor(group.endurance)} />
-            <InfoRow label="Pain Thresh." value={group.painThreshold} />
+            <InfoRow label="Strength" value={Math.floor(unit.strength)} />
+            <InfoRow label="Endurance" value={Math.floor(unit.endurance)} />
+            <InfoRow label="Pain Thresh." value={unit.painThreshold} />
           </div>
         </div>
       </InfoBox>
 
-      {isOwnGroup && (
-        <ResourceInfo group={group} tile={tile} className="h-full" />
+      {isOwnUnit && (
+        <ResourceInfo unit={unit} tile={tile} className="h-full" />
       )}
     </div>
   );
 };
 
-export default GroupInfo;
+export default UnitInfo;

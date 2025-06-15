@@ -64,7 +64,7 @@
 
 ### Groups
 
-- [ ] Rename groups to units
+- [x] Rename groups to units
 - [ ] Add group entity
 - [ ] Add UI to create groups
 - [ ] Add UI to delete groups

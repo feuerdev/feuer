@@ -13,7 +13,7 @@ export function create(tiles: Hashtable<Tile>): World {
     idCounter: -1,
     players: {},
     tiles: tiles,
-    groups: {},
+    units: {},
     buildings: {},
     playerRelations: {},
     battles: [],

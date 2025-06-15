@@ -1,11 +1,11 @@
 import { Hex } from "../../shared/hex.js";
-import { Battle, Group } from "../../shared/objects.js";
+import { Battle, Unit } from "../../shared/objects.js";
 
 export function create(
   id: number,
   position: Hex,
-  attacker: Group,
-  defender: Group
+  attacker: Unit,
+  defender: Unit
 ): Battle {
   return {
     attacker: attacker,

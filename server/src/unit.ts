@@ -1,7 +1,7 @@
-import { Group } from "../../shared/objects.js";
+import { Unit } from "../../shared/objects.js";
 import { Hex } from "../../shared/hex.js";
 import { Resources } from "../../shared/resources.js";
-import { GroupBehavior } from "../../shared/objects.js";
+import { UnitBehavior } from "../../shared/objects.js";
 
 /**
  * Generates a random number between min and max (inclusive)
@@ -11,30 +11,28 @@ function randomBetween(min: number, max: number): number {
 }
 
 /**
- * Creates a new group with random attributes
+ * Creates a new unit with random attributes
  */
-export function createGroup(
+export function createUnit(
   id: number,
   owner: string,
-  groupType: string,
   pos: Hex,
   resources: Partial<Resources> = {}
-): Group {
+): Unit {
   // Generate random attributes
   const strength = randomBetween(40, 80);
   const endurance = randomBetween(40, 80);
 
-  // Default group properties
-  const group: Group = {
+  // Default unit properties
+  const unit: Unit = {
     id: id,
     owner: owner,
-    name: `Group ${id}`,
+    name: `Unit ${id}`,
     spotting: 5,
     targetHexes: [],
     pos: pos,
     movementStatus: 0,
     resources: resources,
-    groupType: "Group",
 
     // Combat stats with randomization
     morale: randomBetween(80, 100),
@@ -48,7 +46,7 @@ export function createGroup(
     endurance: endurance,
 
     // Behavior
-    behavior: GroupBehavior.Neutral,
+    behavior: UnitBehavior.Neutral,
 
     // Resource gathering stats with some randomization
     gatheringEfficiency: {
@@ -60,36 +58,36 @@ export function createGroup(
     },
   };
 
-  return group;
+  return unit;
 }
 
 /**
- * Assigns a group to a building slot
- * @param group The group to assign
+ * Assigns a unit to a building slot
+ * @param unit The unit to assign
  * @param buildingId The building ID to assign to
  * @param slotIndex The slot index in the building
  */
-export function assignGroupToBuilding(
-  group: Group,
+export function assignUnitToBuilding(
+  unit: Unit,
   buildingId: number,
   slotIndex: number
 ): void {
   // Remove from previous assignment if any
-  if (group.assignedToBuilding !== undefined) {
-    group.assignedToBuilding = undefined;
-    group.assignedToSlot = undefined;
+  if (unit.assignedToBuilding !== undefined) {
+    unit.assignedToBuilding = undefined;
+    unit.assignedToSlot = undefined;
   }
 
   // Assign to new building and slot
-  group.assignedToBuilding = buildingId;
-  group.assignedToSlot = slotIndex;
+  unit.assignedToBuilding = buildingId;
+  unit.assignedToSlot = slotIndex;
 }
 
 /**
- * Unassigns a group from its current building
- * @param group The group to unassign
+ * Unassigns a unit from its current building
+ * @param unit The unit to unassign
  */
-export function unassignGroupFromBuilding(group: Group): void {
-  group.assignedToBuilding = undefined;
-  group.assignedToSlot = undefined;
+export function unassignUnitFromBuilding(unit: Unit): void {
+  unit.assignedToBuilding = undefined;
+  unit.assignedToSlot = undefined;
 }

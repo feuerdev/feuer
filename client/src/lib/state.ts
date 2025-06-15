@@ -33,7 +33,7 @@ export const useStore = create<AppState>((set) => ({
   setSelection: (selection) => set({ selection }),
   world: {
     tiles: {},
-    groups: {},
+    units: {},
     buildings: {},
     battles: [],
     playerRelations: {},
