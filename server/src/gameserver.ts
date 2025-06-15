@@ -1402,14 +1402,33 @@ export default class GameServer {
   }
 
   /**
+   * Checks if an area around a hex is clear of any units or buildings.
+   * @param hex The center of the area to check.
+   * @param radius The radius to check.
+   * @returns True if no units or buildings are found within the radius.
+   */
+  private isAreaClear(hex: Hex, radius: number): boolean {
+    // Check for buildings
+    for (const building of Object.values(this.world.buildings)) {
+      if (this.calculateHexDistance(hex, building.position) <= radius) {
+        return false; // Found a building
+      }
+    }
+    // Check for units
+    for (const unit of Object.values(this.world.units)) {
+      if (this.calculateHexDistance(hex, unit.pos) <= radius) {
+        return false; // Found a unit
+      }
+    }
+
+    return true;
+  }
+
+  /**
    * @returns a random hex that is not in a water or other extreme biome
    */
   private getRandomSpawnHex(attempt: number = 0): Hex {
     const MAX_ATTEMPTS = 100; // Define a constant for max attempts
-    if (attempt >= MAX_ATTEMPTS) {
-        console.error(`Exceeded maximum attempts (${MAX_ATTEMPTS}) to find a suitable spawn hex.`);
-        throw new Error(`Could not find a suitable spawn hex after ${MAX_ATTEMPTS} attempts.`);
-    }
 
     const hashes = Object.keys(this.world.tiles);
 
@@ -1437,8 +1456,28 @@ export default class GameServer {
       case Biome.Desert:
       case Biome.Ice:
       case Biome.Mountain:
+        if (attempt >= MAX_ATTEMPTS) {
+          console.warn(`Exceeded maximum attempts to find a valid biome. Searching for any valid tile now.`);
+          const suitableTiles = Object.values(this.world.tiles).filter(t => ![Biome.Ocean, Biome.River, Biome.Shore, Biome.Beach, Biome.Desert, Biome.Ice, Biome.Mountain].includes(t.biome));
+          if (suitableTiles.length > 0) {
+            return suitableTiles[Math.floor(Math.random() * suitableTiles.length)].hex;
+          }
+          // As a last resort, return the current (bad) tile, to avoid infinite loops if no good biomes exist.
+          console.error("Could not find any tile with a suitable biome. Spawning in a potentially unsuitable location.");
+          return tile.hex;
+        }
         return this.getRandomSpawnHex(attempt + 1);
     }
+
+    // Check if the area is clear, but only if we haven't exceeded attempts.
+    if (attempt < MAX_ATTEMPTS && !this.isAreaClear(tile.hex, 2)) {
+      return this.getRandomSpawnHex(attempt + 1);
+    }
+    
+    if (attempt >= MAX_ATTEMPTS) {
+      console.warn(`Could not find a clear area. Spawning player in a potentially crowded space.`);
+    }
+
     return tile.hex;
   }
 
