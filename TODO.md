@@ -76,6 +76,11 @@
 
 - [ ] Box select units
 
+
+### QOL
+
+- [ ] When right clicking a building with a unit selected, move the the unit to the building and assign it
+
 ### Morale & Advanced Mechanics
 
 - [ ] Implement morale system
