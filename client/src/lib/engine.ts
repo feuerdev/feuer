@@ -548,7 +548,6 @@ export class Engine {
 
     object.interactive = true;
     object.cursor = "pointer";
-    object.hitArea = new Rectangle(-25, -25, 50, 50);
     object.on("pointerup", (event: FederatedPointerEvent) => {
       if (this.isDragging) {
         return;
@@ -789,7 +788,6 @@ export class Engine {
 
       object.interactive = true;
       object.cursor = "pointer";
-      object.hitArea = new Rectangle(-25, -25, 50, 50);
       object.on("pointerup", (event: FederatedPointerEvent) => {
         if (this.isDragging) {
           return;
