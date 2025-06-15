@@ -594,6 +594,7 @@ export default class GameServer {
 
           // Emit building update to the client
           socket.emit("gamestate building", building);
+          socket.emit("gamestate unit", unit);
         }
       }
       
@@ -839,7 +840,10 @@ export default class GameServer {
         if (oldBuilding) {
           oldBuilding.slots[unit.assignedToSlot].assignedUnitId = undefined
           const ownerSocket = this.uidsockets[oldBuilding.owner]
-          if (ownerSocket) ownerSocket.emit("gamestate building", oldBuilding)
+          if (ownerSocket) {
+            ownerSocket.emit("gamestate building", oldBuilding)
+            ownerSocket.emit("gamestate unit", this.world.units[unit.id])
+          }
         }
       }
       unit.assignedToBuilding = undefined
@@ -877,7 +881,10 @@ export default class GameServer {
         previousUnit.assignedToBuilding = undefined
         previousUnit.assignedToSlot = undefined
         const ownerSocket = this.uidsockets[previousUnit.owner]
-        if (ownerSocket) ownerSocket.emit("gamestate unit", previousUnit)
+        if (ownerSocket) {
+          ownerSocket.emit("gamestate unit", previousUnit)
+          ownerSocket.emit("gamestate building", building)
+        }
       }
     }
 
@@ -890,7 +897,10 @@ export default class GameServer {
       if (previousBuilding && unit.assignedToSlot !== undefined) {
         previousBuilding.slots[unit.assignedToSlot].assignedUnitId = undefined
         const ownerSocket = this.uidsockets[previousBuilding.owner]
-        if (ownerSocket) ownerSocket.emit("gamestate building", previousBuilding)
+        if (ownerSocket) {
+          ownerSocket.emit("gamestate building", previousBuilding)
+          ownerSocket.emit("gamestate unit", unit)
+        }
       }
     }
 
