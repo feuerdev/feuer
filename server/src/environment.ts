@@ -17,6 +17,9 @@ const Config = yargs(process.argv.slice(2))
     type: "string",
     default: "info",
   })
+  .option("host", {
+    description: "Explicit bind address", type: "string", default: "127.0.0.1",
+  })
   .option("port", {
     alias: "p",
     description: "The port to expose the server",

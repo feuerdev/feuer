@@ -1,3 +1,6 @@
+import { createServer } from "node:http";
+import { createSaveQueue, prepareWorld } from "./world-state.js";
+import { validUser } from "./commands.js";
 import { Server } from "socket.io"
 import { generateWorld } from "./mapgen.js"
 import Rules from "../../shared/rules.json" with { type: "json" };
@@ -8,22 +11,20 @@ import { listWorlds, loadWorld, saveWorld } from "./world.js";
 import { initDatabase } from "./db.js";
 import { World } from "../../shared/objects.js";
 
-// Initialize ID counter
-let idCounter = -1
-export const getNextId = () => {
-  return ++idCounter
-}
-
 // Initialize and load or generate world
-let world: World;
+let world: World | null = null;
+const enqueueSave = createSaveQueue(saveWorld);
 
 const worldName = Config.worldName;
 const worldPersistence = Config.worldPersistence && !!worldName;
 console.info(`Using world name: "${worldName}"`);
 console.info(`World persistence: ${worldPersistence}`);
 
+if (worldPersistence && !Config.dbConnectionString) throw new Error("Persistent world requires database configuration; disable persistence explicitly for an isolated development fixture.");
+if (!Number.isInteger(Config.port) || Config.port < 1 || Config.port > 65535 || !Number.isFinite(Config.updateRate) || Config.updateRate <= 0 || !Number.isFinite(Config.referenceRate) || Config.referenceRate <= 0) throw new Error("Invalid port or simulation rates.");
+if (!Config.clientUrls) throw new Error("Client origin configuration is required.");
 if (worldPersistence && Config.dbConnectionString) {
-  await initDatabase();
+  if (!await initDatabase()) throw new Error("Persistent world database is unavailable.");
   // List available worlds
   const worlds = await listWorlds();
   if (worlds.length > 0) {
@@ -48,38 +49,29 @@ if (!world) {
   );
   // Save the newly created world if persistence is enabled
   if (worldPersistence && Config.dbConnectionString) {
-    await saveWorld(world);
+    await enqueueSave(world);
   }
 } else {
   console.info(`World "${worldName}" loaded from database`);
 }
 
+prepareWorld(world);
+
 // Kick off Gameloop
 const game = new GameServer(world);
 game.run();
 
-// Set up periodic saving if persistence is enabled
-if (worldPersistence && Config.dbConnectionString) {
-  // Save every 5 minutes and on process exit
-  const SAVE_INTERVAL = 5 * 60 * 1000; // 5 minutes
-  setInterval(() => {
-    saveWorld(world);
-  }, SAVE_INTERVAL);
-  // Save on graceful shutdown
-  ['SIGINT', 'SIGTERM', 'SIGQUIT'].forEach(signal => {
-    process.on(signal, async () => {
-      console.info(`Received ${signal}, saving world "${worldName}"...`);
-      await saveWorld(world);
-      process.exit(0);
-    });
-  });
-}
+// Serial snapshots prevent an older save from overwriting newer progression.
+const saveTimer = worldPersistence ? setInterval(() => {
+  void enqueueSave(world).catch(() => console.error("Periodic world save failed."));
+}, 5 * 60 * 1000) : null;
 
 // Listen to connections
 const port: number = Config.port
 
 const corsOrigins = Config.clientUrls.split(",")
-const io = new Server(port, {
+const http = createServer();
+const io = new Server(http, {
   cors: {
     origin: corsOrigins,
     credentials: true,
@@ -96,12 +88,12 @@ io.on("connection", async (socket) => {
   // If in dev mode with no auth required, accept user from auth
   const skipAuth = Config.nodeEnv === 'development' && !Config.forceAuth;
   
-  if (skipAuth && user) {
+  if (skipAuth && validUser(user)) {
     userId = user;
     username = user;
   } 
   // Otherwise verify token if provided
-  else if (token) {
+  else if (typeof token === "string" && token.length > 0 && token.length <= 8192) {
     const userObject = await verifyToken(token);
     if (userObject) {
       userId = userObject.id;
@@ -121,10 +113,26 @@ io.on("connection", async (socket) => {
     console.log(`User "${username}" disconnected from world "${worldName}"`);
   });
 
-  await game.onPlayerInitialize(socket, userId);
+  if (!socket.connected) return;
+  try { await game.onPlayerInitialize(socket, userId); }
+  catch { console.error("Player initialization failed."); socket.disconnect(true); }
 });
 
-console.info(`Server running on port ${port} with world "${worldName}"`);
+http.listen(port, Config.host, () => console.info(`Server listening on ${Config.host}:${port}`));
+let shuttingDown = false;
+for (const signal of ["SIGINT", "SIGTERM", "SIGQUIT"] as const) {
+  process.on(signal, async () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    game.stop();
+    if (saveTimer) clearInterval(saveTimer);
+    io.disconnectSockets(true);
+    let exitCode = 0;
+    try { if (worldPersistence) await enqueueSave(world); }
+    catch { console.error("Final world save failed."); exitCode = 1; }
+    finally { io.close(() => process.exit(exitCode)); }
+  });
+}
 
 
 async function verifyToken(token: string): Promise<User | null> {
@@ -138,7 +146,7 @@ async function verifyToken(token: string): Promise<User | null> {
     const user = await clerk.users.getUser(result.sub)
     return user;
   } catch (error) {
-    console.error('Token verification failed:', error);
+    console.error('Token verification failed.');
     return null;
   }
 }

@@ -16,7 +16,8 @@
   ],
   "scripts": {
     "dev": "concurrently \"npm run dev --workspace=client\" \"npm run dev --workspace=@feuer/server\"",
-    "build": "npm run build --workspace=client && npm run build --workspace=@feuer/server"
+    "build": "npm run build --workspace=client && npm run build --workspace=@feuer/server",
+    "test:server": "NODE_ENV=test node --import tsx --test --test-concurrency=1 server/test/*.test.ts"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
