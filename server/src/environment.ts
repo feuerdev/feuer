@@ -71,6 +71,4 @@ const Config = yargs(process.argv.slice(2))
   })
   .parseSync()
 
-console.debug("Config loaded:", Config)
-
 export default Config

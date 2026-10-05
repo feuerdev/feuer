@@ -53,3 +53,7 @@ A side gig is premature. Only consider an expanded game if at least 10 external 
 ## Validation and rollout
 
 Compile server and client separately; run pure simulation tests before any browser test. Live validation should cover two identities, malicious commands, tab hiding, reconnect, match reset and full objective. Repo instructions discourage testing through the dev command; use a deliberate isolated verification setup and request a human playtest only when a concrete build exists. No merge or production deployment in this task. Roll back a demo release by reverting the last change and loading only a compatible match/world version; database schema/version changes need migration/backup design first.
+
+## Configuration logging cleanup
+
+The unconditional startup dump of the complete config object was removed because that object includes the Clerk secret and database connection string. Configuration parsing and game behavior are unchanged; named operational messages remain. Server compilation is the relevant check; no server, sockets, database or provider was started.
