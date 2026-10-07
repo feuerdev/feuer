@@ -10,7 +10,7 @@ export function createBuilding(
 ): Building {
   const template = Buildings[key]
   
-  const slots = template.slots || []
+  const slots = structuredClone(template.slots || [])
   
   const building: Building = {
     owner: owner,
@@ -55,7 +55,7 @@ export function upgradeBuilding(building: Building): Building | null {
   // Apply upgrade
   building.level = nextLevel
   building.spotting = upgrade.spotting
-  building.slots = upgrade.slots || building.slots
+  building.slots = upgrade.slots ? structuredClone(upgrade.slots) : building.slots
   
   // Update defensive stats if present in upgrade
   if (upgrade.attack !== undefined) {

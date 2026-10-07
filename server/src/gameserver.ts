@@ -1,3 +1,5 @@
+import { validCommand, validHex, validId, validUser } from "./commands.js";
+import { prepareWorld } from "./world-state.js";
 import Buildings from "../../shared/templates/buildings.json" with { type: "json" };
 import { astar } from "../../shared/pathfinding.js"
 import { Socket } from "socket.io"
@@ -41,13 +43,21 @@ export default class GameServer {
   //#endregion
 
   constructor(world: World) {
-    this.world = world
+    this.world = prepareWorld(world)
   }
 
   //Gameloop
   private previousTick = Date.now()
   private actualTicks = 0
+  private timer: ReturnType<typeof setInterval> | null = null
+  stop() {
+    if (this.timer !== null) clearInterval(this.timer)
+    this.timer = null
+  }
+
   run() {
+    if (this.timer !== null) return
+    this.previousTick = Date.now()
     let gameloop = () => {
       let timeSincelastFrame = Date.now() - this.previousTick
       this.previousTick = Date.now()
@@ -61,7 +71,7 @@ export default class GameServer {
         console.warn("Warning something is fucky with the gameloop")
       }
     }
-    setInterval(gameloop, this.updaterate)
+    this.timer = setInterval(gameloop, this.updaterate)
   }
 
   resume() {
@@ -181,11 +191,9 @@ export default class GameServer {
     })
 
     //Battles
-    let i = this.world.battles.length
-    while (i--) {
-      let battle = this.world.battles[i]
+    for (const battle of [...this.world.battles].reverse()) {
       // Process battle and potentially resolve it
-      this.resolveBattle(battle)
+      if (this.world.battles.includes(battle)) this.resolveBattle(battle)
     }
   }
 
@@ -291,7 +299,7 @@ export default class GameServer {
         } else {
           // No friendly building to retreat to, unit is lost
           console.log(`Unit ${battle.attacker.id} has nowhere to retreat to and is disbanded`);
-          delete this.world.units[battle.attacker.id];
+          this.removeUnit(battle.attacker.id);
         }
       } else {
         // Attacker survived (possibly fled)
@@ -319,7 +327,7 @@ export default class GameServer {
         } else {
           // No friendly building to retreat to, unit is lost
           console.log(`Unit ${battle.defender.id} has nowhere to retreat to and is disbanded`);
-          delete this.world.units[battle.defender.id];
+          this.removeUnit(battle.defender.id);
         }
       } else {
         // Defender survived (possibly fled)
@@ -327,7 +335,8 @@ export default class GameServer {
       }
       
       // Remove battle from the list
-      this.world.battles.splice(this.world.battles.indexOf(battle), 1);
+      const battleIndex = this.world.battles.indexOf(battle);
+      if (battleIndex !== -1) this.world.battles.splice(battleIndex, 1);
       
       // Update visibilities
       this.updatePlayerVisibilities(battle.attacker.owner);
@@ -462,6 +471,8 @@ export default class GameServer {
     if (player) {
       console.info("Player Disconnected: " + player.uid)
       // Clean up socket listeners
+      delete this.socketplayer[socket.id]
+      if (this.uidsockets[player.uid] === socket) delete this.uidsockets[player.uid]
       socket.removeAllListeners()
     }
   }
@@ -472,6 +483,12 @@ export default class GameServer {
    * If the uid is known, link the socket to the player instance.
    */
   async onPlayerInitialize(socket: Socket, uid: string) {
+    if (!validUser(uid)) throw new Error("Invalid player identity.")
+    const previous = this.uidsockets[uid]
+    if (previous && previous !== socket) {
+      this.onPlayerDisconnected(previous)
+      previous.disconnect(true)
+    }
     let player = this.world.players[uid]
     if (!player) {
       player = {uid: uid, initialized: false, visibleHexes: [], discoveredHexes: []}
@@ -539,7 +556,7 @@ export default class GameServer {
     socket.on("request hire unit", (data) => this.onRequestHireUnit(socket, data))
     socket.on("request set unit behavior", (data) => this.onRequestSetUnitBehavior(socket, data))
     // Debug listener
-    if (Config.nodeEnv === "development") {
+    if (Config.nodeEnv === "development" && !Config.forceAuth) {
       socket.on("debug:killEntity", (data: { type: SelectionType; id: number }) => {
         this.handleDebugKillEntity(socket, data);
       });
@@ -556,18 +573,19 @@ export default class GameServer {
   }
 
   onRequestTiles(socket: Socket, data: Hex[]) {
-    const player: Player = this.socketplayer[socket.id]
-    if (player) {
-      //TODO: Check if player has permission to see these tiles
-      socket.emit("gamestate tiles", this.getTiles(data || player.discoveredHexes))
-    }
+    const player = this.getPlayerBySocketId(socket.id)
+    if (!player || (data != null && (!Array.isArray(data) || data.length > 1000 || !data.every(validHex)))) return
+    const known = new Set(player.discoveredHexes.map(hash))
+    const requested = (data || player.discoveredHexes).filter(hex => known.has(hash(hex)))
+    socket.emit("gamestate tiles", this.getTiles(requested))
   }
 
   /**
    * Currently only used to request an update for your own unit
    */
   onRequestUnit(socket: Socket, data: number) {
-    const player: Player = this.socketplayer[socket.id]
+    if (!validId(data)) return
+    const player = this.getPlayerBySocketId(socket.id)
     const unit = this.world.units[data]
     if (player && unit && player.uid === unit.owner) {
       socket.emit("gamestate unit", unit)
@@ -575,11 +593,12 @@ export default class GameServer {
   }
 
   onRequestMovement(socket: Socket, data: any) {
+    if (!validCommand("Movement", data)) return
     let uid = this.getPlayerUid(socket.id)
     let selection: number = data.selection
     let target = create(data.target.q, data.target.r, data.target.s)
     const unit = this.world.units[selection]
-    if (uid === unit?.owner) {
+    if (uid && uid === unit?.owner && this.world.tiles[hash(target)] && isNavigable(this.world.tiles[hash(target)])) {
       // Unassign unit from building if it's moving away
       if (unit.assignedToBuilding !== undefined) {
         const buildingIdToUpdate = unit.assignedToBuilding; // Store ID before clearing
@@ -608,6 +627,7 @@ export default class GameServer {
   }
 
   onRequestConstruction(socket: Socket, data) {
+    if (!validCommand("Construction", data)) return
     const uid = this.getPlayerUid(socket.id)
     if (!uid) {
       return
@@ -616,7 +636,7 @@ export default class GameServer {
     let pos = create(data.pos.q, data.pos.r, data.pos.s)
     let tile = this.world.tiles[hash(pos)]
 
-    if (this.isAllowedToBuild(tile, uid, data.type)) {
+    if (tile && Object.prototype.hasOwnProperty.call(Buildings, data.type) && this.isAllowedToBuild(tile, uid, data.type)) {
       let building = createBuilding(++this.world.idCounter, uid, data.type, pos)
       subtractResources(tile, Buildings[data.type].cost)
       this.world.buildings[building.id] = building
@@ -628,9 +648,12 @@ export default class GameServer {
    * Get current relation between two players
    */
   onRequestRelation(socket: Socket, data) {
+    if (!validCommand("Relation", data)) return
     const uid = this.getPlayerUid(socket.id)
     if (!uid) return
     
+    if (!this.world.players[data.id1] || !this.world.players[data.id2]) return
+
     // Ensure that at least one of the players is the requesting player
     if (uid !== data.id1 && uid !== data.id2) {
       console.warn(`Player ${uid} tried to request relation between ${data.id1} and ${data.id2}`)
@@ -655,9 +678,10 @@ export default class GameServer {
   }
 
   onRequestTransfer(socket: Socket, data) {
+    if (!validCommand("Transfer", data)) return
     let uid = this.getPlayerUid(socket.id)
     const unit = this.world.units[data.unitId]
-    if (unit.owner !== uid) {
+    if (!uid || !unit || unit.owner !== uid) {
       console.warn(
         `Player '${uid}' tried to transfer resources to unit he doesn't own`
       )
@@ -669,6 +693,7 @@ export default class GameServer {
       let amount = data.amount
       let resource = data.resource
 
+      if (!tile || !Number.isFinite(tile.resources[resource] ?? 0) || !Number.isFinite(unit.resources[resource] ?? 0)) return
       if (!tile.resources[resource]) {
         tile.resources[resource] = 0
       }
@@ -688,6 +713,7 @@ export default class GameServer {
   }
 
   onRequestDemolish(socket: Socket, data) {
+    if (!validCommand("Demolish", data)) return
     const uid = this.getPlayerUid(socket.id)
     if (!uid) {
       return
@@ -703,6 +729,7 @@ export default class GameServer {
    * Handles a request to upgrade a building
    */
   onRequestUpgradeBuilding(socket: Socket, data: any) {
+    if (!validCommand("UpgradeBuilding", data)) return
     const uid = this.getPlayerUid(socket.id)
     if (!uid) return
     
@@ -815,6 +842,7 @@ export default class GameServer {
    * Assigns a unit to a building slot
    */
   onRequestAssignUnit(socket: Socket, data: any) {
+    if (!validCommand("AssignUnit", data)) return
     const uid = this.getPlayerUid(socket.id)
     if (!uid) return
 
@@ -828,6 +856,8 @@ export default class GameServer {
       console.warn(`Invalid assignment request from player ${uid}`)
       return
     }
+
+    if (!building.slots[slotIndex] || building.slots[slotIndex].assignedUnitId !== undefined) return
 
     // If unit is not at the building, move it first.
     if (!equals(unit.pos, building.position)) {
@@ -918,6 +948,7 @@ export default class GameServer {
    * Unassigns a unit from a building slot
    */
   onRequestUnassignUnit(socket: Socket, data: any) {
+    if (!validCommand("UnassignUnit", data)) return
     const uid = this.getPlayerUid(socket.id)
     if (!uid) return
     
@@ -958,6 +989,7 @@ export default class GameServer {
    * Handles a request to hire a new unit
    */
   onRequestHireUnit(socket: Socket, data: { buildingId: number, unitType: string }) {
+    if (!validCommand("HireUnit", data)) return
     const uid = this.getPlayerUid(socket.id)
     if (!uid) return
     
@@ -1003,6 +1035,7 @@ export default class GameServer {
   }
 
   onRequestSetUnitBehavior(socket: Socket, data: { unitId: number; behavior: UnitBehavior }) {
+    if (!validCommand("SetUnitBehavior", data)) return
     const uid = this.getPlayerUid(socket.id);
     if (!uid) return;
 
@@ -1057,7 +1090,7 @@ export default class GameServer {
                 }
             }
         }
-        delete this.world.units[data.id];
+        this.removeUnit(data.id);
         console.log(`DEBUG: Deleted unit ${data.id}`);
       } else {
         console.warn(`DEBUG: Unit ${data.id} not found for deletion.`);
@@ -1229,7 +1262,8 @@ export default class GameServer {
   }
 
   private getPlayerBySocketId(socketId: string): Player {
-    return this.socketplayer[socketId]
+    const player = this.socketplayer[socketId]
+    return player && this.uidsockets[player.uid]?.id === socketId ? player : null
   }
 
   private getPlayerByUid(uid: string): Player | null {
@@ -1492,20 +1526,28 @@ export default class GameServer {
   }
 
   public setWorld(world: World) {
-    this.world = world
+    this.world = prepareWorld(world)
     this.updateNet(1)
   }
 
+  private removeUnit(unitId: number) {
+    delete this.world.units[unitId]
+    this.world.battles = this.world.battles.filter(battle =>
+      battle.attacker.id !== unitId && battle.defender.id !== unitId
+    )
+  }
+
   onRequestDisband(socket: Socket, data) {
+    if (!validCommand("Disband", data)) return
     let uid = this.getPlayerUid(socket.id)
     const unitToDisband = this.world.units[data.unitId]
-    if (unitToDisband.owner !== uid) {
+    if (!uid || !unitToDisband || unitToDisband.owner !== uid) {
       console.warn(`Player '${uid}' tried to disband unit that they don't own`)
       return
     }
 
     if (unitToDisband) {
-      delete this.world.units[unitToDisband.id]
+      this.removeUnit(unitToDisband.id)
       this.updatePlayerVisibilities(uid)
     }
   }
@@ -1514,6 +1556,7 @@ export default class GameServer {
    * Handle request to change relation with another player
    */
   onRequestChangeRelation(socket: Socket, data: { targetPlayerId: string, relationType: EnumRelationType }) {
+    if (!validCommand("ChangeRelation", data)) return
     const uid = this.getPlayerUid(socket.id)
     if (!uid) return
     
@@ -1531,6 +1574,8 @@ export default class GameServer {
       return
     }
     
+    if (!this.world.players[targetPlayerId]) return
+
     // Create or update the relation
     const hash = PlayerRelation.hash(uid, targetPlayerId)
     let playerRelation = this.world.playerRelations[hash]

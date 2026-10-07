@@ -1,54 +1,18 @@
-# React + TypeScript + Vite
+# feuer client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React/Vite/Pixi client for Feuer. Run these commands from the repository root:
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```bash
+npm ci
+cp client/.example.env client/.env
+npm run dev --workspace=client
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Set `VITE_SERVER_URL` in `client/.env` to the game server URL. For local development, `VITE_FORCE_AUTH=false` skips Clerk authentication when the server also runs with `FEUER_NODE_ENV=development` and `FEUER_FORCE_AUTH=false`. Production builds require a valid `VITE_CLERK_PUBLISHABLE_KEY` and a server configured for Clerk authentication.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```bash
+npm run build --workspace=client
+npm run lint --workspace=client
 ```
+
+The client requires a running game server. The server defaults to `127.0.0.1`; set `FEUER_HOST` explicitly when hosting it. Server startup requires an available database unless `FEUER_WORLD_PERSISTENCE=false` is explicitly set for local development.

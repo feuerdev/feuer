@@ -5,7 +5,6 @@ import { Biome, Tile, World } from "../../shared/objects.js"
 import * as Worlds from "./world.js"
 import Rules from "../../shared/rules.json" with { type: "json" };
 import { astar } from "../../shared/pathfinding.js"
-import { getNextId } from "./main.js"
 import {
   create,
   distance,
@@ -345,6 +344,7 @@ function gauss(x: number) {
  */
 function firstIteration(size: number): Hashtable<Tile> {
   let result: Hashtable<Tile> = {}
+  let nextTileId = 0
   for (let q: number = -size; q <= size; q++) {
     let r1: number = Math.max(-size, -q - size)
     let r2: number = Math.min(size, -q + size)
@@ -357,7 +357,7 @@ function firstIteration(size: number): Hashtable<Tile> {
         height: 0,
         resources: {},
         temperature: 0,
-        id: getNextId(),
+        id: nextTileId++,
       }
       result[hash(hex)] = tile
     }

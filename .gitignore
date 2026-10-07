@@ -1,4 +1,12 @@
 .DS_Store
-node_modules
-next
-client/.env
+node_modules/
+next/
+**/dist/
+*.tsbuildinfo
+.env
+.env.*
+**/.env
+**/.env.*
+!.example.env
+!**/.example.env
+artifacts/

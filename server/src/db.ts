@@ -118,8 +118,7 @@ export async function loadWorldFromDb(
       client.release();
     }
   } catch (err) {
-    console.error("Failed to load world:", err);
-    return null;
+    throw new Error("World snapshot could not be loaded; refusing to generate a replacement.");
   }
 }
 
@@ -192,3 +191,5 @@ async function ensureMetadataTable(client: any): Promise<void> {
     `);
   }
 }
+
+export async function closeDatabase(): Promise<void> { if (pool) await pool.end(); }

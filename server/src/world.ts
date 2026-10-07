@@ -1,3 +1,4 @@
+import { prepareWorld } from "./world-state.js";
 import { Tile, World } from "../../shared/objects.js";
 import { Hashtable } from "../../shared/util.js";
 import Config from "./environment.js";
@@ -9,7 +10,7 @@ import {
 } from "./db.js";
 
 export function create(tiles: Hashtable<Tile>): World {
-  return {
+  return prepareWorld({
     idCounter: -1,
     players: {},
     tiles: tiles,
@@ -17,7 +18,7 @@ export function create(tiles: Hashtable<Tile>): World {
     buildings: {},
     playerRelations: {},
     battles: [],
-  };
+  });
 }
 
 export async function saveWorld(world: World): Promise<boolean> {
