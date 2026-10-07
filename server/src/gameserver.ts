@@ -191,11 +191,9 @@ export default class GameServer {
     })
 
     //Battles
-    let i = this.world.battles.length
-    while (i--) {
-      let battle = this.world.battles[i]
+    for (const battle of [...this.world.battles].reverse()) {
       // Process battle and potentially resolve it
-      this.resolveBattle(battle)
+      if (this.world.battles.includes(battle)) this.resolveBattle(battle)
     }
   }
 
@@ -301,7 +299,7 @@ export default class GameServer {
         } else {
           // No friendly building to retreat to, unit is lost
           console.log(`Unit ${battle.attacker.id} has nowhere to retreat to and is disbanded`);
-          delete this.world.units[battle.attacker.id];
+          this.removeUnit(battle.attacker.id);
         }
       } else {
         // Attacker survived (possibly fled)
@@ -329,7 +327,7 @@ export default class GameServer {
         } else {
           // No friendly building to retreat to, unit is lost
           console.log(`Unit ${battle.defender.id} has nowhere to retreat to and is disbanded`);
-          delete this.world.units[battle.defender.id];
+          this.removeUnit(battle.defender.id);
         }
       } else {
         // Defender survived (possibly fled)
@@ -337,7 +335,8 @@ export default class GameServer {
       }
       
       // Remove battle from the list
-      this.world.battles.splice(this.world.battles.indexOf(battle), 1);
+      const battleIndex = this.world.battles.indexOf(battle);
+      if (battleIndex !== -1) this.world.battles.splice(battleIndex, 1);
       
       // Update visibilities
       this.updatePlayerVisibilities(battle.attacker.owner);
@@ -1091,7 +1090,7 @@ export default class GameServer {
                 }
             }
         }
-        delete this.world.units[data.id];
+        this.removeUnit(data.id);
         console.log(`DEBUG: Deleted unit ${data.id}`);
       } else {
         console.warn(`DEBUG: Unit ${data.id} not found for deletion.`);
@@ -1531,6 +1530,13 @@ export default class GameServer {
     this.updateNet(1)
   }
 
+  private removeUnit(unitId: number) {
+    delete this.world.units[unitId]
+    this.world.battles = this.world.battles.filter(battle =>
+      battle.attacker.id !== unitId && battle.defender.id !== unitId
+    )
+  }
+
   onRequestDisband(socket: Socket, data) {
     if (!validCommand("Disband", data)) return
     let uid = this.getPlayerUid(socket.id)
@@ -1541,7 +1547,7 @@ export default class GameServer {
     }
 
     if (unitToDisband) {
-      delete this.world.units[unitToDisband.id]
+      this.removeUnit(unitToDisband.id)
       this.updatePlayerVisibilities(uid)
     }
   }

@@ -78,7 +78,9 @@ const io = new Server(http, {
   },
 })
 
+let shuttingDown = false;
 io.on("connection", async (socket) => {
+  if (shuttingDown) { socket.disconnect(true); return; }
   // Check for both types of auth - Clerk token or local user
   const { token, user } = socket.handshake.auth;
   
@@ -113,13 +115,12 @@ io.on("connection", async (socket) => {
     console.log(`User "${username}" disconnected from world "${worldName}"`);
   });
 
-  if (!socket.connected) return;
+  if (shuttingDown || !socket.connected) { socket.disconnect(true); return; }
   try { await game.onPlayerInitialize(socket, userId); }
   catch { console.error("Player initialization failed."); socket.disconnect(true); }
 });
 
 http.listen(port, Config.host, () => console.info(`Server listening on ${Config.host}:${port}`));
-let shuttingDown = false;
 for (const signal of ["SIGINT", "SIGTERM", "SIGQUIT"] as const) {
   process.on(signal, async () => {
     if (shuttingDown) return;
@@ -128,9 +129,14 @@ for (const signal of ["SIGINT", "SIGTERM", "SIGQUIT"] as const) {
     if (saveTimer) clearInterval(saveTimer);
     io.disconnectSockets(true);
     let exitCode = 0;
-    try { if (worldPersistence) await enqueueSave(world); }
+    try {
+      await new Promise<void>((resolve, reject) => {
+        io.close(() => resolve()).catch(reject);
+      });
+      if (worldPersistence) await enqueueSave(world);
+    }
     catch { console.error("Final world save failed."); exitCode = 1; }
-    finally { io.close(() => process.exit(exitCode)); }
+    finally { process.exit(exitCode); }
   });
 }
 
